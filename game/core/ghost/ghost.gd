@@ -22,7 +22,8 @@ const MAGIC: PackedByteArray = [0x4F, 0x52, 0x47, 0x48]
 const VERSION: int = 1
 const HEADER: int = 16
 const SAMPLE_BYTES: int = 20
-## Longest ghost that from_bytes() reads: 3 hours.
+## Most samples in a ghost: 3 hours. record() stops one sample short, which keeps room for
+## the finish sample, so every recorded ghost loads.
 const MAX_SAMPLES: int = RATE * 3 * 3600
 ## A clock value this close under a sample time counts as that time.
 const EPSILON: float = 1e-6
@@ -41,7 +42,7 @@ func size() -> int:
 ## Adds a sample when time has reached the next sample time. Call it each tick; the first
 ## call adds sample 0.
 func record(time: float, position: Vector3, rotation: Quaternion) -> void:
-	if time + EPSILON >= float(size()) / RATE:
+	if time + EPSILON >= float(size()) / RATE and size() < MAX_SAMPLES - 1:
 		_add(position, rotation)
 		duration = float(size() - 1) / RATE
 

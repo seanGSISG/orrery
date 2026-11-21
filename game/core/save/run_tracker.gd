@@ -122,3 +122,4 @@ func _race(ghost: Ghost) -> void:
 		ghost_marble.name = &"Ghost"
 		add_child(ghost_marble)
 	ghost_marble.ghost = ghost
+	ghost_marble.visible = save.settings.ghost

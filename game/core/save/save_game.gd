@@ -177,7 +177,9 @@ static func _write_atomic(path: String, bytes: PackedByteArray) -> bool:
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var temp: String = path + ".tmp"
 	if not FileAccess.file_exists(path) and FileAccess.file_exists(temp):
-		DirAccess.rename_absolute(temp, path)
+		if DirAccess.rename_absolute(temp, path) != OK:
+			push_warning("Save: cannot recover %s" % temp)
+			return false
 	var file: FileAccess = FileAccess.open(temp, FileAccess.WRITE)
 	if file == null:
 		push_warning("Save: cannot write %s (%s)" % [temp, error_string(FileAccess.get_open_error())])
