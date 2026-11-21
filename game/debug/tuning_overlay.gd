@@ -74,6 +74,7 @@ func _ready() -> void:
 	column.add_child(_scroll)
 	column.add_child(_status)
 	_status.text = HELP
+	get_viewport().size_changed.connect(_refresh)
 
 
 ## Shows the panel. The first open builds it for Game.run and the current camera.
@@ -118,7 +119,8 @@ func _input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	if not event.is_pressed():
-		_held = 0
+		if command == &"left" or command == &"right":
+			_held = 0
 	elif command == &"toggle":
 		toggle()
 	elif command == &"up" or command == &"down":
