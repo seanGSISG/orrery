@@ -53,7 +53,7 @@ func advance(_run: LevelRun, t: float) -> void:
 
 ## Finds the egg once, if the rules count it, and starts the opening.
 func on_overlap(run: LevelRun, _first: bool) -> void:
-	if _found or not run.rules.find_egg():
+	if _found or not run.rules.find_egg(self):
 		return
 	_found = true
 	feedback.emit(&"egg.open", 1.0, _hinge.global_position)

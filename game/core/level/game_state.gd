@@ -22,7 +22,7 @@ var spin: Vector3 = Vector3.ZERO
 var up: Vector3 = Vector3.UP
 ## Marble.frame: the reference for MarbleInput.camera_yaw, with y = up. Run.
 var frame: Basis = Basis.IDENTITY
-## True when the last sub-step had a contact. Run.
+## True when the last sub-step stood on a floor (MarbleTuning.floor_min_up), not a wall. Run.
 var on_ground: bool = false
 ## Gems collected in this run, and gems in the level. Rules.
 var gems_collected: int = 0
@@ -36,7 +36,7 @@ var medal: StringName = &"none"
 var power_up: StringName = &""
 ## Node name of the last checkpoint; empty means the start pad. Rules.
 var checkpoint: StringName = &""
-## True when the egg was found in this run. Rules.
+## True when an egg was found in this run. Rules.
 var egg_found: bool = false
 ## Ascent only: m above the climb start, along up. Ascent mode (#27).
 var height: float = 0.0

@@ -6,6 +6,9 @@
     uv run orrery-harness screenshot --path build/harness/flat.png
     uv run orrery-harness quit
 
+quit exits 1 when the game's log shows a shader compile error. `check-log [PATH]` does the same
+check on a log file (stdin when there is no PATH), for runs that do not use the harness.
+
 launch records the game in build/harness/session.json; the other commands talk to that
 game. Each command prints its result as JSON. An error prints to stderr and exits 1.
 """
@@ -61,16 +64,31 @@ def _parser() -> tuple[argparse.ArgumentParser, dict[str, Command]]:
     )
 
     add("ping", lambda g, a: g.ping(), "check that the harness answers")
-    sub.add_parser("quit", help="quit the game")
+    sub.add_parser(
+        "quit", help="quit the game; exit 1 on a shader compile error in its log"
+    )
+    check = sub.add_parser(
+        "check-log", help="exit 1 on a shader compile error in a log"
+    )
+    check.add_argument("path", nargs="?", help="log file (default: stdin)")
     add("state", lambda g, a: g.state(), "print the GameState")
     add("load_level", lambda g, a: g.load_level(a.id), "load a level").add_argument(
         "id"
     )
     mode = add(
-        "load_mode", lambda g, a: g.load_mode(a.mode, a.zone), "load a mode (stub)"
+        "load_mode",
+        lambda g, a: g.load_mode(a.mode, a.zone, a.zones, a.resume, a.assist),
+        "start a mode: ascent",
     )
     mode.add_argument("mode")
-    mode.add_argument("--zone")
+    mode.add_argument("--zone", type=int, help="start on this zone; 1 is the first")
+    mode.add_argument("--zones", nargs="+", help="zone level ids, from the bottom")
+    mode.add_argument(
+        "--resume", action="store_true", default=None, help="continue the saved spot"
+    )
+    mode.add_argument(
+        "--assist", action=argparse.BooleanOptionalAction, help="turn Assist on or off"
+    )
     held = add(
         "input",
         lambda g, a: g.input(
@@ -156,10 +174,18 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "quit":
             game.stop()
             result = None
+        elif args.command == "check-log":
+            text = (
+                Path(args.path).read_text(errors="replace")
+                if args.path
+                else sys.stdin.read()
+            )
+            game.check_log(text, args.path or "the log")
+            result = None
         else:
             with game.current().connect() as harness:
                 result = commands[args.command](harness, args)
-    except (HarnessError, game.LaunchError, OSError) as error:
+    except (HarnessError, game.LaunchError, game.ShaderError, OSError) as error:
         print(f"orrery-harness: {error}", file=sys.stderr)
         return 1
     print(json.dumps(_plain(result), indent=2))

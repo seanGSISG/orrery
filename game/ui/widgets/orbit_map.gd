@@ -53,7 +53,7 @@ func show_levels(catalog: LevelCatalog, ids: Array[StringName]) -> void:
 		elif not catalog.info(id).built:
 			node.state = &"unbuilt"
 		node.medal = record.medal
-		node.egg = record.egg
+		node.egg = catalog.has_eggs(id)
 		node.focus_entered.connect(_on_focus.bind(id))
 		node.pressed.connect(level_chosen.emit.bind(id))
 		add_child(node)
