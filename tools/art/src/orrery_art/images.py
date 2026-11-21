@@ -245,7 +245,7 @@ def jobs_hash(jobs: list[ImageJob], model: str) -> str:
 
 @dataclass
 class BatchState:
-    """The batch state file, build/art/batches/<jobs file name>.json. A rerun with the same
+    """The batch state file (see state_path). A rerun with the same
     jobs resumes the batch instead of paying for a new one."""
 
     jobs_hash: str
@@ -272,7 +272,11 @@ class BatchState:
 
 
 def state_path(jobs_file: Path) -> Path:
-    return out_path("batches", jobs_file.name + ".json")
+    """build/art/batches/<name>-<hash of the full path>.json, so that two jobs files with one
+    name in two folders keep their own state."""
+    source = jobs_file.resolve()
+    digest = hashlib.sha256(str(source).encode()).hexdigest()[:8]
+    return out_path("batches", f"{source.stem}-{digest}.json")
 
 
 def submit(client: openai.OpenAI, jobs: list[ImageJob], settings: ImageSettings) -> str:

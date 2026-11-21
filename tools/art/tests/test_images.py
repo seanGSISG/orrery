@@ -236,6 +236,12 @@ def test_a_batch_dry_run_ignores_saved_state(
     assert result["dry_run"] and len(result["requests"]) == 1
 
 
+def test_jobs_files_with_one_name_keep_their_own_state(tmp_path: Path) -> None:
+    first, second = tmp_path / "a" / "decals.jsonl", tmp_path / "b" / "decals.jsonl"
+    assert images.state_path(first) != images.state_path(second)
+    assert images.state_path(first) == images.state_path(first)
+
+
 def test_the_default_cap_comes_from_the_config(settings: Config) -> None:
     assert settings.max_usd_per_run == 5.0
 

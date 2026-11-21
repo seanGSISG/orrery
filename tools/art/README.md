@@ -39,7 +39,7 @@ just art batch tools/art/examples/decals.jsonl --yes --no-wait  # submits and re
 
 A jobs file has one JSON object for each line: `prompt` and `out`, and optionally `size` (`WIDTHxHEIGHT`, edges divisible by 16, 1024x640 at least), `quality` (`low`, `medium`, `high`, `xhigh`, `max`) and `transparent` (`.png` or `.webp` only). The model, quality and size defaults are in `config.toml`.
 
-A batch keeps its state in `build/art/batches/<jobs file>.json`. A rerun of the same file resumes the batch and never pays twice. After the images are saved, a rerun only reports them. OpenAI's model page for GPT-Image-2.6 shows the Batch endpoint as not available, but its pricing page lists a Batch price. If a batch fails validation, the result says so and nothing is billed: use `image` instead.
+A batch keeps its state in `build/art/batches/<jobs file name>-<hash of its path>.json`. A rerun of the same file resumes the batch and never pays twice. After the images are saved, a rerun only reports them. OpenAI's model page for GPT-Image-2.6 shows the Batch endpoint as not available, but its pricing page lists a Batch price. If a batch fails validation, the result says so and nothing is billed: use `image` instead.
 
 ## Props: concept image, 3D, clean-up, `kit.prop`
 
