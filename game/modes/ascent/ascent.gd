@@ -137,13 +137,21 @@ static func of(run: LevelRun) -> Ascent:
 	return run.get_node_or_null(^"Ascent") as Ascent if run != null else null
 
 
-## Returns the ids of the zones of the game that are built, from the bottom. With none, the
-## game has no climb yet.
+## Returns the ids of the zones of the game that the climb has now: ZONES from the bottom up
+## to the first one that is not built. With none, the game has no climb yet.
 static func zones() -> Array[StringName]:
+	return built_from_bottom(ZONES)
+
+
+## Returns ids from the first one up to the first one that has no scene. A zone joins only
+## its neighbours, so a zone above a gap is not part of the climb: the marble cannot get to
+## it, nor to a gate on it.
+static func built_from_bottom(ids: Array[StringName]) -> Array[StringName]:
 	var built: Array[StringName] = []
-	for id: StringName in ZONES:
-		if Game.level_path(id) != "":
-			built.append(id)
+	for id: StringName in ids:
+		if Game.level_path(id) == "":
+			break
+		built.append(id)
 	return built
 
 

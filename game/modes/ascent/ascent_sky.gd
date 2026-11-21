@@ -29,7 +29,7 @@ var _environment: Environment = DAWN.environment()
 var _material: ShaderMaterial = ShaderMaterial.new()
 ## The sun angles of now, in a preset, so that SkyPreset.to_sun() gives the direction.
 var _now: SkyPreset = SkyPreset.new()
-## The height of the last change; INF before the first.
+## The height of the last change, from 0 to NOON_HEIGHT; INF before the first.
 var _shown: float = INF
 
 
@@ -53,12 +53,15 @@ func _init() -> void:
 
 
 ## Shows the time of day of height, m above the climb start. Below the climb start it shows
-## DAWN, and above NOON_HEIGHT it shows NOON.
+## DAWN, and above NOON_HEIGHT it shows NOON. A change of less than STEP waits, but not the
+## change that reaches one of the two ends. Outside the ends nothing changes.
 func show_height(height: float) -> void:
-	if absf(height - _shown) < STEP:
+	var at: float = clampf(height, 0.0, NOON_HEIGHT)
+	var end: bool = at == 0.0 or at == NOON_HEIGHT
+	if at == _shown or (absf(at - _shown) < STEP and not end):
 		return
-	_shown = height
-	_apply(clampf(height / NOON_HEIGHT, 0.0, 1.0))
+	_shown = at
+	_apply(at / NOON_HEIGHT)
 
 
 ## Writes the blend of DAWN and NOON to the sky, the sun and the environment: weight 0 is

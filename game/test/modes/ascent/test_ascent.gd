@@ -21,6 +21,15 @@ func test_all_zones_load_at_the_start() -> void:
 	assert_almost_eq(ascent.top, 36.0, 0.001)
 
 
+## The climb of the game is its built zones up to the first one that is not built: a zone
+## above a gap does not join the climb.
+func test_climb_stops_at_the_first_zone_that_is_not_built() -> void:
+	var ids: Array[StringName] = [Ascent.FIXTURE[0], &"no_such_zone", Ascent.FIXTURE[2]]
+	var first: Array[StringName] = [Ascent.FIXTURE[0]]
+	assert_eq(Ascent.built_from_bottom(ids), first)
+	assert_eq(Ascent.built_from_bottom(Ascent.FIXTURE), Ascent.FIXTURE)
+
+
 ## Every mesh of the zones has a visibility range, so far geometry is not drawn.
 func test_far_geometry_has_a_visibility_range() -> void:
 	if not climb():
@@ -92,8 +101,9 @@ func test_light_goes_from_dawn_to_noon() -> void:
 	var sun: DirectionalLight3D = sky.get_node(^"sun") as DirectionalLight3D
 	assert_almost_eq(sky.elevation, AscentSky.DAWN.sun_elevation, 0.001)
 	assert_almost_eq(sun.light_energy, AscentSky.DAWN.sun_energy, 0.001)
+	sky.show_height(AscentSky.NOON_HEIGHT - 0.5)
 	sky.show_height(AscentSky.NOON_HEIGHT)
-	assert_almost_eq(sky.elevation, AscentSky.NOON.sun_elevation, 0.001)
+	assert_almost_eq(sky.elevation, AscentSky.NOON.sun_elevation, 0.001, "a short last step")
 	assert_almost_eq(sun.light_energy, AscentSky.NOON.sun_energy, 0.001)
 	sky.show_height(AscentSky.NOON_HEIGHT * 0.5)
 	var between: float = (AscentSky.DAWN.sun_elevation + AscentSky.NOON.sun_elevation) * 0.5

@@ -27,7 +27,7 @@ Terms used in this file:
 
 ## 2. How a zone plugs in
 
-A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The mode loads every zone that is built, so the climb works while only some zones exist. While none is built, New climb in the Ascent menu is off. The game never climbs the fixture zones: its save is of its own zones.
+A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The game climbs the built zones from the bottom up to the first one that is not built (`Ascent.zones()`), so the climb works while only some zones exist. A zone above a gap waits for the zone below it. While none is built, New climb in the Ascent menu is off. The game never climbs the fixture zones: its save is of its own zones.
 
 Rules for a zone script:
 
@@ -106,7 +106,7 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 
 - The environment and the sun are those that `SkyPreset.environment()` and `sun()` make for dawn. So the tonemap, the glow and the haze are as in a level.
 - `show_height()` gives `_apply()` a weight: the height over `NOON_HEIGHT`, from 0 to 1. `_apply()` is the one place that blends the values of the two presets: the panoramas (in `ascent_sky.gdshader`), the sun's elevation, turn, colour and energy, the fill light, the exposure and the haze. To change the light, change the presets.
-- The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again.
+- The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again. The step that reaches dawn or noon is never left out, and outside the two ends nothing changes.
 - `GraphicsPreset` says that SDFGI comes with the Ascent mode (Ultra only). It is not built yet.
 
 ## 5. HUD and menus
