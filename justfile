@@ -40,9 +40,29 @@ run level="flat": import
 build-levels *ids:
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
+# Build the feel-review course and play it in a window with the tuning overlay (LB+Y or F1)
+feel: (build-levels "feel")
+    "{{ godot }}" --path game res://debug/feel.tscn
+
+# Build the levels whose .glb is missing or older than its script, the kit or the importer
+[private]
+[script("bash")]
+fresh-levels:
+    set -euo pipefail
+    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd)
+    stale=()
+    for script in levels/*/*.py; do
+        id=$(basename "$script" .py)
+        glb="game/levels/built/$id.glb"
+        for input in "$script" "${inputs[@]}"; do
+            if [[ ! -f $glb || $input -nt $glb ]]; then stale+=("$id"); break; fi
+        done
+    done
+    if (( ${#stale[@]} > 0 )); then just build-levels "${stale[@]}"; fi
+
 # Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
 [script("bash")]
-test: import
+test: fresh-levels import
     set -euo pipefail
     log=$(mktemp)
     trap 'rm -f "$log"' EXIT
@@ -134,3 +154,98 @@ test-harness *args: import
 export-debug: import
     mkdir -p build/linux-debug
     "{{ godot }}" --headless --path game --export-debug "Linux Debug" ../build/linux-debug/orrery.x86_64
+
+# --- Route bot (#14) ---
+
+# Run the route bot on built levels (all, or the given ids): first_run under par, expert under gold
+[positional-arguments]
+[script("bash")]
+test-levels *ids: fresh-levels import
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    # --quit-after stops a run whose test script did not load; it would wait forever.
+    status=0
+    "{{ godot }}" --headless --path game --quit-after 100 res://harness/route_bot_levels.tscn \
+        -- "$@" 2>&1 | tee "$log" || status=$?
+    if grep -q 'SCRIPT ERROR' "$log" || ! grep -q '^test-levels: ' "$log"; then
+        echo "just test-levels: the level test did not run to the end" >&2
+        exit 1
+    fi
+    exit "$status"
+
+# Print the par (first_run time × 1.5) and gold (expert time × 1.15) from route bot times
+suggest-times id: (test-levels "--suggest" id)
+
+# --- Controller (#18) ---
+
+# Drive a virtual Xbox pad on /dev/uinput (local only). The pad plugs in while the game runs;
+# the test checks that Godot sees it, A makes the marble jump and the left stick rolls it
+[script("bash")]
+test-pad: import
+    set -euo pipefail
+    if [[ ! -w /dev/uinput ]]; then echo "just test-pad: /dev/uinput is not writable" >&2; exit 1; fi
+    log=$(mktemp) padlog=$(mktemp)
+    steps="press a 0.3; wait 0.7; stick left 0 1 0.6; stick left 0 -1 0.6; wait 0.3"
+    (sleep 3; exec uv run --quiet tools/pad/virtual_pad.py --seconds 60 --sequence "$steps") >"$padlog" 2>&1 &
+    pad=$!
+    trap 'pkill -P "$pad" || true; kill "$pad" 2>/dev/null || true; rm -f "$log" "$padlog"' EXIT
+    status=0
+    ORRERY_VIRTUAL_PAD=1 "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd \
+        -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log" || status=$?
+    # A failed Godot run falls through to here, so the pad log explains it before cleanup.
+    if (( status != 0 )) || ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
+        cat "$padlog" >&2
+        echo "just test-pad: the virtual pad test did not pass" >&2
+        exit 1
+    fi
+
+# --- Gallery and performance (#20) ---
+
+# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html
+[positional-arguments]
+gallery *ids: fresh-levels import
+    uv run --quiet --script tools/gallery/gallery.py "$@"
+
+# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets
+[positional-arguments]
+perf *ids: fresh-levels import
+    GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
+
+# --- Lightmaps (#24) ---
+
+# Bake the lightmaps of levels (all, or the given ids) on this GPU. Close every Godot editor on this project first
+[positional-arguments]
+[script("bash")]
+bake *ids: fresh-levels import
+    set -euo pipefail
+    if (( $# == 0 )); then mapfile -t ids < <(basename -s .py levels/*/*.py); set -- "${ids[@]}"; fi
+    out=game/levels/lightmaps
+    # The editor scans the project at start; the bake can import its files only into a known folder.
+    mkdir -p "$out"
+    scenes=()
+    for id in "$@"; do
+        glb="game/levels/built/$id.glb"
+        if [[ ! -f $glb ]]; then echo "just bake: $glb is missing" >&2; exit 1; fi
+        scenes+=("res://levels/built/$id.glb")
+    done
+    log=$(mktemp) settings=$(mktemp)
+    # The editor rewrites project.godot on exit and drops the settings that equal the defaults.
+    cp game/project.godot "$settings"
+    trap 'cp "$settings" game/project.godot; rm -f "$log" "$settings"' EXIT
+    # A bake needs a real GPU, so the editor runs in a hidden gamescope display. gamescope's exit
+    # code does not follow Godot's, so the plugin's summary line is the only success check.
+    timeout 3600 gamescope --backend headless -W 1280 -H 720 -- \
+        "{{ godot }}" --editor --path game -- --bake-lightmaps "${scenes[@]}" >"$log" 2>&1 || true
+    # The sidecar records the level each new bake belongs to; `just test` warns when they differ.
+    for id in "$@"; do
+        if grep -q "^BAKE ok res://levels/built/$id.glb " "$log"; then
+            sha256sum "game/levels/built/$id.glb" | cut -d' ' -f1 >"$out/$id.sha256"
+        fi
+    done
+    if ! grep -qx "BAKE done: $# of $# baked" "$log"; then
+        grep -E '^(BAKE|ERROR|SCRIPT ERROR)' "$log" >&2 || true
+        echo "just bake: not every level baked" >&2
+        exit 1
+    fi
+    grep -E '^BAKE' "$log"

@@ -54,6 +54,7 @@ var _commands: Dictionary[String, Callable] = {
 	"screenshot": _screenshot,
 	"logs": _logs,
 	"set_setting": _set_setting,
+	"run_bot": _run_bot,
 }
 
 
@@ -271,7 +272,7 @@ func _teleport(params: Params) -> Variant:
 	var run: LevelRun = Game.run
 	if run == null:
 		return _no_run()
-	run.marble.teleport(at, velocity)
+	run.teleport(at, velocity)
 	return {}
 
 
@@ -373,6 +374,29 @@ func _set_setting(params: Params) -> Variant:
 	var old: Variant = ProjectSettings.get_setting(key)
 	ProjectSettings.set_setting(key, type_convert(value, typeof(old)))
 	return {"key": key, "value": ProjectSettings.get_setting(key)}
+
+
+## Runs the route bot (route_bot.gd) on the loaded level: it restarts the run and plays the
+## route to the end at full speed, then pauses the run. route is a route's kind or node name
+## (default first_run). Returns {finished, time, falls}, and {stuck_at, waypoint, reason} when
+## the bot gave up.
+func _run_bot(params: Params) -> Variant:
+	var which: String = params.text("route", "first_run")
+	if params.failed():
+		return params.failure
+	var run: LevelRun = Game.run
+	if run == null:
+		return _no_run()
+	var route: Route = RouteBot.find(run, which)
+	if route == null:
+		return Failure.new(NOT_FOUND, "level %s has no route %s" % [run.level.id, which])
+	var bot: RouteBot = RouteBot.new(run, route)
+	if not bot.problems.is_empty():
+		return Failure.new(INVALID_PARAMS, "route %s: %s" % [which, "; ".join(bot.problems)])
+	paused = true
+	var result: Dictionary = bot.drive()
+	InputHub.use_source(_source)
+	return result
 
 
 ## A JSON-RPC error: code and message.

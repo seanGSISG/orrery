@@ -122,6 +122,9 @@ def _parser() -> tuple[argparse.ArgumentParser, dict[str, Command]]:
     add("logs", lambda g, a: g.logs(a.since), "print engine log lines").add_argument(
         "--since", type=int, default=0
     )
+    add(
+        "run_bot", lambda g, a: g.run_bot(a.route), "play a route to the end"
+    ).add_argument("--route", help="first_run (default), expert or a route name")
     setting = add(
         "set_setting",
         lambda g, a: g.set_setting(a.key, _json(a.value)),
