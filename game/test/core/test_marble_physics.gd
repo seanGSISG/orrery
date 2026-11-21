@@ -147,9 +147,24 @@ func test_glancing_hit_slides() -> void:
 	assert_almost_eq(run.state.velocity.z, -steep.z * TUNING.restitution, 0.01)
 
 
-## In a hit on a wall, the floor stays the ground: a jump goes up, not off the wall.
-func test_ground_is_floor_during_wall_hit() -> void:
+## Only a floor (floor_min_up) is ground. on_ground is true on the floor and on the 30° ramp,
+## and false in the air against a wall. In a hit on a wall, the floor stays the ground: a jump
+## goes up, not off the wall.
+func test_only_a_floor_is_ground() -> void:
 	_start(PHYSICS)
+	var cases: Dictionary[String, Vector3] = {
+		"floor": Vector3(0, TUNING.radius, 0),
+		"ramp": RAMP_TOP + RAMP_NORMAL * TUNING.radius,
+	}
+	for case: String in cases:
+		run.marble.teleport(cases[case], Vector3.ZERO)
+		hold(MarbleInput.new(), 0.1)
+		assert_true(run.state.on_ground, case)
+	run.marble.teleport(Vector3(0, 10, WALL_Z + TUNING.radius), Vector3.ZERO)
+	for _i: int in 30:
+		run.step(rolling(Vector2(0, 1)))
+		assert_false(run.state.on_ground, "in the air against the wall")
+	assert_lt(run.state.position.z, WALL_Z + TUNING.radius + 0.01, "the marble stays on the wall")
 	var at: Vector3 = Vector3(0, TUNING.radius, WALL_Z + TUNING.radius)
 	run.marble.teleport(at, _toward_wall(asin(TUNING.slide_threshold) * 0.6, 10.0))
 	run.step(_jumping())

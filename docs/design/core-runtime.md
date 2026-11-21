@@ -193,7 +193,7 @@ var velocity: Vector3
 var spin: Vector3                    # angular velocity, rad/s
 var up: Vector3 = Vector3.UP         # opposite of gravity
 var frame: Basis = Basis.IDENTITY    # yaw reference; y = up; turns by the shortest arc when up changes
-var on_ground: bool                  # true when the last sub-step had a contact
+var on_ground: bool                  # true when the last sub-step stood on a floor (floor_min_up)
 var ball_rotation: Quaternion        # (added in #72) rotation of the ball mesh, which rolls with the spin; ghosts record it
 var touches: Array[Contact]          # after step(): the first contact for each touched object
 var overlaps: Array[LevelObject]     # after step(): objects whose triggers overlapped in any sub-step
@@ -404,7 +404,7 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 | `spin` | Vector3 | angular velocity, rad/s | run, from marble (#7) |
 | `up` | Vector3 | unit vector, opposite of gravity | run, from marble (#7, #10) |
 | `frame` | Basis | `Marble.frame`: the yaw reference of `MarbleInput.camera_yaw`, with y = up. In JSON: three vectors, the columns | run, from marble (added in #50) |
-| `on_ground` | bool | the last sub-step had a contact | run, from marble (#7) |
+| `on_ground` | bool | the last sub-step stood on a floor (`floor_min_up`); a wall or a ceiling is no ground | run, from marble (#7) |
 | `gems_collected` | int | gems collected in this run | rules (#13) |
 | `gems_total` | int | gems in the level | rules (the stub counts them, #7) |
 | `timer` | float | level clock, s | rules (#13) |
