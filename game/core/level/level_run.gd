@@ -12,6 +12,8 @@ const MARBLE: PackedScene = preload("res://core/marble/marble.tscn")
 
 var level: Level
 var marble: Marble
+## The first start pad in the level; null when it has none.
+var start: StartPad
 var rules: Rules
 var slot: PowerUpSlot
 ## Every LevelObject in the level, in tree order.
@@ -37,6 +39,7 @@ static func create(level: Level) -> LevelRun:
 	return run
 
 
+## Adds the marble, finds the objects, makes the rules and starts the run.
 func _ready() -> void:
 	_dt = 1.0 / Engine.physics_ticks_per_second
 	marble = MARBLE.instantiate() as Marble
@@ -44,12 +47,12 @@ func _ready() -> void:
 	marble.feedback.connect(feedback.emit)
 	_collect(level)
 	rules = Rules.new(self)
-	slot = PowerUpSlot.new(self)
 	var tuning: MarbleTuning = marble.tuning
 	_world = WorldQuery.new(get_world_3d().direct_space_state, tuning.radius, tuning.contact_margin)
 	restart()
 
 
+## Steps the run once per physics frame with the player's input while auto_step is true.
 func _physics_process(_delta: float) -> void:
 	if auto_step:
 		step(InputHub.next_input(state))
@@ -68,25 +71,29 @@ func step(input: MarbleInput) -> void:
 	for object: LevelObject in marble.overlaps:
 		object.on_overlap(self, not _inside.has(object))
 	_inside = marble.overlaps.duplicate()
-	rules.after_step()
 	last_input = input
+	rules.after_step()
 	_write_state()
 
 
-## Starts again at t = 0: every object resets, and the marble sits still on the start pad.
+## Starts again at t = 0 at once: every object resets, the rules and the power-up slot start
+## empty, and the marble sits still on the start pad. The `restart` action calls it.
 func restart() -> void:
 	_tick = 0
 	_inside.clear()
 	for object: LevelObject in objects:
 		object.reset(true)
-	marble.teleport(_start_position(), Vector3.ZERO)
-	rules.reset(true)
+	slot = PowerUpSlot.new(self)
+	marble.teleport(spawn_point(start), Vector3.ZERO)
+	rules.reset()
 	state.level = level.id
 	state.status = &"playing"
 	_write_state()
 
 
-## Puts the marble still at `at` after a reset(false) on every object. The clock runs on.
+## Puts the marble still at `at` after a reset(false) on every object. The clock, the gems
+## and the power-up slot stay. Marble.teleport() resets the physics interpolation, so the
+## marble does not slide across the level on screen.
 func respawn(at: Vector3) -> void:
 	_inside.clear()
 	for object: LevelObject in objects:
@@ -95,29 +102,39 @@ func respawn(at: Vector3) -> void:
 	_write_state()
 
 
-## The marble centre on the first start pad, else above the origin.
-func _start_position() -> Vector3:
-	var above: Vector3 = Vector3.UP * marble.tuning.radius
-	for object: LevelObject in objects:
-		if object is StartPad:
-			return object.global_position + above
-	return above
+## Puts the marble at `at` with new_velocity, and writes the state at once. The harness
+## `teleport` command calls it.
+func teleport(at: Vector3, new_velocity: Vector3) -> void:
+	marble.teleport(at, new_velocity)
+	_write_state()
 
 
-## Finds every LevelObject under node and re-emits its feedback.
+## The marble centre that rests on pad: one radius above its origin, along its up. Above the
+## world origin when pad is null.
+func spawn_point(pad: LevelObject) -> Vector3:
+	if pad == null:
+		return Vector3.UP * marble.tuning.radius
+	return pad.global_position + pad.global_basis.y.normalized() * marble.tuning.radius
+
+
+## Finds every LevelObject under node, re-emits its feedback, and keeps the first start pad.
 func _collect(node: Node) -> void:
 	var object: LevelObject = node as LevelObject
 	if object != null:
 		objects.append(object)
 		object.feedback.connect(feedback.emit)
+		if start == null and object is StartPad:
+			start = object as StartPad
 	for child: Node in node.get_children():
 		_collect(child)
 
 
+## Copies the marble and the tick into the state.
 func _write_state() -> void:
 	state.tick = _tick
 	state.position = marble.position
 	state.velocity = marble.velocity
 	state.spin = marble.spin
 	state.up = marble.up
+	state.frame = marble.frame
 	state.on_ground = marble.on_ground
