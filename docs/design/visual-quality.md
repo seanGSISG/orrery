@@ -253,12 +253,12 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 
 | Preset | Resolution | Measures | Fails when |
 |---|---|---|---|
-| Low | 1080p | GPU time (mean, 99th percentile) | Its GPU time is higher than Medium's |
+| Low | 1080p | GPU time (mean, 99th percentile), VRAM | Its VRAM is not lower than Medium's |
 | Medium | 1080p | GPU time, VRAM | The 99th-percentile GPU time on the RTX 5090 is above the budget (`docs/plan.md` §4.7: start at 3 ms, calibrate in M1), or VRAM is above 4 GB |
 | High | 1440p | GPU time | Report only |
 | Ultra | 4K | GPU time | The 99th-percentile GPU time on the RTX 5090 is above 16.7 ms (60 fps) |
 
-- The check also fails when Low, Medium, High and Ultra do not cost more in that order at 1080p. This proves that the presets change real settings (#24).
+- The check also fails when Low, Medium, High and Ultra do not use more VRAM in that order at 1080p. This proves that the presets change real settings (#24). The check does not compare GPU time between presets: on a small level, the GPU time of Low and Medium changes by 2x from run to run on a shared GPU, and Medium and High cost about the same.
 - The camera path includes one fast orbit around the marble. During that orbit, the check saves two frames 1/60 s apart as the `motion` pair for rubric check 3.
 
 ## 9. Not verified
