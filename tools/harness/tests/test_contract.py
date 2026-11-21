@@ -136,12 +136,21 @@ def test_run_bot_plays_each_route_to_the_finish(harness: Harness) -> None:
     assert missing.value.code == NOT_FOUND
 
 
-def test_saves_go_to_the_harness_user_data(harness: Harness) -> None:
-    """A finish saves into the session's own user://, not into the player's."""
+def test_saves_go_to_the_session_user_data(
+    session: game.Session, harness: Harness
+) -> None:
+    """A finish saves into the session's own user://, not into the player's. A second
+    session gets its own folder and leaves the first one's files, and end() deletes it."""
     harness.load_level("route_bot")
     assert harness.run_bot().finished
-    assert any(game.USER_DATA.rglob("save.json"))
-    assert any(game.USER_DATA.rglob("route_bot.ghost"))
+    data = game.user_data(session.port)
+    assert any(data.rglob("save.json"))
+    assert any(data.rglob("route_bot.ghost"))
+    other = game.start(game.LaunchOptions(display="none"))
+    assert game.user_data(other.port).is_dir()
+    game.end(other)
+    assert not game.user_data(other.port).exists()
+    assert any(data.rglob("route_bot.ghost"))
 
 
 def test_set_setting(harness: Harness) -> None:
@@ -177,6 +186,7 @@ def test_quit() -> None:
     with session.connect() as harness:
         harness.quit()
     assert game._wait_exit(session, 10.0)
+    game.end(session)
 
 
 @pytest.mark.gpu

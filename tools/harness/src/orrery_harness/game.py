@@ -12,8 +12,9 @@ until the harness answers. The display decides where it renders:
 launch() records the running game in build/harness/session.json, so that every later CLI
 command and the MCP server reach the same game.
 
-Each game gets an empty user:// in build/harness/user/ (XDG_DATA_HOME), so a harness session
-never reads or writes the player's saves, ghosts and settings. The next start() empties it.
+Each game gets its own empty user:// in build/harness/user-<port>/ (XDG_DATA_HOME), so a
+harness session never reads or writes the player's saves, ghosts and settings, nor another
+session's. end() deletes it.
 """
 
 import os
@@ -38,8 +39,6 @@ ROOT = next(
 GAME = ROOT / "game"
 RUNS = ROOT / "build/harness"
 SESSION = RUNS / "session.json"
-# XDG_DATA_HOME of the game: Godot puts user:// in it.
-USER_DATA = RUNS / "user"
 
 # The game gets only these variables from the caller's environment, plus the GPU driver
 # variables that start with a prefix below.
@@ -112,11 +111,9 @@ def launch(options: LaunchOptions) -> Session:
 
 
 def start(options: LaunchOptions) -> Session:
-    """Starts a game on an empty USER_DATA and waits until its harness answers, without
-    recording it. Stop it with end(). A game that still runs loses its user:// files."""
+    """Starts a game and waits until its harness answers, without recording it. Stop it
+    with end()."""
     RUNS.mkdir(parents=True, exist_ok=True)
-    shutil.rmtree(USER_DATA, ignore_errors=True)
-    USER_DATA.mkdir()
     binary = godot()
     if not (GAME / ".godot").exists():
         subprocess.run(
@@ -153,17 +150,38 @@ def stop() -> None:
 
 
 def end(session: Session) -> None:
-    """Quits the game, and kills it when it does not quit within 10 s. A game that no longer
-    runs gets no quit, because another game may have its port now."""
-    if not running(session):
-        return
+    """Quits the game, kills it when it does not quit within 10 s, and deletes its user
+    data. A game that no longer runs gets no quit, because another game may have its port
+    now."""
+    if running(session):
+        try:
+            with session.connect() as game:
+                game.quit()
+        except OSError:
+            pass
+        if not _wait_exit(session, 10.0):
+            _kill(session)
+    # Godot can still write its log after gamescope exits, so wait for the whole group.
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline and _group_alive(session.pid):
+        time.sleep(0.1)
+    shutil.rmtree(user_data(session.port), ignore_errors=True)
+
+
+def _group_alive(group: int) -> bool:
+    """True while a process of the process group still runs."""
     try:
-        with session.connect() as game:
-            game.quit()
-    except OSError:
-        pass
-    if not _wait_exit(session, 10.0):
-        _kill(session)
+        os.killpg(group, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def user_data(port: int) -> Path:
+    """The XDG_DATA_HOME of the game on port. Godot puts its user:// in it."""
+    return RUNS / f"user-{port}"
 
 
 def command(
@@ -196,19 +214,23 @@ def command(
 def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
     port = _free_port()
     log = RUNS / f"game-{port}.log"
+    data = user_data(port)
+    shutil.rmtree(data, ignore_errors=True)
+    data.mkdir()
     with log.open("wb") as out:
         process = subprocess.Popen(
             command(binary, display, port, options),
             stdin=subprocess.DEVNULL,
             stdout=out,
             stderr=subprocess.STDOUT,
-            env=_game_env(),
+            env=_game_env() | {"XDG_DATA_HOME": str(data)},
             start_new_session=True,
         )
     session = Session(port=port, pid=process.pid, display=display, log=str(log))
     deadline = time.monotonic() + options.timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:
+            shutil.rmtree(data, ignore_errors=True)
             raise LaunchError(f"the game exited with {process.returncode}; see {log}")
         try:
             with session.connect() as game:
@@ -216,17 +238,16 @@ def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
             return session
         except OSError:
             time.sleep(0.2)
-    _kill(session)
+    end(session)
     raise LaunchError(f"no harness answer in {options.timeout:.0f} s; see {log}")
 
 
 def _game_env() -> dict[str, str]:
-    env = {
+    return {
         key: value
         for key, value in os.environ.items()
         if value and (key in _ENV_KEYS or key.startswith(_ENV_PREFIXES))
     }
-    return env | {"XDG_DATA_HOME": str(USER_DATA)}
 
 
 def _free_port() -> int:
