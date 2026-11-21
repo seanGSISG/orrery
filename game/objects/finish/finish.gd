@@ -27,18 +27,17 @@ func reset(restart: bool) -> void:
 		_show(false)
 
 
-## Opens the finish on the tick after the last gem, and sounds on the tick after the run
+## Opens the finish on the tick after the last gem, then sounds on the tick after the run
 ## finished.
 func advance(run: LevelRun, _t: float) -> void:
+	var open: bool = run.state.gems_collected >= run.state.gems_total
+	if open != _open:
+		_show(open)
+		if open and run.state.gems_total > 0:
+			feedback.emit(&"finish.open", 1.0, global_position)
 	if run.state.status == &"finished" and not _reached:
 		_reached = true
 		feedback.emit(&"finish.reach", 1.0, global_position)
-	var open: bool = run.state.gems_collected >= run.state.gems_total
-	if open == _open:
-		return
-	_show(open)
-	if open and run.state.gems_total > 0:
-		feedback.emit(&"finish.open", 1.0, global_position)
 
 
 ## Tells the rules that the marble is on the finish in this tick.

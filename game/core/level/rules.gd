@@ -133,13 +133,19 @@ static func _wants_to_move(input: MarbleInput) -> bool:
 	return input.move != Vector2.ZERO or input.jump or input.use
 
 
-## The lowest world y of every Solid shape under node, or INF when there is none.
+## The lowest world y of every enabled Solid shape under node, or INF when there is none.
 static func _lowest_solid(node: Node) -> float:
 	var lowest: float = INF
 	var shape_node: CollisionShape3D = node as CollisionShape3D
-	if shape_node != null and shape_node.shape != null and shape_node.get_parent() is Solid:
-		var bounds: AABB = shape_node.global_transform * shape_node.shape.get_debug_mesh().get_aabb()
-		lowest = bounds.position.y
+	if (
+		shape_node != null
+		and not shape_node.disabled
+		and shape_node.shape != null
+		and shape_node.get_parent() is Solid
+	):
+		var to_world: Transform3D = shape_node.global_transform
+		for corner: Vector3 in shape_node.shape.get_debug_mesh().get_faces():
+			lowest = minf(lowest, (to_world * corner).y)
 	for child: Node in node.get_children():
 		lowest = minf(lowest, _lowest_solid(child))
 	return lowest

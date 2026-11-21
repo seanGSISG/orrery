@@ -63,6 +63,8 @@ func test_last_gem_on_the_finish_finishes_at_once() -> void:
 	visit(FINISH + Vector3(0.3, 0, 0))
 	assert_eq(run.state.gems_collected, 3)
 	assert_eq(run.state.status, &"finished")
+	run.step(MarbleInput.new())
+	assert_lt(heard.find(&"finish.open"), heard.find(&"finish.reach"))
 
 
 ## The clock counts the tick that finishes the run.
@@ -80,8 +82,11 @@ func test_finish_on_the_first_input_tick_counts_that_tick() -> void:
 func test_pickups_count_only_while_playing() -> void:
 	start(RULES)
 	run.teleport(VOID + Vector3.UP * TUNING.radius, Vector3.ZERO)
-	while run.state.status != &"respawning":
+	for _i: int in Engine.physics_ticks_per_second * 2:
+		if run.state.status == &"respawning":
+			break
 		run.step(MarbleInput.new())
+	assert_eq(run.state.status, &"respawning")
 	visit(GEM_WEST)
 	assert_eq(run.state.gems_collected, 0)
 	hold(MarbleInput.new(), 1.0)

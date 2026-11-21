@@ -17,6 +17,12 @@ func _ready() -> void:
 	_light(false)
 
 
+## Puts the light out at a restart. A respawn keeps it.
+func reset(restart: bool) -> void:
+	if restart:
+		_light(false)
+
+
 ## Lights the pad while it is the rules' last checkpoint.
 func advance(run: LevelRun, _t: float) -> void:
 	var lit: bool = run.rules.checkpoint == self
