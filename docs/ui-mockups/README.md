@@ -1,6 +1,14 @@
 # HUD and menu mockups (#6)
 
-Static mockups of the HUD and every menu in three directions. Sean picks from `index.html`. Nothing here is game code.
+## Decision (Sean, 2026-11-21)
+
+Approved. Ticket #6 is closed.
+
+- In-level HUD and Ascent HUD: direction B (glass and light).
+- Title, level select, pause, settings and results: direction C (orrery chart).
+- B's HUD takes C's coral accent and C's numerals.
+
+Static mockups of the HUD and every menu in three directions. Sean picked from `index.html`. Nothing here is game code.
 
 | Path | Content |
 |---|---|
