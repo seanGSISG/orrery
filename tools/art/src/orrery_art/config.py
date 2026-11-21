@@ -142,3 +142,4 @@ def out_path(kind: str, name: str) -> Path:
     if not name or rel.is_absolute() or ".." in rel.parts:
         raise ValueError(f"{name!r}: give a relative path inside build/art/{kind}/")
     return OUT / kind / rel
+# CI probe: throwaway, do not merge
