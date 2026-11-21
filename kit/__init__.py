@@ -9,6 +9,7 @@ export turns positions into Godot's y-up axes: Blender (x, y, z) is Godot (x, z,
 
 from kit.markers import level, marker, shot
 from kit.pieces import ramp, track
+from kit.props import prop
 from kit.surfaces import surface
 
-__all__ = ["level", "marker", "ramp", "shot", "surface", "track"]
+__all__ = ["level", "marker", "prop", "ramp", "shot", "surface", "track"]

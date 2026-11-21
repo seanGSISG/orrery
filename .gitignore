@@ -12,5 +12,6 @@ game/materials/textures/*
 __pycache__/
 .venv/
 
-# Local secrets
+# Local secrets. .env.example is the committed template.
 .env
+!.env.example

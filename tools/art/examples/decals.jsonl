@@ -1,0 +1,3 @@
+{"prompt": "A round clock-face decal in polished brass and cream enamel, Roman numerals, fine engraved gear pattern, flat front view, no hands, no background", "out": "decals/clock_face.png", "transparent": true}
+{"prompt": "An orrery emblem: a small sun with three ringed planets on thin brass arms, flat vector style, warm gold, no background", "out": "emblems/orrery.png", "transparent": true}
+{"prompt": "A small enamel sign plate that reads FINISH in serif capitals, brass frame with rivets, flat front view, no background", "out": "signage/finish.png", "quality": "high", "size": "1536x1024", "transparent": true}

@@ -1,0 +1,37 @@
+# Settings for the asset tools (tools/art/README.md). This file holds no secrets: the API keys
+# come from the environment or the git-ignored `.env` (OPENAI_API_KEY, TRIPO_API_KEY).
+
+[keys]
+# The Bitwarden Login items to copy the keys from (the password field). The missing-key
+# message names them.
+openai = "openai-api-key"
+tripo = "tripo-api-key"
+
+[spend]
+# A batch, image or model run that is estimated above this cost stops. `--max-usd` sets
+# another cap for one run.
+max_usd_per_run = 5.0
+
+[image]
+model = "gpt-image-2.6-sunburst"
+quality = "medium"
+size = "1024x1024"
+# Live (standard) rates in USD per 1M tokens, from developers.openai.com/api/docs/pricing
+# (checked 2026-11-21). The Batch API bills half.
+text_in_usd_per_m = 5.0
+image_out_usd_per_m = 30.0
+
+[model]
+api = "https://openapi.tripo3d.ai/v3"
+version = "v3.1-20260211"
+# 1 credit = USD 0.01. Image to 3D and multiview to 3D cost 20-30 credits
+# (platform.tripo3d.ai/pricing, checked 2026-11-21); the estimate takes the top of that range,
+# plus the extra for detailed (HD) texture. Each task type has its credits here.
+usd_per_credit = 0.01
+detailed_texture_credits = 10
+poll_seconds = 5
+timeout_minutes = 30
+
+[model.credits]
+image-to-model = 30
+multiview-to-model = 30
