@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Ascent HUD</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop dawn"></div>
+<!-- The limb is the whole climb, 0 to 600 m: one tick per 10 m, a long tick per 50 m,
+     an inward tick at each zone start. Ring = now, diamond = best height. -->
+<svg class="climb" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs><clipPath id="span"><rect x="1600" y="89" width="320" height="902"/></clipPath></defs>
+  <g clip-path="url(#span)"><circle class="limb" cx="316" cy="540" r="1447.5" stroke-width="111"/></g>
+  <g class="pool">
+  <g clip-path="url(#span)"><g transform="rotate(-17.7 316 540)">
+    <circle class="ln2" cx="316" cy="540" r="1392"/>
+    <circle class="ln2" cx="316" cy="540" r="1480" pathLength="6101.69"/>
+    <circle class="ln2" cx="316" cy="540" r="1487" pathLength="6101.69" stroke-width="14" stroke-dasharray="1 9" stroke-dashoffset=".5"/>
+    <circle class="ln" cx="316" cy="540" r="1491" pathLength="6101.69" stroke-width="22" stroke-dasharray="1.4 48.6" stroke-dashoffset=".7"/>
+    <circle class="ln" cx="316" cy="540" r="1480" pathLength="6101.69" stroke-width="5" stroke-dasharray="0 514 86 6000"/>
+  </g></g>
+  <g class="ln">
+    <path d="M1772 540h24" transform="rotate(14.75 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(11.8 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(7.67 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(2.95 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(-2.36 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(-7.67 316 540)"/>
+    <path d="M1772 540h24" transform="rotate(-12.98 316 540)"/>
+  </g>
+  <g class="mid" text-anchor="end" dominant-baseline="central">
+    <text class="mid" x="1725.6" y="834.5">100</text>
+    <text class="mid" x="1748.4" y="688">200</text>
+    <text class="mid" x="1756" y="540">300</text>
+    <text class="mid" x="1748.4" y="392">400</text>
+    <text class="mid" x="1725.6" y="245.5">500</text>
+    <text class="mid" x="1687.8" y="102.2">600</text>
+  </g>
+  <circle class="body" cx="1725.9" cy="90" r="9"/>
+  <!-- best: 143 m -->
+  <path class="gold-ln" d="M1764 778.2h-44"/>
+  <path class="gold-fill" d="M1776.7 768.2l9 10-9 10-9-10z"/>
+  <path class="gold-ln" d="M1628 765v27M1628 767h19l-5 6 5 6h-19"/>
+  <text class="best" x="1710" y="778.2" text-anchor="end" dominant-baseline="central">143</text>
+  <!-- now: 86 m -->
+  <path class="sol" style="stroke-width:2" d="M1747 863.5h-87"/>
+  <circle class="now" cx="1760.2" cy="863.5" r="10"/>
+  <text class="now-text" x="1648" y="863.5" text-anchor="end" dominant-baseline="central">86<tspan class="unit"> m</tspan></text>
+  </g>
+</svg>
+<div class="safe">
+  <div class="stats pool">
+    <span class="caps">Falls</span><b>07</b>
+    <span class="time">14:32</span>
+  </div>
+</div>
+</div>
+</body>
+</html>

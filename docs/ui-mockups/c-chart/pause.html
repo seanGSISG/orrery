@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Pause</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop noon" style="--bd-blur:10px;--bd-dim:.42"></div>
+<div class="night"></div>
+<!-- The ring is the par time: the bright arc is the run so far, the star is gold, the check is par. -->
+<svg class="ring" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <path id="star" d="M0-9l2.23 5.93 6.33.29-4.95 3.95 1.68 6.11-5.29-3.48-5.29 3.48 1.68-6.11-4.95-3.95 6.33-.29z"/>
+    <path id="check" d="M-7 0l5 5 9-10"/>
+  </defs>
+  <g transform="translate(960 540)">
+    <circle class="disc" r="376"/>
+    <circle class="ln2" r="340"/>
+    <circle class="ln2" r="349" pathLength="360" stroke-width="12" stroke-dasharray=".4 5.6" stroke-dashoffset=".2"/>
+    <circle class="ln" r="353" pathLength="360" stroke-width="20" stroke-dasharray=".5 29.5" stroke-dashoffset=".25"/>
+    <circle class="ln" r="340" pathLength="360" stroke-width="5" stroke-dasharray="217.9 400" transform="rotate(-90)"/>
+    <g transform="rotate(246.9)"><path class="gold-ln" d="M0-326v-50"/><g transform="translate(0 -394) rotate(-246.9) scale(1.4)"><use href="#star" class="gold-fill"/></g></g>
+    <path class="ln" d="M0-326v-50"/>
+    <g transform="translate(0 -394) scale(1.4)"><use href="#check" class="ln"/></g>
+    <circle class="now" cy="-340" r="10" transform="rotate(217.9)"/>
+  </g>
+</svg>
+<div class="inside">
+  <h1 class="name">Paused</h1>
+  <p class="where">8 · Gear Bridge · 0:42.37</p>
+  <ul class="menu">
+    <li class="focus">Resume<i class="g g-menu"></i></li>
+    <li>Restart<i class="g g-view"></i></li>
+    <li>Settings</li>
+    <li>Levels</li>
+  </ul>
+  <p class="hints"><span><i class="g">A</i>Select</span></p>
+</div>
+</div>
+</body>
+</html>
