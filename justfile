@@ -31,7 +31,10 @@ blender-agent:
 [script("bash")]
 build-egg:
     set -euo pipefail
-    tmp=$(mktemp -d)
+    # In build/, on the file system of the checkout: the last step is then a rename, and Godot
+    # never reads a part of the file.
+    mkdir -p build
+    tmp=$(mktemp -d build/egg.XXXXXX)
     trap 'rm -rf "$tmp"' EXIT
     if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
         --python tools/blender/egg.py -- "$tmp/egg.glb" >"$tmp/log" 2>&1; then
