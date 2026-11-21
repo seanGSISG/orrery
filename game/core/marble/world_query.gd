@@ -12,11 +12,14 @@ const SAME_NORMAL: float = 0.9998
 ## A contact is flush with a deeper contact when its point lies this close to that contact's
 ## plane, m.
 const FLUSH: float = 0.001
+## A surface rises above a plane when its normal leans back by more than this (a sine; 0.06°).
+const RISE: float = 0.001
 
 var _space: PhysicsDirectSpaceState3D
 var _radius: float
 var _margin: float
 var _query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+var _ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
 
 
 ## Queries space with a sphere of radius; contacts count up to margin outside the surface.
@@ -27,6 +30,8 @@ func _init(space: PhysicsDirectSpaceState3D, radius: float, margin: float) -> vo
 	var sphere: SphereShape3D = SphereShape3D.new()
 	sphere.radius = radius
 	_query.shape = sphere
+	_ray.collision_mask = SOLID_MASK
+	_ray.hit_back_faces = false
 
 
 ## Returns the contacts of the sphere at center with every Solid, one per distinct normal of
@@ -91,14 +96,15 @@ func _set_query(center: Vector3, margin: float, motion: Vector3, mask: int, area
 	_query.collide_with_bodies = not areas
 
 
-## Returns contacts with each flush contact joined to the surface that it continues. A contact
+## Returns contacts with each flush contact joined to the plane that it continues. A contact
 ## is flush when its point lies within FLUSH of the plane of a deeper contact that is not flush
-## itself: at a seam between flush Solids, the edge of the next Solid. The marble cannot touch
-## that edge before the plane, so the contact takes the plane's point, normal and depth, and
-## keeps its own velocity, surface and object. Else the edge gives a normal tilted toward the
-## marble, and a fast marble hops at the seam. Flush contacts go last, so the surface that the
-## marble touches stays the ground.
-static func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
+## itself, and the surface past the point does not rise above that plane (_stays_down()): at a
+## seam between flush Solids, the edge of the next Solid. The marble cannot touch that edge
+## before the plane, so the contact copies the plane's point, normal, depth and velocity, and
+## keeps its surface and object for the touch. Else the edge gives a normal tilted toward the
+## marble, and a fast marble hops at the seam. The foot of a ramp rises, so it stays as it is.
+## Flush contacts go last, so the surface that the marble touches stays the ground.
+func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
 	var deepest_first: Array[Contact] = contacts.duplicate()
 	deepest_first.sort_custom(func(a: Contact, b: Contact) -> bool: return a.depth > b.depth)
 	var planes: Array[Contact] = []
@@ -107,7 +113,7 @@ static func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
 		var plane: Contact = null
 		for deeper: Contact in planes:
 			var off: float = absf((contact.point - deeper.point).dot(deeper.normal))
-			if deeper.depth > contact.depth and off <= FLUSH:
+			if deeper.depth > contact.depth and off <= FLUSH and _stays_down(contact.point, deeper):
 				plane = deeper
 				break
 		if plane == null:
@@ -116,6 +122,7 @@ static func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
 		contact.point = plane.point
 		contact.normal = plane.normal
 		contact.depth = plane.depth
+		contact.velocity = plane.velocity
 		flush.append(contact)
 	var out: Array[Contact] = []
 	for contact: Contact in contacts:
@@ -123,6 +130,26 @@ static func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
 			out.append(contact)
 	out.append_array(flush)
 	return out
+
+
+## Returns true when the surface one margin past point (seen from plane's point) lies in plane
+## or drops away from it. A ray down onto that spot gives the surface normal; the Solid there
+## can be a neighbour of the point's Solid, for example where the marble rides a seam. No hit
+## (a steep rise) counts as a rise. A point under plane's point needs no ray.
+func _stays_down(point: Vector3, plane: Contact) -> bool:
+	var along: Vector3 = point - plane.point
+	along -= plane.normal * along.dot(plane.normal)
+	if along.length() < FLUSH:
+		return true
+	along = along.normalized()
+	var spot: Vector3 = point + along * _margin
+	_ray.from = spot + plane.normal * _margin
+	_ray.to = spot - plane.normal * _margin
+	var hit: Dictionary = _space.intersect_ray(_ray)
+	if hit.is_empty():
+		return false
+	var normal: Vector3 = hit["normal"]
+	return normal.dot(along) >= -RISE
 
 
 ## Adds the contact at point on solid to out, which holds only that Solid's contacts. deepest
