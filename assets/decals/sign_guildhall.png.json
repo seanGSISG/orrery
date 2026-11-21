@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for the name panel above the door of a guildhall in a clockmaker's town square. Straight-on orthographic view, no perspective. The panel fills the frame.\nSUBJECT: A long rectangular panel of weathered honey-coloured limestone with a plain moulded border. One line of deeply cut serif capitals, gilded inside the cuts, centred: \"GUILDHALL\".\nTEXT RULES: Draw exactly this one word, once, and no other text. Spelling: G-U-I-L-D-H-A-L-L.\nSTYLE: Photographic realism with restraint. Limestone with fine pores and soft edge wear, worn gold leaf in the letter cuts. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the panel, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for the name panel above the door of a guildhall in a clockmaker's town square. Straight-on orthographic view, no perspective. The panel fills the frame.\nSUBJECT: A long rectangular panel of weathered honey-coloured limestone with a plain moulded border. One line of deeply cut serif capitals, gilded inside the cuts, centred: \"GUILDHALL\".\nTEXT RULES: Draw exactly this one word, once, and no other text. Spelling: G-U-I-L-D-H-A-L-L.\nSTYLE: Photographic realism with restraint. Limestone with fine pores and soft edge wear, worn gold leaf in the letter cuts. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the panel, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+    "size": "2048x768",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 224,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 224
+      },
+      "output_tokens": 772,
+      "total_tokens": 996,
+      "output_tokens_details": {
+        "image_tokens": 772,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0243,
+  "billed_usd": 0.0243,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}
