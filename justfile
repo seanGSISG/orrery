@@ -82,10 +82,13 @@ lint: import
     tools=() deps=()
     for f in "${py[@]}"; do
         grep -qE '^(import|from) bpy' "$f" && continue
+        [[ $f == tools/harness/* ]] && continue
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
     uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
+    # The harness is a uv project; ty checks it with its locked dependencies.
+    uv run --quiet --project tools/harness --with "ty==$TY_VERSION" ty check tools/harness
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
@@ -108,3 +111,20 @@ smoke-wine: export
         exit 1
     fi
     echo "Windows export boots under Wine."
+
+# --- Harness (#9) ---
+
+# Drive a debug build through the harness CLI, for example `just harness launch --level flat`
+[positional-arguments]
+harness *args:
+    uv run --quiet --project tools/harness orrery-harness "$@"
+
+# Run the harness contract tests on a headless debug build. `-m gpu` runs the GPU screenshot test
+[positional-arguments]
+test-harness *args: import
+    uv run --quiet --project tools/harness pytest tools/harness "$@"
+
+# Build the Linux debug export (harness and test levels included) into build/linux-debug/
+export-debug: import
+    mkdir -p build/linux-debug
+    "{{ godot }}" --headless --path game --export-debug "Linux Debug" ../build/linux-debug/orrery.x86_64
