@@ -17,13 +17,14 @@ Terms used in this file:
 |---|---|
 | `game/modes/ascent/ascent.gd` | `Ascent`: the mode. `Ascent.start()` builds the climb and plays it; one `Ascent` node is in the run. |
 | `game/modes/ascent/ascent_falls.gd` | `AscentFalls`: counts the falls and the metres fallen. |
-| `game/modes/ascent/ascent_sky.gd`, `ascent_sky.gdshader` | `AscentSky`: the sun and the sky of the climb, set by the height. The shader blends the panoramas of two sky presets. |
+| `game/modes/ascent/ascent_sky.gd`, `ascent_sky.gdshader` | `AscentSky`: the sun and the sky of the climb, set by the height. The shader blends the panoramas of the two sky presets round the height. |
 | `game/modes/ascent/ascent_flag.gd` | `AscentFlag`: the flag at the best height. |
 | `game/modes/ascent/ascent_gate.gd` | `AscentGate`: the gate. |
 | `game/ui/hud/height_meter.gd`, `game/ui/widgets/height_scale.gd` | The height meter of the HUD. |
 | `game/ui/screens/ascent_screen.gd` | The Ascent menu: Continue, New climb, Assist. |
 | `game/ui/screens/ascent_stats_screen.gd` | The stats screen at the gate. |
 | `levels/test/ascent_fixture_<n>.py` | Three fixture zones, 12 m each, for the tests. |
+| `levels/ascent/zone_1.py`, `kit/town.py` | Zone 1, Clockmaker's Square (#31, `docs/levels/ascent-z1.md`), and the kit pieces of its town and tower: spiral ramps, lift gears, facades, houses. |
 
 ## 2. How a zone plugs in
 
@@ -95,18 +96,22 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 
 ## 4. Light
 
-`AscentSky` has one sun and one sky. They come from the tier skies of the look baseline (`game/skies/*.tres`, `SkyPreset`): `dawn.tres` at the climb start and `noon.tres` at `NOON_HEIGHT` (500 m, the top of zone 3). Zones 1 to 3 are on the Earth only. M2 adds the skies of the higher zones (sunset, the stars).
+`AscentSky` has one sun and one sky. They come from sky presets (`game/skies/*.tres`, `SkyPreset`). `AscentSky.STOPS` lists the skies of the climb from the bottom, each at its height: `ground_dawn.tres` at the climb start and `noon.tres` at `NOON_HEIGHT` (500 m, the top of zone 3). Zones 1 to 3 are on the Earth only. M2 adds the stops of the higher zones (sunset, the stars).
 
-| Value | Dawn, 0 m | Noon, 500 m |
+The ground dawn is the sky of a town on the ground at dawn: the photograph of the Beginner dawn with its own far horizon, over far land that the bake draws (`docs/design/visual-quality.md` §10). It has no cloud sea below. The Beginner `dawn.tres`, with its cloud sea below the level, is not a stop of the climb.
+
+| Value | Ground dawn, 0 m | Noon, 500 m |
 |---|---|---|
 | Sun elevation | 12° | 58° |
 | Sun energy | 2.27 | 1.35 |
 | Sky energy | 0.297 | 0.177 |
 | Haze density | 0.001 /m | 0.0005 /m |
 
-- The environment and the sun are those that `SkyPreset.environment()` and `sun()` make for dawn. So the tonemap, the glow and the haze are as in a level.
-- `show_height()` gives `_apply()` a weight: the height over `NOON_HEIGHT`, from 0 to 1. `_apply()` is the one place that blends the values of the two presets: the panoramas (in `ascent_sky.gdshader`), the sun's elevation, turn, colour and energy, the fill light, the exposure and the haze. To change the light, change the presets.
-- The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again. The step that reaches dawn or noon is never left out, and outside the two ends nothing changes.
+- The environment and the sun are those that `SkyPreset.environment()` and `sun()` make for the first stop. So the tonemap, the glow and the haze are as in a level.
+- `show_height()` gives `_apply()` the height. `_apply()` finds the two stops round it and blends their values by the share of the way from the lower stop to the upper one. It is the one place that blends: the panoramas (in `ascent_sky.gdshader`), the sun's elevation, turn, colour and energy, the fill light, the exposure and the haze. To change the light, change the presets or the stops.
+- Below the horizon the shader blends the panoramas later: by blend³ (`LAND_HOLD`), with the two blends meeting over a band of about 3° round the horizon. The land of the ground dawn is dim and the cloud layer of noon is bright, so an even blend would cover the land in clouds as soon as the climb leaves the ground. With blend³ the land shows through zone 1 (3 % noon at 150 m), and the clouds come in over zones 2 and 3 (22 % at 300 m, all at 500 m). The sun and the sky above the horizon follow the height evenly.
+- The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again. The step that reaches the first or the last stop is never left out, and outside them nothing changes.
+- A zone script names `sky="ground_dawn"` in `kit.level()`, so the zone played alone (the gallery, `just test-levels`) has the sky of the climb start.
 - `GraphicsPreset` says that SDFGI comes with the Ascent mode (Ultra only). It is not built yet.
 
 ## 5. HUD and menus
@@ -134,6 +139,7 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 1. **Eggs in the menus.** The save keeps every egg of every zone, but no screen of Ascent shows them yet (the Ascent menu or the stats screen can count them: 10 in all).
 2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
 3. **SDFGI.** Ascent has no SDFGI on Ultra yet (plan §4.7).
-4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws.
+4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between the ground dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws. This is not cheap now (#31): the dawn glow is in the photograph, so the bake cannot take it out, and noon is an approved panorama. A fix needs climb skies from Blender's sky model with no sun disc and no aerosol glow, and a sun disc and its glow in `ascent_sky.gdshader` at the sun of `_apply()`.
 5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
 6. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
+7. **Route points.** A route has at most 100 points (`kit.marker` names them with two digits). The first-run route of zone 1 uses all 100. A longer zone needs fewer points, or a point name with three digits in `kit/markers.py`.

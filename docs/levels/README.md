@@ -65,14 +65,14 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-B1 is built, so its row has the bot's times; the other rows are estimates. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+B1 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
 | B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
 | B2 | 32 s | 17 s | 48 s | 20 s |
 | B3 | 49 s | 23 s | 74 s | 26 s |
-| Ascent 1 (0 to 150 m) | 122 s | 67 s | | |
+| Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
 | Ascent 3 (300 to 500 m) | 152 s | 73 s | | |
 
@@ -86,3 +86,14 @@ B1 (`b01.md`, "As built") found these rules. They hold for every level.
 - **The route bot slows for each turn:** to 6.9 m/s at 30° and to 3.5 m/s at 90° or more (`RouteBot._turn_speed`). A sharp turn costs about half a second. On B1, curve points 2 to 3 m apart made the bot miss a point and turn back. So a fast route has few points, long legs and few turns.
 - **Leave 0.5 m between a route line and a kerb or a pillar.**
 - **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines.
+
+## Rules from Ascent 1
+
+Ascent 1 (`ascent-z1.md`, "As built") found these rules for tall levels and for the route bot.
+
+- **A Steam Vent throws the marble the way it enters.** Put the landing ahead of the vent, 2.5 to 3 m past the column at 3 m/s, and give the player room to line up before the vent. In the air the bot only steers and brakes, so a route enters each vent toward its landing.
+- **The bot cannot climb a steep slope on a short leg.** Its push is in proportion to the speed that it wants, and near a point it wants little. On a slope over 25°, give it one long leg from the foot to the top.
+- **A jump point is about 0.9 m before the next edge.** Steps of 1 m are 2.3 m deep with gaps of 0.3 m, and the jump legs have a speed of 2.5 to 3 m/s.
+- **Two pieces that the marble rolls across meet flush.** A step of 0.12 m stopped the marble at the end of a beam. Moving decks stop flush with their floors, and the gap beside a moving deck is 0.2 m or less.
+- **A route has at most 100 points** (`kit.marker`). On a spiral ramp 2 m wide, points 72° apart at 4.75 m from the middle keep each leg clear of the inner kerb.
+- **A lift gear needs a casing.** `town.lift()` carries the marble from the bottom of the gear to its top and lets it off sideways.
