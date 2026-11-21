@@ -30,6 +30,10 @@ blender-agent:
 import:
     "{{ godot }}" --headless --path game --import
 
+# Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
+run level="flat": import
+    "{{ godot }}" --path game -- --level {{ level }}
+
 # Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
 [script("bash")]
 test: import
