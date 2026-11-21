@@ -13,7 +13,8 @@ extends RefCounted
 ## - The finish takes the marble only when all gems are collected. after_step() decides it,
 ##   after every hook of the tick, so the order of the hooks does not matter and the clock
 ##   counts the finishing tick. The medal is &"gold" at or under Level.gold, &"qualified" at
-##   or under Level.par, else &"none".
+##   or under Level.par, else &"none". The finish sounds `finish.reach` in that tick, because
+##   the results screen can stop the run before the next one.
 ## - Out of bounds is a marble centre below kill_height. The status is &"respawning" for
 ##   RESPAWN_DELAY, then the marble comes back still on the last checkpoint, else on the start
 ##   pad. Collected gems, the egg and the held power-up stay.
@@ -32,8 +33,8 @@ var checkpoint: LevelObject = null
 
 var _run: LevelRun
 var _dt: float = 1.0 / Engine.physics_ticks_per_second
-## True when the marble was on the finish in this tick.
-var _on_finish: bool = false
+## The finish that the marble was on in this tick, else null.
+var _finish: LevelObject = null
 ## Ticks since the clock started; -1 before the first input.
 var _clock: int = -1
 ## Ticks left until the respawn while the status is &"respawning".
@@ -60,7 +61,7 @@ func reset() -> void:
 	state.checkpoint = &""
 	state.egg_found = false
 	checkpoint = null
-	_on_finish = false
+	_finish = null
 	_clock = -1
 	_respawn_left = 0
 
@@ -76,10 +77,11 @@ func after_step() -> void:
 	if _clock >= 0:
 		_clock += 1
 		state.timer = _clock * _dt
-	var finishing: bool = _on_finish and state.gems_collected >= state.gems_total
-	_on_finish = false
-	if state.status == &"playing" and finishing:
+	var finish: LevelObject = _finish
+	_finish = null
+	if state.status == &"playing" and finish != null and state.gems_collected >= state.gems_total:
 		state.status = &"finished"
+		finish.feedback.emit(&"finish.reach", 1.0, finish.global_position)
 		if state.timer <= _run.level.gold:
 			state.medal = &"gold"
 		elif state.timer <= _run.level.par:
@@ -123,8 +125,8 @@ func reach_checkpoint(reached: LevelObject) -> bool:
 
 ## The finish calls this while the marble is on it. The run finishes at the end of the tick
 ## if every gem is collected by then.
-func reach_finish() -> void:
-	_on_finish = true
+func reach_finish(finish: LevelObject) -> void:
+	_finish = finish
 
 
 ## The egg calls this when the marble touches it. Returns true when the egg counts as found:
