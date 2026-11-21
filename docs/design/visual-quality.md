@@ -289,7 +289,7 @@ A level script names a kit material, and the importer gives those faces the game
 - Gold is the same in every set: `Metal048A`, tint (1.0, 0.82, 0.5), 0.6 m, roughness × 5.
 - Every limestone is paved: slabs of 1.0 m by 1.5 m in a running bond, joints 12 mm wide, the detail normal at 0.25 m.
 - The tints are above 1 because the colour maps are darker than limestone. The shader keeps the result inside the albedo limits of section 6.
-- To change the set: set `KitMaterials.SET`, then run `just build-levels` and `just bake`. Each set has its own dawn on the style board. To get it, run `just bake-skies dawn --look b` (or `c`) and put these values into `game/skies/dawn.tres`:
+- To change the set: set `KitMaterials.SET`, then run `just build-levels` and `just bake`. Each set has its own dawn on the style board. To get it, set `LOOK` in `tools/blender/bake_skies.py` to the same letter, run `just bake-skies dawn`, and put these values into `game/skies/dawn.tres`. (`just bake-skies dawn --look b` bakes a look that is not in use into `build/skies/`, for a preview.)
 
 | Dawn of look | `sky_energy` | `sun_elevation` | `sun_color` | `sun_energy` |
 |---|---|---|---|---|

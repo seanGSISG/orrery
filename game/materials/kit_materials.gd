@@ -11,7 +11,7 @@ extends Object
 ## - "c": weathered grey stone and dark bronze.
 ## A set is the folder res://materials/<set>/. A material that every set shares is in
 ## res://materials/. After a change of SET, run `just build-levels` and `just bake`.
-## docs/design/visual-quality.md §10 gives the dawn light that goes with each set.
+## docs/design/visual-quality.md §10 gives the dawn sky and sun that go with each set.
 
 const SET: String = "a"
 const PATHS: Array[String] = ["res://materials/%s/%%s.tres" % SET, "res://materials/%s.tres"]

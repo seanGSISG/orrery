@@ -127,5 +127,5 @@ void fragment() {
 	ALBEDO = clamp(surface.rgb, vec3(ALBEDO_MIN), vec3(mix(ALBEDO_MAX_DIELECTRIC, ALBEDO_MAX_METAL, metallic)));
 	ROUGHNESS = clamp(surface.a, 0.0, 1.0);
 	METALLIC = metallic;
-	NORMAL = normalize((VIEW_MATRIX * MODEL_MATRIX * vec4(normalize(bent), 0.0)).xyz);
+	NORMAL = normalize((VIEW_MATRIX * vec4(MODEL_NORMAL_MATRIX * normalize(bent), 0.0)).xyz);
 }
