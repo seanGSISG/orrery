@@ -206,6 +206,17 @@ func test_egg_is_found_once() -> void:
 	assert_eq(heard.count(&"egg.open"), 1)
 
 
+## The kill height is KILL_DEPTH under the lowest Solid, also below the world origin.
+func test_kill_height_follows_the_lowest_solid() -> void:
+	var pit: Solid = Solid.new()
+	pit.position = Vector3(0, -20, 0)
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	shape.shape = BoxShape3D.new()
+	pit.add_child(shape)
+	start(RULES, [pit])
+	assert_almost_eq(run.rules.kill_height, -20.5 - Rules.KILL_DEPTH, 0.001)
+
+
 ## LevelRun.teleport() shows the new place in the state before the next tick.
 func test_teleport_writes_state_at_once() -> void:
 	start(RULES)
