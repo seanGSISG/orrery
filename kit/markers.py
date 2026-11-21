@@ -13,6 +13,8 @@ from mathutils import Vector
 from kit.scene import Vec3, add_object, default_name, pose
 
 Setting = bool | int | float | str
+# Point names end in two digits, so that their name order is the order of `points`.
+MAX_POINTS = 100
 
 
 def marker(
@@ -32,6 +34,8 @@ def marker(
     as the rotation, never as settings: the export does not turn vector settings into Godot's
     axes.
     """
+    if len(points) > MAX_POINTS:
+        raise ValueError(f"kit.marker({type!r}): at most {MAX_POINTS} points")
     for key, value in settings.items():
         if not isinstance(value, Setting):
             raise TypeError(

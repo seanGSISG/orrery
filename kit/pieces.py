@@ -25,7 +25,9 @@ def track(
 ) -> bpy.types.Object:
     """Adds a flat track piece: a slab THICKNESS m thick whose top face is at the height of
     `at`. surface: the surface type of all its faces."""
-    return _slab(name or default_name("track"), at, width, length, 0.0, yaw, surface)
+    return _slab(
+        name or default_name("track", "-col"), at, width, length, 0.0, yaw, surface
+    )
 
 
 def ramp(
@@ -39,7 +41,9 @@ def ramp(
 ) -> bpy.types.Object:
     """Adds a ramp: a slab THICKNESS m thick whose top face climbs `rise` m (down when
     negative) over `length` m. The next piece starts at `at` + (0, length, rise) for yaw 0."""
-    return _slab(name or default_name("ramp"), at, width, length, rise, yaw, surface)
+    return _slab(
+        name or default_name("ramp", "-col"), at, width, length, rise, yaw, surface
+    )
 
 
 def _slab(

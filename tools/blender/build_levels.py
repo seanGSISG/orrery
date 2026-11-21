@@ -31,14 +31,15 @@ ROOT = Path(__file__).resolve().parents[2]
 LEVELS = ROOT / "levels"
 BUILT = ROOT / "game" / "levels" / "built"
 BUILD_LEVEL = ROOT / "tools" / "blender" / "build_level.py"
-IMPORT_SETTINGS = """[remap]
+IMPORT_SCRIPT = 'import_script/path="res://levels/level_import.gd"'
+IMPORT_SETTINGS = f"""[remap]
 
 importer="scene"
 
 [params]
 
 nodes/use_node_type_suffixes=false
-import_script/path="res://levels/level_import.gd"
+{IMPORT_SCRIPT}
 """
 
 
@@ -103,10 +104,12 @@ def build(level: Level) -> list[str]:
         errors = validation_errors(glb)
         if errors:
             return errors
+        # Name the post-import script before Godot can see the .glb. Godot adds its own keys
+        # to the file after an import; keep them while the script line is there.
+        settings = level.out.with_name(level.out.name + ".import")
+        if not settings.exists() or IMPORT_SCRIPT not in settings.read_text():
+            settings.write_text(IMPORT_SETTINGS)
         shutil.move(glb, level.out)
-    settings = level.out.with_name(level.out.name + ".import")
-    if not settings.exists():
-        settings.write_text(IMPORT_SETTINGS)
     return []
 
 
@@ -122,7 +125,7 @@ def import_and_check(levels: list[Level]) -> list[str]:
     imported = run([*godot, "--import"])
     ids = [level.id for level in levels]
     checked = run([*godot, "--script", "res://levels/check_levels.gd", "--", *ids])
-    if checked.returncode == 0:
+    if imported.returncode == 0 and checked.returncode == 0:
         return []
     # LevelConverter errors start with "level <id>:"; SCRIPT ERROR means a bug in a script.
     ours = ("ERROR: level ", "SCRIPT ERROR")
@@ -131,7 +134,7 @@ def import_and_check(levels: list[Level]) -> list[str]:
     unloaded = [
         line for line in checked.stderr.splitlines() if line.startswith("level ")
     ]
-    return [*errors, *unloaded] or [f"check_levels.gd failed:\n{checked.stderr}"]
+    return [*errors, *unloaded] or [f"Godot failed:\n{imported.stderr}{checked.stderr}"]
 
 
 def main() -> None:

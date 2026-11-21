@@ -10,13 +10,14 @@ Vec3 = tuple[float, float, float]
 _counts: dict[str, int] = {}
 
 
-def default_name(prefix: str) -> str:
-    """Returns the next free name `<prefix>_00`, `<prefix>_01` ... for an object with no name."""
+def default_name(prefix: str, suffix: str = "") -> str:
+    """Returns the next name `<prefix>_00`, `<prefix>_01` ... for an object with no name. The
+    object name `<name><suffix>` is free."""
     while True:
         n = _counts.get(prefix, 0)
         _counts[prefix] = n + 1
         name = f"{prefix}_{n:02d}"
-        if name not in bpy.data.objects:
+        if f"{name}{suffix}" not in bpy.data.objects:
             return name
 
 

@@ -105,8 +105,14 @@ func _place(marker: Node3D, data: Dictionary) -> void:
 		_fail(marker, "unknown marker type `%s`: %s does not exist" % [type, path])
 		return
 	var scene: PackedScene = load(path) as PackedScene
-	var object: Node3D = scene.instantiate() as Node3D
-	var script: Script = object.get_script()
+	var root: Node = scene.instantiate() if scene != null else null
+	var object: Node3D = root as Node3D
+	var script: Script = object.get_script() if object != null else null
+	if script == null:
+		_fail(marker, "%s must have a Node3D root with a LevelObject script" % path)
+		if root != null:
+			root.free()
+		return
 	_apply(object, script, data, String(marker.name))
 	var parent: Node = marker.get_parent()
 	var index: int = marker.get_index()
