@@ -26,6 +26,22 @@ blender *args:
 blender-agent:
     gamescope --backend headless -W 1920 -H 1080 -- blender-5.2 --online-mode
 
+# Build the Clockwork Egg (tools/blender/egg.py) into game/objects/egg/egg.glb. The .glb is
+# committed, like the baked skies: run this after a change to the script, then commit both
+[script("bash")]
+build-egg:
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/egg.py -- "$tmp/egg.glb" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just build-egg: Blender failed" >&2
+        exit 1
+    fi
+    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/egg.glb"
+    mv "$tmp/egg.glb" game/objects/egg/egg.glb
+
 # Copy the kit textures that the game uses from assets/textures/ into the Godot project, which
 # reads only res://. A committed game/materials/textures/<file>.import adopts <file>
 [private]
