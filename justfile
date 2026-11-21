@@ -26,6 +26,25 @@ blender *args:
 blender-agent:
     gamescope --backend headless -W 1920 -H 1080 -- blender-5.2 --online-mode
 
+# Build the Clockwork Egg (tools/blender/egg.py) into game/objects/egg/egg.glb. The .glb is
+# committed, like the baked skies: run this after a change to the script, then commit both
+[script("bash")]
+build-egg:
+    set -euo pipefail
+    # In build/, on the file system of the checkout: the last step is then a rename, and Godot
+    # never reads a part of the file.
+    mkdir -p build
+    tmp=$(mktemp -d build/egg.XXXXXX)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/egg.py -- "$tmp/egg.glb" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just build-egg: Blender failed" >&2
+        exit 1
+    fi
+    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/egg.glb"
+    mv "$tmp/egg.glb" game/objects/egg/egg.glb
+
 # Build the marble's brass core (tools/blender/marble_core.py) into game/core/marble/built/
 [script("bash")]
 build-marble:

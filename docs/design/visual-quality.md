@@ -111,6 +111,7 @@ Reasons:
   - Reason: with `BAKE_STATIC`, the light "doesn't display a specular lobe on static lightmapped meshes". Brass, gold and glass would lose their sun highlight. Shadowmasking also needs a directional light with the Dynamic bake mode (manual, "Using Lightmap GI"; `lightmapper_rd.cpp` warns "Shadowmask disabled: no directional light with their bake mode set to dynamic exists").
 - Fill light comes from the sky and from baked bounce light. Do not add fill lights.
 - Accent lights (lamps, emissive glass) use `BAKE_STATIC` and cast no real-time shadows.
+  - Exception: the light below a gem and the light above the Clockwork Egg (section 11) are real time: `light_bake_mode = BAKE_DISABLED`, no shadows. Reason: they belong to objects, not to the level. A collected gem hides, and a lightmap would keep its light on the floor. The egg's light is there so that the room that hides the egg is not dark; it is the one light in a level that does the work of a fill light.
 - `rendering/lights_and_shadows/use_physical_light_units` stays `false`. We do not need physical units to meet the bar.
 
 ### Bake settings (every level)
@@ -340,3 +341,61 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 
 - With the stand-in light rig and no textures (#20), the same level used 222 MB at Medium.
 - At these small loads the GPU changes its clock speed between runs: the same preset measured 0.19 ms in one run and 0.44 ms in the next. So the check "Low costs less than Medium" in `just perf` can fail by chance on a level this small. The two budgets passed in every run. Run the check again when only that order fails.
+
+## 11. As built: gems and the Clockwork Egg
+
+### Gems
+
+One scene, `game/objects/gem/gem.tscn`, and four cuts. `GemCut` holds each cut as rings round the vertical axis and builds its mesh and the planes of its facets once; every gem of a cut shares them. A gem is 0.5 m across at its largest, and its lowest point is 0.3 m above its marker.
+
+| Cut | Outline | Sides | Standard colour | Colourblind colour |
+|---|---|---|---|---|
+| 0 hexagon | flat at both ends | 6 | amber | orange |
+| 1 double pyramid | pointed at both ends | 6 | deep blue | blue |
+| 2 rose | pointed on top, flat below | 6 | emerald green | yellow |
+| 3 brilliant | flat on top, pointed below | 12 | magenta | reddish purple |
+
+- Cuts 0, 1 and 3 and their colours are the three gems of the style board, with its ring sizes. The game has four cuts, so cut 2 is new. Its outline is the one pair of ends that the board does not use. Its colour is a deep tone of the bluish green of the Okabe-Ito set, as the board's colours are deep tones of that set's orange, blue and reddish purple.
+- `Palette` is the one place for the colours. The standard gems have one lightness, as on the board ("every colour emits the same luminance"). The colourblind gems keep the steps of lightness of their colours: `Palette.gem_lightness()` gives the jewel a factor from the luminance of its colour.
+
+**Glass.** `game/objects/gem/gem.gdshader` draws the jewel in the opaque pass. The board's gem is clear glass (transmission 1); the game's gem does not show the level behind it. In exchange it has crisp edges with MSAA and with FSR 2.2, it writes motion vectors, and it needs no copy of the screen texture.
+
+- The shader follows the view ray into the gem through the planes of the cut (index of refraction 2.2): the ray bends at the facet, the facets inside mirror it up to four times, and it leaves where it meets a facet at a steep angle. This needs a convex cut; a test checks each cut.
+- The gem shows the sky and the probes in the direction of the ray that left. The engine reads them: the shader gives the engine a normal for that direction through `TANGENT` and `NORMAL_MAP`, and the colour as the tint of a metal. `NORMAL` stays the facet's own normal, so the clearcoat layer mirrors the surroundings in the outside of the glass.
+- A long path through the glass gives a deep colour and a short path a pale one. The gem is dark where the camera looks straight through it and bright where it sends light back.
+- `light()` adds two glints for each light: a coloured one where the path inside leaves toward the light, and a white one where a facet mirrors the light.
+- A pale line marks each edge of the cut and each place where the path inside changes. That line hides the step between two pictures inside one facet, which no anti-aliasing mode smooths. A thin bright rim, at least 1.2 pixels wide, marks the outline.
+- A far gem changes look: from 6 mm per pixel the picture of the inside fades, and from 2 cm per pixel the gem shows plain facets, glows about four times more, has no coloured glint from the path inside, and the sides that face the camera glint as the gem turns. Each gem starts at its own turn angle, so the gems of a level do not glint together.
+
+**Round the gem.** The gem casts no shadow. An `OmniLight3D` 0.22 m above the marker (energy 0.25, range 1.2 m, no shadows, not baked) marks its place on the floor. The beam is 3.2 m tall and starts at the top of the jewel: `game/objects/gem/beam.gdshader`, additive, at least 0.2 % of the height of the view wide, so that it shows from far away. The finish uses the same shader with its old settings.
+
+### Clockwork Egg
+
+- `tools/blender/egg.py` builds the egg, and `just build-egg` writes `game/objects/egg/egg.glb` (21 266 triangles, 589 KB). The file is committed, like the baked skies, so that only a change to the script needs Blender. It is in plain git, not in Git LFS.
+- The `.glb` holds three objects, which `egg.gd` moves: `shell`, `lid` with its origin on the hinge, and `gear` with its origin on its axis. It holds no texture. `egg.glb.import` gives the material `brass` the look of `game/objects/egg/brass.tres`: the kit shader with the Metal048A maps, tint (0.9, 0.76, 0.5), metallic 1. The jewels are plain PBR materials from the script: mirrors with the hue of the board's gem colours and a small glow.
+- The light: one `OmniLight3D` 1 m above the marker, colour (1.0, 0.78, 0.5), energy 1.2, range 4 m, no shadows, not baked (the exception in section 4).
+
+### Measured (RTX 5090, 2026-11-21)
+
+GPU time is the median of three runs of the `just perf` scene. "Before" is one such set. "After" was measured in three sets: its mean repeated within 0.02 ms, its 99th percentile within 0.1 ms. The GPU also did other work, and at these loads it changes its clock speed between runs (section 10), so a difference below about 0.1 ms is not reliable.
+
+| Run | Before: mean / p99 | After: mean / p99 | VRAM before / after |
+|---|---|---|---|
+| `core_loop`, Medium at 1080p | 0.75 / 0.89 ms | 0.78 / 0.92 ms | 872 / 882 MB |
+| `core_loop`, Ultra at 4K | 3.34 / 4.12 ms | 3.39 / 4.23 ms | 2347 / 2357 MB |
+| `fixture`, Medium at 1080p | 0.70 / 0.93 ms | 0.74 / 0.92 ms | 875 / 875 MB |
+| `fixture`, Ultra at 4K | 3.03 / 3.91 ms | 3.07 / 3.94 ms | 2349 / 2349 MB |
+
+- The budgets of section 8 hold: Medium at 1080p has a 99th percentile of 0.9 ms (limit 3 ms) and uses 882 MB (limit 4 GB); Ultra at 4K has a 99th percentile of 4.2 ms (limit 16.7 ms).
+- One gem that fills about 40 % of the height of the view costs about 0.5 ms at Ultra 4K: 4.3 ms with the gem, 3.8 ms without it, in three runs each. The same test at 1080p gives no result, because the change of clock speed is larger than the cost.
+- The style review of the B1 level (#28) found a median luma of about 20 of 255 in the vault that hides the egg. With a copy of that level (not part of this change) and the egg's light, one frame of its `egg` shot has a median luma of 58. The two numbers come from different runs, and the first one was not measured again here.
+- Colourblind palette, mean luminance of the gem in one close view each: blue 0.08, reddish purple 0.13, orange 0.16, yellow 0.24. The step from reddish purple to orange is small. The standard gems are between 0.14 and 0.16.
+
+### Not verified
+
+- No check finds a shader that does not compile. `godot --headless` does not compile shaders, and `just gallery` fails only on a blank frame; a gem with a broken shader is a plain grey solid, not a blank frame. After a change to a shader, run the game on a GPU and search its log for `SHADER ERROR`.
+- No level here uses the noon or the dusk sky. With the sky changed at run time in `core_loop` (the floor kept its dawn lightmap), the gems stay coloured at dusk but are darker: 0.10 to 0.12 mean luminance, against 0.14 to 0.16 at dawn. Look at the gems again in the first level with a dusk sky.
+- The colourblind palette was not tested with a simulation of colour vision or with a player.
+- The lightmaps of `core_loop` and `fixture` were baked with the old gem light, whose bounce light was baked. They were not baked again. The `.sha256` check does not see a change to an object scene.
+- The finish beam was compared in one view on one GPU: the old and the new beam shader give the same picture there.
+- Every frame here comes from one GPU and one driver. Two expressions that GLSL leaves undefined (a `smoothstep` with equal edges in the beam, a division by zero for opposite facets in the gem) drew correctly on it. They were found by reading and by review, and they are corrected; a frame did not show them.
