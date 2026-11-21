@@ -70,6 +70,14 @@ _Avoid_: speedrun route, fast route
 The surface finish of a kit face by name: `limestone`, `brass` or `gold`. A level script names it, and the importer gives the face the material `game/materials/<set>/<name>.tres`. The surface type (friction and bounce) is a separate name.
 _Avoid_: texture, skin (a skin is a choice of marble)
 
+**Kit piece**:
+A mesh that a level script adds with the kit: a track, a ramp, a deck, a wall and so on. A piece collides unless its description says that it does not (an inlay, gear teeth, a gear, a hoop, a ball).
+_Avoid_: prop, tile, block (a block is a deep deck)
+
+**Kerb**:
+The low brass edge, 0.3 m high, on an outer edge of a floor. It stops a marble that rolls. A **parapet** is a wall of 1 m or more with a brass cap, for an edge that the marble reaches through the air.
+_Avoid_: rail, border, lip
+
 **Sky preset**:
 One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. A level's `sky` names it, or else the level's tier picks it.
 _Avoid_: skybox, environment
