@@ -101,8 +101,8 @@ func test_adjust_clamps_and_rounds() -> void:
 	assert_eq(distance.text(), "2.6")
 
 
-## The course builds and loads: one start and finish, a checkpoint for each leg, a moving
-## platform and a turning gear. Rolling forward from the start on the runway reaches the
+## The course builds and loads: a checkpoint for each leg, a moving platform, a turning
+## gear and three bumpers. Rolling forward from the start on the runway reaches the
 ## top speed and stays on the ground.
 func test_course_loads_and_the_runway_reaches_top_speed() -> void:
 	if not ResourceLoader.exists(COURSE):
@@ -116,6 +116,7 @@ func test_course_loads_and_the_runway_reaches_top_speed() -> void:
 	assert_eq(types.count("Checkpoint"), 4)
 	assert_eq(types.count("MovingPlatform"), 1)
 	assert_eq(types.count("TurningGear"), 1)
+	assert_eq(types.count("Bumper"), 3)
 	hold(rolling(Vector2(0, 1)), 3.0)
 	assert_true(run.state.on_ground)
 	assert_eq(run.state.status, &"playing")

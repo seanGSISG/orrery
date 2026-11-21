@@ -7,7 +7,8 @@ The loop runs counter-clockwise, seen from above:
 - north (+y): 1 flat runway with 5 m stripes, 2-4 hills of 10, 20 and 30 degrees;
 - east (+x): 5-7 walls of 90, 60 and 45 degrees, 8 a thin wall, 9 a V seam;
 - south (-y): 10 gaps of 1 to 6 m, 11 steps of 0.5 to 1.2 m, then a ramp down;
-- west (-x): 12 a moving platform, 13 a turning gear, then back onto the runway.
+- west (-x): 12 a moving platform, 13 a turning gear, 14 bumpers, then back onto the
+  runway.
 The finish is on a side pad west of the start, out of the loop.
 
 Kit has only flat tracks and ramps, so the walls, the V seam and the steps are prisms made
@@ -241,6 +242,11 @@ _sign("13 GEAR", (47.9, 32, 1.8), WEST)
 
 # Back to the runway: the track ends at its right edge, x = 4.
 _paint(kit.track(at=(45.8, 32, 0), length=41.8, yaw=WEST), LIGHT)
+
+# 14: three bumpers to roll into, off the lane centre so that you can also pass them.
+_sign("14 BUMPERS", (36, 32, 1.8), WEST)
+for x, y in ((30, 30.5), (24, 33.5), (18, 30.5)):
+    kit.marker("bumper", at=(x, y, 0))
 
 # The finish: a side pad off the left edge of the runway, out of the loop.
 _paint(kit.track(at=(-4, 4, 0), width=4, length=6, yaw=WEST), DARK)

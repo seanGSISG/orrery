@@ -42,6 +42,7 @@ The loop goes counter-clockwise. A yellow sign shows the number and the name of 
 | 11 Steps | Jump up the steps of 0.5, 0.8, 1.0 and 1.2 m. | Which steps can you jump up? Does a step stop the marble hard? |
 | 12 Platform | Ride the moving platform. Roll on it while it moves. | Does the platform carry the marble well? Do you slide off when it stops? |
 | 13 Gear | Ride the turning gear and roll off it. | Does the gear carry the marble? Is it easy to roll off? |
+| 14 Bumpers | Roll into the bumpers slowly and at full speed. | Is the push too strong or too weak? Is the rumble correct? |
 
 Do these checks on all of the course:
 
@@ -74,6 +75,5 @@ When the feel is correct, commit the saved values and write "Signed off" in #19.
 ## Limits
 
 - The course has one surface type (`default`), because M1 has no other surface type yet.
-- The course has no bumper yet. The bumper comes with #15.
 - The overlay does not show `radius`, `mass` or the solver limits. They are not feel values. It does not show the camera `clearance`, because the camera reads that value only when it starts.
 - The overlay is in debug builds only. The release exports do not contain `game/debug/`.
