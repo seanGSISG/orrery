@@ -300,7 +300,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - **Autoloads:** `Game` (mode and level flow), `Save` (progress, best times, ghosts, settings), `InputHub` (one input source at a time: player, route bot or harness), `Graphics` (the graphics preset), `Music`.
 - **Input sources:** the marble reads a small `MarbleInput` value each tick (move vector, jump, use, camera yaw and pitch). The player, the route bot and the harness all produce it, so tests drive the exact path the player uses.
 - **Objects:** each object is one scene with one typed script and its own GUT test.
-- **Ghosts:** the marble's position and rotation, recorded 30 times a second of level clock by the `RunTracker` that `Save` adds to each run (`docs/design/core-runtime.md` §4). They play back the same on any PC because they do not re-simulate.
+- **Ghosts:** the marble's position and rotation, recorded 30 times a second of level clock by the `RunTracker` that `Save` adds to each run. `RunTracker` follows the signal `LevelRun.stepped`, which `step()` emits at the end of every tick (`docs/design/core-runtime.md` §4). They play back the same on any PC because they do not re-simulate.
 
 ### 4.5 The harness (automation interface)
 
@@ -313,10 +313,11 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
   - `input {move, jump, use, camera, frames}`: `camera` is `[yaw, pitch]`; with no `frames` the input holds until the next `input`
   - `step {frames}`: runs the ticks (120 per second) at once, at most 36000 per request, and pauses. `pause`, `resume`, `set_time_scale {scale}` (ticks per physics frame, 0 to 64)
   - `teleport {position, velocity?}`
-  - `screenshot {path?, shot?}`: saves the real rendered frame, optionally from a named camera shot. It returns `{path, width, height, blank, adapter}`. It fails with `NO_FRAME` under `godot --headless`, which renders nothing.
+  - `screenshot {path?, shot?}`: saves the real rendered frame, optionally from a named camera shot. It returns `{path, width, height, blank, adapter}`. It fails with `NO_FRAME` under `godot --headless`, which renders nothing. The gallery takes its shots without a warm-up step.
   - `run_bot {route?}`: restarts the level, plays a route to the end at full speed, pauses, and returns `{finished, time, falls}` (plus `{stuck_at, waypoint, reason}` when the bot gave up). `route` is `first_run` (default), `expert` or a route node name.
   - `logs {since}`, `set_setting {key, value}`
 - **Harness MCP** (`tools/harness/`): Python server that launches the game and wraps the socket. Tools: `game_launch {level = "flat", display = headless|window|none, width = 1920, height = 1080}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot?}` (returns the image), `game_run_bot {route?}`, `game_logs {since}`, `game_quit`. `display` is `headless` (gamescope, no window; falls back to `window`), `window` (a desktop window) or `none` (`godot --headless`: no frames, no screenshots; CI uses it). `game_launch` has no `mode` parameter yet. The same package has a CLI (`uv run orrery-harness …`, or `just harness …`) with one subcommand for every harness command, so there is one implementation. `teleport`, `pause`, `resume`, `set_time_scale`, `load_level` and `set_setting` are in the CLI only. See `tools/harness/README.md`.
+- **Session isolation:** each launch gets its own empty `user://` folder, `build/harness/user-<port>-<random>/` (set through `XDG_DATA_HOME`). The folder is deleted when the session ends, so a harness session never reads or writes the player's saves and ghosts. Every automated launch (harness, gallery, perf, bake) is silent (`--audio-driver Dummy`). `just run` and `just feel` keep the sound.
 - Launch (`display = headless`): `gamescope --backend headless -W <width> -H <height> -- godot --path game --resolution <width>x<height> -- --harness-port=<port> [--level <id>]`. Fallback: a window on the KDE desktop.
 
 ### 4.6 The route bot
@@ -352,7 +353,7 @@ Built in #14 (`game/harness/route_bot.gd`, `game/objects/route/route.gd`).
 
 Built in #25. `docs/design/audio.md` is the design: the buses, the volume settings, the music groups, the zone changes, the sound table and how to add a track.
 
-- Music files: OGG Vorbis with loop points, BPM and beat counts set in the import settings.
+- Music files: OGG Vorbis with loop points, BPM and beat counts set in the import settings. The music `.ogg` files are in Git LFS (`game/audio/music/**/*.ogg`); the small sound effects are not.
 - The autoload `Music` plays one *group* of tracks (a folder `game/audio/music/<group>/`). A normal group is an `AudioStreamPlaylist` (shuffled, looped, 2 s fade between tracks). The group `ascent` is one `AudioStreamInteractive`: `Music.set_zone(zone)` changes the clip on the next bar line. The level's `music` field picks the group, then the tier, and the title and menus play `title`.
 - Buses: Master (with a hard limiter), Music, SFX, UI, each with a volume setting in `Save.settings`.
 - Sound effects: `SfxPlayer` plays one sound per `LevelRun.feedback` kind. The sounds come from `tools/audio/sfx/synth_sfx.py`.
@@ -390,6 +391,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just perf [id…]` | Flies a fixed camera path through each level per graphics preset and checks GPU frame time and VRAM |
 | `just bake [id…]` | Bakes the lightmaps of levels on this GPU (4.7). Close every Godot editor on the project first |
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response (local only) |
+| `just build-sfx [--montage PATH]` | Synthesises the sound effects and the test music loops, and checks them. `--montage` also joins the sounds into one OGG |
 | `just feel` | Builds the feel-review course and plays it in a window with the tuning overlay (`docs/feel-review.md`) |
 | `just run [level]` | Plays a level in a window (default: `flat`) |
 | `just export` | Builds Linux and Windows release exports into `build/` |

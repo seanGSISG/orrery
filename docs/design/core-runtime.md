@@ -89,7 +89,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 4. `marble.step(dt, input, world)`: the sub-steps (below).
 5. `object.on_touch(self, contact)` for each touched object, and `object.on_overlap(self, first)` for each overlapped object.
 6. `rules.after_step()`: clock, out of bounds, respawn, finish (#13).
-7. Write `state` and keep `last_input = input`.
+7. Write `state` and keep `last_input = input`, then emit `stepped` (#72).
 
 **Sub-steps** (#10):
 
@@ -194,6 +194,7 @@ var spin: Vector3                    # angular velocity, rad/s
 var up: Vector3 = Vector3.UP         # opposite of gravity
 var frame: Basis = Basis.IDENTITY    # yaw reference; y = up; turns by the shortest arc when up changes
 var on_ground: bool                  # true when the last sub-step had a contact
+var ball_rotation: Quaternion        # (added in #72) rotation of the ball mesh, which rolls with the spin; ghosts record it
 var touches: Array[Contact]          # after step(): the first contact for each touched object
 var overlaps: Array[LevelObject]     # after step(): objects whose triggers overlapped in any sub-step
 func step(dt: float, input: MarbleInput, world: WorldQuery) -> void   # reads only its arguments and own fields
@@ -205,6 +206,7 @@ class_name WorldQuery
 extends RefCounted
 func _init(space: PhysicsDirectSpaceState3D, radius: float, margin: float) -> void
 func contacts(center: Vector3) -> Array[Contact]
+func ray(from: Vector3, to: Vector3) -> Dictionary   # (added in #72) intersect_ray() result for the first front face, or empty; the camera uses it
 func sweep(center: Vector3, motion: Vector3) -> float    # safe fraction, 0..1
 func overlaps(center: Vector3) -> Array[LevelObject]
 
@@ -266,6 +268,7 @@ extends Node3D
 class_name LevelRun
 extends Node3D
 signal feedback(kind: StringName, strength: float, at: Vector3)   # every object's and the marble's feedback
+signal stepped                  # (added in #72) at the end of every step(), when state holds the new tick; once per tick, also when many ticks run in one frame
 var level: Level
 var marble: Marble
 var start: StartPad             # (added in #50) the first start pad; null when the level has none
@@ -353,8 +356,8 @@ static func from_bytes(bytes: PackedByteArray) -> Ghost
 
 # core/save/run_tracker.gd (#21): records the ghost, shows the best run's GhostMarble, calls save.find_egg() and save.finish()
 class_name RunTracker
-extends LevelObject
-static func attach(run: LevelRun, save: SaveGame) -> RunTracker   # no marker places it
+extends Node                      # (changed in #72: was a LevelObject; it now follows LevelRun.stepped)
+static func attach(run: LevelRun, save: SaveGame) -> RunTracker   # no marker places it; egg and finish save on the tick they happen; tick 1 starts a new attempt
 ```
 
 The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float) -> void`. A test can give it a `GameState` with any `up`, so the camera does not need the gravity fields.
