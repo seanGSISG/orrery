@@ -76,6 +76,11 @@ export: import
 smoke-wine: export
     set -euo pipefail
     export WINEPREFIX="${XDG_CACHE_HOME:-$HOME/.cache}/orrery/wine" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml="
-    log=$(timeout 180 wine build/windows/orrery.exe --headless -- --smoke 2>&1)
-    grep -q '^ORRERY boot ok' <<<"$log" || { echo "$log" >&2; echo "just smoke-wine: no boot marker" >&2; exit 1; }
+    status=0
+    log=$(timeout 180 wine build/windows/orrery.exe --headless -- --smoke 2>&1) || status=$?
+    if (( status != 0 )) || ! grep -q '^ORRERY boot ok' <<<"$log"; then
+        echo "$log" >&2
+        echo "just smoke-wine: no boot marker (exit $status)" >&2
+        exit 1
+    fi
     echo "Windows export boots under Wine."
