@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Results</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop noon" style="--bd-blur:16px;--bd-dim:.4"></div>
+<div class="night"></div>
+<!-- The ring is the par time: the bright arc is this run, and it stops just short of the gold star. -->
+<svg class="ring" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <path id="star" d="M0-9l2.23 5.93 6.33.29-4.95 3.95 1.68 6.11-5.29-3.48-5.29 3.48 1.68-6.11-4.95-3.95 6.33-.29z"/>
+    <path id="check" d="M-7 0l5 5 9-10"/>
+  </defs>
+  <g transform="translate(600 520)">
+    <circle class="disc" r="358"/>
+    <circle class="ln2" r="320"/>
+    <circle class="ln2" r="329" pathLength="360" stroke-width="12" stroke-dasharray=".4 5.6" stroke-dashoffset=".2"/>
+    <circle class="ln" r="333" pathLength="360" stroke-width="20" stroke-dasharray=".5 29.5" stroke-dashoffset=".25"/>
+    <circle class="ln" r="320" pathLength="360" stroke-width="6" stroke-dasharray="240.8 400" transform="rotate(-90)"/>
+    <g transform="rotate(246.9)"><path class="gold-ln" d="M0-306v-50"/><g transform="translate(0 -376) rotate(-246.9) scale(1.4)"><use href="#star" class="gold-fill"/></g></g>
+    <path class="ln" d="M0-306v-50"/>
+    <g transform="translate(0 -376) scale(1.4)"><use href="#check" class="ln"/></g>
+    <circle class="ink-fill" cy="-320" r="10" transform="rotate(240.8)"/>
+  </g>
+</svg>
+<div class="inside run">
+  <p class="name">8 · Gear Bridge</p>
+  <p class="time">0:46.82</p>
+  <p class="medal caps"><i class="i i-star on"></i>Gold</p>
+</div>
+<div class="safe">
+  <ul class="ledger">
+    <li class="record"><span class="name">New record</span><b>−4.38</b></li>
+    <li><span class="name">Gems</span><b>5/5</b></li>
+    <li><span class="name">Egg</span><b><i class="i i-check"></i>Found</b></li>
+    <li><span class="name">Gold</span><b>0:48.00</b></li>
+    <li><span class="name">Par</span><b>1:10.00</b></li>
+  </ul>
+  <p class="actions"><span class="focus"><i class="g">A</i>Next</span><span><i class="g g-view"></i>Retry</span><span><i class="g">B</i>Levels</span></p>
+</div>
+</div>
+</body>
+</html>

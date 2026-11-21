@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C · Level select</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop dawn" style="--bd-blur:18px;--bd-dim:.4"></div>
+<div class="night"></div>
+<!-- One orbit per tier, one body per level, level 1 at the top and clockwise from there.
+     Numbered ring = open, star = gold, check = par, egg = egg found, dashed ring = not yet played, dot = locked. -->
+<svg class="orbits" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <path id="star" transform="scale(1.25)" d="M0-9l2.23 5.93 6.33.29-4.95 3.95 1.68 6.11-5.29-3.48-5.29 3.48 1.68-6.11-4.95-3.95 6.33-.29z"/>
+    <path id="check" transform="scale(1.25)" d="M-7 0l5 5 9-10"/>
+    <path id="egg" transform="scale(1.2)" d="M0-9.5c3.2 0 6.1 4.6 6.1 9.1 0 4-2.7 7.4-6.1 7.4S-6.1 3.6-6.1-.4C-6.1-4.9-3.2-9.5 0-9.5z"/>
+    <path id="arc2" d="M960 156A400 400 0 0 1 1360 556"/>
+    <path id="arc3" d="M960 82A474 474 0 0 1 1434 556"/>
+  </defs>
+  <g transform="translate(960 556)">
+    <circle class="ln3" r="462"/>
+    <circle class="dots" r="462" pathLength="360" stroke-dasharray="0 18"/>
+    <circle class="ln3" r="388"/>
+    <circle class="dots" r="388" pathLength="360" stroke-dasharray="0 18"/>
+    <circle class="ln2" r="300"/>
+    <circle class="ln3" r="226" pathLength="360" stroke-width="10" stroke-dasharray=".4 2.6" stroke-dashoffset=".2"/>
+    <circle class="ln3" r="220"/>
+  </g>
+  <text class="ring-name"><textPath href="#arc2" startOffset="2%">INTERMEDIATE</textPath></text>
+  <text class="ring-name"><textPath href="#arc3" startOffset="2%">ADVANCED</textPath></text>
+
+  <g transform="rotate(0 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256">1</text><use href="#star" class="gold-fill" x="947" y="208"/><use href="#egg" class="gold-fill" x="973" y="208"/></g>
+  <g transform="rotate(18 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-18 960 256)">2</text><use href="#star" class="gold-fill" x="960" y="208" transform="rotate(-18 960 208)"/></g>
+  <g transform="rotate(36 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-36 960 256)">3</text><use href="#check" class="ln" x="947" y="208" transform="rotate(-36 947 208)"/><use href="#egg" class="gold-fill" x="973" y="208" transform="rotate(-36 973 208)"/></g>
+  <g transform="rotate(54 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-54 960 256)">4</text><use href="#star" class="gold-fill" x="947" y="208" transform="rotate(-54 947 208)"/><use href="#egg" class="gold-fill" x="973" y="208" transform="rotate(-54 973 208)"/></g>
+  <g transform="rotate(72 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-72 960 256)">5</text><use href="#check" class="ln" x="960" y="208" transform="rotate(-72 960 208)"/></g>
+  <g transform="rotate(90 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-90 960 256)">6</text><use href="#check" class="ln" x="960" y="208" transform="rotate(-90 960 208)"/></g>
+  <g transform="rotate(108 960 556)"><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-108 960 256)">7</text><use href="#check" class="ln" x="947" y="208" transform="rotate(-108 947 208)"/><use href="#egg" class="gold-fill" x="973" y="208" transform="rotate(-108 973 208)"/></g>
+  <!-- 8 has the focus: a second ring in the accent and a line to the readout in the centre. -->
+  <g transform="rotate(126 960 556)"><path class="sol" style="stroke-width:2" d="M960 290v44"/><circle class="sol" cx="960" cy="256" r="34"/><circle class="node" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-126 960 256)">8</text><use href="#star" class="gold-fill" x="947" y="204" transform="rotate(-126 947 204)"/><use href="#egg" class="gold-fill" x="973" y="204" transform="rotate(-126 973 204)"/></g>
+  <g transform="rotate(144 960 556)"><circle class="node new" cx="960" cy="256" r="24"/><text class="no" x="960" y="256" transform="rotate(-144 960 256)">9</text></g>
+  <g class="locked">
+    <circle cx="960" cy="256" r="7" transform="rotate(162 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(180 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(198 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(216 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(234 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(252 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(270 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(288 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(306 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(324 960 556)"/>
+    <circle cx="960" cy="256" r="7" transform="rotate(342 960 556)"/>
+  </g>
+</svg>
+<div class="detail">
+  <p class="name">Gear Bridge</p>
+  <p class="time">0:46.82</p>
+  <p class="targets"><span><i class="i i-star"></i>0:48.00</span><span><i class="i i-check"></i>1:10.00</span></p>
+  <p class="marks"><i class="i i-gold"></i><i class="i i-egg on"></i></p>
+</div>
+<div class="safe">
+  <ul class="tiers caps">
+    <li class="on name"><i class="g g-lb">LB</i>Beginner<i class="g g-rb">RB</i></li>
+    <li><i class="i i-lock"></i>Intermediate</li>
+    <li><i class="i i-lock"></i>Advanced</li>
+  </ul>
+  <p class="totals"><span><i class="i i-gold"></i>4/20</span><span><i class="i i-egg on"></i>5/20</span></p>
+  <p class="hints"><span><i class="g">A</i>Play</span><span><i class="g">B</i>Back</span></p>
+</div>
+</div>
+</body>
+</html>

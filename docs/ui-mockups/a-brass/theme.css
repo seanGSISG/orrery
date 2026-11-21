@@ -1,0 +1,298 @@
+/* Direction A, Brass instrument: enamel plates in aged-brass bezels, engraved capitals,
+   the timer as a small dial. Swap the palette in :root to restyle every screen. */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:wght@500;600&display=block");
+
+:root {
+  --font-display: "Cinzel", serif;
+  --font-text: "Spectral", serif;
+  --enamel: #0c1322;
+  --enamel-hi: #1a2640;
+  --enamel-lo: #060a13;
+  --brass: #c9a35b;
+  --brass-hi: #f6e3b0;
+  --brass-lo: #6d4f24;
+  --brass-ink: #17110a;
+  --brass-glint: #fff6d8;
+  --brass-shade: #7a5a2a;
+  --brass-line: color-mix(in srgb, var(--brass) 40%, transparent);
+  --glow: color-mix(in srgb, var(--brass-hi) 30%, transparent);
+  --enamel-lit: #23314f;
+  --pit: #03050a;
+  --ivory: #f3ecda;
+  --ivory-2: #cbc4b1;
+  --ivory-3: #8d8879;
+  --gold: #f5cd6b;
+  --verdigris: #74cbb8;
+  --rim: linear-gradient(150deg, var(--brass-hi), var(--brass) 20%, var(--brass-lo) 46%, var(--brass) 68%, var(--brass-hi) 84%, var(--brass-lo));
+  --rim-round: conic-gradient(from 200deg, var(--brass-hi), var(--brass) 12%, var(--brass-lo) 27%, var(--brass) 40%, var(--brass-hi) 52%, var(--brass) 64%, var(--brass-lo) 78%, var(--brass) 90%, var(--brass-hi));
+  --face: radial-gradient(130% 150% at 30% 0%, var(--enamel-hi), var(--enamel) 55%, var(--enamel-lo));
+  --polished: linear-gradient(180deg, var(--brass-hi), color-mix(in srgb, var(--brass) 80%, var(--brass-hi)) 36%, color-mix(in srgb, var(--brass) 76%, var(--brass-lo)) 74%, var(--brass));
+  --rim-polished: linear-gradient(180deg, var(--brass-glint), var(--brass-shade));
+  --drop: 0 0 0 1px rgb(0 0 0 / .6), 0 12px 32px rgb(0 0 0 / .5);
+}
+
+.frame {
+  font-family: var(--font-text); color: var(--ivory); font-weight: 500;
+  font-size: 28px; line-height: 1.15; font-variant-numeric: lining-nums tabular-nums;
+}
+.caps { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; }
+/* Numerals are always Spectral: the Cinzel 1 reads as an I. */
+.frame b { font-family: var(--font-text); font-weight: 600; }
+
+/* An enamel plate in a brass bezel. Every panel and control is one. */
+.plate {
+  border: 3px solid transparent; border-radius: 12px;
+  background: var(--face) padding-box, var(--rim) border-box;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .75), inset 0 3px 12px rgb(0 0 0 / .6), var(--drop);
+  text-shadow: 0 2px 2px rgb(0 0 0 / .7);
+}
+/* A large plate: four screws and an engraved inner line. */
+.plate.big {
+  border-width: 4px; border-radius: 18px;
+  background:
+    radial-gradient(circle at 30px 30px, var(--brass-hi) 0 1.5px, var(--brass) 2.5px 5px, var(--brass-ink) 6px 7px, transparent 7.5px) padding-box,
+    radial-gradient(circle at calc(100% - 30px) 30px, var(--brass-hi) 0 1.5px, var(--brass) 2.5px 5px, var(--brass-ink) 6px 7px, transparent 7.5px) padding-box,
+    radial-gradient(circle at 30px calc(100% - 30px), var(--brass-hi) 0 1.5px, var(--brass) 2.5px 5px, var(--brass-ink) 6px 7px, transparent 7.5px) padding-box,
+    radial-gradient(circle at calc(100% - 30px) calc(100% - 30px), var(--brass-hi) 0 1.5px, var(--brass) 2.5px 5px, var(--brass-ink) 6px 7px, transparent 7.5px) padding-box,
+    var(--face) padding-box, var(--rim) border-box;
+}
+.plate.big::before { content: ""; position: absolute; inset: 14px; border: 1px solid var(--brass-line); border-radius: 8px; pointer-events: none; }
+
+/* Focus: the control turns to polished brass, with a diamond stud on each side. */
+.focus {
+  position: relative;
+  background: var(--polished) padding-box, var(--rim-polished) border-box;
+  color: var(--brass-ink); text-shadow: 0 1px 0 rgb(255 255 255 / .45);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .7), 0 0 0 6px var(--glow), 0 16px 36px rgb(0 0 0 / .55);
+}
+.studs::before, .studs::after {
+  content: ""; position: absolute; top: 50%; width: 16px; height: 16px; margin-top: -8px;
+  transform: rotate(45deg); background: var(--polished); box-shadow: 0 0 0 1px rgb(0 0 0 / .7), 0 3px 8px rgb(0 0 0 / .6);
+}
+.studs::before { left: -40px; }
+.studs::after { right: -40px; }
+
+/* A word cast in brass. */
+.cast {
+  font-family: var(--font-display); font-weight: 700;
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%, var(--brass-lo)); -webkit-background-clip: text; background-clip: text;
+  color: transparent; text-shadow: none; filter: drop-shadow(0 3px 2px rgb(0 0 0 / .7));
+}
+
+/* Button glyphs: small enamel studs in brass rims. */
+.g {
+  border: 2.5px solid transparent; background: var(--face) padding-box, var(--rim-round) border-box;
+  color: var(--ivory); font-family: var(--font-display); font-weight: 700; text-shadow: none;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .65), 0 3px 8px rgb(0 0 0 / .45);
+}
+.g-key, .g-lb, .g-rb { background: var(--face) padding-box, var(--rim) border-box; }
+.g-mouse::before { background: var(--brass-hi); }
+
+.hints { display: flex; gap: 44px; font-size: 28px; color: var(--ivory-2); text-shadow: 0 2px 4px rgb(0 0 0 / .8); }
+.hints span { display: inline-flex; align-items: center; gap: 14px; }
+.safe > .hints { position: absolute; left: 0; bottom: 0; }
+
+/* A dark centre keeps bare text readable on a menu backdrop. */
+.shade { position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 75% at 50% 52%, color-mix(in srgb, var(--enamel-lo) 82%, transparent), color-mix(in srgb, var(--enamel-lo) 30%, transparent) 75%, transparent); }
+
+/* ---------- HUD ---------- */
+
+.gems { position: absolute; left: 0; top: 0; height: 68px; padding: 0 26px 0 20px; display: flex; align-items: center; gap: 12px; border-radius: 34px; }
+.gems .i { font-size: 34px; color: var(--brass-hi); }
+.gems b { font-size: 42px; }
+.gems span { font-family: var(--font-text); font-size: 28px; color: var(--ivory-2); margin-left: -4px; }
+
+.clock { position: absolute; left: 50%; top: 0; transform: translateX(-50%); display: flex; align-items: center; padding-bottom: 34px; }
+.dial {
+  position: relative; z-index: 1; width: 148px; height: 148px; border-radius: 50%; border: 8px solid transparent;
+  background: radial-gradient(circle at 50% 32%, var(--enamel-hi), var(--enamel) 60%, var(--enamel-lo)) padding-box, var(--rim-round) border-box;
+  box-shadow: inset 0 0 0 1.5px rgb(0 0 0 / .8), inset 0 6px 16px rgb(0 0 0 / .7), var(--drop);
+}
+.dial svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dial .ticks { fill: none; stroke: var(--ivory-3); stroke-width: 5; }
+.dial .ticks.major { stroke: var(--ivory); stroke-width: 9; }
+.dial .zone { fill: none; stroke: var(--gold); stroke-opacity: .5; stroke-width: 4; }
+.dial .swept { fill: none; stroke: var(--ivory); stroke-width: 4; }
+.dial .gold { fill: var(--gold); stroke: #000; stroke-width: 1; }
+.dial .par { fill: var(--ivory); stroke: #000; stroke-width: 1; }
+.dial .hand { fill: var(--brass-hi); stroke: #000; stroke-width: .8; }
+.dial .hub { fill: var(--brass); stroke: #000; stroke-width: 1; }
+.clock .tab { height: 52px; display: flex; align-items: center; gap: 8px; font-family: var(--font-text); font-weight: 600; font-size: 26px; }
+.clock .tab .i { font-size: 24px; }
+.clock .tab.gold { padding: 0 34px 0 18px; margin-right: -22px; color: var(--gold); }
+.clock .tab.par { padding: 0 18px 0 34px; margin-left: -22px; }
+.clock .readout {
+  position: absolute; z-index: 2; left: 50%; bottom: 0; transform: translateX(-50%);
+  height: 58px; padding: 0 22px; display: flex; align-items: baseline; line-height: 54px;
+  font-family: var(--font-text); font-weight: 600; font-size: 28px; color: var(--ivory-2);
+}
+.clock .readout b { font-size: 40px; color: var(--ivory); }
+
+.toast { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); height: 62px; padding: 0 30px 0 24px; display: flex; align-items: center; gap: 14px; white-space: nowrap; font-size: 26px; }
+.toast .i { font-size: 26px; color: var(--verdigris); }
+.toast .g { margin-left: -10px; }
+
+.slot {
+  position: absolute; right: 0; bottom: 16px; width: 128px; height: 128px; border-radius: 50%; border: 9px solid transparent;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 30%, var(--enamel-hi), var(--enamel) 60%, var(--enamel-lo)) padding-box, var(--rim-round) border-box;
+  box-shadow: inset 0 0 0 1.5px rgb(0 0 0 / .8), inset 0 8px 18px rgb(0 0 0 / .75), var(--drop);
+}
+.slot .i { font-size: 62px; color: var(--ivory); filter: drop-shadow(0 2px 2px rgb(0 0 0 / .7)); }
+.slot .g { position: absolute; left: -16px; bottom: -14px; }
+
+/* ---------- Ascent HUD ---------- */
+
+.stats { position: absolute; left: 0; top: 0; display: flex; gap: 14px; }
+.stats > div { height: 72px; padding: 0 20px; display: flex; align-items: center; gap: 8px; }
+.stats .caps { font-size: 24px; margin-right: 8px; color: var(--ivory-2); }
+/* The fall count is a mechanical counter: one wheel per digit. */
+.stats .wheel {
+  width: 38px; height: 50px; display: grid; place-items: center; border-radius: 5px; font-size: 34px;
+  background: linear-gradient(180deg, var(--pit), var(--enamel-hi) 50%, var(--pit));
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 8px #000, 0 1px 0 rgb(255 255 255 / .14);
+}
+.stats .time { font-family: var(--font-text); font-size: 28px; color: var(--ivory-2); }
+
+/* The altimeter is the whole climb, 0 to 600 m, one tick per 10 m. */
+.tube {
+  position: absolute; right: 0; top: 20px; bottom: 20px; width: 62px; border-radius: 31px; border: 5px solid transparent;
+  background: linear-gradient(90deg, var(--enamel-lo), var(--enamel-hi) 45%, var(--enamel-lo)) padding-box, var(--rim) border-box;
+  box-shadow: inset 0 0 0 1.5px rgb(0 0 0 / .8), inset 0 0 14px rgb(0 0 0 / .8), var(--drop);
+}
+.gauge { position: absolute; inset: 30px 0; }
+.gauge .scale {
+  position: absolute; inset: -1px 0;
+  background:
+    repeating-linear-gradient(to top, var(--ivory-2) 0 2px, transparent 2px calc(100% / 60)) left / 11px 100% no-repeat,
+    repeating-linear-gradient(to top, var(--ivory-2) 0 2px, transparent 2px calc(100% / 60)) right / 11px 100% no-repeat;
+}
+.gauge .bore { position: absolute; left: 50%; top: -8px; bottom: -8px; width: 10px; margin-left: -5px; border-radius: 5px; background: var(--pit); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .12); }
+.gauge .column { position: absolute; left: 50%; bottom: -8px; width: 10px; margin-left: -5px; border-radius: 5px; background: linear-gradient(90deg, #fff, var(--ivory) 40%, var(--ivory-3)); }
+.gauge .zone { position: absolute; left: 0; right: 0; height: 3px; margin-bottom: -1.5px; background: linear-gradient(90deg, var(--brass-hi) 0 18px, transparent 18px calc(100% - 18px), var(--brass-hi) calc(100% - 18px)); }
+.gauge .best, .gauge .now { position: absolute; right: 70px; transform: translateY(50%); display: flex; align-items: center; white-space: nowrap; }
+.gauge .best::after, .gauge .now::after { content: ""; position: absolute; left: 100%; top: 50%; margin-top: -9px; border: 9px solid transparent; border-left: 15px solid var(--brass-hi); border-right: 0; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .6)); }
+.gauge .best { height: 50px; padding: 0 16px; gap: 8px; font-family: var(--font-text); font-weight: 600; font-size: 26px; color: var(--gold); }
+.gauge .best .i { font-size: 24px; }
+.gauge .now { height: 78px; padding: 0 22px; gap: 8px; align-items: baseline; line-height: 72px; font-size: 28px; color: var(--ivory-2); }
+.gauge .now b { font-size: 50px; color: var(--ivory); }
+
+/* ---------- Title ---------- */
+
+.title { display: flex; flex-direction: column; align-items: center; }
+.logo { margin-top: 96px; font-size: 168px; letter-spacing: .14em; margin-right: -.14em; line-height: 1; }
+.rule { margin-top: 26px; width: 620px; height: 16px; position: relative; }
+.rule::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 2px; background: linear-gradient(90deg, transparent, var(--brass) 20%, var(--brass-hi) 50%, var(--brass) 80%, transparent); }
+.rule::after { content: ""; position: absolute; left: 50%; top: 0; width: 16px; height: 16px; margin-left: -8px; transform: rotate(45deg); background: var(--polished); box-shadow: 0 0 0 4px var(--enamel); }
+.menu { display: grid; gap: 16px; }
+.menu li { position: relative; width: 480px; height: 84px; padding: 0 22px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.menu li .g { position: absolute; right: 18px; }
+.title .menu { margin-top: 84px; }
+
+/* ---------- Level select ---------- */
+
+.tiers { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; }
+.tiers .plate { height: 68px; padding: 0 26px; display: flex; align-items: center; gap: 12px; font-size: 26px; color: var(--ivory-3); }
+.tiers .plate .i { font-size: 24px; }
+.tiers .plate.on { background: var(--polished) padding-box, var(--rim-polished) border-box; color: var(--brass-ink); text-shadow: 0 1px 0 rgb(255 255 255 / .45); }
+.totals { position: absolute; right: 0; top: 0; height: 68px; padding: 0 26px; display: flex; align-items: center; gap: 30px; font-family: var(--font-text); font-weight: 600; font-size: 28px; }
+.totals span { display: inline-flex; align-items: center; gap: 10px; }
+.totals .i { font-size: 32px; color: var(--gold); }
+
+.grid { position: absolute; left: 0; right: 0; top: 96px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.cell { position: relative; height: 186px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto 1fr; column-gap: 14px; align-items: center; }
+.cell .no { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--brass); font-size: 26px; color: var(--brass-hi); }
+.cell .name { grid-column: 2 / -1; font-size: 28px; }
+.cell .time { grid-column: 1 / 3; align-self: end; font-family: var(--font-text); font-weight: 600; font-size: 38px; }
+.cell .marks { align-self: end; display: flex; gap: 10px; font-size: 36px; padding-bottom: 4px; }
+.cell .i-gold, .cell .i-egg { color: var(--gold); }
+.cell .i-par { color: var(--ivory); }
+.cell .off, .cell .i-medal-none { color: var(--ivory-3); }
+.cell.new .time { color: var(--ivory-3); }
+.cell.locked { display: flex; align-items: center; justify-content: center; gap: 18px; border-color: transparent; background: linear-gradient(var(--enamel-lo), var(--enamel-lo)) padding-box, linear-gradient(150deg, var(--brass-lo), var(--brass-ink) 50%, var(--brass-lo)) border-box; color: var(--ivory-3); box-shadow: inset 0 0 0 1px #000, inset 0 3px 12px rgb(0 0 0 / .7); }
+.cell.locked .no { border-color: var(--brass-lo); color: var(--ivory-3); }
+.cell.locked .i { font-size: 40px; }
+.cell.focus { z-index: 1; transform: scale(1.06); border-width: 4px; }
+.cell.focus .no { border-color: var(--brass-ink); color: var(--brass-ink); }
+.cell.focus .i-gold, .cell.focus .i-egg, .cell.focus .i-par { color: var(--brass-ink); }
+/* Gold and par times of the level that has the focus. */
+.targets { position: absolute; right: 0; bottom: -2px; height: 48px; padding: 0 22px; display: flex; align-items: center; gap: 28px; font-weight: 600; font-size: 26px; }
+.targets span { display: inline-flex; align-items: center; gap: 8px; }
+.targets .i { font-size: 22px; }
+.targets .i-star { color: var(--gold); }
+
+/* ---------- Pause ---------- */
+
+.pause { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 640px; padding: 56px 0 44px; display: flex; flex-direction: column; align-items: center; }
+.pause h1 { font-size: 60px; letter-spacing: .14em; margin-right: -.14em; }
+.pause .where { margin-top: 10px; font-size: 28px; color: var(--ivory-2); }
+.pause .clock-line { margin-top: 8px; display: flex; align-items: baseline; gap: 22px; font-family: var(--font-text); font-weight: 600; font-size: 40px; }
+.pause .clock-line span { display: inline-flex; align-items: center; gap: 8px; font-size: 28px; color: var(--gold); }
+.pause .clock-line .i { font-size: 24px; }
+.pause .menu { margin-top: 36px; }
+.pause .hints { margin-top: 36px; }
+
+/* ---------- Settings ---------- */
+
+.board { position: absolute; inset: 0; padding: 40px 56px; display: flex; flex-direction: column; }
+.board .tabs { display: flex; align-items: center; gap: 12px; }
+.board .tabs .plate { flex: 1; height: 72px; display: grid; place-items: center; font-size: 26px; color: var(--ivory-2); }
+.board .tabs .plate.on { background: var(--polished) padding-box, var(--rim-polished) border-box; color: var(--brass-ink); text-shadow: 0 1px 0 rgb(255 255 255 / .45); }
+.board .tabs .g { margin: 0 6px; }
+.rows { margin-top: 30px; flex: 1; display: flex; flex-direction: column; }
+.row { position: relative; height: 112px; margin: 0 -18px; padding: 0 28px 0 34px; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; border: 3px solid transparent; font-size: 30px; }
+.row + .row::before { content: ""; position: absolute; left: 30px; right: 30px; top: -3px; height: 1px; background: var(--brass-line); }
+.row.focus { background: linear-gradient(180deg, var(--enamel-lit), var(--enamel)) padding-box, linear-gradient(180deg, var(--brass-glint), var(--brass) 50%, var(--brass-shade)) border-box; color: var(--ivory); text-shadow: 0 2px 2px rgb(0 0 0 / .7); }
+.row.focus::before, .row.focus + .row::before { display: none; }
+.row.focus::after { content: ""; position: absolute; left: 6px; top: 50%; width: 14px; height: 14px; margin-top: -7px; transform: rotate(45deg); background: var(--polished); box-shadow: 0 0 0 1px #000; }
+.board .hints { margin-top: auto; }
+
+.seg { display: flex; gap: 8px; }
+.seg .plate { height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 10px; font-size: 26px; color: var(--ivory-2); }
+.seg .plate.on { background: var(--polished) padding-box, var(--rim-polished) border-box; color: var(--brass-ink); text-shadow: 0 1px 0 rgb(255 255 255 / .45); }
+.seg .plate .i { font-size: 22px; }
+.step { display: flex; align-items: center; gap: 26px; font-family: var(--font-text); font-weight: 600; font-size: 34px; }
+.step i { width: 0; height: 0; border: 14px solid transparent; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .7)); }
+.step i:first-child { border-right: 20px solid var(--brass-hi); border-left: 0; }
+.step i:last-child { border-left: 20px solid var(--brass-hi); border-right: 0; }
+.slide { display: flex; align-items: center; gap: 28px; }
+.slide .groove { position: relative; width: 420px; height: 12px; border-radius: 6px; background: var(--pit); box-shadow: inset 0 2px 4px #000, 0 1px 0 rgb(255 255 255 / .14); }
+.slide .groove i { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 4px; background: linear-gradient(180deg, var(--brass-hi), var(--brass)); }
+.slide .groove i::after { content: ""; position: absolute; right: -19px; top: 50%; width: 38px; height: 38px; margin-top: -19px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, var(--brass-glint), var(--brass) 45%, var(--brass-lo)); box-shadow: 0 0 0 1px #000, 0 5px 10px rgb(0 0 0 / .6); }
+.slide b { min-width: 78px; text-align: right; font-size: 34px; }
+/* A lever switch says its state three ways: the word, the knob position and the lit slot. */
+.lever { display: flex; align-items: center; gap: 22px; font-family: var(--font-display); font-weight: 600; font-size: 28px; color: var(--ivory-3); }
+.lever i { position: relative; width: 96px; height: 46px; border-radius: 23px; background: var(--pit); box-shadow: inset 0 2px 5px #000, 0 1px 0 rgb(255 255 255 / .14), 0 0 0 2px var(--brass-lo); }
+.lever i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 28%, var(--ivory), var(--ivory-3) 55%, var(--pit) 150%); box-shadow: 0 0 0 1px #000, 0 3px 6px rgb(0 0 0 / .6); }
+.lever.on { color: var(--ivory); }
+.lever.on i { background: linear-gradient(90deg, var(--brass) 0 50%, var(--pit) 80%); box-shadow: inset 0 2px 5px rgb(0 0 0 / .7), 0 1px 0 rgb(255 255 255 / .14), 0 0 0 2px var(--brass); }
+.lever.on i::after { left: 53px; background: radial-gradient(circle at 35% 28%, var(--brass-glint), var(--brass) 45%, var(--brass-lo)); }
+
+/* ---------- Results ---------- */
+
+.award { position: absolute; left: 50%; top: 136px; bottom: 30px; transform: translateX(-50%); width: 1180px; padding: 150px 64px 44px; display: flex; flex-direction: column; align-items: center; }
+/* The medal is a coin set into the top edge of the plate. */
+.coin {
+  position: absolute; left: 50%; top: -116px; width: 232px; height: 232px; margin-left: -116px; border-radius: 50%; border: 10px solid transparent;
+  display: grid; place-items: center; align-content: center; gap: 2px;
+  background: radial-gradient(circle at 38% 26%, var(--brass-glint), var(--brass) 44%, var(--brass-shade) 108%) padding-box, var(--rim-round) border-box;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / .45), inset 0 0 0 9px var(--glow), inset 0 0 0 11px rgb(0 0 0 / .3), var(--drop);
+  color: var(--brass-ink); text-shadow: 0 1px 0 rgb(255 255 255 / .5);
+}
+.coin .i { font-size: 104px; filter: drop-shadow(0 1px 0 rgb(255 255 255 / .5)); }
+.coin .caps { font-size: 26px; letter-spacing: .2em; margin-right: -.2em; }
+.award .where { font-size: 30px; color: var(--ivory-2); }
+.award .time { font-family: var(--font-text); font-weight: 600; font-size: 168px; line-height: 1.05; letter-spacing: .02em; }
+.award .record { height: 60px; padding: 0 26px; display: flex; align-items: center; gap: 16px; border-radius: 10px; border: 3px solid transparent; font-size: 26px; color: var(--verdigris); }
+.award .record b { font-size: 28px; }
+.facts { margin-top: 34px; align-self: stretch; display: grid; grid-template-columns: 1fr 1fr 1.5fr; }
+.facts li { height: 88px; display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 30px; border-left: 1px solid var(--brass-line); }
+.facts li:first-child { border-left: 0; }
+.facts .i { font-size: 36px; color: var(--gold); }
+.facts .i-check { font-size: 26px; color: var(--verdigris); }
+.facts b { font-size: 30px; }
+.facts .targets { gap: 12px; }
+.facts .targets .i { font-size: 26px; }
+.facts .targets .i-par { color: var(--ivory); margin-left: 18px; }
+.actions { margin-top: auto; display: flex; gap: 20px; }
+.actions .plate { height: 84px; min-width: 250px; padding: 0 30px 0 18px; display: flex; align-items: center; gap: 18px; font-size: 30px; }
