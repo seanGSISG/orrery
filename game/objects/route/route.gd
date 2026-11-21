@@ -12,7 +12,7 @@ extends LevelObject
 ##                actions="0 wait_until moving_platform_00 8.6 0.2; 2 speed 8")
 ##
 ## points: positions on the floor, in order. The marker's own position is not a point. Put a
-## point on each gem and on the finish pad: the bot passes within 0.35 m of each point.
+## point on each gem and on the finish pad: the bot passes within 0.45 m of each point.
 ## actions: entries `<point> <action> [values]`, separated by `;`. <point> is the 0-based index
 ## in points, the same number as the point's name suffix `_pNN`.
 ## - `jump`: jump at the point.
