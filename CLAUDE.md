@@ -2,8 +2,6 @@
 
 An original 3D marble platformer for Linux and Windows, built with Godot 4.7.2 and Blender 5.2.4 LTS. `docs/plan.md` holds every design decision, the architecture and the milestones. Read its relevant section before you add a feature, change the design, or start a milestone task. When a task conflicts with the plan, raise it with Sean before you build.
 
-M0 is not finished: `kit/`, `levels/` and the harness arrive with it. Build them as `docs/plan.md` §6 and §8 describe. Remove this paragraph when M0 merges.
-
 ## Rules
 
 - **Originality.** Every name, level, asset, melody and line of code in Orrery is our own. The projects in `docs/research/gameplay.md` are references for numbers and behaviour only. Write all code yourself from the documented behaviour.
