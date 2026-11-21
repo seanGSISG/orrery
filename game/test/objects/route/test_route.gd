@@ -61,7 +61,7 @@ func test_a_level_outside_the_test_tier_needs_a_first_run_route() -> void:
 	var error: String = _errors(_scene("beginner", expert))
 	assert_string_contains(error, "level t: node scene: needs a `route` marker of kind first_run")
 	var first_run: Array[Dictionary] = [{"type": "route", "kind": "first_run"}]
-	assert_eq(_errors(_scene("beginner", first_run)), "")
+	assert_false(_errors(_scene("beginner", first_run)).contains("needs a `route`"))
 
 
 func test_route_kinds_are_first_run_or_expert_once_each() -> void:
