@@ -85,4 +85,4 @@ B1 (`b01.md`, "As built") found these rules. They hold for every level.
 - **A piece that lies across an edge makes a step.** Give a beam or a ramp a level end that follows the edge.
 - **The route bot slows for each turn:** to 6.9 m/s at 30° and to 3.5 m/s at 90° or more (`RouteBot._turn_speed`). A sharp turn costs about half a second. On B1, curve points 2 to 3 m apart made the bot miss a point and turn back. So a fast route has few points, long legs and few turns.
 - **Leave 0.5 m between a route line and a kerb or a pillar.**
-- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `teeth`, `lathe`, `pillar`, `hoop` and `inlay`. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines.
+- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines.

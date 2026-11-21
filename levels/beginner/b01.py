@@ -187,26 +187,10 @@ kit.wall(
     material="brass",
 )
 
-# An inverted cone with a brass finial hangs under each block, as under a tower top. The
-# cones are out of reach, so they do not collide.
-for name, (x, y), radius in (
-    ("plaza", CLOCK, 14.0),
-    ("terrace", (-22.5, 19.5), 5.2),
-    ("garden", (25.5, 16.0), 3.3),
-    ("court", (-4.0, 42.5), 5.2),
-    ("dais", DAIS, 5.2),
-):
-    depth = 1.5 * radius
-    kit.lathe(
-        (x, y, BASE), [(0.0, -depth), (radius, 0.0)], name=f"keel_{name}", collide=False
-    )
-    kit.lathe(
-        (x, y, BASE - depth),
-        [(0.0, -0.14 * radius), (0.07 * radius, -0.07 * radius), (0.03 * radius, 0.0)],
-        name=f"keel_{name}_finial",
-        material="brass",
-        collide=False,
-    )
+# A brass gear wheel is set into the south wall of the court on each side of the grand
+# ramp, above the marble's reach.
+for name, x in (("west", -9.0), ("east", 9.0)):
+    kit.gear(at=(x, 37 - 0.12, 2.0), radius=1.55, name=f"court_gear_{name}")
 
 # --- Ramps -------------------------------------------------------------------------------
 
@@ -257,12 +241,23 @@ for name, middle, edge, side, top in (
         middle[0] + side * HAND_HALF * right[0],
         middle[1] + side * HAND_HALF * right[1],
     )
-    kit.deck(
-        [near, far, (far[0] + side * reach * along[0], edge)],
-        top=top,
-        name=f"minute_hand_{name}",
-        material="gold",
-    )
+    last = (far[0] + side * reach * along[0], edge)
+    kit.deck([near, far, last], top=top, name=f"minute_hand_{name}", material="gold")
+# The point of the hand lies on the court as an inlay: a diamond, as on the hour pointer.
+# It starts at the two places where the sides of the beam meet the edge of the court:
+# `near` and `last` of the tip, from the last pass of the loop.
+point_foot = ((near[0] + last[0]) / 2, 37.0)
+kit.inlay(
+    [
+        near,
+        last,
+        (point_foot[0] + along[0] + right[0], point_foot[1] + along[1] + right[1]),
+        (point_foot[0] + 3.4 * along[0], point_foot[1] + 3.4 * along[1]),
+        (point_foot[0] + along[0] - right[0], point_foot[1] + along[1] - right[1]),
+    ],
+    top=4.0,
+    name="minute_hand_point",
+)
 # A gold ring on the terrace marks the way onto the hand.
 hand_eye = (hand_start[0] - 1.9 * along[0], hand_start[1] - 1.9 * along[1])
 
@@ -335,13 +330,18 @@ for hour in range(12):
         CLOCK[1] + 8.9 * math.sin(math.radians(angle)),
     )
     kit.inlay(kit.box(foot, wide, 1.6, yaw=angle - 90), name=f"clock_hour_{hour:02d}")
-# The hour pointer shows six o'clock: dawn. The minute hand fell onto the terrace.
+# The hour pointer shows six o'clock: dawn. It starts at the rim of the dish and has a
+# diamond point. The minute hand fell onto the terrace.
+POINTER = DISH + 0.24
 kit.inlay(
     [
-        (0, CLOCK[1] - 8.6),
-        (0.3, CLOCK[1] - 7.3),
-        (0, CLOCK[1] - 6.8),
-        (-0.3, CLOCK[1] - 7.3),
+        (-0.18, CLOCK[1] - POINTER),
+        (0.18, CLOCK[1] - POINTER),
+        (0.18, CLOCK[1] - 7.3),
+        (0.42, CLOCK[1] - 7.7),
+        (0, CLOCK[1] - 8.7),
+        (-0.42, CLOCK[1] - 7.7),
+        (-0.18, CLOCK[1] - 7.3),
     ],
     name="clock_pointer",
 )
@@ -354,27 +354,45 @@ for name, strip, top in (
     ("edge_plaza", kit.rect(16.86, 0.3, 17, 22), 0.0),
     ("edge_terrace_east", kit.rect(-17.14, 9, -17, 30), 2.0),
     ("edge_terrace_north", kit.rect(-22, 29.86, -17.14, 30), 2.0),
-    ("edge_court", kit.rect(-16.7, 37, -6, 37.14), 4.0),
+    ("edge_court_west", kit.rect(-16.7, 37, near[0] - 0.6, 37.14), 4.0),
+    ("edge_court_east", kit.rect(last[0] + 0.6, 37, -6, 37.14), 4.0),
 ):
     kit.inlay(strip, top=top, name=name, material="brass")
 
 # --- The armillary sphere over the finish ------------------------------------------------
 
-# Four pillars carry the horizon ring. The other two rings hang inside it, above the
-# marble's reach. The marble sees the rings from the start: they mark the finish. The
-# pillars stand clear of the two ways in: from the south and from the last gem.
+# Four pillars carry the horizon ring. The meridian ring stands in the horizon ring, and
+# the ecliptic ring hangs in the meridian ring: each ring is one ring thickness smaller than
+# the ring round it, and all three turn on one east-west axle, at the two pivot balls. The
+# lowest ring is above the marble's reach. The marble sees the rings from the start: they
+# mark the finish. The pillars stand clear of the two ways in: from the south and from the
+# last gem.
+RING = 0.25
+HORIZON = 3.9
+SPHERE = (*DAIS, 9.7)
 for i in range(4):
     angle = math.radians(68.5 + 90 * i)
     kit.pillar(
-        at=(DAIS[0] + 3.9 * math.cos(angle), DAIS[1] + 3.9 * math.sin(angle), 4),
-        radius=0.5,
-        height=2.8,
+        at=(
+            DAIS[0] + HORIZON * math.cos(angle),
+            DAIS[1] + HORIZON * math.sin(angle),
+            4,
+        ),
+        radius=0.65,
+        height=5.05,
         name=f"dais_pillar_{i}",
     )
-SPHERE = (*DAIS, 7.33)
-kit.hoop(SPHERE, 3.9, name="armillary_horizon")
-kit.hoop(SPHERE, 2.5, rotation=(90, 0, 0), name="armillary_meridian")
-kit.hoop(SPHERE, 3.1, rotation=(55, 0, 40), name="armillary_ecliptic")
+kit.hoop(SPHERE, HORIZON, RING, name="armillary_horizon")
+kit.hoop(SPHERE, HORIZON - RING, RING, rotation=(90, 0, 0), name="armillary_meridian")
+kit.hoop(
+    SPHERE, HORIZON - 2 * RING, RING, rotation=(30, 0, 0), name="armillary_ecliptic"
+)
+for name, side in (("west", -1), ("east", 1)):
+    kit.ball(
+        (SPHERE[0] + side * (HORIZON - RING), SPHERE[1], SPHERE[2]),
+        0.42,
+        name=f"armillary_pivot_{name}",
+    )
 
 # --- Objects -----------------------------------------------------------------------------
 
@@ -474,4 +492,5 @@ kit.shot("finish", at=(-7, 42.5, 5.6), rotation=(4, 0, -34))
 kit.shot("egg", at=(10.9, 40.3, -0.8), rotation=(-5, 0, -90))
 kit.shot("clock", at=(0, 1, 8), rotation=(-38, 0, 0))
 kit.shot("hand", at=(-23.2, 24.2, 3.7), rotation=(-10, 0, -31.6))
+kit.shot("court", at=(-11.5, 41.5, 7.5), rotation=(-25, 0, 145.5))
 kit.shot("garden", at=(26, 3, -0.5), rotation=(-8, 0, 12))

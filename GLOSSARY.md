@@ -71,7 +71,7 @@ The surface finish of a kit face by name: `limestone`, `brass` or `gold`. A leve
 _Avoid_: texture, skin (a skin is a choice of marble)
 
 **Kit piece**:
-A mesh that a level script adds with the kit: a track, a ramp, a deck, a wall and so on. A piece collides unless its description says that it does not (an inlay, gear teeth, a hoop).
+A mesh that a level script adds with the kit: a track, a ramp, a deck, a wall and so on. A piece collides unless its description says that it does not (an inlay, gear teeth, a gear, a hoop, a ball).
 _Avoid_: prop, tile, block (a block is a deep deck)
 
 **Kerb**:

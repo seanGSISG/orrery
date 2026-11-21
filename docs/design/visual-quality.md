@@ -258,7 +258,7 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 ## 9. Not verified
 
 - The Git LFS numbers for the whole scope are estimates. Section 10 has the numbers that #24 measured on the two fixture levels.
-- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 5.3 MB with every mesh at 0.1 m (section 10).
+- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 4.6 MB with every mesh at 0.1 m (section 10).
 - The material ranges in section 6 are common PBR practice, not values from a Godot source.
 - We did not test how much MSAA 2× costs on a real GTX 1660. The plan's 5090 budget stands in for it.
 - We did not test HDR output on Sean's KDE Wayland session, or in `gamescope`.
@@ -273,7 +273,7 @@ Sean approved look A of the style board on 2026-11-21: honey limestone, aged bra
 A level script names a kit material, and the importer gives those faces the game's material of that name.
 
 - Names: `limestone` (track decks), `brass` (trim and borders) and `gold` (inlays). `kit.surface(id, material)` makes the Blender material; `kit.track()` and `kit.ramp()` take `material="limestone"` and `trim="brass"`.
-- The pieces of `kit/masonry.py` (`deck`, `wall`, `arch`, `lathe`, `inlay` and the others) take `material` in the same way. An inlay is gold and gear teeth are brass unless the level script says otherwise.
+- The pieces of `kit/masonry.py` (`deck`, `wall`, `arch`, `lathe`, `inlay` and the others) take `material` in the same way. An inlay is gold; gear teeth, a gear, a hoop and a ball are brass unless the level script says otherwise.
 - The trim is a brass angle section along the two long edges of a piece. It is a mesh of its own that does not collide, so it does not change how the marble rolls. Give `trim=""` for an edge that touches another piece.
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
@@ -324,10 +324,10 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Kit textures in Git LFS (sets A, B and C, and gold) | 47 MB |
 | Tier skies in Git LFS (dawn, noon, dusk) | 35 MB |
 | Sky sources in Git LFS (3 HDRIs, the planet map) | 14 MB |
-| Lightmap files, `b01` (#28: 100 meshes, 52,600 triangles, every mesh at 0.1 m per texel; bake 48 s) | 5.3 MB |
+| Lightmap files, `b01` (#28: 96 meshes, 55,700 triangles, every mesh at 0.1 m per texel; bake 36 s) | 4.6 MB |
 | VRAM, `fixture`, Medium at 1080p | 875 MB |
-| VRAM, `b01`, Medium at 1080p | 894 MB |
-| GPU time, `b01`, mean / p99 at 1080p (two runs; see the note on clock speed below) | Low 0.22 / 0.27 and 0.54 / 0.78 ms, Medium 0.38 / 0.95 and 0.89 / 1.16 ms, High 0.83 / 0.94 ms, Ultra 1.31 / 1.60 ms |
+| VRAM, `b01`, Medium at 1080p | 892 MB |
+| GPU time, `b01`, mean / p99 at 1080p (three runs; see the note on clock speed below) | Low 0.22 to 0.54 / 0.27 to 0.78 ms, Medium 0.38 to 0.89 / 0.95 to 1.16 ms, High 0.83 to 0.90 / 0.94 to 3.00 ms, Ultra 1.30 to 1.33 / 1.60 to 1.62 ms |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |

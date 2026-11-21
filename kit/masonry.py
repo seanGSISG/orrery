@@ -4,12 +4,14 @@
 - deck(): a floor of any outline. dish(): a round bowl that fills a round hole in a deck.
 - wall(): a wall or a kerb along a path. arch(): a wall panel with a doorway.
 - teeth(): a row of gear teeth along the top of an outer wall. They do not collide.
-- lathe() and pillar(): round pieces. hoop(): a round ring. It does not collide.
+- lathe() and pillar(): round pieces. They collide.
+- hoop(), ball() and gear(): a round ring, a ball and a gear wheel against a wall. They do
+  not collide.
 - inlay(): a flat metal figure set into a floor. It does not collide.
 
 A deck, a dish, a wall and an inlay take world positions and keep their origin at the world
-origin, so the paving of the kit material runs on from one piece to the next. An arch and
-a round piece have their origin at `at`. Each piece is `material` on the surface type
+origin, so the paving of the kit material runs on from one piece to the next. An arch, a
+gear and a round piece have their origin at `at`. Each piece is `material` on the surface type
 `surface`, as a track piece is (kit/pieces.py).
 """
 
@@ -40,6 +42,14 @@ TOOTH_WIDTH = 0.32
 TOOTH_DEPTH = 0.22
 TOOTH_HEIGHT = 0.3
 TOOTH_DROP = 0.12
+# A gear wheel, as shares of its radius: the root of the teeth, the inner edge of the rim,
+# the hub, the width of a spoke and how far the boss on the hub stands out.
+GEAR_ROOT = 0.86
+GEAR_RIM = 0.7
+GEAR_HUB = 0.28
+GEAR_SPOKE = 0.14
+GEAR_BOSS = 0.05
+GEAR_SPOKES = 6
 
 
 def deck(
@@ -381,23 +391,92 @@ def pillar(
         (0.55 * radius, height),
     ]
     obj = lathe(at, stone, name=name)
-    ball = 0.45 * radius
+    finial = 0.45 * radius
     # The ball sits a little into the capital.
-    centre = height + 0.8 * ball
-    steps = 12
-    sphere = [
-        (
-            ball * math.sin(math.pi * k / steps),
-            centre - ball * math.cos(math.pi * k / steps),
-        )
-        for k in range(steps + 1)
-    ]
-    sphere[0] = (0.0, centre - ball)
-    sphere[-1] = (0.0, centre + ball)
-    top = lathe(
-        (0.0, 0.0, 0.0), sphere, name=f"{name}_ball", material="brass", collide=False
-    )
+    top = ball((0.0, 0.0, height + 0.8 * finial), finial, name=f"{name}_ball")
     top.parent = obj
+    return obj
+
+
+def ball(
+    at: Vec3, radius: float, name: str | None = None, material: str = "brass"
+) -> bpy.types.Object:
+    """Adds a ball of `material` whose middle is at `at`: a finial, or the pivot of a ring.
+    It does not collide: keep it out of the marble's way."""
+    name = name or default_name("ball")
+    steps = 12
+    half = [
+        (
+            radius * math.sin(math.pi * k / steps),
+            -radius * math.cos(math.pi * k / steps),
+        )
+        for k in range(1, steps)
+    ]
+    profile = [(0.0, -radius), *half, (0.0, radius)]
+    return lathe(at, profile, name=name, material=material, collide=False)
+
+
+def gear(
+    at: Vec3,
+    radius: float,
+    teeth: int = 14,
+    depth: float = 0.25,
+    yaw: float = 0.0,
+    name: str | None = None,
+    material: str = "brass",
+) -> bpy.types.Object:
+    """Adds a gear wheel that stands upright, flat against a wall: a rim with `teeth` teeth
+    out to `radius`, six spokes and a hub. `at` is the middle of its front face. Like an
+    arch, it faces -y and runs back `depth` m along +y, turned by `yaw` degrees, so a part
+    of `depth` can be inside the wall. It does not collide: put it above the marble's reach
+    or on a wall that the marble does not touch."""
+    name = name or default_name("gear")
+    pitch = 360.0 / teeth
+    root = GEAR_ROOT * radius
+    rim: list[Point] = []
+    for i in range(teeth):
+        middle = i * pitch
+        # A tooth with sloped flanks, then the root of the gap to the next tooth.
+        for share, reach in (
+            (-0.25, root),
+            (-0.15, radius),
+            (0.15, radius),
+            (0.25, root),
+            (0.5, root),
+        ):
+            angle = math.radians(middle + share * pitch)
+            rim.append((reach * math.cos(angle), reach * math.sin(angle)))
+    # A window between each two spokes. The spokes have parallel sides.
+    inner, outer = GEAR_HUB * radius, GEAR_RIM * radius
+    windows = []
+    for i in range(GEAR_SPOKES):
+        middle = (i + 0.5) * 360.0 / GEAR_SPOKES
+        spans = [
+            180.0 / GEAR_SPOKES
+            - math.degrees(math.asin(GEAR_SPOKE * radius / 2 / reach))
+            for reach in (inner, outer)
+        ]
+        windows.append(
+            [
+                *arc((0.0, 0.0), inner, middle - spans[0], middle + spans[0]),
+                *arc((0.0, 0.0), outer, middle + spans[1], middle - spans[1]),
+            ]
+        )
+    bm = bmesh.new()
+    _plate(bm, rim, windows, 0.0, -depth, through=True, closed=True)
+    # The boss on the hub stands proud of the wheel.
+    boss = arc((0.0, 0.0), 0.6 * inner, 0, 360)
+    _plate(bm, boss, (), GEAR_BOSS * radius, 0.0, through=False, closed=False)
+    # The wheel lies flat; stand it up, so that its top face is its front.
+    bmesh.ops.rotate(
+        bm,
+        verts=bm.verts[:],
+        cent=(0.0, 0.0, 0.0),
+        matrix=Matrix.Rotation(math.pi / 2, 3, "X"),
+    )
+    obj = add_mesh(bm, name, surface_material("default", material), collide=False)
+    obj.location = at
+    obj.rotation_euler = (0.0, 0.0, math.radians(yaw))
     return obj
 
 
