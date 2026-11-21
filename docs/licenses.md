@@ -1,9 +1,11 @@
 # Licenses
 
-Every third-party asset, sample, font and AI model used in Orrery. Add one row per item.
+Every third-party asset, sample, font, add-on and AI model in Orrery. Each line gives the source, the license and where we use it.
 
-| Item | Source | License | Used for |
+| Item | Source | License | Used in |
 |---|---|---|---|
+| GUT 9.7.1 (Godot Unit Test) | Tag archive `https://github.com/bitwes/Gut/archive/refs/tags/v9.7.1.tar.gz` (SHA-256 `6da99c4e9228d9bec3fb4bd1730a487770a989f0f511dac82a2897a964613385`), vendored unchanged | MIT (`game/addons/gut/LICENSE.md`). Its bundled fonts (Anonymous Pro, Courier Prime, Lobster Two) are SIL OFL 1.1 fonts; `game/addons/gut/fonts/OFL.txt` holds the license text | `game/addons/gut/`: the unit-test runner. Release exports leave it out |
+| Sound effects and placeholder music loops | Our own work: `tools/audio/sfx/synth_sfx.py` synthesises them from sines and noise. No samples. The script runs with numpy (BSD-3-Clause) and soundfile (BSD-3-Clause, with libsndfile, LGPL-2.1), which are build tools only and do not ship | Ours | `game/audio/sfx/`; `game/test/audio/loops/` (tests only) |
 | Qwen-Image-2512, image model (`qwen_image_2512_bf16.safetensors`) | [Comfy-Org/Qwen-Image](https://huggingface.co/Comfy-Org/Qwen-Image) at `1f12b17`, repackaged from [Qwen/Qwen-Image-2512](https://huggingface.co/Qwen/Qwen-Image-2512) | Apache-2.0 | Mood references of the style board: `docs/style/review/mood-*.webp` and `ref-*.webp` |
 | Qwen2.5-VL-7B, text encoder (`qwen_2.5_vl_7b_fp8_scaled.safetensors`) | Comfy-Org/Qwen-Image at `1f12b17`, from [Qwen/Qwen2.5-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) | Apache-2.0 | Text encoder of Qwen-Image-2512 |
 | Qwen-Image VAE (`qwen_image_vae.safetensors`) | Comfy-Org/Qwen-Image at `1f12b17` | Apache-2.0 | Image decoder of Qwen-Image-2512 |

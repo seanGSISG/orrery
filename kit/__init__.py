@@ -1,0 +1,14 @@
+"""Orrery kit: the Blender library that level scripts call (docs/plan.md §4.3).
+
+A level script `levels/<tier>/<id>.py` imports kit and builds its level in the empty scene that
+`tools/blender/build_level.py` gives it. Rebuild with `just build-levels <id>`.
+
+Units and axes are Blender's: metres, x right, y forward, z up. Angles are in degrees. The glTF
+export turns positions into Godot's y-up axes: Blender (x, y, z) is Godot (x, z, -y).
+"""
+
+from kit.markers import level, marker, shot
+from kit.pieces import ramp, track
+from kit.surfaces import surface
+
+__all__ = ["level", "marker", "ramp", "shot", "surface", "track"]

@@ -2,8 +2,6 @@
 
 An original 3D marble platformer for Linux and Windows, built with Godot 4.7.2 and Blender 5.2.4 LTS. `docs/plan.md` holds every design decision, the architecture and the milestones. Read its relevant section before you add a feature, change the design, or start a milestone task. When a task conflicts with the plan, raise it with Sean before you build.
 
-M0 is not finished: the `justfile`, `game/`, `kit/`, `levels/` and the harness arrive with it. Build them as `docs/plan.md` §6 and §8 describe. Remove this paragraph when M0 merges.
-
 ## Rules
 
 - **Originality.** Every name, level, asset, melody and line of code in Orrery is our own. The projects in `docs/research/gameplay.md` are references for numbers and behaviour only. Write all code yourself from the documented behaviour.
@@ -32,7 +30,8 @@ M0 is not finished: the `justfile`, `game/`, `kit/`, `levels/` and the harness a
 - `godot --headless` renders nothing, so its screenshots are blank. Use the harness for anything visual. Use `--headless` for imports, exports and logic tests.
 - Godot and Jolt don't promise identical results from identical inputs. Assert with tolerances, and compare physics values only within one OS. Ghosts record transforms for this reason.
 - Run the pinned official Blender (`blender-5.2`). The Arch `blender` package uses a different Python.
-- GUT reports success when zero tests run. Keep the test-count check in `just test`.
+- GUT reports success when zero tests run, and it skips a test script that does not parse. Keep both checks in `just test`.
+- With `unsafe_call_argument` an error, a Variant argument to a GUT assert (for example from `ProjectSettings.get_setting`) is a parse error. Put the value in a typed variable first.
 
 ## Workflow
 

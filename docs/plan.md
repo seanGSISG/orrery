@@ -206,13 +206,13 @@ orrery/
 │   ├── project.godot
 │   ├── addons/gut/
 │   ├── core/              marble solver, camera, input, gravity fields, save data
-│   ├── objects/           one folder per object or power-up (scene + script + test)
+│   ├── objects/           one folder per object or power-up (scene + script)
 │   ├── modes/             campaign, ascent, planetarium
 │   ├── ui/                menus and HUD
 │   ├── audio/             buses, music players
 │   ├── harness/           automation interface and route bot (left out of release exports)
 │   ├── levels/built/      built .glb files (generated, ignored by git)
-│   └── test/              GUT tests
+│   └── test/              GUT tests; object tests in test/objects/<type>/
 ├── levels/                level scripts, the source of truth
 │   ├── beginner/  intermediate/  advanced/  secret/
 │   ├── ascent/            zone_1.py … zone_8.py
@@ -229,13 +229,15 @@ orrery/
 
 Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`.
 
+Object tests live in `game/test/objects/<type>/`, not beside the object: the release exports leave out only `test/*`, and GUT scans only `res://test/`. The runtime design is in `docs/design/core-runtime.md`.
+
 ### 4.2 Marble physics
 
 Every serious marble game writes its own marble physics (`docs/research/gameplay.md` §6). Orrery does too. The solver is our own code, written from the documented behaviour. No code comes from reference projects.
 
 - **State:** position, linear velocity, angular velocity, radius, mass, current gravity vector, held power-up effects.
 - **Tick:** Godot physics runs at 120 Hz. Each tick splits into sub-steps so that the marble moves at most half its radius per sub-step.
-- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh; moving objects are `AnimatableBody3D`, and the solver reads their velocity at the contact point. The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
+- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh. Every collider is a `Solid` (a `StaticBody3D`). A moving object moves its `Solid` from code each tick with `Solid.move()`, which sets the physics transform at once and records the surface velocity; the solver reads that velocity at the contact point. Movers are not `AnimatableBody3D`: its transform reaches shape queries only at the next physics frame, and `LevelRun.step()` runs ticks outside physics frames (`docs/design/core-runtime.md` §1 and §2). The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
 - **Motion model:**
   - Input sets a target angular velocity around the axis perpendicular to the move direction and the surface normal. Spin approaches the target at the angular acceleration limit; with no input, braking pulls spin toward zero.
   - Friction at the contact couples spin and linear velocity: static friction, then kinetic friction when the contact slips. Each surface type scales the friction.
@@ -304,7 +306,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 
 - Reads the level's `route` markers and steers the marble with the same `MarbleInput` as a player: it aims at the next waypoint from the marble's current position and speed, and it does each waypoint's action (jump, use power-up, wait until a platform arrives).
 - Because it steers from the current state, small physics differences between runs or between Linux and Windows do not break it. Level tests do not need exact physics repeats.
-- **Par and gold:** start as the bot's time × 1.5 (par) and × 1.15 (gold). A person tunes them after playing.
+- **Par and gold:** each level script carries two routes, the first-run route and an expert route, and the bot times both. Par starts as the first-run route time × 1.5. Gold starts as the expert route time × 1.15, so gold needs the expert line. A person tunes them after playing.
 - From M3, a search program tries many input sequences per level to find unintended shortcuts. Agents fix the shortcuts or keep them as intended skips.
 
 ### 4.7 Rendering and performance
@@ -314,6 +316,8 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - Ascent and Planetarium: dynamic sky and sun (time of day follows height in Ascent), SDFGI on Ultra only.
 - Presets: **Low** (no GI or fog, lower shadow resolution), **Medium**, **High**, **Ultra** (4K-ready, SDFGI, full volumetrics).
 - **Targets:** 1080p at 60 fps on a GTX 1660 / RX 5600-class GPU at Medium. Agents can't test that GPU directly, so the performance check fails when GPU frame time at Medium on the RTX 5090 goes over a budget (start at 3 ms; calibrate in M1 against a known-good scene). High-refresh monitors work.
+- **Measured (#20, RTX 5090, idle GPU, `just perf fixture` with the stand-in light rig):** GPU mean/p99 ms Low 0.10/0.13, Medium 0.21/0.24, High 0.56/0.61, Ultra 0.84/0.96 at 1080p; High 1440p 0.82/0.90; Ultra 4K 2.7/3.3. VRAM Medium 222 MB, Ultra 4K 1.7 GB. The fixture is too small to calibrate the 3 ms budget, so it stays until the first real level (M1).
+- **Visual quality bar:** `docs/design/visual-quality.md` turns "crisp and photorealistic" into checks. It holds the preset table, the anti-aliasing choice, the lightmap bake settings, the glass-marble approach, the texture policy (2K default with a short list of 4K exceptions, which replaces the 2K cap in 2.11 and 9), the material rules, the gallery review rubric and what `just perf` measures per preset. Every art and rendering ticket meets it.
 
 ### 4.8 Audio implementation
 
@@ -340,14 +344,14 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just setup` | Installs and checks every pinned tool (6.2). Safe to repeat |
 | `just build-levels [id]` | Builds level scripts into `.glb` files |
 | `just import` | `godot --headless --path game --import` |
-| `just lint` | `gdlint` (gdtoolkit), Ruff, ty, shellcheck, level lint |
-| `just test` | GUT unit tests, headless. Fails if zero tests ran |
+| `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff, ty, shellcheck, level lint. Tool versions come from `tools/setup/pins.env` |
+| `just test` | GUT unit tests, headless. Fails if zero tests ran or a test script does not load |
 | `just test-levels [id]` | Runs the route bot on each level, headless. Fails if the bot does not finish under par |
 | `just gallery [id]` | Renders every level's camera shots into `build/gallery/index.html` |
 | `just perf [id]` | Flies a fixed camera path through each level and checks GPU frame time |
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response |
 | `just export` | Builds Linux and Windows release exports into `build/` |
-| `just smoke-wine` | Starts the Windows export under Wine, headless, and checks that it boots |
+| `just smoke-wine` | Exports, starts the Windows export under Wine, headless, and checks its boot marker |
 | `just run [level]` | Plays the game |
 | `just ci` | Everything CI runs, locally |
 
@@ -364,9 +368,11 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 ### 5.3 CI (GitHub Actions)
 
+- **`lint` job** (ubuntu): runs `just lint`.
 - **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels`, uploads the built files.
-- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with 4.7.2 and templates, downloads the built levels, runs import, GUT tests and the headless level tests.
-- **`export` job:** Linux and Windows release exports as artifacts.
+- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
+- **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
+- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless and checks its boot marker.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
 ## 6. Dev environment

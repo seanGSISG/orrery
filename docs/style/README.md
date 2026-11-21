@@ -1,12 +1,21 @@
 # Style board
 
+## Decision (Sean, 2026-11-21)
+
+Approved. Ticket #5 is closed.
+
+- Materials and light: set A. Honey limestone, aged brass, golden dawn.
+- Marble A is the default: clear glass with a turning brass orrery core. Marble B (blue stone, gold inlay) becomes an unlockable skin later.
+- Gems: as rendered. 0.5 m wide, 0.3 m above the floor, one cut per colour, faint beam.
+- Skies: noon and dusk, as rendered.
+
 The style board sets the look of Orrery: materials, light, sky and scale. Sean approves it before any final art (ticket #5, `docs/plan.md` 2.11). Level layouts come from the level briefs, not from this board.
 
 Open `review/index.html` to see the board.
 
-**Status: not approved yet.** When Sean decides, write the choices into "Approved choices" below.
+**Status: approved.** See "Decision" above.
 
-## Open choices
+## Options reviewed
 
 | Choice | Recommendation |
 |---|---|
@@ -14,10 +23,6 @@ Open `review/index.html` to see the board.
 | Marble: A (glass, brass core) or B (blue stone, gold inlay) | A. The brass core shows the marble's roll, and the glass picks up each sky. B contrasts more with pale stone. |
 | Gem look | Three cuts, one per colour, as rendered. |
 | Noon and dusk skies | As rendered. The dusk scene is dark away from the sun; a level at dusk needs fill light for play. |
-
-## Approved choices
-
-None yet.
 
 ## The game look: Blender renders
 
