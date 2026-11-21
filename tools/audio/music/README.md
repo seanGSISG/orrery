@@ -43,17 +43,29 @@ System tools: `fluidsynth`, `ffmpeg`, `oggenc` (vorbis-tools).
    loudness, clipping, silence and the loop seam. Take-level proxies reject clipping,
    silence, drifting tempo and mushy drums; hook-level proxies reject a hook that clashes
    with the bed or sits under it.
-5. **Review** (`review.py`). `review/index.html` plays the kept candidates.
+5. **Review** (`review.py`). `out/review/index.html` plays the kept candidates.
 
 ## Outputs
 
 | Path | Committed | What |
 |---|---|---|
-| `out/` | no | takes, work files and full candidate OGGs |
-| `review/index.html`, `review/previews/` | yes | the review page and 20 s previews |
-| `midi/<candidate>.mid` | yes | the authored layer of each kept candidate |
+| `out/` | no | takes, work files, full candidate OGGs and the review page with 20 s previews |
+| `out/midi/<candidate>.mid` | no | the written layer of every kept candidate |
+| `midi/<candidate>.mid` | yes | the written layer of each shipped track, copied from `out/midi/` when Sean picks it |
 | `manifest/<track>.json` | yes | prompts, seeds, settings, metrics and every rejection |
 
 The full OGGs carry Vorbis comments `BPM`, `BEATS`, `BAR_BEATS`, `LOOPSTART=0` and
 `LOOPLENGTH` (samples) for the Godot import (#25): the whole file is the loop, so
 `loop_offset` is 0.
+
+## Ship a pick
+
+1. Copy `out/candidates/<track>/<id>.ogg` to `game/audio/music/<group>/<name>.ogg` and
+   follow `docs/design/audio.md` §4. Its `BPM` and `BEATS` comments give `bpm` and
+   `beat_count`; round `bpm` up in the last decimal, so `beat_count` beats never run past
+   the end of the file.
+2. Copy `out/midi/<id>.mid` to `midi/`.
+3. Add the track's row (prompt, seed, written layer) to `docs/licenses.md`.
+
+Shipped so far: title `title-ace-03-a` (Wind-up), Beginner `beginner-ace-07-a` (Roll
+call), Ascent zone 1 `ascent-ace-06-a` (Spiral stair).

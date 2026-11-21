@@ -3,7 +3,7 @@
 - generate: render backing takes through ComfyUI (one job at a time).
 - build: analyse every take, mix the hook and clockwork layer over it, run the checks,
   and keep the best 3-5 passing candidates per track.
-- review: write review/index.html from the kept candidates.
+- review: write out/review/index.html from the kept candidates.
 """
 
 from __future__ import annotations

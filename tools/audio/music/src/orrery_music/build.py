@@ -5,8 +5,8 @@ if a listen-check proxy fails. For each surviving take and each of the track's h
 fit the hook to the take's harmony, arrange and render the layer, mix, normalise, encode
 OGG Vorbis, decode it again and run the final checks on the file a player would load.
 
-Writes `out/candidates/<track>/<candidate>.ogg`, `review/previews/<candidate>.ogg`,
-`midi/<candidate>.mid` (the human-written layer) and `manifest/<track>.json` (prompts,
+Writes `out/candidates/<track>/<candidate>.ogg`, `out/review/previews/<candidate>.ogg`,
+`out/midi/<candidate>.mid` (the written layer) and `manifest/<track>.json` (prompts,
 seeds, settings, every metric and every rejection reason).
 """
 
@@ -278,7 +278,7 @@ def build_candidate(
         hook, loop, report.loop_bars, period, track.tonic_midi
     )
     layer = arrange(played, report.loop_bars, period, tonic)
-    midi_path = root / "midi" / f"{cid}.mid"
+    midi_path = out / "midi" / f"{cid}.mid"
     midi_path.parent.mkdir(parents=True, exist_ok=True)
     layer.full_midi.save(midi_path)
     work = out / "work" / track.id
@@ -321,7 +321,7 @@ def build_candidate(
     )
     prev = master.encode_ogg(
         master.preview(final, 8 * 4 * period),
-        root / "review" / "previews" / f"{cid}.ogg",
+        root / "out" / "review" / "previews" / f"{cid}.ogg",
         1,
         {},
     )

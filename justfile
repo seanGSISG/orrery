@@ -108,13 +108,14 @@ lint: import
     tools=() deps=()
     for f in "${py[@]}"; do
         grep -qE '^(import|from) bpy' "$f" && continue
-        [[ $f == tools/harness/* ]] && continue
+        [[ $f == tools/harness/* || $f == tools/audio/music/* ]] && continue
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
     uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
-    # The harness is a uv project; ty checks it with its locked dependencies.
+    # The harness and the music pipeline are uv projects; ty checks each with its locked dependencies.
     uv run --quiet --project tools/harness --with "ty==$TY_VERSION" ty check tools/harness
+    uv run --quiet --project tools/audio/music --with "ty==$TY_VERSION" ty check tools/audio/music
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
@@ -149,6 +150,13 @@ harness *args:
 [positional-arguments]
 test-harness *args: import
     uv run --quiet --project tools/harness pytest tools/harness "$@"
+
+# --- Music pipeline (#26) ---
+
+# Run the music pipeline tests (needs ffmpeg for the loudness test)
+[positional-arguments]
+test-music *args:
+    uv run --quiet --project tools/audio/music pytest tools/audio/music "$@"
 
 # Build the Linux debug export (harness and test levels included) into build/linux-debug/
 export-debug: import

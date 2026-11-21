@@ -1,6 +1,6 @@
-"""Write `review/index.html`: one dark, phone-friendly page with every kept candidate.
+"""Write `out/review/index.html`: one dark, phone-friendly page with every kept candidate.
 
-Each card has the full loop (from `out/`, not committed) and the committed 20 s preview,
+Each card has the full loop and a 20 s preview (both under `out/`, not committed),
 the tempo, key and length, and one line on what makes it catchy. The "Hear the seam"
 button jumps to 5 s before the loop end with looping on, so the wrap is easy to judge.
 """
@@ -66,8 +66,8 @@ def write_review(root: Path) -> Path:
         )
         cards: list[str] = []
         for i, c in enumerate(kept):
-            full = html.escape(f"../{c['file']}")
-            prev = html.escape(f"../{c['preview']}")
+            full = html.escape(f"../../{c['file']}")
+            prev = html.escape(f"../../{c['preview']}")
             aid = html.escape(f"a-{c['id']}")
             minutes, seconds = divmod(round(c["seconds"]), 60)
             model = (
@@ -111,7 +111,7 @@ def write_review(root: Path) -> Path:
 </body>
 </html>
 """
-    dest = root / "review" / "index.html"
+    dest = root / "out" / "review" / "index.html"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(page)
     return dest
