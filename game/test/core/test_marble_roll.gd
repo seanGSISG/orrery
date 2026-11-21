@@ -20,6 +20,14 @@ func test_reaches_top_speed_in_expected_time() -> void:
 	assert_true(run.state.on_ground)
 
 
+## A marble put just above the floor, inside the contact margin, falls and rests on it.
+func test_settles_on_the_floor() -> void:
+	run.marble.teleport(Vector3(0, TUNING.radius + 0.005, 0), Vector3.ZERO)
+	hold(MarbleInput.new(), 0.2)
+	assert_almost_eq(run.state.position.y, TUNING.radius, 0.001)
+	assert_true(run.state.on_ground)
+
+
 ## With no input, braking stops a marble at top speed in
 ## max_roll_speed / (braking_acceleration × radius).
 func test_brakes_to_rest_without_input() -> void:

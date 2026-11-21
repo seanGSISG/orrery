@@ -26,7 +26,8 @@ func _init(space: PhysicsDirectSpaceState3D, radius: float, margin: float) -> vo
 	_query.shape = sphere
 
 
-## Returns the contacts of the sphere at center with every Solid, one per distinct normal.
+## Returns the contacts of the sphere at center with every Solid, one per distinct normal of
+## each Solid. So a flush object keeps its own contact beside the floor's.
 func contacts(center: Vector3) -> Array[Contact]:
 	_set_query(center, _margin, Vector3.ZERO, SOLID_MASK, false)
 	var solids: Array[Solid] = []
@@ -45,8 +46,10 @@ func contacts(center: Vector3) -> Array[Contact]:
 		others.remove_at(i)
 		_query.exclude = others
 		var pairs: Array[Vector3] = _space.collide_shape(_query, 16)
+		var own: Array[Contact] = []
 		for k: int in range(1, pairs.size(), 2):
-			_add_contact(out, center, pairs[k], solids[i])
+			_add_contact(own, center, pairs[k], solids[i])
+		out.append_array(own)
 	_query.exclude = []
 	return out
 
@@ -80,9 +83,10 @@ func _set_query(center: Vector3, margin: float, motion: Vector3, mask: int, area
 	_query.collide_with_bodies = not areas
 
 
-## Adds the contact at point on solid. Of two contacts with almost the same normal, only the
-## deeper one stays: within about 2 mm of an internal edge, Jolt also gives the neighbour
-## triangle's edge point, with a normal tilted by up to 0.01 rad.
+## Adds the contact at point on solid to out, which holds only that Solid's contacts. Of two
+## contacts with almost the same normal, only the deeper one stays: within about 2 mm of an
+## internal edge, Jolt also gives the neighbour triangle's edge point, with a normal tilted
+## by up to 0.01 rad.
 func _add_contact(out: Array[Contact], center: Vector3, point: Vector3, solid: Solid) -> void:
 	var offset: Vector3 = center - point
 	var distance: float = offset.length()

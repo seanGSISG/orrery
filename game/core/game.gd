@@ -13,19 +13,24 @@ var screen: StringName = &"play"
 
 ## Replaces the current run with a run of level id that has a follow camera. Loads the built
 ## level res://levels/built/<id>.glb, else the test level res://test/levels/<id>.tscn.
-## Returns null when neither exists.
+## Returns null, and keeps the current run, when neither exists or the scene root is not a
+## Level.
 func load_level(id: StringName) -> LevelRun:
 	var path: String = BUILT_LEVEL % id
 	if not ResourceLoader.exists(path):
 		path = TEST_LEVEL % id
-	if not ResourceLoader.exists(path):
-		push_error("Game.load_level: no level named %s" % id)
+	var scene: PackedScene = load(path) as PackedScene if ResourceLoader.exists(path) else null
+	var root: Node = scene.instantiate() if scene != null else null
+	var level: Level = root as Level
+	if level == null:
+		push_error("Game.load_level: no Level scene for %s" % id)
+		if root != null:
+			root.free()
 		return null
 	if run != null:
 		remove_child(run)
 		run.queue_free()
-	var scene: PackedScene = load(path) as PackedScene
-	run = LevelRun.create(scene.instantiate() as Level)
+	run = LevelRun.create(level)
 	var camera: FollowCamera = FollowCamera.new()
 	camera.run = run
 	run.add_child(camera)

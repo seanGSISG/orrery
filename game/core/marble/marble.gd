@@ -59,10 +59,12 @@ func add_velocity(delta_v: Vector3) -> void:
 
 ## Puts the marble at `at` with new_velocity. The spin becomes the spin that rolls at
 ## new_velocity on a floor normal to up, so a marble put on the ground does not slip.
+## on_ground is false until the next step finds the contacts.
 func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	position = at
 	velocity = new_velocity
 	spin = up.cross(new_velocity) / tuning.radius
+	on_ground = false
 
 
 ## One sub-step of h seconds, in the order of docs/design/core-runtime.md §3.
@@ -76,7 +78,7 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 	var ground: Contact = null
 	var pressure: float = 0.0
 	for contact: Contact in contacts:
-		var push: float = _meet(contact)
+		var push: float = _meet(contact, h)
 		if push > pressure:
 			ground = contact
 			pressure = push
@@ -90,16 +92,19 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 	_note(contacts, world)
 
 
-## Stops the motion into contact and pushes the marble out to SKIN above the surface. Returns
-## the speed that it took away along the normal. #10 adds the bounce and the slide here.
-func _meet(contact: Contact) -> float:
+## Pushes the marble out to SKIN above contact's surface, and stops the part of the motion into
+## it that would pass that point in this sub-step of h seconds. So a marble inside the margin
+## only closes the gap. Returns the speed taken away along the normal. #10 adds the bounce
+## and the slide here.
+func _meet(contact: Contact, h: float) -> float:
 	if contact.depth > -SKIN:
 		position += contact.normal * (contact.depth + SKIN)
-	var closing: float = (velocity - contact.velocity).dot(contact.normal)
-	if closing >= 0.0:
+	var gap: float = maxf(-contact.depth - SKIN, 0.0)
+	var excess: float = (contact.velocity - velocity).dot(contact.normal) - gap / h
+	if excess <= 0.0:
 		return 0.0
-	velocity -= contact.normal * closing
-	return -closing
+	velocity += contact.normal * excess
+	return excess
 
 
 ## Drives the spin toward the spin that input asks for (braking with no input), and couples
@@ -134,13 +139,14 @@ func _roll(ground: Contact, pressure: float, h: float, input: MarbleInput) -> vo
 	spin -= n.cross(change) / (INERTIA * r)
 
 
-## Returns the rolling velocity that input asks for, in the plane of normal n. On each camera
-## axis that input pushes along the current velocity, a faster current speed stays the
-## target, so input never slows the marble below its current speed.
+## Returns the rolling velocity that input asks for, in the plane of normal n. The camera's
+## forward and right are orthonormal in that plane, so full input asks for max_roll_speed on
+## any slope. On each axis that input pushes along the current velocity, a faster current
+## speed stays the target, so input never slows the marble below its current speed.
 func _wished_velocity(input: MarbleInput, n: Vector3, current: Vector3) -> Vector3:
 	var heading: Basis = frame * Basis(Vector3.UP, input.camera_yaw)
-	var right: Vector3 = (heading.x - n * heading.x.dot(n)).normalized()
 	var forward: Vector3 = (n * heading.z.dot(n) - heading.z).normalized()
+	var right: Vector3 = forward.cross(n)
 	var x: float = _keep_faster(input.move.x * tuning.max_roll_speed, current.dot(right))
 	var y: float = _keep_faster(input.move.y * tuning.max_roll_speed, current.dot(forward))
 	return right * x + forward * y

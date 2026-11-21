@@ -92,7 +92,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 - Each sub-step does these steps:
   1. Apply gravity from the field with the highest priority, or else the tuning gravity (straight down).
   2. Find contacts.
-  3. Respond to them, relative to `contact.velocity`. The response leaves the marble 0.1 mm (`Marble.SKIN`) above each surface, because a sweep from exact contact stops at once (F5).
+  3. Respond to them, relative to `contact.velocity`. The response leaves the marble 0.1 mm (`Marble.SKIN`) above each surface, because a sweep from exact contact stops at once (F5). For a contact inside the margin only, it stops only the motion that would pass the surface in this sub-step.
   4. Apply rolling, air control and jump.
   5. Sweep the move with `cast_motion`.
   6. Collect the overlapped triggers.
@@ -102,7 +102,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 - Call `intersect_shape` on the solid layer with margin `contact_margin` (0.01) and at most 32 results, then keep the unique `Solid`s. Use 32, because one body can fill several entries (F4).
 - For each Solid, call `collide_shape` (at most 16 pairs) with the other Solids in `exclude`. Use the second point of each pair.
 - `normal = (centre - point).normalized()`. `depth = radius - distance`. The depth is negative when the contact is inside the margin.
-- Merge contacts whose normals almost agree (`dot > 0.9998`), and keep the deeper contact with its point and normal. This removes the duplicates from F1 and the edge points close to an internal edge (F7).
+- Merge the contacts of one Solid whose normals almost agree (`dot > 0.9998`), and keep the deeper contact with its point and normal. This removes the duplicates from F1 and the edge points close to an internal edge (F7). Contacts of different Solids stay apart, so a flush object keeps its touch.
 - Sweep with `cast_motion` and margin 0.
 - Find overlaps with `intersect_shape` on the trigger layer, areas only, then use `collider.owner as LevelObject`.
 - Physics layers: layer 1 is `solid` (mask value 1) and layer 2 is `trigger` (mask value 2). Name them in `project.godot`.
