@@ -55,6 +55,16 @@ func test_marble_stays_in_view_past_a_wall() -> void:
 	assert_almost_eq(camera.global_position.distance_to(run.state.position), camera.distance, 0.05)
 
 
+## With the marble against the wall and the camera on the wall side, the camera stays
+## min_distance from the marble centre, outside the marble.
+func test_camera_stays_outside_the_marble_at_a_wall() -> void:
+	_start(WALL)
+	run.marble.teleport(Vector3(4, 0.2, 0.8 - Marble.SKIN), Vector3.ZERO)
+	_play(_looking(0.0, PlayerSource.START_PITCH), 0.2)
+	var gap: float = camera.global_position.distance_to(run.state.position)
+	assert_almost_eq(gap, camera.min_distance, 0.001)
+
+
 ## After a change of up, the camera's up turns to the new up over a short time, not at once,
 ## and the camera stays on the up side of the marble. Also for a full flip of up.
 func test_up_follows_a_change_smoothly() -> void:

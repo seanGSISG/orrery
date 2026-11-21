@@ -18,6 +18,10 @@ static var shake_enabled: bool = true
 
 ## Distance from the marble centre when nothing blocks the view, m.
 @export var distance: float = 2.5
+## Closest distance from the marble centre, m, so the camera never goes into the marble. When
+## a Solid is nearer (the marble rests against a wall behind it), the camera goes into the
+## Solid: faces seen from behind are not drawn, so the marble stays in view.
+@export var min_distance: float = 0.5
 ## Radius of the sphere that keeps the camera away from Solids, m. Keep it below the marble
 ## radius: the cast starts at the marble centre and ignores a Solid that it already overlaps.
 @export var clearance: float = 0.15
@@ -83,7 +87,7 @@ func follow(state: GameState, input: MarbleInput, dt: float) -> void:
 	var tilt: Basis = Basis(Quaternion(_frame.y, _up))
 	var view: Basis = tilt * _frame * Basis(Vector3.UP, input.camera_yaw)
 	view = view * Basis(Vector3.RIGHT, pitch)
-	var open: float = distance * _world.sweep(_focus, view.z * distance)
+	var open: float = maxf(distance * _world.sweep(_focus, view.z * distance), min_distance)
 	if snap or open < _distance:
 		_distance = open
 	else:
