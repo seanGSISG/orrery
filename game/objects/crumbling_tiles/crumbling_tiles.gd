@@ -16,9 +16,6 @@ const SHAKE_RATE: float = 25.0
 const FALL: float = 9.8
 ## Seconds that a broken tile shows as it falls, before it hides.
 const FALL_TIME: float = 1.0
-## A touch point moves this far into the tile along the contact normal before it picks the
-## tile, so that a touch on a shared edge picks the tile that was touched, m.
-const INTO: float = 0.01
 
 ## Seconds from a tile's first touch until it breaks.
 @export var delay: float = 0.5
@@ -33,6 +30,8 @@ const INTO: float = 0.01
 
 var _columns: int = 1
 var _rows: int = 1
+## Size of one tile, m.
+var _size: Vector3 = Vector3.ZERO
 ## The tiles in row order: index row * _columns + column.
 var _solids: Array[Solid] = []
 var _looks: Array[MeshInstance3D] = []
@@ -50,17 +49,17 @@ func _ready() -> void:
 		tile = width if tile <= 0.0 else tile
 	_columns = maxi(1, roundi(width / tile))
 	_rows = maxi(1, roundi(depth / tile))
-	var size: Vector3 = Vector3(width / _columns, thickness, depth / _rows)
+	_size = Vector3(width / _columns, thickness, depth / _rows)
 	var box: BoxShape3D = BoxShape3D.new()
-	box.size = size
+	box.size = _size
 	var mesh: BoxMesh = BoxMesh.new()
-	mesh.size = size - Vector3(GAP, 0, GAP)
+	mesh.size = _size - Vector3(GAP, 0, GAP)
 	for row: int in _rows:
 		for column: int in _columns:
 			var solid: Solid = Solid.new()
 			solid.name = "Tile%02d_%02d" % [row, column]
 			solid.position = Vector3(
-				(column + 0.5) * size.x - width / 2.0, 0, (row + 0.5) * size.z - depth / 2.0
+				(column + 0.5) * _size.x - width / 2.0, 0, (row + 0.5) * _size.z - depth / 2.0
 			)
 			add_child(solid)
 			solid.owner = self
@@ -113,12 +112,18 @@ func advance(_run: LevelRun, t: float) -> void:
 			look.global_position = solid.global_transform * rest + Vector3.DOWN * drop
 
 
-## Cracks the touched tile on its first touch, with tile.crack.
-func on_touch(_run: LevelRun, contact: Contact) -> void:
-	var local: Vector3 = global_transform.affine_inverse() * (contact.point - contact.normal * INTO)
-	var column: int = clampi(floori((local.x + width / 2.0) * _columns / width), 0, _columns - 1)
-	var row: int = clampi(floori((local.z + depth / 2.0) * _rows / depth), 0, _rows - 1)
-	var i: int = row * _columns + column
-	if _touched_at[i] == INF:
-		_touched_at[i] = _now
-		feedback.emit(&"tile.crack", 0.3, _solids[i].global_position)
+## Cracks each whole tile that the marble touches, with tile.crack. The contact gives the
+## marble centre, and every tile within the marble's contact reach of it cracks, so a marble on
+## a seam cracks the tiles on both sides.
+func on_touch(run: LevelRun, contact: Contact) -> void:
+	var tuning: MarbleTuning = run.marble.tuning
+	var reach: float = tuning.radius + tuning.contact_margin
+	var centre: Vector3 = to_local(contact.point + contact.normal * (tuning.radius - contact.depth))
+	var half: Vector3 = _size / 2.0
+	for i: int in _solids.size():
+		if _touched_at[i] != INF:
+			continue
+		var offset: Vector3 = centre - (_solids[i].position + Vector3(0, -half.y, 0))
+		if (offset - offset.clamp(-half, half)).length() <= reach:
+			_touched_at[i] = _now
+			feedback.emit(&"tile.crack", 0.3, _solids[i].global_position)

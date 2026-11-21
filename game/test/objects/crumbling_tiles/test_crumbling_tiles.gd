@@ -35,6 +35,17 @@ func test_touched_tile_cracks_holds_for_the_delay_then_falls() -> void:
 	assert_lt(run.state.position.y, GRID.y - 2.0, "the marble fell through")
 
 
+func test_marble_on_a_seam_cracks_the_tiles_on_both_sides() -> void:
+	_start(FLAT, [TILES.instantiate() as CrumblingTiles])
+	# On the seam between TILE_A and the tile to its west.
+	_put_on(TILE_A + Vector3(-1, 0, 0))
+	hold(MarbleInput.new(), 0.45)
+	assert_eq(heard.count(&"tile.crack"), 2)
+	hold(MarbleInput.new(), 1.0)
+	assert_eq(heard.count(&"tile.fall"), 2)
+	assert_lt(run.state.position.y, GRID.y - 2.0, "the marble fell through")
+
+
 func test_broken_tile_stays_gone_and_the_others_hold() -> void:
 	_start(FLAT, [TILES.instantiate() as CrumblingTiles])
 	_put_on(TILE_A)
