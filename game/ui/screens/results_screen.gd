@@ -131,42 +131,18 @@ func _build_dial() -> void:
 	add_child(side)
 
 
-## Builds the table on the right: one line per fact, with a rule between the lines.
+## Builds the table on the right: one line per fact.
 func _build_table() -> Control:
-	var table: VBoxContainer = UiTheme.column(0)
+	var table: StatTable = StatTable.new(TABLE_WIDTH)
 	table.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
 	table.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	table.grow_vertical = Control.GROW_DIRECTION_BOTH
-	table.custom_minimum_size.x = TABLE_WIDTH
-	var top: HSeparator = HSeparator.new()
-	top.theme_type_variation = &"RuleStrong"
-	table.add_child(top)
 	var egg: HBoxContainer = UiTheme.row(14)
 	egg.add_child(_egg_icon)
 	egg.add_child(_egg)
-	_add_line(table, _record_name, _record)
-	_add_line(table, UiTheme.label("RESULTS_GEMS", &"Row"), _gems)
-	_add_line(table, UiTheme.label("RESULTS_EGG", &"Row"), egg)
-	_gold_line = _add_line(table, UiTheme.label("RESULTS_GOLD", &"Row"), _gold)
-	_par_line = _add_line(table, UiTheme.label("RESULTS_PAR", &"Row"), _par)
+	table.add_line(_record_name, _record)
+	table.add_line(UiTheme.label("RESULTS_GEMS", &"Row"), _gems)
+	table.add_line(UiTheme.label("RESULTS_EGG", &"Row"), egg)
+	_gold_line = table.add_line(UiTheme.label("RESULTS_GOLD", &"Row"), _gold)
+	_par_line = table.add_line(UiTheme.label("RESULTS_PAR", &"Row"), _par)
 	return table
-
-
-## Adds one line to table: name on the left, value on the right, and a rule below. Returns
-## the line.
-func _add_line(table: VBoxContainer, name_label: Label, value: Control) -> Control:
-	var line: VBoxContainer = UiTheme.column(0)
-	var row: HBoxContainer = UiTheme.row(24)
-	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(name_label)
-	row.add_child(value)
-	var inset: MarginContainer = MarginContainer.new()
-	inset.theme_type_variation = &"TableLine"
-	inset.add_child(row)
-	line.add_child(inset)
-	var rule: HSeparator = HSeparator.new()
-	rule.theme_type_variation = &"Rule"
-	line.add_child(rule)
-	table.add_child(line)
-	return line

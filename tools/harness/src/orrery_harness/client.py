@@ -23,7 +23,6 @@ HOST = "127.0.0.1"
 # Error codes that the harness adds to the JSON-RPC ones.
 NO_RUN = -32000
 NOT_FOUND = -32001
-NOT_AVAILABLE = -32002
 NO_FRAME = -32003
 NOT_SAVED = -32004
 INVALID_REQUEST = -32600
@@ -171,8 +170,22 @@ class Harness:
     def load_level(self, id: str) -> GameState:
         return GameState.model_validate(self.call("load_level", id=id))
 
-    def load_mode(self, mode: str, zone: str | None = None) -> None:
-        self.call("load_mode", mode=mode, zone=zone)
+    def load_mode(
+        self,
+        mode: str,
+        zone: int | None = None,
+        zones: list[str] | None = None,
+        resume: bool | None = None,
+        assist: bool | None = None,
+    ) -> GameState:
+        """Starts a mode; "ascent" is the only one. It starts a new Ascent climb, or continues
+        the saved spot when resume is true. zones are the zone level ids from the bottom
+        (default: the zones of the game), assist turns Assist on or off first, and zone (1 is
+        the first) puts the marble on the start pad of that zone."""
+        result = self.call(
+            "load_mode", mode=mode, zone=zone, zones=zones, resume=resume, assist=assist
+        )
+        return GameState.model_validate(result)
 
     def state(self) -> GameState:
         return GameState.model_validate(self.call("state"))

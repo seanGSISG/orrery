@@ -96,6 +96,14 @@ func after_step() -> void:
 		_respawn_left = roundi(RESPAWN_DELAY / _dt)
 
 
+## Sets the level clock to seconds. A clock above 0 runs on from there at once; a clock of 0
+## still waits for the first input. LevelRun.resume() calls it to continue a saved run.
+func set_clock(seconds: float) -> void:
+	var ticks: int = roundi(seconds / _dt)
+	_clock = ticks if ticks > 0 else -1
+	_run.state.timer = maxi(ticks, 0) * _dt
+
+
 ## A gem calls this when the marble touches it. Returns true when the gem counts: then the
 ## gem hides.
 func collect_gem() -> bool:

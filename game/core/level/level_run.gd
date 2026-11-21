@@ -10,6 +10,9 @@ signal feedback(kind: StringName, strength: float, at: Vector3)
 ## At the end of each step(), when state holds the new tick. It comes once per tick, also
 ## when the harness or a test steps many ticks in one frame.
 signal stepped
+## At the end of teleport(), when state holds the new place. A mode that writes state from the
+## marble's place (the height of Ascent) follows it, so the state is whole with no step.
+signal teleported
 
 const MARBLE: PackedScene = preload("res://core/marble/marble.tscn")
 
@@ -26,6 +29,9 @@ var state: GameState = GameState.new()
 var last_input: MarbleInput = MarbleInput.new()
 ## False: only explicit step() calls advance the run.
 var auto_step: bool = true
+## False: the player's `restart` action does nothing (Game.restart()). Ascent sets it, because
+## a restart there would throw a long climb away. restart() itself always works.
+var restartable: bool = true
 
 var _world: WorldQuery
 var _tick: int = 0
@@ -106,11 +112,24 @@ func respawn(at: Vector3) -> void:
 	_write_state()
 
 
+## Continues a saved run (Ascent): the run is at tick, so every mover has the pose of that
+## time, the level clock shows clock s, and the marble is at `at` with new_velocity. Call it
+## in place of the first step, on a run that has just started.
+func resume(tick: int, clock: float, at: Vector3, new_velocity: Vector3) -> void:
+	_tick = tick
+	for object: LevelObject in objects:
+		object.advance(self, _tick * _dt)
+	rules.set_clock(clock)
+	marble.teleport(at, new_velocity)
+	_write_state()
+
+
 ## Puts the marble at `at` with new_velocity, and writes the state at once. The harness
 ## `teleport` command calls it.
 func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	marble.teleport(at, new_velocity)
 	_write_state()
+	teleported.emit()
 
 
 ## The marble centre that rests on pad: one radius above its origin, along its up. Above the

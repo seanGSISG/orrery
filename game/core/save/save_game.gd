@@ -128,7 +128,7 @@ func finish(id: StringName, time: float, medal: StringName, ghost: Ghost) -> boo
 	if best:
 		record.best_time = time
 		if ghost != null and ghost.size() > 0:
-			_write_atomic(_ghost_path(id), ghost.to_bytes())
+			keep_ghost(id, ghost)
 	if better:
 		record.medal = medal
 	if best or better:
@@ -144,8 +144,15 @@ func find_egg(id: StringName) -> void:
 		write()
 
 
-## Returns the ghost of the best run of level id, or null when there is none or its file is
-## damaged.
+## Writes ghost as the ghost file of id. finish() keeps the ghost of a best run this way.
+## Ascent also keeps the recording of a climb that is not finished, under an id of its own.
+## Returns false when the file could not be written.
+func keep_ghost(id: StringName, ghost: Ghost) -> bool:
+	return _write_atomic(_ghost_path(id), ghost.to_bytes())
+
+
+## Returns the ghost that finish() or keep_ghost() wrote for id, or null when there is none
+## or its file is damaged.
 func ghost(id: StringName) -> Ghost:
 	var path: String = _ghost_path(id)
 	if not FileAccess.file_exists(path):

@@ -4,9 +4,11 @@ extends Control
 ## held power-up (bottom right), each on a glass panel. Ui shows it on the &"play" screen and
 ## calls show_state() each frame; it has no input.
 ##
-## The three corners are free for more: a mode adds its own panel to `area`, which keeps the
-## panels off the screen edges, and anchors it there. #27 adds the Ascent height meter to the
-## left edge this way.
+## An Ascent climb has no gems, no target times and no power-ups. So its HUD is the timer
+## alone and the height meter (HeightMeter) on the left edge.
+##
+## The corners are free for more: a mode adds its own panel to `area`, which keeps the panels
+## off the screen edges, and anchors it there.
 
 ## Width of the timer panel, and the side of the power-up slot.
 const TIMER_WIDTH: float = 430.0
@@ -21,7 +23,11 @@ var gems: Readout = Readout.new(UiLook.HUD_GEMS_SIZE, UiLook.HUD_GEMS_SMALL)
 var time: Readout = Readout.new(UiLook.HUD_TIME_SIZE, UiLook.HUD_TIME_SMALL)
 ## The icon of the held power-up; its `icon` is &"" for an empty slot.
 var power_up: Icon = Icon.new(&"", UiLook.INK, 60.0)
+## The height meter of an Ascent climb; hidden in a level.
+var height_meter: HeightMeter = HeightMeter.new()
 
+var _gems_panel: GlassPanel = GlassPanel.new()
+var _timer_panel: GlassPanel = GlassPanel.new()
 var _target_icon: Icon = Icon.new(&"star", UiLook.GOLD, 22.0)
 var _target: Label = UiTheme.label("", &"HudTargetGold")
 var _bar: ParBar = ParBar.new()
@@ -39,14 +45,23 @@ func _init() -> void:
 	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_child(area)
 	add_child(margin)
-	area.add_child(_build_gems())
-	area.add_child(_build_timer())
+	_build_gems()
+	_build_timer()
 	_build_slot()
+	height_meter.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
+	height_meter.grow_vertical = Control.GROW_DIRECTION_BOTH
+	height_meter.visible = false
+	area.add_child(height_meter)
 
 
 ## Shows the gems, the clock and the held power-up of state, against the target times of
-## level.
-func show_state(state: GameState, level: Level) -> void:
+## level. With climb, the Ascent node of the run, it shows the clock and the height meter.
+func show_state(state: GameState, level: Level, climb: Ascent = null) -> void:
+	var climbing: bool = climb != null
+	if climbing != height_meter.visible:
+		_show_parts(climbing)
+	if climbing:
+		height_meter.show_climb(state.height, climb.best_height, climb.zone_heights, climb.top)
 	gems.show_text(str(state.gems_collected), "/%d" % state.gems_total)
 	time.show_text(TimeText.minutes(state.timer), TimeText.hundredths(state.timer))
 	_bar.show_times(state.timer, level.gold, level.par)
@@ -65,19 +80,31 @@ func show_state(state: GameState, level: Level) -> void:
 	_slot.modulate.a = 1.0 if held else 0.45
 
 
+## Shows the parts of a climb (the height meter and a timer panel as wide as its clock), or
+## the parts of a level.
+func _show_parts(climbing: bool) -> void:
+	height_meter.visible = climbing
+	_gems_panel.visible = not climbing
+	_bar.visible = not climbing
+	_slot.visible = not climbing
+	_use.visible = not climbing
+	_timer_panel.custom_minimum_size.x = 0.0 if climbing else TIMER_WIDTH
+	_timer_panel.reset_size()
+	_timer_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+
+
 ## Builds the gems panel, in the top left corner.
-func _build_gems() -> Control:
-	var panel: GlassPanel = GlassPanel.new()
+func _build_gems() -> void:
 	var row: HBoxContainer = UiTheme.row(14)
 	row.add_child(Icon.new(&"gem", UiLook.GOLD, 34.0))
 	row.add_child(gems)
-	panel.add_child(row)
-	return panel
+	_gems_panel.add_child(row)
+	area.add_child(_gems_panel)
 
 
 ## Builds the timer panel, in the top centre: the clock and the target, over the par bar.
-func _build_timer() -> Control:
-	var panel: GlassPanel = GlassPanel.new()
+func _build_timer() -> void:
+	var panel: GlassPanel = _timer_panel
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	panel.custom_minimum_size.x = TIMER_WIDTH
@@ -90,7 +117,7 @@ func _build_timer() -> Control:
 	column.add_child(row)
 	column.add_child(_bar)
 	panel.add_child(column)
-	return panel
+	area.add_child(panel)
 
 
 ## Builds the power-up slot, in the bottom right corner, with the glyph of `use` on its lower

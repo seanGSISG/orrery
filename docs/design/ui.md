@@ -4,7 +4,7 @@ Status: built in #22. It follows `docs/plan.md` §2.3, §2.4 and §2.13. Where t
 
 Terms used in this file:
 
-- **Screen:** what the player sees as one whole. `Game.screen` names it: `title`, `level_select`, `settings`, `play`, `pause` or `results`.
+- **Screen:** what the player sees as one whole. `Game.screen` names it: `title`, `level_select`, `ascent`, `settings`, `play`, `pause`, `results` or `ascent_stats`.
 - **Look:** every font, colour and size of the HUD and the menus, in `UiLook`.
 - **Design unit:** one pixel in a 1920 × 1080 window. All UI sizes are in design units.
 
@@ -13,7 +13,7 @@ Terms used in this file:
 | Path | What it is |
 |---|---|
 | `game/ui/ui.gd` | `Ui`, a `CanvasLayer` in `main.tscn`. It shows the screen that `Game.screen` names, and holds the HUD and every `Screen`. |
-| `game/ui/screens/` | `Screen` (the base) and one script per menu: title, level select, settings, pause, results. |
+| `game/ui/screens/` | `Screen` (the base) and one script per menu: title, level select, settings, pause, results, the Ascent menu and the Ascent stats. |
 | `game/ui/hud/hud.gd` | `Hud`: the gems, the timer and the power-up slot of a level. |
 | `game/ui/settings/` | The parts of the settings screen: `SettingsTabs`, `SettingRow`, `OptionRow`, `BindRow`, `ValueMark`. |
 | `game/ui/widgets/` | The parts of the screens: `MenuItem`, `LevelNode`, `Dial`, `OrbitMap`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`. |
@@ -27,23 +27,26 @@ Terms used in this file:
 
 ## 2. Screens and flow
 
-`Game` (the autoload) owns the flow. `Game.screen` is the screen that shows, `GameState.screen` reports it, and `Game.screen_changed` tells of a change. To change the screen, set `Game.screen`. `Ui` reacts; it makes no decision of its own, except the two that depend on a frame: the `pause` action, and the change to `results` when the run finishes.
+`Game` (the autoload) owns the flow. `Game.screen` is the screen that shows, `GameState.screen` reports it, and `Game.screen_changed` tells of a change. To change the screen, set `Game.screen`. `Ui` reacts; it makes no decision of its own, except the two that depend on a frame: the `pause` action, and the change to `results` (for an Ascent climb: `ascent_stats`) when the run finishes.
 
 | Screen | Shows | Leaves to |
 |---|---|---|
-| `title` | Play, Ascent, Settings, Quit | `level_select`, `settings` |
+| `title` | Play, Ascent, Settings, Quit | `level_select`, `ascent`, `settings` |
 | `level_select` | The levels of one tier on a ring; `tab_prev` and `tab_next` change the tier | `play` (through `Game.load_level`), `title` |
 | `settings` | Five tabs: graphics, display, audio, controls, accessibility | The screen that opened it |
 | `play` | The level and the HUD | `pause` (the `pause` action), `results` (the run finishes) |
-| `pause` | Resume, Restart, Settings, Levels | `play`, `settings`, `level_select` |
+| `pause` | Resume, Restart, Settings, Levels. In an Ascent climb: Resume, Settings, Save and quit | `play`, `settings`, `level_select` (from a climb: `ascent`) |
 | `results` | Time, medal, record, gems, egg; Next, Retry, Levels | `play`, `level_select` |
+| `ascent` | The Ascent menu: Continue, New climb, Assist; the saved climb and the best climb | `play` (through `Ascent.start`), `title` |
+| `ascent_stats` | The stats of a climb at the gate: time, record, height, falls, metres fallen, the Assist mark; Done | `ascent` |
 
 Rules that `Game` applies at each change (`Game._apply_screen`):
 
-- `title` and `level_select` have no run: to show one ends the current run.
+- `title`, `level_select` and `ascent` have no run (`Game.MENU_SCREENS`): to show one ends the current run.
 - The scene tree is paused under `pause`, and under `settings` when a run exists. So the run and the sound effects stop, and the music plays on (`docs/design/audio.md`).
-- `results` does not pause the tree, so the finish sound plays out. `Ui` stops the marble on the finish. A run that steps itself stops there (`auto_step` false), so player input no longer moves the marble, and it steps again on `play`. A run that its caller steps (a test, the harness) stays with its caller.
-- `Game.load_level()` shows `play`. `Game.restart()` restarts the run and shows `play`; the `restart` action calls it on `play`, `pause` and `results`.
+- `results` and `ascent_stats` (`Game.END_SCREENS`) do not pause the tree, so the finish sound plays out. `Ui` stops the marble on the finish. A run that steps itself stops there (`auto_step` false), so player input no longer moves the marble, and it steps again on `play`. A run that its caller steps (a test, the harness) stays with its caller.
+- `Game.load_level()` shows `play`. `Game.restart()` restarts the run and shows `play`; the `restart` action calls it on `play`, `pause` and `results`. It does nothing for a run that is not restartable (`LevelRun.restartable`): an Ascent climb.
+- `Game.play(level)` starts a run of a `Level` that a mode made itself. `Ascent.start()` uses it.
 
 The harness steps a run by itself, also under `pause` and `results`: it owns time. It has no command for menu input yet.
 
@@ -51,7 +54,7 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 
 1. Make `game/ui/screens/<name>_screen.gd` that extends `Screen`. Build the controls in `_init()` (call `super()` first). In `open()`, fill them and give one control the focus. Return true from `back()` after you set the screen that B or Esc goes to.
 2. Add it to `Ui.screens` under a new name.
-3. Set `Game.screen` to that name to show it. If the screen lies over a run and the run must not pause, add the name to the last rule in `Game._apply_screen`.
+3. Set `Game.screen` to that name to show it. If the screen has no run, add the name to `Game.MENU_SCREENS`. If it lies over a finished run and the run must not pause, add it to `Game.END_SCREENS`.
 4. Add its text keys to `en.po`.
 
 ### Settings screen (#23)
@@ -62,16 +65,22 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 - Each change goes through `Save.change_settings({key: value})`: it sets the var, calls `Settings.apply()` and writes the file. The harness `set_setting` uses it too.
 - **Add a setting:** add a var with its default to `Settings`, put it into the game in `Settings.apply()`, add a row in the tab's `_build_*()` function, and add its text keys to `en.po`.
 
-### Start Ascent (#27)
+### Ascent screens (#27)
 
-`TitleScreen.ascent` is the Ascent item. It is off: it shows faint and the focus passes it by. Turn it on with `ascent.set_enabled(true)` and start the mode in `TitleScreen._on_ascent()`.
+`docs/design/ascent.md` has the mode. Its screens:
+
+- `TitleScreen.ascent` opens the Ascent menu.
+- `AscentScreen` reads `Save.ascent` and `Save.level(Ascent.ID)`. Continue shows only with a saved spot. New climb is off (faint, and the focus passes it by) while no zone of the climb is built. The Assist item turns `Save.ascent.assist` on and off and writes the save.
+- `AscentStatsScreen` reads the `Ascent` node of the finished run (`Ascent.of(Game.run)`). `Ui` gives it the best time from before the climb, as it does for the results.
+- `StatTable` is the table of the results, the Ascent menu and the Ascent stats.
 
 ## 3. HUD
 
-`Hud` shows on `play`. `Ui` calls `Hud.show_state(state, level)` each frame. It has three glass panels inside `Hud.area`, which keeps them off the screen edges: gems (top left), timer with the next target and the par bar (top centre), power-up slot with the glyph of `use` (bottom right).
+`Hud` shows on `play`. `Ui` calls `Hud.show_state(state, level, climb)` each frame; `climb` is the `Ascent` node of the run, or null. It has three glass panels inside `Hud.area`, which keeps them off the screen edges: gems (top left), timer with the next target and the par bar (top centre), power-up slot with the glyph of `use` (bottom right).
 
 - The HUD shows only through the run's `FollowCamera`. A screenshot from a level's shot camera (the gallery) has no HUD.
-- **Add a panel** (the Ascent height meter, #27): make a control, put it on a `GlassPanel` if it needs a ground, add it to `Hud.area` and anchor it to a free edge (the left edge and the bottom left corner are free). Update it from `GameState` in `show_state()`, or in a method of its own that the mode calls. Take colours and sizes from `UiLook`.
+- **Ascent.** A climb has no gems, no target times and no power-ups. Its HUD is the clock, in a panel as wide as the clock, and the `HeightMeter` on the left edge: the height in whole metres over a `HeightScale` with the zone starts, the gate, the best height and the marble.
+- **Add a panel:** make a control, put it on a `GlassPanel` if it needs a ground, add it to `Hud.area` and anchor it to a free edge (the bottom left corner is free; the left edge is free in a level). Update it from `GameState` in `show_state()`, or in a method of its own that the mode calls. Take colours and sizes from `UiLook`.
 
 ## 4. Look
 
