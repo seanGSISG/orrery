@@ -40,21 +40,21 @@ build-marble:
         exit 1
     fi
     "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/orrery_core.glb"
-    # A new folder drops the textures that Godot took out of the old .glb. The .import file
-    # names the post-import script before Godot can see the .glb.
-    rm -rf "$out"
+    # The .import file names the post-import script before Godot can see the new .glb.
     mkdir -p "$out"
     printf '[remap]\n\nimporter="scene"\n\n[params]\n\nimport_script/path="res://core/marble/core_import.gd"\ngltf/embedded_image_handling=2\n' \
         >"$out/orrery_core.glb.import"
     mv "$tmp/orrery_core.glb" "$out/orrery_core.glb"
 
-# Build the marble's core when its .glb is missing or older than its script
+# Build the marble's core when its .glb is missing or older than its script or its texture
 [private]
 [script("bash")]
 fresh-marble:
     set -euo pipefail
     glb=game/core/marble/built/orrery_core.glb
-    if [[ ! -f $glb || tools/blender/marble_core.py -nt $glb ]]; then just build-marble; fi
+    for input in tools/blender/marble_core.py assets/textures/metal/Metal048A_2K-JPG_Color.jpg; do
+        if [[ ! -f $glb || $input -nt $glb ]]; then just build-marble; break; fi
+    done
 
 # Copy the kit textures that the game uses from assets/textures/ into the Godot project, which
 # reads only res://. A committed game/materials/textures/<file>.import adopts <file>
