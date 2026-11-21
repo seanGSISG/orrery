@@ -104,6 +104,30 @@ func test_strength_sets_the_volume() -> void:
 	assert_lt(quiet, loud - 6.0, "a weak event plays quieter")
 
 
+func test_overlapping_hits_keep_their_own_positions() -> void:
+	_start()
+	run.feedback.emit(&"bumper.hit", 1.0, Vector3(-5, 0, 0))
+	var first: AudioStreamPlayer3D = sfx.player(&"bumper") as AudioStreamPlayer3D
+	hold(rolling(Vector2.ZERO), 0.1)
+	run.feedback.emit(&"bumper.hit", 1.0, Vector3(5, 0, 0))
+	var second: AudioStreamPlayer3D = sfx.player(&"bumper") as AudioStreamPlayer3D
+	assert_ne(first, second, "the second hit gets its own voice")
+	assert_true(first.playing and second.playing, "both hits ring")
+	assert_eq(first.global_position, Vector3(-5, 0, 0), "the first hit stays where it was")
+	assert_eq(second.global_position, Vector3(5, 0, 0))
+
+
+func test_restart_clears_the_retrigger_gap() -> void:
+	_start()
+	_hold_heard(rolling(Vector2.ZERO), 0.1)
+	run.feedback.emit(&"gem.collect", 1.0, Vector3.ZERO)
+	var before: Node = sfx.player(&"gem")
+	run.restart()
+	_hold_heard(rolling(Vector2.ZERO), 0.1)
+	run.feedback.emit(&"gem.collect", 1.0, Vector3.ZERO)
+	assert_ne(sfx.player(&"gem"), before, "the same tick after a restart plays again")
+
+
 func test_unknown_kind_plays_nothing() -> void:
 	_start()
 	run.feedback.emit(&"gizmo.wobble", 1.0, Vector3.ZERO)
@@ -158,9 +182,11 @@ func test_restart_plays_the_respawn_sound() -> void:
 	_assert_plays(&"respawn", "restart")
 
 
-func test_detach_stops_the_roll_loop() -> void:
+func test_detach_stops_every_sound() -> void:
 	_start()
+	run.feedback.emit(&"egg.open", 1.0, Vector3.ZERO)
 	sfx.attach(null)
 	assert_false(sfx.roll.playing)
+	assert_eq(_playing_count(), 0, "the egg chime stops with the run")
 	run.feedback.emit(&"gem.collect", 1.0, Vector3.ZERO)
 	assert_eq(_playing_count(), 0, "a detached player ignores the old run")

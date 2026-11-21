@@ -79,7 +79,7 @@ The API: `Music.play_group(group)`, `Music.play(stream)` (null fades out), `Musi
 | the marble rolls on the ground | `roll` (loop) | flat |
 
 - **Strength:** the strength 0..1 sets the volume (35 % to 100 %, linear) and the pitch (0.94 to 1.06, with ±3 % random change).
-- **Voices:** each sound has one player with at most 3 voices. A sound does not start again within 4 ticks of its last start.
+- **Voices:** each sound has 3 players of one voice each, used in turn, so each voice keeps its own volume, pitch and position. A sound does not start again within 4 ticks of its last start. A change of run stops every sound of the last run.
 - **Roll:** the loop always plays while a run is attached. Its volume follows the rolling speed (spin × radius, over the top rolling speed) while the marble is on the ground. It is silent in the air. Its pitch goes from 0.7 to 1.4 with the speed.
 
 ### Make the sounds

@@ -6,11 +6,13 @@ extends Node
 ## - Feedback: each LevelRun.feedback kind maps to a sound res://audio/sfx/<sound>.ogg
 ##   through SOUNDS. The strength (0..1) sets the volume and the pitch. A sound in POSITIONAL
 ##   plays at the event's position, the others play flat.
-## - Voices: each sound has one player with at most VOICES voices, and it does not start
-##   again within GAP_TICKS of its last start. The limiter on Master catches the rest.
+## - Voices: each sound has VOICES players of one voice each, used in turn, so each voice
+##   keeps its own volume, pitch and position. A sound does not start again within GAP_TICKS
+##   of its last start. The limiter on Master catches the rest.
 ## - Roll: a loop whose volume follows the marble's rolling speed (spin times radius) on the
 ##   ground, and whose pitch rises with it. It is silent in the air.
 ## - Respawn: the respawn sound plays when the run comes back from &"respawning" or restarts.
+## - A change of run stops every sound of the last run.
 
 const SOUND_PATH: String = "res://audio/sfx/%s.ogg"
 ## Feedback kind to sound. A kind that is not a key here falls back to its "<type>." key,
@@ -59,22 +61,29 @@ var roll: AudioStreamPlayer
 var roll_level: float = 0.0
 
 var _run: LevelRun
-## Sound name to its AudioStreamPlayer or AudioStreamPlayer3D.
-var _players: Dictionary[StringName, Node] = {}
+## Every voice: an AudioStreamPlayer or AudioStreamPlayer3D. A sound's VOICES voices are
+## next to each other, from index _first[sound].
+var _voices: Array[Node] = []
+var _first: Dictionary[StringName, int] = {}
+## Sound name to the count of its starts; the next start uses voice count % VOICES.
+var _starts: Dictionary[StringName, int] = {}
 ## Sound name to the run tick of its last start.
 var _started: Dictionary[StringName, int] = {}
 var _tick: int = 0
 var _status: StringName = &""
 
 
-## Makes one player per sound and the roll loop. Pauses with the game.
+## Makes the voices of each sound and the roll loop. Pauses with the game.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	var names: Array[StringName] = SOUNDS.values()
 	names.append_array([LAND_HARD, RESPAWN])
 	for sound: StringName in names:
-		if not _players.has(sound):
-			_players[sound] = _make_player(sound)
+		if not _first.has(sound):
+			_first[sound] = _voices.size()
+			_starts[sound] = 0
+			for i: int in VOICES:
+				_voices.append(_make_voice(sound))
 	roll = AudioStreamPlayer.new()
 	roll.stream = load(SOUND_PATH % ROLL) as AudioStream
 	roll.bus = AudioBuses.SFX
@@ -93,10 +102,12 @@ func attach(run: LevelRun) -> void:
 		_run.feedback.disconnect(_on_feedback)
 	_run = run
 	_started.clear()
+	for voice: Node in _voices:
+		_stop(voice)
+	roll.stop()
 	roll_level = 0.0
 	roll.volume_db = SILENT_DB
 	if run == null:
-		roll.stop()
 		return
 	run.feedback.connect(_on_feedback)
 	_tick = run.state.tick
@@ -109,6 +120,8 @@ func observe(dt: float) -> void:
 	if not is_instance_valid(_run):
 		return
 	var state: GameState = _run.state
+	if state.tick < _tick:
+		_started.clear()
 	if state.tick < _tick or (_status == &"respawning" and state.status == &"playing"):
 		_play(RESPAWN, 1.0, state.position)
 	_tick = state.tick
@@ -121,9 +134,12 @@ func observe(dt: float) -> void:
 	roll.pitch_scale = lerpf(ROLL_PITCH.x, ROLL_PITCH.y, speed)
 
 
-## Returns the player of sound (an AudioStreamPlayer or AudioStreamPlayer3D); null if none.
+## Returns the voice of sound that started last, else its first voice: an AudioStreamPlayer
+## or AudioStreamPlayer3D. Null for an unknown sound.
 func player(sound: StringName) -> Node:
-	return _players[sound] if _players.has(sound) else null
+	if not _first.has(sound):
+		return null
+	return _voices[_first[sound] + (_starts[sound] + VOICES - 1) % VOICES]
 
 
 ## Returns the sound for a feedback kind and strength; &"" when the kind has none.
@@ -154,28 +170,38 @@ func _play(sound: StringName, strength: float, at: Vector3) -> void:
 	var s: float = clampf(strength, 0.0, 1.0)
 	var volume: float = linear_to_db(lerpf(QUIET, 1.0, s))
 	var pitch: float = lerpf(0.94, 1.06, s) * randf_range(0.97, 1.03)
-	var node: Node = _players[sound]
-	var flat: AudioStreamPlayer = node as AudioStreamPlayer
+	var voice: Node = _voices[_first[sound] + _starts[sound] % VOICES]
+	_starts[sound] += 1
+	var flat: AudioStreamPlayer = voice as AudioStreamPlayer
 	if flat != null:
 		flat.volume_db = volume
 		flat.pitch_scale = pitch
 		flat.play()
 		return
-	var spatial: AudioStreamPlayer3D = node as AudioStreamPlayer3D
+	var spatial: AudioStreamPlayer3D = voice as AudioStreamPlayer3D
 	spatial.global_position = at
 	spatial.volume_db = volume
 	spatial.pitch_scale = pitch
 	spatial.play()
 
 
-## Makes the player of sound on the SFX bus: positional or flat, VOICES voices.
-func _make_player(sound: StringName) -> Node:
+## Stops voice, flat or positional.
+func _stop(voice: Node) -> void:
+	var flat: AudioStreamPlayer = voice as AudioStreamPlayer
+	if flat != null:
+		flat.stop()
+	var spatial: AudioStreamPlayer3D = voice as AudioStreamPlayer3D
+	if spatial != null:
+		spatial.stop()
+
+
+## Makes one voice of sound on the SFX bus: positional or flat.
+func _make_voice(sound: StringName) -> Node:
 	var stream: AudioStream = load(SOUND_PATH % sound) as AudioStream
 	if sound in POSITIONAL:
 		var spatial: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
 		spatial.stream = stream
 		spatial.bus = AudioBuses.SFX
-		spatial.max_polyphony = VOICES
 		spatial.unit_size = 8.0
 		spatial.max_distance = 80.0
 		add_child(spatial)
@@ -183,6 +209,5 @@ func _make_player(sound: StringName) -> Node:
 	var flat: AudioStreamPlayer = AudioStreamPlayer.new()
 	flat.stream = stream
 	flat.bus = AudioBuses.SFX
-	flat.max_polyphony = VOICES
 	add_child(flat)
 	return flat

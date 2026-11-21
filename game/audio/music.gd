@@ -56,15 +56,20 @@ func _ready() -> void:
 		_ui[sound] = ui
 	sfx = SfxPlayer.new()
 	add_child(sfx)
+	_follow(Game.run)
 
 
-## Follows Game.run: a new run gets its music and the sound effects.
+## Follows Game.run when it changes.
 func _process(_delta: float) -> void:
-	var run: LevelRun = Game.run
-	if run != _run:
-		_run = run
-		sfx.attach(run)
-		play_group(group_of(run))
+	if Game.run != _run:
+		_follow(Game.run)
+
+
+## Gives run (null: no run, the title) its music group and the sound effects.
+func _follow(run: LevelRun) -> void:
+	_run = run
+	sfx.attach(run)
+	play_group(group_of(run))
 
 
 ## Returns the music group of run: its level's music field, else its tier; TITLE for null.

@@ -91,6 +91,7 @@ func test_tier_playlist_shuffles_loops_and_fades() -> void:
 
 func test_group_is_the_level_music_else_its_tier() -> void:
 	assert_eq(Music.group_of(null), Music.TITLE, "no run plays the title music")
+	assert_eq(Music.group, Music.group_of(Game.run), "a group plays from the start")
 	var level: Level = FLAT.instantiate() as Level
 	level.tier = &"beginner"
 	var run: LevelRun = LevelRun.create(level)
