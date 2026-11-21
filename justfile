@@ -148,10 +148,11 @@ test-pad: import
     (sleep 3; exec uv run --quiet tools/pad/virtual_pad.py --seconds 60 --sequence "$steps") >"$padlog" 2>&1 &
     pad=$!
     trap 'pkill -P "$pad" || true; kill "$pad" 2>/dev/null || true; rm -f "$log" "$padlog"' EXIT
+    status=0
     ORRERY_VIRTUAL_PAD=1 "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd \
         -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log" || status=$?
     # A failed Godot run falls through to here, so the pad log explains it before cleanup.
-    if (( ${status:-0} != 0 )) || ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
+    if (( status != 0 )) || ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
         cat "$padlog" >&2
         echo "just test-pad: the virtual pad test did not pass" >&2
         exit 1
