@@ -119,7 +119,7 @@ func _input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	if not event.is_pressed():
-		if command == &"left" or command == &"right":
+		if command == (&"right" if _held == 1 else &"left"):
 			_held = 0
 	elif command == &"toggle":
 		toggle()
