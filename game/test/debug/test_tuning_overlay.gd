@@ -151,6 +151,24 @@ func test_controller_opens_the_overlay_and_changes_a_value() -> void:
 	assert_almost_eq(run.marble.tuning.gravity, start + 0.5, 0.0001)
 
 
+## Every overlay value has a file and a default line in it, so Save can write each one.
+func test_every_value_has_a_line_to_save() -> void:
+	start_run(preload("res://test/levels/flat.tscn"))
+	var camera: FollowCamera = FollowCamera.new()
+	run.add_child(camera)
+	var overlay: TuningOverlay = TuningOverlay.new()
+	add_child_autofree(overlay)
+	overlay.build(run, camera)
+	var labels: Array[String] = []
+	for setting: TuningSetting in overlay.settings:
+		labels.append(setting.label)
+		assert_ne(setting.file, "", "%s has no file" % setting.label)
+		var source: String = FileAccess.get_file_as_string(setting.file)
+		assert_ne(setting._rewrite(source), "", "%s has no line in %s" % [setting.label, setting.file])
+	assert_has(labels, "fov")
+	assert_has(labels, "clearance")
+
+
 ## Returns a fresh load of the tuning copy.
 func _load_copy() -> MarbleTuning:
 	return ResourceLoader.load(COPY, "", ResourceLoader.CACHE_MODE_IGNORE) as MarbleTuning
