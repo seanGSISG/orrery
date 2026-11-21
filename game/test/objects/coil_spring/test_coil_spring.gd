@@ -62,6 +62,16 @@ func test_use_launches_about_ten_metres() -> void:
 	assert_almost_eq(apex(), 10.0, 0.3)
 
 
+## The use keeps the speed across up, so a rolling marble springs forward.
+func test_use_keeps_the_speed_across_up() -> void:
+	start()
+	visit(WEST)
+	run.teleport(AWAY + Vector3.UP * TUNING.radius, Vector3(4, 0, 0))
+	run.step(using())
+	assert_almost_eq(run.state.velocity.x, 4.0, 0.1)
+	assert_gt(run.state.velocity.y, 19.0)
+
+
 ## One press uses one power-up: a use held from before the pickup does nothing, and a press
 ## with an empty slot does nothing.
 func test_one_press_uses_one_power_up() -> void:
@@ -87,6 +97,7 @@ func test_checkpoint_respawn_keeps_the_spring() -> void:
 	hold(MarbleInput.new(), 2.0)
 	assert_almost_eq(run.state.position, CHECKPOINT + Vector3.UP * TUNING.radius, Vector3.ONE * 0.001)
 	assert_eq(run.state.power_up, &"coil_spring")
+	assert_false(west.visible)
 	run.step(using())
 	assert_almost_eq(apex(), 10.0, 0.3)
 
