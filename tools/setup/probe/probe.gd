@@ -56,12 +56,14 @@ func _render(out: String) -> void:
 			var lum: float = image.get_pixel(x, y).get_luminance()
 			low = minf(low, lum)
 			high = maxf(high, lum)
-	var passed: bool = high - low > 0.2
+	# A software adapter (llvmpipe, lavapipe) renders too, but is not the GPU path.
+	var software: bool = RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_CPU
+	var passed: bool = high - low > 0.2 and not software
 	print(
 		(
 			"PROBE render %s contrast=%.2f size=%dx%d gpu=%s"
 			% [
-				"ok" if passed else "blank",
+				"ok" if passed else ("software" if software else "blank"),
 				high - low,
 				image.get_width(),
 				image.get_height(),

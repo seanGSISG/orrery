@@ -27,11 +27,12 @@ report() {  # report STATUS NAME DETAIL
   printf '   \033[%sm%-8s\033[0m %-28s %s\n' "$colour" "$1" "$2" "$3"
 }
 
-# probe MODE LOG [launcher...]: run the Godot probe project. Succeeds when the run
-# exits 0 (gamescope exits 0 unless the timeout kills it) and prints its marker line.
+# probe MODE LOG [launcher...]: run the Godot probe project (with --headless when
+# HEADLESS is set). Succeeds when the run exits 0 (gamescope exits 0 unless the
+# timeout kills it) and prints its marker line.
 probe() {
   local mode="$1" log="$2"; shift 2
-  timeout 90 "$@" "$GODOT" --path "$WORK/probe" -- --mode="$mode" --out="$WORK/render.png" --match="$PAD_ID" >"$log" 2>&1 \
+  timeout 90 "$@" "$GODOT" ${HEADLESS:+"--headless"} --path "$WORK/probe" -- --mode="$mode" --out="$WORK/render.png" --match="$PAD_ID" >"$log" 2>&1 \
     && grep -q "^PROBE $mode ok" "$log"
 }
 GS=(gamescope --backend headless -W 640 -H 360 --)
@@ -76,7 +77,7 @@ for _ in $(seq 1 90); do
 done
 if ! grep -q '^virtual pad up:' "$LOG/pad.log"; then
   report FAIL "Virtual Xbox controller" "the virtual pad did not start; see $LOG/pad.log"
-elif probe joypad "$LOG/joypad-headless.log"; then
+elif HEADLESS=1 probe joypad "$LOG/joypad-headless.log"; then
   report PASS "Virtual Xbox controller" "$(grep -o 'name=.*' "$LOG/joypad-headless.log")"
 elif probe joypad "$LOG/joypad-gamescope.log" "${GS[@]}"; then
   report PASS "Virtual Xbox controller" "$(grep -o 'name=.*' "$LOG/joypad-gamescope.log") (in gamescope only)"
@@ -94,7 +95,7 @@ if "$GODOT" --headless --path "$WORK/probe" --export-debug "Windows Desktop" "$W
     && grep -q "^PROBE boot ok" "$LOG/wine.log"; then
     report PASS "Windows export under Wine" "boots headless"
   else
-    report FALLBACK "Windows export under Wine" "export works; boot check moves to the CI Windows runner"
+    report FAIL "Windows export under Wine" "export works but Wine cannot boot it; see $LOG/wine.log"
   fi
 else
   report FAIL "Windows export under Wine" "export failed; see $LOG/win-export.log"

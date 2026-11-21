@@ -75,8 +75,12 @@ if [[ ! -f "$tdir/version.txt" ]]; then
   download "$tpz" "https://github.com/godotengine/godot/releases/download/$gtag/Godot_v${gtag}_export_templates.tpz"
   verify "$tpz" "$GODOT_TEMPLATES_SHA512" sha512
   # Unpack beside the target, then rename: an interrupted install never looks complete.
-  rm -rf "$tdir.partial" && mkdir -p "$tdir.partial" && unzip -q "$tpz" -d "$tdir.partial"
-  rm -rf "$tdir" && mv "$tdir.partial/templates" "$tdir" && rm -rf "$tdir.partial" "$tpz"
+  rm -rf "$tdir.partial"
+  mkdir -p "$tdir.partial"
+  unzip -q "$tpz" -d "$tdir.partial"
+  rm -rf "$tdir"
+  mv "$tdir.partial/templates" "$tdir"
+  rm -rf "$tdir.partial" "$tpz"
 fi
 ok "export templates in $tdir"
 
@@ -87,7 +91,10 @@ if [[ ! -x "$bdir/blender" ]]; then
   urls=(); for m in $BLENDER_MIRRORS; do urls+=("$m/release/Blender$BLENDER_SERIES/$tar"); done
   download "$DL/$tar" "${urls[@]}"
   verify "$DL/$tar" "$BLENDER_SHA256" sha256
-  tar -xJf "$DL/$tar" -C "$OPT" && mv "$OPT/blender-$BLENDER_VERSION-linux-x64" "$bdir" && rm -f "$DL/$tar"
+  rm -rf "$bdir" "$OPT/blender-$BLENDER_VERSION-linux-x64"   # clear a partial install
+  tar -xJf "$DL/$tar" -C "$OPT"
+  mv "$OPT/blender-$BLENDER_VERSION-linux-x64" "$bdir"
+  rm -f "$DL/$tar"
 fi
 ln -sfn "$bdir/blender" "$BIN/blender-$BLENDER_SERIES"
 "$BIN/blender-$BLENDER_SERIES" --version 2>/dev/null | grep -q "^Blender $BLENDER_VERSION" || die "blender-$BLENDER_SERIES does not report $BLENDER_VERSION"
@@ -99,12 +106,20 @@ if [[ ! -x "$vdir/gltf_validator" ]]; then
   f="gltf_validator-$GLTF_VALIDATOR_VERSION-linux64.tar.xz"
   download "$DL/$f" "https://github.com/KhronosGroup/glTF-Validator/releases/download/$GLTF_VALIDATOR_VERSION/$f"
   verify "$DL/$f" "$GLTF_VALIDATOR_SHA256" sha256
-  mkdir -p "$vdir" && tar -xJf "$DL/$f" -C "$vdir" && rm -f "$DL/$f"
+  rm -rf "$vdir.partial"
+  mkdir -p "$vdir.partial"
+  tar -xJf "$DL/$f" -C "$vdir.partial"
+  [[ -x "$vdir.partial/gltf_validator" ]] || die "$f has no gltf_validator"
+  rm -rf "$vdir"
+  mv "$vdir.partial" "$vdir"
+  rm -f "$DL/$f"
 fi
 ln -sfn "$vdir/gltf_validator" "$BIN/gltf_validator"
 ok "gltf_validator $GLTF_VALIDATOR_VERSION"
-bunx "@gltf-transform/cli@$GLTF_TRANSFORM_VERSION" --version >/dev/null && ok "gltf-transform $GLTF_TRANSFORM_VERSION (bunx)"
-uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint --version >/dev/null && ok "gdtoolkit $GDTOOLKIT_VERSION (uvx)"
+bunx "@gltf-transform/cli@$GLTF_TRANSFORM_VERSION" --version >/dev/null
+ok "gltf-transform $GLTF_TRANSFORM_VERSION (bunx)"
+uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint --version >/dev/null
+ok "gdtoolkit $GDTOOLKIT_VERSION (uvx)"
 
 step "ComfyUI music models"
 if [[ ! -d "$COMFYUI_DIR/models" ]]; then
@@ -113,13 +128,18 @@ else
   while read -r repo file sub gate; do
     [[ -z "$repo" || "$repo" == \#* ]] && continue
     name=$(basename "$file")
+    link="$COMFYUI_DIR/models/$sub/$name"
+    if [[ -e "$link" && ! -L "$link" ]]; then
+      warn "$sub/$name is a real file, not a setup link; leaving it alone"
+      continue
+    fi
     if [[ -n "${gate:-}" ]] && ! hf_gate_open "$gate"; then
       warn "$name waits for the license: accept it at https://huggingface.co/$gate, then rerun just setup"
       continue
     fi
     path=$(hf download "$repo" "$file" --quiet)
     mkdir -p "$COMFYUI_DIR/models/$sub"
-    ln -sfn "$path" "$COMFYUI_DIR/models/$sub/$name"
+    ln -sfn "$path" "$link"
     ok "$sub/$name"
   done < "$ROOT/tools/setup/comfy-models.txt"
 fi
