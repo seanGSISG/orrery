@@ -95,13 +95,17 @@ var _at_end: bool = false
 var _ground_at: Vector3 = Vector3.ZERO
 
 
-## Returns the route of run whose kind or node name is which, or null.
+## Returns the route of run whose kind is which, else the route whose node name is which, or
+## null.
 static func find(run: LevelRun, which: String) -> Route:
+	var named: Route = null
 	for object: LevelObject in run.objects:
 		var route: Route = object as Route
-		if route != null and (String(route.kind) == which or String(route.name) == which):
+		if route != null and String(route.kind) == which:
 			return route
-	return null
+		if route != null and String(route.name) == which:
+			named = route
+	return named
 
 
 ## Makes a bot that drives route in run. Check problems before drive().
@@ -119,11 +123,12 @@ func _init(run: LevelRun, route: Route) -> void:
 
 
 ## Restarts the run and plays the route to its end at full speed, through InputHub. Returns
-## the result (see above). Make your own source active again afterwards.
+## the result (see above). Make your own source active again afterwards. A bot drives once; make
+## a new bot for the next drive.
 func drive() -> Dictionary:
-	if not problems.is_empty():
-		push_error("RouteBot: %s" % "; ".join(problems))
-		return {"finished": false, "time": 0.0, "falls": 0}
+	if done or not problems.is_empty():
+		push_error("RouteBot: drive() runs once, on a route without problems")
+		return result()
 	_run.auto_step = false
 	_run.restart()
 	_start(_run.state)
@@ -171,6 +176,9 @@ func _follow(state: GameState) -> bool:
 		done = true
 		finished = true
 		return false
+	if state.tick * _dt >= MAX_SECONDS:
+		_give_up(&"timeout", state.position)
+		return false
 	if state.status == &"respawning":
 		if not _falling:
 			_falling = true
@@ -181,9 +189,6 @@ func _follow(state: GameState) -> bool:
 	if _falling:
 		_falling = false
 		_resume(state)
-	if state.tick * _dt >= MAX_SECONDS:
-		_give_up(&"timeout", state.position)
-		return false
 	if state.on_ground:
 		_ground_at = state.position
 	return true
@@ -193,7 +198,7 @@ func _follow(state: GameState) -> bool:
 ## The bot does not leave the last point: it steers back to it until the run finishes, because a
 ## jump can fly over the finish.
 func _act(state: GameState, input: MarbleInput) -> void:
-	while waypoint < _points.size():
+	while not _at_end:
 		var point: Route.Waypoint = _points[waypoint]
 		if _waiting:
 			if _holding(point, state):
@@ -205,14 +210,8 @@ func _act(state: GameState, input: MarbleInput) -> void:
 		elif point.stops():
 			_waiting = true
 			_wait_left = maxf(point.wait, 0.0)
-		elif waypoint == _points.size() - 1:
-			_at_end = true
-			break
 		else:
 			_leave(point, point.position)
-	if waypoint >= _points.size():
-		_give_up(&"route_end", state.position)
-		return
 	_press(state, input)
 	_steer(state, input)
 	_watch_progress(state)
@@ -259,12 +258,16 @@ func _holding(point: Route.Waypoint, state: GameState) -> bool:
 
 
 ## Queues the point's use and jump presses and heads for the next point, on the line from
-## from. After a stop, from is the marble, because a mover can carry it away from the point.
+## from. After a stop, from is the marble, because a mover can carry it away from the point. At
+## the last point it only marks the end.
 func _leave(point: Route.Waypoint, from: Vector3) -> void:
 	if point.use:
 		_use_ticks = 1
 	if point.jump:
 		_jump_ticks = JUMP_TICKS
+	if waypoint == _points.size() - 1:
+		_at_end = true
+		return
 	_from = from
 	waypoint += 1
 	_best = INF
@@ -359,6 +362,7 @@ func _resume(state: GameState) -> void:
 	waypoint = nearest
 	_from = state.position
 	_waiting = false
+	_at_end = false
 	_use_ticks = 0
 	_jump_ticks = 0
 	_best = INF
@@ -409,6 +413,8 @@ func _bind(point: Route.Waypoint) -> void:
 			problems.append("wait_until: %s has no period setting" % point.mover)
 		elif point.window.x > length or point.window.y > length:
 			problems.append("wait_until: %s has a period of %.2f s" % [point.mover, length])
+		elif point.window == Vector2(length, 0.0):
+			problems.append("wait_until: the window %.2f to 0 of %s is empty" % [length, point.mover])
 		_cycles[point.mover] = Vector2(length, shift)
 		return
 	problems.append("wait_until: the level has no object named %s" % point.mover)

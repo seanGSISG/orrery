@@ -45,3 +45,22 @@ func test_a_route_into_the_gap_falls_and_gives_up_at_the_edge() -> void:
 	assert_almost_eq(bot.stuck_at.z, -10.0, 0.5, "the last ground is the edge of the near slab")
 	var reason: String = bot.result()["reason"]
 	assert_eq(reason, "fell")
+
+
+func test_the_last_point_jumps_once_then_the_route_ends_without_a_finish() -> void:
+	var route: Route = ROUTE.instantiate() as Route
+	route.name = &"JumpAtTheEnd"
+	route.actions = "0 speed 3; 0 jump"
+	var point: Marker3D = Marker3D.new()
+	point.position = Vector3(0, 0, -4)
+	route.add_child(point)
+	start_run(LEVEL, [route])
+	var jumps: Array[int] = [0]
+	run.feedback.connect(
+		func(kind: StringName, _strength: float, _at: Vector3) -> void:
+			if kind == &"marble.jump":
+				jumps[0] += 1
+	)
+	var bot: RouteBot = RouteBot.new(run, RouteBot.find(run, "JumpAtTheEnd"))
+	bot.drive()
+	assert_eq([bot.finished, bot.reason, jumps[0]], [false, &"route_end", 1])

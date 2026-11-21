@@ -23,6 +23,10 @@ func _ready() -> void:
 	ids.erase("--suggest")
 	if ids.is_empty():
 		ids = _built_ids()
+	if ids.is_empty():
+		print("test-levels: no built levels in %s; run `just build-levels`" % BUILT)
+		get_tree().quit(1)
+		return
 	var counts: Dictionary[StringName, int] = {&"pass": 0, &"fail": 0, &"skip": 0}
 	for id: String in ids:
 		var run: LevelRun = Game.load_level(StringName(id))
