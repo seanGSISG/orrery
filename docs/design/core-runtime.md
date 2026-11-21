@@ -23,6 +23,7 @@ Terms used in this file:
 5. **Objects are scenes with `@export` settings and four hooks.** The importer writes the marker settings into the `@export` vars. Objects emit `feedback(kind, strength, at)` for rumble and sound.
 6. **Contract first.** The contract PR adds all shared types, stubs and placeholder objects. After it merges, #8 to #13 work in parallel and do not edit the same files.
 7. **Turn on `physics/jolt_physics_3d/queries/use_enhanced_internal_edge_removal`.** Without it, the marble drifts on flat trimesh floors (F7).
+8. **Set `physics/jolt_physics_3d/collisions/collision_margin_fraction` to 0** (2026-11-20). Else Jolt rounds every box edge, and two flush boxes make a groove that throws a fast marble up (F25).
 
 ## 2. Engine facts
 
@@ -71,6 +72,8 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 | F22 | A collider inside an instanced object scene has `owner` set to the object root. | VERIFIED |
 | F23 | When a mover puts the sphere centre inside a convex Solid (`BoxShape3D`), `collide_shape` still gives one pair: the first point is the centre minus (radius + margin) along the outward face normal, and the second is on the nearest face. So `centre - point` points into the Solid, and `point - first` points out. A trimesh (`ConcavePolygonShape3D`) gives no pair once the centre passes its face, because the inside faces are back faces (F6). | VERIFIED (#10) |
 | F24 | `intersect_shape` finds an `Area3D` box under a turned, non-uniformly scaled node at the scaled size (scale (4, 2, 6): hits up to 0.2 m outside each face, misses at 0.3 m). A field volume can be a 1 m cube that the node scales. | VERIFIED (#10) |
+| F25 | With the default `collisions/collision_margin_fraction` (0.08), Jolt rounds each edge of a convex shape by 0.08 × its shortest half size, at most `Shape3D.margin`. The faces do not move. A 0.5 m thick box gets a 0.02 m round: for a sphere 4 cm in front of the top edge, the nearest point is 1.5 cm behind the edge and 0.7 mm below the top. Two flush boxes make a groove 4 cm wide and 0.9 mm deep. At 5 m/s the marble sinks into it and leaves it at 0.34 m/s up. With 0, the edge is sharp, and the nearest point is on the edge, in the top plane (2026-11-20). | VERIFIED |
+| F26 | At a seam between two flush Solids, the marble also gets the near edge of the next Solid, inside the margin, with a normal tilted back by up to 17°. Jolt's internal edge removal (F7) works only inside one shape. Before the flush rule in §3, the solver took that tilted plane for a hit: at 5 to 15 m/s the marble left the floor at 0.8 to 3.6 m/s and rose up to 0.33 m, at the track-to-trapdoor seam and between tile rows (2026-11-20, #16 found it). | VERIFIED |
 | A1 | The Blender glTF exporter writes custom-property vectors unchanged, in Blender's Z-up axes. Use child empties for positions and paths, because the exporter converts their transforms. | ASSUMED |
 | A2 | Shape queries do not tell which triangle, and so which material, a contact is on. So each surface type needs its own `Solid`. | ASSUMED |
 | A3 | Jolt can move dozens of static bodies each tick at a low cost. | ASSUMED |
@@ -106,6 +109,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 - For each Solid, call `collide_shape` (at most 16 pairs) with the other Solids in `exclude`. The second point of each pair is on the Solid. The first is the point of the grown sphere that is deepest past the surface (F23).
 - `normal = (centre - point).normalized()`. `depth = radius - distance`. The depth is negative when the contact is inside the margin. When a mover put the centre inside a convex Solid (`point - first` points against the normal, F23), the normal flips and `depth = radius + distance`, so the response pushes the marble out of the Solid, not deeper in.
 - Merge the contacts of one Solid whose normals almost agree (`dot > 0.9998`), and keep the deeper contact with its point and normal. This removes the duplicates from F1 and the edge points close to an internal edge (F7). Contacts of different Solids stay apart, so a flush object keeps its touch.
+- Join flush contacts (2026-11-20). Go through the contacts deepest first. A contact whose point lies within `WorldQuery.FLUSH` (1 mm) of the plane of a deeper contact that is not flush itself is the edge of a flush Solid at a seam (F26). The marble cannot touch that edge before it touches the plane. So the contact takes the plane's point, normal and depth, keeps its own velocity, surface and object, and goes to the end of the list. The marble rolls across the seam with no vertical speed, the flush object still gets its touch, and the surface under the marble stays the ground. A real step is far outside 1 mm: a 0.1 m step still throws the marble up at 3.7 m/s from 5 m/s.
 - Sweep with `cast_motion` and margin 0.
 - Find overlaps with `intersect_shape` on the trigger layer, areas only, then use `collider.owner as LevelObject`.
 - Physics layers: layer 1 is `solid` (mask value 1) and layer 2 is `trigger` (mask value 2). Name them in `project.godot`.
@@ -373,7 +377,7 @@ game/
 └── test/
     ├── support/run_test.gd    #7
     ├── levels/flat.tscn       #7; every other test level has one owner, its creator (#10: physics.tscn, pusher.gd)
-    ├── core/                  test_marble_roll and test_player_source #7, test_marble_physics #10, test_camera #11
+    ├── core/                  test_marble_roll and test_player_source #7, test_marble_physics and test_marble_seams #10, test_camera #11
     ├── level/                 test_game_state #7, test_level_import #8, test_rules #13
     ├── objects/<type>/        the owner of objects/<type>/
     └── harness/               #9
@@ -391,7 +395,7 @@ Rules:
    - the Jolt query setting from §1, item 7;
    - the input actions for #7's keys.
 
-   Later autoloads (Save in #21, Music in #25) add one line each. If two edits conflict there, keep both lines.
+   Later autoloads (Save in #21, Music in #25) add one line each, and so does the Jolt setting from §1, item 8. If two edits conflict there, keep both lines.
 4. **justfile:** #7 adds `run` and #8 adds `build-levels`, each as its own block. The CI workflow gets one new job, from #8.
 5. **Kit:** #8 builds one generic marker helper, `marker(type, **settings)`. Then object tickets do not need to edit `kit/`.
 6. **Test levels:** make a new test level. Do not edit a test level that another ticket owns.
@@ -475,6 +479,8 @@ An object test adds the object with `start_run(FLAT, [bumper])`, rolls the marbl
 | `AnimatableBody3D` movers | Their transform changes reach queries one frame late (F11). The solver gets the velocity from `Solid` instead |
 | `get_rest_info` as the contact query | It gives one contact per call and misses corners (F3) |
 | A home-made filter for internal edges | It only halved the drift (F7) |
+| Merge flush contacts of different Solids by their normals | The edge normal at a seam is tilted by up to 17° (F26), so a normal test loose enough to merge it also merges real slopes and steps |
+| A larger `FLUSH` for rounded box edges | The groove between rounded boxes is real geometry (F25). With the flush rule alone, a marble at 5 m/s still left a tile seam at 0.34 m/s, and at 15 m/s at 1.5 m/s |
 | `Area3D` signals for triggers | The marble would need to be a body, and the signals arrive at the physics step, not inside `step()` |
 | A shared enum for feedback kinds | Every object ticket would edit one file |
 | Marker settings as a Dictionary at run time | That is an untyped seam. The importer writes the `@export` vars instead |

@@ -9,6 +9,9 @@ const SOLID_MASK: int = 1
 const TRIGGER_MASK: int = 2
 ## Two contacts are one when their normals agree this closely.
 const SAME_NORMAL: float = 0.9998
+## A contact is flush with a deeper contact when its point lies this close to that contact's
+## plane, m.
+const FLUSH: float = 0.001
 
 var _space: PhysicsDirectSpaceState3D
 var _radius: float
@@ -27,7 +30,8 @@ func _init(space: PhysicsDirectSpaceState3D, radius: float, margin: float) -> vo
 
 
 ## Returns the contacts of the sphere at center with every Solid, one per distinct normal of
-## each Solid. So a flush object keeps its own contact beside the floor's.
+## each Solid. So a flush object keeps its own contact beside the floor's. A contact at the
+## edge of a flush Solid joins the surface that it continues (_join_flush()).
 func contacts(center: Vector3) -> Array[Contact]:
 	_set_query(center, _margin, Vector3.ZERO, SOLID_MASK, false)
 	var solids: Array[Solid] = []
@@ -55,7 +59,7 @@ func contacts(center: Vector3) -> Array[Contact]:
 			_add_contact(own, center, pairs[k], pairs[k + 1], solid)
 		out.append_array(own)
 	_query.exclude = []
-	return out
+	return _join_flush(out)
 
 
 ## Returns the safe fraction (0..1) of motion before the sphere at center hits a Solid.
@@ -85,6 +89,40 @@ func _set_query(center: Vector3, margin: float, motion: Vector3, mask: int, area
 	_query.collision_mask = mask
 	_query.collide_with_areas = areas
 	_query.collide_with_bodies = not areas
+
+
+## Returns contacts with each flush contact joined to the surface that it continues. A contact
+## is flush when its point lies within FLUSH of the plane of a deeper contact that is not flush
+## itself: at a seam between flush Solids, the edge of the next Solid. The marble cannot touch
+## that edge before the plane, so the contact takes the plane's point, normal and depth, and
+## keeps its own velocity, surface and object. Else the edge gives a normal tilted toward the
+## marble, and a fast marble hops at the seam. Flush contacts go last, so the surface that the
+## marble touches stays the ground.
+static func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
+	var deepest_first: Array[Contact] = contacts.duplicate()
+	deepest_first.sort_custom(func(a: Contact, b: Contact) -> bool: return a.depth > b.depth)
+	var planes: Array[Contact] = []
+	var flush: Array[Contact] = []
+	for contact: Contact in deepest_first:
+		var plane: Contact = null
+		for deeper: Contact in planes:
+			var off: float = absf((contact.point - deeper.point).dot(deeper.normal))
+			if deeper.depth > contact.depth and off <= FLUSH:
+				plane = deeper
+				break
+		if plane == null:
+			planes.append(contact)
+			continue
+		contact.point = plane.point
+		contact.normal = plane.normal
+		contact.depth = plane.depth
+		flush.append(contact)
+	var out: Array[Contact] = []
+	for contact: Contact in contacts:
+		if not flush.has(contact):
+			out.append(contact)
+	out.append_array(flush)
+	return out
 
 
 ## Adds the contact at point on solid to out, which holds only that Solid's contacts. deepest

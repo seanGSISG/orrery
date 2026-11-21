@@ -3,7 +3,8 @@ extends RefCounted
 ## One touch between the marble and a Solid. WorldQuery.contacts() makes them; the solver and
 ## LevelObject.on_touch() read them.
 
-## The touched point, on the surface.
+## The touched point, on the surface. At the edge of a flush Solid, the point of the surface
+## that the edge continues (WorldQuery).
 var point: Vector3
 ## Unit vector from point toward the marble centre.
 var normal: Vector3
