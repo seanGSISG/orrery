@@ -60,8 +60,9 @@ def level(
     title: str, par: float, gold: float, music: str = "", sky: str = ""
 ) -> bpy.types.Object:
     """Sets the level data: the title, the par and gold times in seconds, the music track and
-    the sky preset. Call it once in each level script. The build adds the id and the tier from
-    the script path `levels/<tier>/<id>.py`."""
+    the sky preset (dawn, noon or dusk: `game/skies/<sky>.tres`). With no sky, the tier picks
+    it: beginner dawn, intermediate noon, advanced dusk. Call it once in each level script.
+    The build adds the id and the tier from the script path `levels/<tier>/<id>.py`."""
     return marker(
         "level",
         at=(0.0, 0.0, 0.0),

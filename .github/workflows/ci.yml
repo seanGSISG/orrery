@@ -17,15 +17,15 @@ defaults:
   run:
     shell: bash
 
+# Every job imports the project, with its Git LFS files (textures, skies, lightmaps, music).
+# The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
+# downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      # `just lint` imports the project, with its LFS lightmaps and music.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
       - run: just lint
@@ -64,10 +64,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      # The baked lightmaps (game/levels/lightmaps/) and the music are in Git LFS.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v7
         with:
@@ -81,10 +78,7 @@ jobs:
     name: Harness contract tests
     runs-on: ubuntu-latest
     steps:
-      # The game imports and plays the LFS music.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
       - run: just test-harness
@@ -94,8 +88,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
         with:
           templates: "true"

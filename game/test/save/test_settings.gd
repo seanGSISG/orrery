@@ -59,7 +59,7 @@ func test_volumes() -> void:
 	assert_almost_eq(AudioBuses.volume(AudioBuses.UI), 0.2, 0.001)
 
 
-## The ghost setting is read by RunTracker at each run, so the loaded value is enough.
+## RunTracker reads the ghost setting on every tick, so the loaded value is enough.
 func test_ghost() -> void:
 	assert_false(_start({"ghost": false}).ghost)
 
@@ -81,6 +81,9 @@ func test_window_mode() -> void:
 func test_resolution() -> void:
 	_start({"resolution": Vector2i(1280, 720)})
 	assert_eq(get_window().size, Vector2i(1280, 720))
+	get_window().size = Vector2i(1600, 900)
+	_save_game().change_settings({"resolution": Vector2i(1280, 720)})
+	assert_eq(get_window().size, Vector2i(1280, 720), "a new choice wins over a resize by hand")
 	Settings.new().apply()
 	var width: int = ProjectSettings.get_setting("display/window/size/viewport_width")
 	var height: int = ProjectSettings.get_setting("display/window/size/viewport_height")

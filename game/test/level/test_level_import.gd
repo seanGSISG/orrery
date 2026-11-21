@@ -142,22 +142,7 @@ func test_level_outside_the_test_tier_needs_the_gallery_shots() -> void:
 	assert_false(errors.contains("shot `overview`"))
 
 
-## A level with no light of its own gets the stand-in sun and sky; its tier picks the rig.
-func test_level_without_light_gets_the_stand_in_rig() -> void:
-	var scene: Node3D = _scene()
-	LevelConverter.new().convert(scene)
-	var suns: Array[Node] = scene.find_children("*", "DirectionalLight3D", true, false)
-	var skies: Array[Node] = scene.find_children("*", "WorldEnvironment", true, false)
-	assert_eq(suns.size(), 1)
-	assert_eq(skies.size(), 1)
-	assert_true((suns[0] as DirectionalLight3D).shadow_enabled)
-	var environment: Environment = (skies[0] as WorldEnvironment).environment
-	assert_eq(environment.tonemap_mode, Environment.TONE_MAPPER_AGX)
-	var sky: ProceduralSkyMaterial = environment.sky.sky_material as ProceduralSkyMaterial
-	assert_eq(sky.sky_top_color, LevelConverter.SKY_TOP["noon"])
-
-
-## A level that brings its own sun keeps it and gets no stand-in sky.
+## A level that brings its own sun keeps it and gets no sky (test_level_look.gd has the rest).
 func test_level_with_its_own_sun_gets_no_rig() -> void:
 	var scene: Node3D = _scene()
 	scene.add_child(DirectionalLight3D.new())
