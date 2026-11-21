@@ -28,6 +28,9 @@ var screen: StringName = &"play":
 		_apply_screen()
 		screen_changed.emit(screen)
 
+## True while the results hold a run that stepped itself before; &"play" lets it step again.
+var _held: bool = false
+
 
 ## Keeps the `restart` action working while the game is paused.
 func _ready() -> void:
@@ -93,19 +96,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Makes the run and the scene tree fit `screen`:
 ## - a menu screen ends the run;
-## - the run steps itself only on &"play";
-## - the tree is paused under &"pause" and under &"settings" over a run, so the sound effects
-##   stop (docs/design/audio.md). &"results" does not pause, so the finish sound plays out.
+## - the tree is paused under &"pause" and under &"settings" over a run, so the run and the
+##   sound effects stop (docs/design/audio.md);
+## - &"results" does not pause, so the finish sound plays out. A run that steps itself stops
+##   there, and steps again on &"play". A run that its caller steps (auto_step false) stays
+##   with its caller.
 func _apply_screen() -> void:
 	if screen in MENU_SCREENS:
 		_end_run()
-	if run != null:
-		run.auto_step = screen == &"play"
+	if run != null and screen == &"results" and run.auto_step:
+		run.auto_step = false
+		_held = true
+	elif run != null and screen == &"play" and _held:
+		run.auto_step = true
+		_held = false
 	get_tree().paused = run != null and screen not in [&"play", &"results"]
 
 
 ## Frees the current run, if there is one.
 func _end_run() -> void:
+	_held = false
 	if run != null:
 		remove_child(run)
 		run.queue_free()

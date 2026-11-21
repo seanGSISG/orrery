@@ -13,14 +13,16 @@ const PERIOD: float = 240.0
 const DISTANCE: float = 0.8
 const HEIGHT: float = 0.3
 
-var _camera: Camera3D = Camera3D.new()
+var _camera: Camera3D
 var _center: Vector3 = Vector3.ZERO
 var _radius: float = 10.0
 var _time: float = 0.0
 
 
-## Adds the level and the camera, and measures the level.
+## Adds the level and the camera, and measures the level. With no level scene it adds
+## nothing, and _process() stays off.
 func _ready() -> void:
+	set_process(false)
 	var path: String = Game.level_path(LEVEL)
 	var scene: PackedScene = load(path) as PackedScene if path != "" else null
 	if scene == null:
@@ -34,9 +36,11 @@ func _ready() -> void:
 		bounds = box if bounds.size == Vector3.ZERO else bounds.merge(box)
 	_center = bounds.get_center()
 	_radius = maxf(bounds.size.length() * 0.5, 4.0)
+	_camera = Camera3D.new()
 	_camera.fov = 50.0
 	add_child(_camera)
 	_camera.make_current()
+	set_process(true)
 	_process(0.0)
 
 

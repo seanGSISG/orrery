@@ -42,15 +42,17 @@ func test_level_shows_play_screen() -> void:
 	assert_eq(shown(), &"play")
 
 
-## Menu pauses the level and the scene tree; Menu again resumes both.
+## Menu pauses the level and the scene tree; Menu again resumes both. A run that its caller
+## steps does not start to step itself.
 func test_pad_pauses_and_resumes() -> void:
-	start_level(&"rules")
+	var run: LevelRun = start_level(&"rules")
 	tap_button(JOY_BUTTON_START)
 	assert_eq(shown(), &"pause")
 	assert_true(get_tree().paused, "paused")
 	tap_button(JOY_BUTTON_START)
 	assert_eq(shown(), &"play")
 	assert_false(get_tree().paused, "resumed")
+	assert_false(run.auto_step, "the caller still steps the run")
 
 
 ## Esc pauses; A on Resume, the first item, resumes.

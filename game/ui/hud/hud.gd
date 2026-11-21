@@ -58,7 +58,7 @@ func show_state(state: GameState, level: Level) -> void:
 	_target_icon.icon = &"star" if gold_open else &"check"
 	_target_icon.color = UiLook.GOLD if gold_open else UiLook.INK_2
 	_target.theme_type_variation = &"HudTargetGold" if gold_open else &"HudTarget"
-	_target.text = TimeText.minutes(level.gold if gold_open else level.par)
+	_target.text = TimeText.target(level.gold if gold_open else level.par)
 	var held: bool = state.power_up != &""
 	power_up.icon = state.power_up
 	_use.modulate.a = 1.0 if held else 0.0

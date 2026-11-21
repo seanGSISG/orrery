@@ -260,13 +260,23 @@ bake *ids: fresh-levels import
 
 # --- HUD and menus (#22) ---
 
-# Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope)
+# Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope).
+# The Dummy audio driver keeps the run silent
 [script("bash")]
 ui-shots: fresh-levels import
     set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
     for size in "1920 1080" "3840 2160"; do
         read -r width height <<<"$size"
-        gamescope --backend headless -W "$width" -H "$height" -- "{{ godot }}" --path game \
-            --resolution "${width}x${height}" res://test/ui/ui_shots.tscn -- \
-            --out "$PWD/build/ui/$height"
+        gamescope --backend headless -W "$width" -H "$height" -- "{{ godot }}" \
+            --audio-driver Dummy --path game --resolution "${width}x${height}" \
+            res://test/ui/ui_shots.tscn -- --out "$PWD/build/ui/$height" >"$log" 2>&1 || true
+        # gamescope's exit code does not follow Godot's, so the script's last line is the check.
+        if ! grep -qx 'ui-shots: done' "$log"; then
+            grep -E '^(ui-shots|ERROR|SCRIPT ERROR)' "$log" >&2 || true
+            echo "just ui-shots: not every screenshot was saved at ${width}x${height}" >&2
+            exit 1
+        fi
+        grep '^ui-shots: /' "$log"
     done

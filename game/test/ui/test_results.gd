@@ -11,14 +11,15 @@ func before_each() -> void:
 	ui.level_select.catalog = catalog
 
 
-## A finished run shows the results, and the marble stays still on the finish.
+## A finished run shows the results. The marble stays still on the finish, and a run that
+## steps itself stops, so player input no longer moves the marble.
 func test_finish_shows_results() -> void:
-	var run: LevelRun = start_level(&"rules")
+	var run: LevelRun = Game.load_level(&"rules")
 	finish_run(run)
 	await wait_process_frames(2)
 	assert_eq(shown(), &"results")
 	assert_eq(run.state.velocity, Vector3.ZERO)
-	assert_false(run.auto_step, "player input no longer moves the marble")
+	assert_false(run.auto_step, "the run stops")
 
 
 ## The first finish of a level is a new record.
@@ -45,15 +46,16 @@ func test_pad_plays_next_level() -> void:
 	assert_eq(Game.snapshot().level, &"flat")
 
 
-## View retries: the same level starts again.
+## View retries: the same level starts again, and a run that stepped itself does so again.
 func test_pad_retries() -> void:
-	var run: LevelRun = start_level(&"rules")
+	var run: LevelRun = Game.load_level(&"rules")
 	finish_run(run)
 	await wait_process_frames(2)
 	tap_button(JOY_BUTTON_BACK)
 	assert_eq(shown(), &"play")
 	assert_eq(run.state.status, &"playing")
 	assert_eq(run.state.tick, 0)
+	assert_true(run.auto_step, "the run steps itself again")
 
 
 ## B goes to the level select and ends the run.

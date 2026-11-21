@@ -1,7 +1,9 @@
 extends Node
 ## Saves one screenshot of each UI screen, for a review of the look. `just ui-shots` runs it
 ## in gamescope at 1920 × 1080 and 3840 × 2160 and writes build/ui/<height>/<name>.png:
-##     godot --path game --resolution 1920x1080 res://test/ui/ui_shots.tscn -- --out <dir>
+##     godot --audio-driver Dummy --path game --resolution 1920x1080
+##         res://test/ui/ui_shots.tscn -- --out <dir>
+## The Dummy audio driver keeps the run silent.
 ##
 ## It runs the real main scene with a demo save in user://ui-shots/, so the player's save is
 ## not touched. It changes the screen through Game, as the menus do. Without `--out` it saves
@@ -14,9 +16,12 @@ const SAVE_DIR: String = "user://ui-shots"
 const LEVEL: StringName = &"core_loop"
 
 var _out: String = SAVE_DIR
+## Screenshots that could not be saved.
+var _failed: int = 0
 
 
-## Goes through the screens in the order of a play session, saves each, and quits.
+## Goes through the screens in the order of a play session, saves each, and quits. It prints
+## "ui-shots: done" when every screenshot is saved, and quits with 1 when one is not.
 func _ready() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var at: int = args.find("--out")
@@ -50,7 +55,10 @@ func _ready() -> void:
 	Game.screen = &"play"
 	_finish(run)
 	await _save("results")
-	get_tree().quit()
+	# `just ui-shots` looks for this line: gamescope does not pass the exit code on.
+	if _failed == 0:
+		print("ui-shots: done")
+	get_tree().quit(mini(_failed, 1))
 
 
 ## Points Save at a new demo save: some medals, best times and eggs in the test tier.
@@ -125,3 +133,5 @@ func _save(name: String) -> void:
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var error: Error = get_viewport().get_texture().get_image().save_png(path)
 	print("ui-shots: %s %s" % [path, error_string(error)])
+	if error != OK:
+		_failed += 1

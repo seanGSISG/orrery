@@ -40,9 +40,8 @@ Terms used in this file:
 Rules that `Game` applies at each change (`Game._apply_screen`):
 
 - `title` and `level_select` have no run: to show one ends the current run.
-- The run steps itself only on `play`.
-- The scene tree is paused under `pause`, and under `settings` when a run exists. So the sound effects stop and the music plays on (`docs/design/audio.md`).
-- `results` does not pause the tree, so the finish sound plays out. `Ui` stops the marble on the finish, and the run does not step, so player input no longer moves it.
+- The scene tree is paused under `pause`, and under `settings` when a run exists. So the run and the sound effects stop, and the music plays on (`docs/design/audio.md`).
+- `results` does not pause the tree, so the finish sound plays out. `Ui` stops the marble on the finish. A run that steps itself stops there (`auto_step` false), so player input no longer moves the marble, and it steps again on `play`. A run that its caller steps (a test, the harness) stays with its caller.
 - `Game.load_level()` shows `play`. `Game.restart()` restarts the run and shows `play`; the `restart` action calls it on `play`, `pause` and `results`.
 
 The harness steps a run by itself, also under `pause` and `results`: it owns time. It has no command for menu input yet.

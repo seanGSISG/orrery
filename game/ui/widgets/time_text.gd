@@ -9,6 +9,11 @@ static func full(seconds: float) -> String:
 	return minutes(seconds) + hundredths(seconds)
 
 
+## Returns seconds as a target time: "0:48" for whole seconds, else all of it, "0:46.82".
+static func target(seconds: float) -> String:
+	return full(seconds).trim_suffix(".00")
+
+
 ## Returns seconds as a difference: "4.38" under one minute, "1:04.38" from one minute.
 static func difference(seconds: float) -> String:
 	return full(seconds).trim_prefix("0:").trim_prefix("0")
