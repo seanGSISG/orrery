@@ -6,7 +6,7 @@ say "station 2 feels icy".
 The loop runs counter-clockwise, seen from above:
 - north (+y): 1 flat runway with 5 m stripes, 2-4 hills of 10, 20 and 30 degrees;
 - east (+x): 5-7 walls of 90, 60 and 45 degrees, 8 a thin wall, 9 a V seam;
-- south (-y): 10 gaps of 1 to 6 m, 11 steps of 0.5 to 1.2 m, then a ramp down;
+- south (-y): 10 gaps of 1 to 10 m, 11 steps of 0.5 to 1.2 m, then a ramp down;
 - west (-x): 12 a moving platform, 13 a turning gear, 14 bumpers, then back onto the
   runway.
 The finish is on a side pad west of the start, out of the loop.
@@ -151,63 +151,72 @@ for number, angle, length, colour in (
     _paint(kit.ramp(at=(0, y + length + 4, rise), length=length, rise=-rise), colour)
     _paint(kit.track(at=(0, y + 2 * length + 4, 0), length=4), colour)
     y += 2 * length + 8
-# The flat after the last hill (y 132..136) and this track make the corner pad: x -4..4,
-# y 132..140.
+# The flat after the last hill (y 132..136) and this track end the hills at y 140.
 _paint(kit.track(at=(0, 136, 0), length=4), DARK)
 
-# --- East leg, +x (yaw -90); the lane centre is y = 136 ---------------------------------
+# A plain run-in makes the north leg long enough for the south leg: the gaps of station 10
+# need 54 m more than the first loop had. The run-in ends at the corner pad, which spans
+# x -4..4, y TOP-4..TOP+4.
+TOP = 190.0
+_paint(kit.track(at=(0, 140, 0), length=TOP + 4 - 140), LIGHT)
+
+# --- East leg, +x (yaw -90); the lane centre is y = TOP ---------------------------------
 
 EAST = -90.0
-kit.marker("checkpoint", at=(7, 136, 0))
+kit.marker("checkpoint", at=(7, TOP, 0))
 for number, angle, x in ((5, 90, 4), (6, 60, 18), (7, 45, 32)):
     _paint(
-        kit.track(at=(x, 136, 0), length=14, yaw=EAST), LIGHT if number % 2 else DARK
+        kit.track(at=(x, TOP, 0), length=14, yaw=EAST), LIGHT if number % 2 else DARK
     )
-    _wall(f"wall_{angle}", (x + 1, 136, 0), angle, EAST)
-    _sign(f"{number} WALL {angle}", (x + 2, 136, 1.8), EAST)
+    _wall(f"wall_{angle}", (x + 1, TOP, 0), angle, EAST)
+    _sign(f"{number} WALL {angle}", (x + 2, TOP, 1.8), EAST)
 
 # 8: a free-standing wall 0.2 m thick in the middle of the lane, for the camera case of #11.
-_paint(kit.track(at=(46, 136, 0), length=14, yaw=EAST), DARK)
+_paint(kit.track(at=(46, TOP, 0), length=14, yaw=EAST), DARK)
 _prism(
     "thin_wall",
-    (48, 136, 0),
+    (48, TOP, 0),
     [(-0.1, -EMBED), (0.1, -EMBED), (0.1, 2), (-0.1, 2)],
     10,
     EAST,
 )
-_sign("8 THIN WALL", (47, 136, 2.9), EAST)
+_sign("8 THIN WALL", (47, TOP, 2.9), EAST)
 
 # 9: a V seam: two 30 degree faces that meet along the lane centre.
 side = HALF * math.tan(math.radians(30))
 _prism(
     "v_seam",
-    (60, 136, 0),
+    (60, TOP, 0),
     [(-HALF, side), (0, 0), (HALF, side), (HALF, -0.5), (-HALF, -0.5)],
     14,
     EAST,
     LIGHT,
 )
-_sign("9 V SEAM", (61, 136, 3.0), EAST)
-# The corner pad spans x 74..82, y 132..140.
-_paint(kit.track(at=(74, 136, 0), length=8, yaw=EAST), DARK)
+_sign("9 V SEAM", (61, TOP, 3.0), EAST)
+# The corner pad spans x 74..82, y TOP-4..TOP+4.
+_paint(kit.track(at=(74, TOP, 0), length=8, yaw=EAST), DARK)
 
 # --- South leg, -y (yaw 180); the lane centre is x = 78 ---------------------------------
 
 SOUTH = 180.0
-kit.marker("checkpoint", at=(78, 129, 0))
-_paint(kit.track(at=(78, 132, 0), length=12, yaw=SOUTH), LIGHT)
-_sign("10 GAPS", (78, 128, 1.8), SOUTH)
+kit.marker("checkpoint", at=(78, TOP - 7, 0))
+_paint(kit.track(at=(78, TOP - 4, 0), length=12, yaw=SOUTH), LIGHT)
+_sign("10 GAPS", (78, TOP - 8, 1.8), SOUTH)
 
-# 10: pads with gaps of 1, 2, 3, 4 and 6 m between them.
-y = 120.0
-for i, gap in enumerate((1, 2, 3, 4, 6)):
+# 10: pads with gaps of 1, 2, 3, 4, 6, 8 and 10 m between them. The pad after a gap is where
+# you land, stop, and run up to the next gap. The pads after the gaps of 1 to 4 m are 6 m
+# long. The others are 14, 14 and 16 m: from rest a marble needs 7.4 m to reach top speed
+# (15 m/s), which clears 11.25 m at most, and 7.4 m to stop again. A checkpoint on the pads
+# after the 6 and 8 m gaps starts a run-up from rest.
+GAPS = ((1, 6), (2, 6), (3, 6), (4, 6), (6, 14), (8, 14), (10, 16))
+y = TOP - 16
+for i, (gap, pad) in enumerate(GAPS):
     y -= gap
     _sign(f"{gap} m", (78, y + gap / 2, 1.4), SOUTH, size=0.6)
-    _paint(
-        kit.track(at=(78, y, 0), length=6 if i < 4 else 8, yaw=SOUTH),
-        DARK if i % 2 else LIGHT,
-    )
-    y -= 6 if i < 4 else 8
+    _paint(kit.track(at=(78, y, 0), length=pad, yaw=SOUTH), DARK if i % 2 else LIGHT)
+    if gap in (6, 8):
+        kit.marker("checkpoint", at=(78, y - 3, 0))
+    y -= pad
 # y is 72 here: the last pad ends at y 72.
 
 # 11: steps that rise 0.5, 0.8, 1.0 and 1.2 m, each 5 m deep, then a ramp back down.
@@ -253,11 +262,12 @@ _paint(kit.track(at=(-4, 4, 0), width=4, length=6, yaw=WEST), DARK)
 kit.marker("finish", at=(-8, 4, 0))
 _sign("FINISH", (-8, 4, 2.0), WEST, size=0.6)
 
-kit.shot("overview", at=(38, 10, 105), rotation=(-62, 0, 0))
+kit.shot("overview", at=(39, -15, 210), rotation=(-62, 0, 0))
 kit.shot("runway", at=(0, -4, 2.2), rotation=(-8, 0, 0))
 kit.shot("hills", at=(9, 52, 6), rotation=(-18, 0, 30))
-kit.shot("walls", at=(-4, 128, 4), rotation=(-14, 0, -70))
-kit.shot("thin_wall", at=(44, 133, 1.4), rotation=(-6, 0, -80))
-kit.shot("gaps", at=(84, 136, 5), rotation=(-20, 0, 160))
+kit.shot("walls", at=(-4, TOP - 8, 4), rotation=(-14, 0, -70))
+kit.shot("thin_wall", at=(44, TOP - 3, 1.4), rotation=(-6, 0, -80))
+kit.shot("gaps", at=(84, TOP, 5), rotation=(-20, 0, 160))
+kit.shot("long_gaps", at=(82, 137, 5), rotation=(-22, 0, 174))
 kit.shot("steps", at=(85, 82, 6), rotation=(-18, 0, 155))
 kit.shot("movers", at=(66, 22, 7), rotation=(-25, 0, 48))
