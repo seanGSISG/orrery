@@ -10,6 +10,8 @@ var title: String = ""
 ## Par time and gold time, s; 0 when the level has none.
 var par: float = 0.0
 var gold: float = 0.0
+## The number of Clockwork Eggs in the level.
+var eggs: int = 0
 
 
 ## Returns the info of level id. A level with no scene gives built false and no name.
@@ -21,6 +23,7 @@ static func read(level_id: StringName) -> LevelInfo:
 	if scene == null:
 		return info
 	info.built = true
+	info.eggs = Level.egg_ids(path).size()
 	var state: SceneState = scene.get_state()
 	for i: int in state.get_node_property_count(0):
 		var value: Variant = state.get_node_property_value(0, i)

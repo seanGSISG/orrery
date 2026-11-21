@@ -3,8 +3,10 @@ extends Node3D
 ## The Ascent mode (docs/plan.md §2.9): one climb through every zone, with no checkpoints.
 ## Ascent.start() builds the climb from the zone levels, plays it through Game and adds one
 ## Ascent node to the run. Ascent.of(run) returns that node; the HUD and the stats screen read
-## it. The climb is a Level with the id, the tier and the music group ID, so its best time and
-## the ghost of the best climb save through Save.finish() like those of any level.
+## it. The climb is a Level with the tier and the music group ID. Its level id is
+## record_id() of its zones, so its best time and the ghost of the best climb save through
+## Save.finish() like those of any level, and a climb of other zones has a record of its own.
+## An egg saves under the id of its zone, so it stays found when the climb gets more zones.
 ##
 ## How a zone plugs in. A zone is a level script of its own, built like any level: one start
 ## pad, one finish pad, both routes. It uses the climb's coordinates, so every zone loads at
@@ -41,7 +43,7 @@ extends Node3D
 ## Emitted when the marble enters another zone; zone is its index, 0 for the first.
 signal zone_changed(zone: int)
 
-## The level id, the tier and the music group of the climb.
+## The tier and the music group of the climb, and the start of its level id (record_id()).
 const ID: StringName = &"ascent"
 ## The zone levels of the game, from the bottom (levels/ascent/zone_<n>.py).
 const ZONES: Array[StringName] = [&"zone_1", &"zone_2", &"zone_3"]
@@ -144,6 +146,14 @@ static func zones() -> Array[StringName]:
 	return built
 
 
+## Returns the level id of a climb of the zones ids, from the bottom: "ascent:" and the ids
+## with a + between them, for example &"ascent:zone_1+zone_2+zone_3". The best time and the
+## ghost of the best climb are kept under it (Save.level(), Save.ghost()), so a record of a
+## climb of fewer zones never stands for a longer climb.
+static func record_id(ids: Array[StringName]) -> StringName:
+	return StringName("%s:%s" % [ID, "+".join(PackedStringArray(ids))])
+
+
 ## Returns true when the save has a spot that a climb of the zones ids continues: the climb
 ## starts with the zones that the spot was saved in. More zones on top are fine. A spot of
 ## other zones is a place in another world, so such a climb starts at the bottom. The Ascent
@@ -220,7 +230,6 @@ func _notification(what: int) -> void:
 func _build(ids: Array[StringName]) -> Level:
 	var level: Level = Level.new()
 	level.name = &"Climb"
-	level.id = ID
 	level.title = "TITLE_ASCENT"
 	level.tier = ID
 	level.music = ID
@@ -243,6 +252,7 @@ func _build(ids: Array[StringName]) -> Level:
 	if _starts.is_empty():
 		level.free()
 		return null
+	level.id = record_id(_zone_ids)
 	_keep_last_finish(level)
 	if Save.ascent.assist:
 		_add_checkpoints()

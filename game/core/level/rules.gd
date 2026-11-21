@@ -29,6 +29,8 @@ var kill_height: float = -KILL_DEPTH
 
 ## The last checkpoint reached; null means the start pad. Read it; only Rules writes it.
 var checkpoint: LevelObject = null
+## The eggs found in this run, in the order of the finds. Read it; only Rules writes it.
+var found_eggs: Array[LevelObject] = []
 
 var _run: LevelRun
 var _dt: float = 1.0 / Engine.physics_ticks_per_second
@@ -60,6 +62,7 @@ func reset() -> void:
 	state.checkpoint = &""
 	state.egg_found = false
 	checkpoint = null
+	found_eggs.clear()
 	_on_finish = false
 	_clock = -1
 	_respawn_left = 0
@@ -127,11 +130,12 @@ func reach_finish() -> void:
 	_on_finish = true
 
 
-## The egg calls this when the marble touches it. Returns true when the egg counts as found:
-## then it opens.
-func find_egg() -> bool:
-	if _run.state.status != &"playing":
+## An egg calls this with itself when the marble touches it. Returns true when the egg
+## counts as found: then it opens. A level can have several eggs; each counts once.
+func find_egg(egg: LevelObject) -> bool:
+	if _run.state.status != &"playing" or found_eggs.has(egg):
 		return false
+	found_eggs.append(egg)
 	_run.state.egg_found = true
 	return true
 

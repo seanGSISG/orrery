@@ -138,7 +138,7 @@ func test_gate_ends_the_run() -> void:
 	var time: float = run.state.timer
 	assert_gt(time, 1.0)
 	assert_false(Save.ascent.has_spot)
-	assert_eq(Save.level(Ascent.ID).best_time, time)
+	assert_eq(Save.level(Ascent.record_id(Ascent.FIXTURE)).best_time, time)
 	quit_climb()
 	assert_false(Save.ascent.has_spot, "a finished climb leaves no spot")
 
@@ -170,7 +170,8 @@ func test_ghost_of_the_best_climb_plays_back() -> void:
 		path.append(run.state.position)
 	put(GATE)
 	assert_eq(run.state.status, &"finished")
-	assert_almost_eq(Save.ghost(Ascent.ID).duration, run.state.timer, 0.0001)
+	var record: StringName = Ascent.record_id(Ascent.FIXTURE)
+	assert_almost_eq(Save.ghost(record).duration, run.state.timer, 0.0001)
 	if not climb():
 		return
 	var tracker: RunTracker = run.get_node(^"RunTracker") as RunTracker
@@ -180,6 +181,29 @@ func test_ghost_of_the_best_climb_plays_back() -> void:
 		run.step(roll(Vector2(0, -1)))
 		assert_almost_eq(tracker.ghost_marble.position, path[tick], Vector3.ONE * 0.02)
 	assert_true(tracker.ghost_marble.visible)
+
+
+## The best time and the ghost are of the zones of the climb. A record of a climb of fewer
+## zones does not stand for the climb of all zones.
+func test_record_is_of_the_zones_of_the_climb() -> void:
+	var lower: Array[StringName] = [Ascent.FIXTURE[0], Ascent.FIXTURE[1]]
+	run = Ascent.start(true, lower)
+	if run == null:
+		fail_test("the fixture climb is not built: run `just build-levels`")
+		return
+	run.auto_step = false
+	run.step(roll(Vector2(0, 1)))
+	# The finish pad of zone 2 is the gate of this climb.
+	put(Vector3(16, 2, 24))
+	assert_eq(run.state.status, &"finished")
+	assert_gt(Save.level(Ascent.record_id(lower)).best_time, 0.0)
+	assert_not_null(Save.ghost(Ascent.record_id(lower)))
+	if not climb(true):
+		return
+	run.step(roll(Vector2(0, 1)))
+	assert_eq(Save.level(run.level.id).best_time, -1.0, "the full climb has no best time yet")
+	var tracker: RunTracker = run.get_node(^"RunTracker") as RunTracker
+	assert_null(tracker.ghost_marble, "and no ghost")
 
 
 ## A restart of the run (the route bot, the harness) starts a new climb.

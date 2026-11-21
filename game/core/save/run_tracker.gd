@@ -5,8 +5,9 @@ extends Node
 ## Game loads.
 ##
 ## On each LevelRun.stepped it reads run.state (the state of the new tick) and:
-## - calls save.find_egg() when egg_found becomes true, and save.finish() with the recorded
-##   ghost when the status becomes &"finished", so no event waits for a later tick;
+## - calls save.find_egg() for each egg that the rules count as found, under the id of the
+##   level that holds the egg (in an Ascent climb: its zone), and save.finish() with the
+##   recorded ghost when the status becomes &"finished", so no event waits for a later tick;
 ## - records the marble's pose into a Ghost at Ghost.RATE per second of level clock;
 ## - puts the ghost marble of the best run at the level clock, shown while
 ##   save.settings.ghost is true.
@@ -20,7 +21,8 @@ var ghost_marble: GhostMarble
 ## The ghost of this attempt so far.
 var recording: Ghost = Ghost.new()
 
-var _egg_saved: bool = false
+## The number of Rules.found_eggs that are saved.
+var _eggs_saved: int = 0
 var _finish_saved: bool = false
 ## The ghost of a new best in this attempt; the ghost marble takes it in the next attempt.
 var _new_best: Ghost
@@ -59,26 +61,36 @@ func _on_stepped() -> void:
 ## Starts a new recording, and makes the ghost marble race a new best of the last attempt.
 func _start_attempt() -> void:
 	recording = Ghost.new()
-	_egg_saved = false
+	_eggs_saved = 0
 	_finish_saved = false
 	if _new_best != null:
 		_race(_new_best)
 		_new_best = null
 
 
-## Saves the egg once when egg_found is true, and the finish with the recording once when the
-## status is &"finished".
+## Saves each new egg of Rules.found_eggs once, and the finish with the recording once when
+## the status is &"finished".
 func _save_events() -> void:
 	var state: GameState = run.state
 	var level: StringName = run.level.id
-	if state.egg_found and not _egg_saved:
-		_egg_saved = true
-		save.find_egg(level)
+	while _eggs_saved < run.rules.found_eggs.size():
+		var egg: LevelObject = run.rules.found_eggs[_eggs_saved]
+		_eggs_saved += 1
+		save.find_egg(_level_of(egg).id, egg.name)
 	if state.status == &"finished" and not _finish_saved:
 		_finish_saved = true
 		recording.finish(state.timer, state.position, run.marble.ball_rotation)
 		if save.finish(level, state.timer, state.medal, recording):
 			_new_best = recording
+
+
+## Returns the Level that holds node: the nearest one above it, which in an Ascent climb is
+## the zone, not the climb. The run's level when there is none.
+func _level_of(node: Node) -> Level:
+	var above: Node = node.get_parent()
+	while above != null and not above is Level:
+		above = above.get_parent()
+	return above as Level if above != null else run.level
 
 
 ## Makes the ghost marble play ghost, when there is one.

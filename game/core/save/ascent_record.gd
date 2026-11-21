@@ -3,7 +3,7 @@ extends SaveRecord
 ## The saved Ascent climb (docs/plan.md §2.9). Save.ascent holds the one instance. The Ascent
 ## mode (game/modes/ascent/ascent.gd) fills these vars and calls Save.write(). The best time
 ## to the top and the ghost of the best climb are not here: they go through Save.finish() like
-## those of any level, under the level id Ascent.ID.
+## those of any level, under the level id of the climb (Ascent.record_id()).
 
 ## True when Assist is on: the next start of the climb has a checkpoint at each zone start.
 var assist: bool = false

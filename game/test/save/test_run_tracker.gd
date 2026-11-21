@@ -36,7 +36,7 @@ func test_egg_saves_when_found() -> void:
 	assert_true(run.state.egg_found)
 	var loaded: SaveGame = _save()
 	loaded.read()
-	assert_true(loaded.level(&"rules").egg)
+	assert_eq(loaded.level(&"rules").eggs, PackedStringArray(["Egg"]))
 
 
 ## A finish saves the time, the medal and the ghost. In the next attempt the ghost marble

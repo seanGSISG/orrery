@@ -1,7 +1,8 @@
 class_name ResultsScreen
 extends Screen
 ## The results of a finished run, over the level: the time and the medal on the dial, and a
-## table with the record, the gems, the egg and the target times. Next plays the level after
+## table with the record, the gems, the egg (for a level with several eggs: how many of them
+## are found) and the target times. Next plays the level after
 ## this one, Retry restarts (so does the `restart` action; Game handles it), and Levels or
 ## ui_cancel goes to the level select.
 ##
@@ -90,9 +91,19 @@ func open() -> void:
 	else:
 		_record.text = ""
 	_gems.text = "%d/%d" % [state.gems_collected, state.gems_total]
-	var egg: bool = state.egg_found or Save.level(level.id).egg
-	_egg_icon.visible = egg
-	_egg.text = "RESULTS_EGG_FOUND" if egg else "RESULTS_EGG_MISSING"
+	# The eggs of the save and of this run: the save of a find can land a tick after it.
+	var found: PackedStringArray = Save.level(level.id).eggs.duplicate()
+	var total: int = 0
+	for object: LevelObject in run.objects:
+		total += 1 if object is Egg else 0
+	for egg: LevelObject in run.rules.found_eggs:
+		if not found.has(String(egg.name)):
+			found.append(String(egg.name))
+	var every: bool = total > 0 and found.size() >= total
+	_egg_icon.visible = every
+	_egg.text = "RESULTS_EGG_FOUND" if every else "RESULTS_EGG_MISSING"
+	if total > 1:
+		_egg.text = "%d/%d" % [mini(found.size(), total), total]
 	_gold.text = TimeText.full(level.gold)
 	_par.text = TimeText.full(level.par)
 	_gold_line.visible = level.gold > 0.0

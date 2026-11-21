@@ -2,7 +2,8 @@ class_name LevelNode
 extends FocusButton
 ## One level on the ring of the level select: a numbered mark that takes the focus. OrbitMap
 ## makes and places them. Beside the mark, away from the centre of the chart, it shows the
-## medal (a star for gold, a check for qualified) and the egg when it is found.
+## medal (a star for gold, a check for qualified) and the egg when every egg of the level is
+## found.
 ##
 ## - &"open": a ring with the number; the player can play the level.
 ## - &"locked": a dashed ring with a faint number.
