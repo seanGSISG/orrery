@@ -5,6 +5,7 @@ on:
     branches: [main, "plan-*"]
   push:
     branches: [main, "plan-*"]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,9 +22,56 @@ defaults:
 # The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
 # downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
 jobs:
+  # Lists the changed files and picks the jobs they need (.github/pick-jobs.sh holds the rules).
+  # A pull request compares with its base, a push with the commit before it. A new branch, a
+  # manual run or a failed diff runs every job. A docs-only change runs no other job.
+  changes:
+    name: Pick the jobs
+    runs-on: ubuntu-latest
+    outputs:
+      levels: ${{ steps.pick.outputs.levels }}
+      lint: ${{ steps.pick.outputs.lint }}
+      test: ${{ steps.pick.outputs.test }}
+      harness: ${{ steps.pick.outputs.harness }}
+      export: ${{ steps.pick.outputs.export }}
+      music: ${{ steps.pick.outputs.music }}
+      art: ${{ steps.pick.outputs.art }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # The pull request checkout is a merge commit; its first parent is the base.
+          case $EVENT in
+            pull_request) base=HEAD^1 ;;
+            push) base=$BEFORE ;;
+            *) base= ;;
+          esac
+          if [[ -z $base || $base =~ ^0+$ ]] || ! files=$(git diff --name-only --no-renames "$base" HEAD); then
+            files=everything
+          fi
+          picked=$(.github/pick-jobs.sh <<<"$files")
+          echo "$picked" >> "$GITHUB_OUTPUT"
+          {
+            echo '### Changed files'
+            echo '```'
+            echo "$files"
+            echo '```'
+            if [[ $picked != *=true* ]]; then
+              echo 'Docs-only change: no job runs beyond this one.'
+            else
+              echo "Jobs that run: $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   lint:
     name: Lint
-    needs: levels
+    needs: [changes, levels]
+    if: needs.changes.outputs.lint == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -37,9 +85,11 @@ jobs:
 
   # Builds the marble's core and every level script with Blender and checks the import. Every
   # other job that runs the game gets the core, because the marble scene needs it; the test
-  # jobs get the levels too.
+  # jobs get the levels too. When no test job runs, it builds only the core.
   levels:
     name: Build levels
+    needs: changes
+    if: needs.changes.outputs.levels == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -55,13 +105,17 @@ jobs:
           path: ~/.local/opt
           key: ${{ steps.pins.outputs.key }}
       - run: tools/blender/install-ci.sh
-      - run: just build-levels
+      - if: needs.changes.outputs.test == 'true'
+        run: just build-levels
+      - if: needs.changes.outputs.test != 'true'
+        run: just build-marble
       - uses: actions/upload-artifact@v7
         with:
           name: marble
           path: game/core/marble/built/
           if-no-files-found: error
-      - uses: actions/upload-artifact@v7
+      - if: needs.changes.outputs.test == 'true'
+        uses: actions/upload-artifact@v7
         with:
           name: levels
           path: game/levels/built/
@@ -69,7 +123,8 @@ jobs:
 
   test:
     name: Import, GUT and level tests (${{ matrix.os }})
-    needs: levels
+    needs: [changes, levels]
+    if: needs.changes.outputs.test == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +147,8 @@ jobs:
   # The harness contract tests against a headless debug build; the GPU screenshot test runs locally.
   harness:
     name: Harness contract tests
-    needs: levels
+    needs: [changes, levels]
+    if: needs.changes.outputs.harness == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -106,7 +162,8 @@ jobs:
 
   export:
     name: Export Linux and Windows
-    needs: levels
+    needs: [changes, levels]
+    if: needs.changes.outputs.export == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -134,7 +191,7 @@ jobs:
           path: build/windows/
           if-no-files-found: error
 
-  # Boots the Windows export that the export job uploads.
+  # Boots the Windows export that the export job uploads. It is skipped when the export is.
   windows-boot:
     name: Boot the Windows export
     needs: export
@@ -147,3 +204,18 @@ jobs:
       - name: Boot the Windows export
         timeout-minutes: 2
         run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'
+
+  # The music pipeline's and the asset tools' pytest suites. They need no Godot and no LFS files.
+  tools:
+    name: Tool tests
+    needs: changes
+    if: needs.changes.outputs.music == 'true' || needs.changes.outputs.art == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: extractions/setup-just@v4
+      - if: needs.changes.outputs.music == 'true'
+        run: just test-music
+      - if: needs.changes.outputs.art == 'true'
+        run: just test-art
