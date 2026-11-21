@@ -1,11 +1,12 @@
 shader_type spatial;
-// The shader of every kit material (res://materials/<set>/<name>.tres). It maps a PBR
-// texture set onto a kit piece from three sides in the piece's own space, so a piece needs
-// no UV1 and the texel density is the same on every piece: one repeat covers `tile` metres.
-// Kit pieces keep a scale of 1, so their own space is in metres.
-// - Paving: with a slab size, the surface is cut into slabs in a running bond. Each slab
-//   reads a different part of the texture and has its own shade, so the texture shows no
-//   repeat. The joints are flush lines of darker stone.
+// The shader of every kit material (res://materials/). It maps a PBR texture set onto a kit
+// piece from three sides in the piece's own space, so a piece needs no UV1 and the texel
+// density is the same on every piece: one repeat covers `tile` metres. Kit pieces keep a
+// scale of 1, so their own space is in metres.
+// - Paving: with a slab size, the top of a piece is cut into slabs in a running bond, and
+//   the course lines go on down its sides. Each slab reads a different part of the texture
+//   and has its own shade, so the texture shows no repeat. The joints are flush lines of
+//   darker stone.
 // - Detail: with a detail size, the normal map is added again at that size for fine grain
 //   close to the camera (docs/design/visual-quality.md §6).
 
@@ -22,8 +23,7 @@ uniform float normal_strength = 1.0;
 // Metres that one repeat of the detail normal covers; 0 turns the detail off.
 uniform float detail_tile = 0.0;
 uniform float detail_strength = 0.5;
-// Slab size in metres: across and along the piece on its top, along and up on its sides.
-// (0, 0) turns the paving off.
+// Slab size in metres, across and along the piece. (0, 0) turns the paving off.
 uniform vec2 slab_size = vec2(0.0);
 // Joint width in metres, and how dark the joint is (1 is as bright as the slab).
 uniform float joint_width = 0.012;
@@ -36,54 +36,64 @@ const float ALBEDO_MIN = 0.013;
 const float ALBEDO_MAX_DIELECTRIC = 0.871;
 const float ALBEDO_MAX_METAL = 0.956;
 const float BLEND_SHARPNESS = 8.0;
+// A slab size for "no joint in this direction".
+const float ENDLESS = 100000.0;
 
 varying vec3 piece_position;
 varying vec3 piece_normal;
+varying flat float piece_seed;
 
 void vertex() {
 	piece_position = VERTEX;
 	piece_normal = NORMAL;
+	// Two pieces of the same shape get different slabs.
+	piece_seed = floor(dot(MODEL_MATRIX[3].xyz, vec3(7.0, 13.0, 29.0)));
 }
 
 // Returns three random numbers from 0 to 1 for a slab.
 vec3 slab_random(vec2 cell) {
-	vec3 p = fract(vec3(cell.xyx) * vec3(0.1031, 0.1030, 0.0973));
+	vec3 p = fract(vec3(cell.xyx + piece_seed) * vec3(0.1031, 0.1030, 0.0973));
 	p += dot(p, p.yxz + 33.33);
 	return fract((p.xxy + p.yzz) * p.zyx);
 }
 
-// Returns what one side sees at the point `at` on its plane, in metres: the albedo in rgb
-// and the roughness in a. `bump` gets the slope of the normal map along the plane's two
-// axes; the green channel points along +y of `at`.
-vec4 side(vec2 at, out vec2 bump) {
-	vec2 uv = vec2(at.x, -at.y) / tile;
+// Returns what one side shows at the point `at` on its plane, in metres: the albedo in rgb
+// and the roughness in a. `size` is the slab size along the two axes of `at`. `bump` gets
+// the slope of the normal map along +x and -y of `at`.
+vec4 side(vec2 at, vec2 size, out vec2 bump) {
+	vec2 uv = at / tile;
 	vec2 dx = dFdx(uv);
 	vec2 dy = dFdy(uv);
 	float shade = 1.0;
 	float joint = 0.0;
+	vec2 flip = vec2(1.0);
 	if (slab_size.x > 0.0 && slab_size.y > 0.0) {
 		// Running bond: every second row is half a slab along.
-		float row = floor(at.y / slab_size.y);
-		vec2 slab = vec2(at.x / slab_size.x + 0.5 * mod(row, 2.0), at.y / slab_size.y);
+		vec2 slab = vec2(at.x / size.x + 0.5 * mod(floor(at.y / size.y), 2.0), at.y / size.y);
 		vec3 random = slab_random(floor(slab));
-		uv += random.xy;
+		// Each slab reads the texture from its own place, mirrored or not along each axis.
+		flip = step(0.5, fract(random.z * vec2(17.0, 31.0))) * 2.0 - 1.0;
+		uv = uv * flip + random.xy;
+		dx *= flip;
+		dy *= flip;
 		shade = 1.0 - slab_variation * random.z;
 		// The distance to the nearest slab edge in metres, against the size of a pixel, so
-		// a far joint fades out and does not shimmer.
-		vec2 edge = (0.5 - abs(fract(slab) - 0.5)) * slab_size;
+		// that a far joint fades out and does not shimmer.
+		vec2 edge = (0.5 - abs(fract(slab) - 0.5)) * size;
 		float pixel = max(length(dFdx(at)), length(dFdy(at)));
-		float line = 1.0 - smoothstep(0.5 * joint_width - 0.5 * pixel, 0.5 * joint_width + 0.5 * pixel, min(edge.x, edge.y));
+		float line = 1.0 - smoothstep(0.5 * (joint_width - pixel), 0.5 * (joint_width + pixel), min(edge.x, edge.y));
 		joint = line * clamp(joint_width / pixel, 0.0, 1.0);
 	}
 	vec3 color = textureGrad(albedo_map, uv, dx, dy).rgb * tint * shade;
 	float rough = textureGrad(roughness_map, uv, dx, dy).r * roughness_scale;
 	bump = (textureGrad(normal_map, uv, dx, dy).rg * 2.0 - 1.0) * normal_strength;
 	if (detail_tile > 0.0) {
-		bump += (texture(normal_map, uv * (tile / detail_tile)).rg * 2.0 - 1.0) * detail_strength;
+		float finer = tile / detail_tile;
+		bump += (textureGrad(normal_map, uv * finer, dx * finer, dy * finer).rg * 2.0 - 1.0) * detail_strength;
 	}
 	color *= mix(1.0, joint_shade, joint);
 	rough = mix(rough, max(rough, 0.9), joint);
-	bump *= 1.0 - joint;
+	bump *= flip * (1.0 - joint);
 	return vec4(color, rough);
 }
 
@@ -92,20 +102,21 @@ void fragment() {
 	vec3 weight = pow(abs(normal), vec3(BLEND_SHARPNESS));
 	weight /= weight.x + weight.y + weight.z;
 	vec4 surface = vec4(0.0);
-	vec3 bent = vec3(0.0);
+	vec3 bent = normal;
 	vec2 bump;
-	// A side that the face does not look at costs no texture reads.
+	// A side that the face does not look at costs no texture reads. In a piece's own space
+	// x is across, y is up and -z is along (the glTF axes of the kit's x, z and y).
 	if (weight.x > 0.001) {
-		surface += weight.x * side(piece_position.zy, bump);
-		bent += weight.x * vec3(abs(normal.x) * sign(normal.x), bump.y + normal.y, bump.x + normal.z);
+		surface += weight.x * side(vec2(-piece_position.z, -piece_position.y), vec2(slab_size.y, ENDLESS), bump);
+		bent += weight.x * vec3(0.0, bump.y, -bump.x);
 	}
 	if (weight.y > 0.001) {
-		surface += weight.y * side(piece_position.xz, bump);
-		bent += weight.y * vec3(bump.x + normal.x, abs(normal.y) * sign(normal.y), bump.y + normal.z);
+		surface += weight.y * side(vec2(piece_position.x, -piece_position.z), slab_size, bump);
+		bent += weight.y * vec3(bump.x, 0.0, bump.y);
 	}
 	if (weight.z > 0.001) {
-		surface += weight.z * side(piece_position.xy, bump);
-		bent += weight.z * vec3(bump.x + normal.x, bump.y + normal.y, abs(normal.z) * sign(normal.z));
+		surface += weight.z * side(vec2(piece_position.x, -piece_position.y), vec2(slab_size.x, ENDLESS), bump);
+		bent += weight.z * vec3(bump.x, bump.y, 0.0);
 	}
 	ALBEDO = clamp(surface.rgb, vec3(ALBEDO_MIN), vec3(mix(ALBEDO_MAX_DIELECTRIC, ALBEDO_MAX_METAL, metallic)));
 	ROUGHNESS = clamp(surface.a, 0.0, 1.0);

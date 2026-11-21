@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkyPreset" format=3]
+
+[ext_resource type="Script" path="res://skies/sky_preset.gd" id="1"]
+[ext_resource type="Texture2D" path="res://skies/dusk.hdr" id="2"]
+
+[resource]
+script = ExtResource("1")
+panorama = ExtResource("2")
+sky_energy = 1.15
+sun_elevation = 7.0
+sun_azimuth = 135.0
+sun_color = Color(1, 0.77, 0.58, 1)
+sun_energy = 4.39
+sky_share = 0.5
+fill_color = Color(0.29, 0.36, 0.53, 1)
+fog_density = 0.0003

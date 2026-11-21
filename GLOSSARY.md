@@ -45,3 +45,11 @@ _Avoid_: spawn point, placeholder
 **Route**:
 A `route` marker: the points and actions that the route bot (`game/harness/route_bot.gd`) plays a level along. A level script places a `first_run` route and an `expert` route; `just test-levels` checks them against par and gold.
 _Avoid_: path, track (a track is a level piece)
+
+**Kit material**:
+The look of a kit face by name: `limestone`, `brass` or `gold`. A level script names it, and the importer gives the face the material `game/materials/<set>/<name>.tres`. The surface type (friction and bounce) is a separate name.
+_Avoid_: texture, skin (a skin is a marble look)
+
+**Sky preset**:
+One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. A level's `sky` names it, or else the level's tier picks it.
+_Avoid_: skybox, environment

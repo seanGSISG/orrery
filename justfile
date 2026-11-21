@@ -57,12 +57,13 @@ build-levels *ids: kit-textures
 feel: (build-levels "feel")
     "{{ godot }}" --path game res://debug/feel.tscn
 
-# Build the levels whose .glb is missing or older than its script, the kit or the importer
+# Build the levels whose .glb is missing or older than its script, the kit, the importer, the
+# material set or a sky preset (the importer writes the sky and the sun into the level)
 [private]
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd)
+    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd game/skies/sky_preset.gd game/skies/*.tres)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)

@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Color.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Roughness.jpg" id="3"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/tint = Vector3(1.0, 0.82, 0.5)
+shader_parameter/tile = 0.6
+shader_parameter/roughness_scale = 5.0
+shader_parameter/metallic = 1.0

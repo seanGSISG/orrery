@@ -61,10 +61,9 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      # The baked lightmaps (game/levels/lightmaps/) are in Git LFS.
+      # The setup action pulls the Git LFS files (textures, skies, lightmaps) through its cache.
+      # `lfs: true` here would download them again on every run, past the cache.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v7
         with:
@@ -88,8 +87,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
         with:
           templates: "true"
