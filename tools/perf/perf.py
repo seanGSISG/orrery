@@ -128,7 +128,7 @@ def measure(level: str, run: Run) -> Result:
         raise RuntimeError(
             f"{level} {run.name}: failed (exit {done.returncode})\n{log}"
         )
-    check_shaders(f"{done.stdout}{done.stderr}", f"{level} {run.name}")
+    check_shaders(f"{done.stdout}\n{done.stderr}", f"{level} {run.name}")
     report = json.loads(out.read_text())
     if (report["width"], report["height"]) != (run.width, run.height):
         size = f"{report['width']}x{report['height']}"
