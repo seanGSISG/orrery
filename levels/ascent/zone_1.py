@@ -23,6 +23,7 @@ Each section of the tower has a way inside and a way outside:
 
 import math
 from collections.abc import Sequence
+from typing import Literal
 
 import kit
 from kit import town
@@ -351,7 +352,9 @@ kit.marker("egg", at=EGG)
 # The builder's crane: a beam from above the terrace to the gallery landing of the tower.
 BEAM_Y = RIDGE_VENT[1]
 BEAM_LOW = (-26.0, 21.2)
-BEAM_HIGH = (-8.6, 27.2)
+# The beam ends flush with the west edge of the gallery landing, so it makes no step.
+LANDING_X = -9.0
+BEAM_HIGH = (LANDING_X, GALLERY)
 HEEL = 1.8
 kit.track(
     at=(BEAM_LOW[0], BEAM_Y, BEAM_LOW[1]),
@@ -394,14 +397,15 @@ kit.marker(
     name="hoist",
 )
 
-# The gallery landing on the west face of the tower, with a parapet but where the hoist comes.
-LANDING = (-9.0, 33.6, X0, 40.4)
+# The gallery landing on the west face of the tower, with a parapet but where the hoist and the
+# crane beam come.
+LANDING = (LANDING_X, 33.6, X0, 40.4)
 lx0, ly0, lx1, ly1 = LANDING
 town.block("gallery_landing", (lx0, ly0, GALLERY - 1.0), (lx1, ly1, GALLERY))
 for name, path in (
     (
         "south",
-        [(lx1, ly0, GALLERY), (lx0, ly0, GALLERY), (lx0, HOIST_Y - 1.6, GALLERY)],
+        [(lx1, ly0, GALLERY), (lx0, ly0, GALLERY), (lx0, BEAM_Y - 0.6, GALLERY)],
     ),
     (
         "north",
@@ -1092,10 +1096,14 @@ for i, (mx, my) in enumerate(
 # --- The town round the square ------------------------------------------------------------------
 
 
+# A house of a street: plan corners, eave height, the sides with no windows, roof paint.
+House = tuple[Point, Point, float, str, str]
+
+
 def street(
     name: str,
-    houses: Sequence[tuple[Point, Point, float, str, str]],
-    along: str,
+    houses: Sequence[House],
+    along: Literal["x", "y"],
     door: str,
     roof: str = "limestone",
 ) -> None:
@@ -1112,8 +1120,8 @@ def row(
     widths: Sequence[float],
     eaves: Sequence[float],
     other: tuple[float, float],
-    along: str,
-) -> list[tuple[Point, Point, float, str, str]]:
+    along: Literal["x", "y"],
+) -> list[House]:
     """Returns the houses of a row whose fronts follow `along` (x or y) from `start`, each
     `width` wide, between the two cross coordinates of `other`. The houses between the ends
     have no windows on their shared sides."""
@@ -1628,7 +1636,7 @@ kit.shot("square", at=(0.0, -6.5, 2.2), rotation=(14, 0, 0))
 kit.shot("market", at=(4.0, 3.0, 3.0), rotation=(4, 0, 58))
 kit.shot("workshop", at=(-2.0, 4.0, 3.0), rotation=(6, 0, -52))
 kit.shot("tower", at=(26, -26, 30), rotation=(16, 0, 34))
-kit.shot("crown_down", at=(0.0, 33.5, 154.0), rotation=(-72, 0, 180))
+kit.shot("crown_down", at=(0.0, 30.0, 156.0), rotation=(-80, 0, 180))
 kit.shot("finish", at=(14, 20, 158), rotation=(-22, 0, 35))
 kit.shot("egg", at=(EGG[0] + 3.5, EGG[1] - 1.5, 1.6), rotation=(-12, 0, 70))
 kit.shot("shaft", at=(-4.2, 37.0, 33.0), rotation=(-25, 0, -60))

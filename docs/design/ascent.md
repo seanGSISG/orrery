@@ -24,6 +24,7 @@ Terms used in this file:
 | `game/ui/screens/ascent_screen.gd` | The Ascent menu: Continue, New climb, Assist. |
 | `game/ui/screens/ascent_stats_screen.gd` | The stats screen at the gate. |
 | `levels/test/ascent_fixture_<n>.py` | Three fixture zones, 12 m each, for the tests. |
+| `levels/ascent/zone_1.py`, `kit/town.py` | Zone 1, Clockmaker's Square (#31, `docs/levels/ascent-z1.md`), and the kit pieces of its town and tower: spiral ramps, lift gears, facades, houses. |
 
 ## 2. How a zone plugs in
 
@@ -141,3 +142,4 @@ The ground dawn is the sky of a town on the ground at dawn: the photograph of th
 4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between the ground dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws. This is not cheap now (#31): the dawn glow is in the photograph, so the bake cannot take it out, and noon is an approved panorama. A fix needs climb skies from Blender's sky model with no sun disc and no aerosol glow, and a sun disc and its glow in `ascent_sky.gdshader` at the sun of `_apply()`.
 5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
 6. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
+7. **Route points.** A route has at most 100 points (`kit.marker` names them with two digits). The first-run route of zone 1 uses all 100. A longer zone needs fewer points, or a point name with three digits in `kit/markers.py`.

@@ -80,3 +80,75 @@ Ascent has no par time. The level script carries the first-run route and the exp
 - Each floor has its own machine: pendulums, lift gears, bell weights, the great bell. The tower never repeats a section.
 - Every outside way is in plain view from the floor door. It tempts the player on every climb.
 - The bell cradle is slow on purpose. It lifts the player out of the broken tower with the floating pieces of zone 2 in view.
+
+## As built
+
+Level script: `levels/ascent/zone_1.py`. Town kit: `kit/town.py`. The script follows the map and the plan inset, with the differences below. The map is a side view, so the script takes the north–south places from the inset. The tower stands north of the square, 12 m square, with its middle at (0, 39); x is east and y is north.
+
+| Difference | Reason |
+|---|---|
+| The start pad is 9.5 m south of the tower wall, not 2.6 m | The camera looks north at the start. Close to the wall, the first view was the wall. Now it shows the square, the tower base and the two sides |
+| The circle in the middle of the inset is a fountain | It has no vent symbol, and a square needs a middle |
+| The bakery vent throws the marble north onto the south end of the guildhall roof, not west onto the eave | On the inset the guildhall stands north of the bakery. A vent throws the marble the way it enters |
+| A brass gutter runs along the guildhall eave | A marble that landed near the eave rolled back down and off |
+| The north part of the guildhall is a flat terrace at +14 m with a parapet. The ridge vent stands on it, and the hoist and the crane leave from it | The vent throws the marble the way it enters, so a player needs room to line up with the hoist or with the beam. The 2.8 m ridge walk gave no room |
+| The crane beam is 17.5° and 17 m, with a level heel at its low end, and it ends flush with the gallery landing (map: 16°, 21 m) | The heel must be 3 m past the vent, where the marble is at the top of its throw, and the beam must end flush with the landing: a step of 0.12 m stopped the marble |
+| The hoist runs from above the terrace (+19.8 m) to the gallery landing (+26 m) and stops flush with it (map: +19.5 to +27 m) | The marble rolls straight off the deck onto the landing |
+| The crates and the balcony are on the south face of the workshop | The waterwheel stands at the workshop's south-east corner |
+| Every lift gear (the waterwheel, the second gear and the two lift gears of the gear room) carries the marble from its bottom to its top inside a brass casing and two side rings, and lets it off sideways through a window in one ring | In a prototype, a marble that rode a notch over the top fell out too late to reach any floor beyond the gear. The casing also lets the marble board at the bottom, so a gear 7.2 m across lifts 7.2 m |
+| The second gear stands north of the workshop and lets the marble off west at +13.9 m onto a ledge, the loose planks and the tower's east door. The tower base top is +13.9 m (map: +14) | The gear's exit sets the height |
+| The tower base climb is a spiral ramp of 2.5 half turns, not three straight ramps | At 12 m wide, three straight ramps of 4 m rise are steeper than 20° and leave no room for landings |
+| The weight shaft ramp is 5 half turns of 13.5 m at 19.6° (map: 17 m at 16°) | A ramp 2 m wide fits round a 12 m tower only at 4.3 m from its middle |
+| Each spiral ramp has a brass kerb on both edges. The shaft ramp's inner kerb has a gap where the expert jumps to the counterweight | The kerbs stop a fall into the middle of the tower or into its corners. Without the gap, the jump clipped the kerb |
+| The counterweight runs from +30.6 m to +47 m | A landing 0.2 m below the take-off lets a run-up of 0.9 m reach it |
+| The pendulums swing along the ramp, not across it | Across the ramp, the bob would go through the tower wall |
+| The east scaffold: steps +27 to +30 m east, a vent to a deck at +37 m beyond the steps, steps +38 to +40 m west, and a vent to the gear room's east balcony at +50 m. No deck at +47 m and no steps at +48 and +49 m | The tower wall leaves no room for two more steps between the second vent and the door. The two bumpers stand on the +37 m deck and on the +50 m balcony |
+| The scaffold hangs from the tower on iron stays | Posts from the ground made a cage in front of the start |
+| Gear room: three flat gears along the south wall (+51, +52, +53 m), lift gear 1 by the west wall, lift gear 2 across the room, and two spiral ramps of 225° with a level landing between them | Lift gear 1 lets the marble off straight into the lane of lift gear 2. The two ramps climb the 12.3 m that are left |
+| The three west vents stand in one line west from the west door, each at the near end of its ledge (+58, +66, +74 m). Five steps lead back east to the clock floor's west balcony | A marble that keeps its speed crosses all three steam columns without a landing: the expert's weave. A marble that slows down lands on a ledge |
+| Steps and stair fragments have gaps of 0.3 m | A gap narrower than the marble cannot drop it. Wider gaps dropped the route bot after a short jump |
+| The clock floor's east way goes from the second slate slope through a vent onto a ledge at +107 m north of the tower, two steps and a bridge into the belfry's north door | A door in the east wall would be in the way of the belfry ramp's first turn |
+| The great bell hangs still. Its clapper is the third pendulum: it swings along the belfry ramp | The pendulum object has a ball for a bob, so the bell itself cannot swing |
+| The crown vent stands on a platform at +135 m and throws the marble south onto the fragment at +143 m. The bell cradle rises beside it to the crown | The cradle must arrive flush with the crown's edge |
+| The rafters are 19 m at 25.3° and 19.6 m at 29.3°, and meet on a round brass cap 3.2 m across | Two beams that meet in a point make the marble turn 170° on a beam 0.8 m wide |
+| The crown is a slab 14 × 10 m at +150 m on top of the east wall, with a merlon at each corner. The finish is in its middle | Zone 2 starts beside it, on its own floor |
+
+Decoration that the map does not show: a town round the square (about 70 houses in streets of one mesh each, out to 56 m from the square), street lamps, shop signs, a plinth, a cornice at each floor, corner pilasters, glazed windows, the great door of the tower base, a dial on each face of the clock floor (no numerals, six o'clock), and louvres in the belfry. The windows, the dials, the signs, the stays and the tower's dress do not collide.
+
+### Routes and times
+
+The route bot drives both routes (`just test-levels zone_1`, 2026-11-21): first run **175.5 s**, expert **104.0 s**. Par 263.2 s and gold 119.7 s come from `just suggest-times zone_1`. Ascent has no par time; the two values only let `just test-levels` check the routes. The bot is slower than the estimates (122 s and 67 s): it slows to 3.5 m/s at each sharp turn, it waits for each mover's window, and it climbs the spiral ramps on legs of 72°, because a route has at most 100 points (`kit.marker`).
+
+The other ways up were driven with routes that were not kept: the workshop side with the base ramp, the east scaffold, and the west hoist of the belfry. The expert route drives the crane beam, the counterweight, the west vents, the slate slopes and the rafters. The route bot also climbed the zone in the Ascent mode (`load_mode ascent`) to the gate at 150 m.
+
+### Light
+
+The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the tower and the guildhall put much of the square in shade, and the inside of the tower has the light of the sky only.
+
+### Clockwork Egg as built
+
+The dry chimney stands at the south end of the ridge walk (+14 m). Its flue, 1.3 m wide, goes down 15 m to the hearth of the guildhall's hall. The egg stands in front of the hearth. A door 2.4 m wide in the hall's east wall opens to the street beside the square.
+
+### Placeholders for props and decals
+
+A placeholder is an empty with the custom property `town_spot` = {kind, size, note}, from `town.spot()`. It shows nothing in the game. To put a model in, change the `town.spot("prop", name, at, rotation, ...)` line to `kit.prop(name, at=..., rotation=..., collider=...)` at the same place. No spot stands on a way up.
+
+| Prop spot | Place (x, y, z) | Size (w × d × h, m) | To make |
+|---|---|---|---|
+| `prop_bench_1`, `prop_bench_2` | (−10.5, 30.8, 0), (10.5, 29.6, 0) | 1.8 × 0.6 × 0.9 | Benches with their backs to the tower |
+| `prop_bench_3` | (−15.8, 26.0, 0) | 1.8 × 0.6 × 0.9 | Bench by the guildhall lane |
+| `prop_barrels_bakery` | (−17.4, 16.6, 0) | 1.2 × 1.2 × 1.1 | Flour barrels by the bakery door |
+| `prop_handcart` | (6.0, 3.0, 0) | 1.6 × 2.6 × 1.2 | Baker's handcart |
+| `prop_flower_tub_1`, `prop_flower_tub_2` | (−3.6, 15.0, 0), (3.6, 15.0, 0) | 0.9 × 0.9 × 0.8 | Flower tubs by the fountain |
+| `prop_goods_stall_2`, `prop_goods_stall_3` | (−12.5, 9.95, 0.95), (−16.0, 9.95, 0.95) | 2.6 × 0.6 × 0.5 | Bread and fruit on the stall counters |
+| `prop_clock_parts` | (13.8, 22.5, 0) | 1.2 × 0.8 × 1.0 | A crate of clock parts by the workshop door |
+| `prop_hay_cart` | (0.0, −5.0, 0) | 1.8 × 3.2 × 1.6 | Hay cart in the south street |
+| `prop_anvil` | (25.0, 14.0, 0) | 0.8 × 0.5 × 0.8 | Anvil by the waterwheel |
+
+| Decal spot | Where | Art to make |
+|---|---|---|
+| `decal_clock_dial_south`, `_east`, `_north`, `_west` | The four dials of the clock floor, 9 m across | Dial face, no numerals |
+| `decal_sign_bakery`, `decal_sign_clockmaker`, `decal_sign_inn` | The boards of the three hanging shop signs | Sign art on both faces |
+| `decal_guildhall_crest` | Over the hall door | The guild's crest |
+| `decal_tower_door_plaque` | Over the great door of the tower | Name plaque |
+| `decal_street_name_south`, `decal_street_name_east` | Corner houses of the square | Street name plates |
