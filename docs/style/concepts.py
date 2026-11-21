@@ -145,15 +145,31 @@ def build_graph(mood: Mood, seed: int, cfg: float) -> dict[str, dict[str, object
     """Return the ComfyUI API graph for one text-to-image run."""
     width, height = SIZE
     return {
-        "1": {"class_type": "UNETLoader", "inputs": {"unet_name": UNET, "weight_dtype": "default"}},
+        "1": {
+            "class_type": "UNETLoader",
+            "inputs": {"unet_name": UNET, "weight_dtype": "default"},
+        },
         "2": {
             "class_type": "CLIPLoader",
-            "inputs": {"clip_name": TEXT_ENCODER, "type": "qwen_image", "device": "default"},
+            "inputs": {
+                "clip_name": TEXT_ENCODER,
+                "type": "qwen_image",
+                "device": "default",
+            },
         },
         "3": {"class_type": "VAELoader", "inputs": {"vae_name": VAE}},
-        "4": {"class_type": "ModelSamplingAuraFlow", "inputs": {"model": ["1", 0], "shift": SHIFT}},
-        "5": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": mood.prompt}},
-        "6": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["2", 0], "text": NEGATIVE}},
+        "4": {
+            "class_type": "ModelSamplingAuraFlow",
+            "inputs": {"model": ["1", 0], "shift": SHIFT},
+        },
+        "5": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"clip": ["2", 0], "text": mood.prompt},
+        },
+        "6": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"clip": ["2", 0], "text": NEGATIVE},
+        },
         "7": {
             "class_type": "EmptySD3LatentImage",
             "inputs": {"width": width, "height": height, "batch_size": 1},
@@ -173,10 +189,16 @@ def build_graph(mood: Mood, seed: int, cfg: float) -> dict[str, dict[str, object
                 "denoise": 1.0,
             },
         },
-        "9": {"class_type": "VAEDecode", "inputs": {"samples": ["8", 0], "vae": ["3", 0]}},
+        "9": {
+            "class_type": "VAEDecode",
+            "inputs": {"samples": ["8", 0], "vae": ["3", 0]},
+        },
         "10": {
             "class_type": "SaveImage",
-            "inputs": {"images": ["9", 0], "filename_prefix": f"{COMFY_FOLDER}/{mood.name}_{seed}"},
+            "inputs": {
+                "images": ["9", 0],
+                "filename_prefix": f"{COMFY_FOLDER}/{mood.name}_{seed}",
+            },
         },
     }
 
@@ -191,7 +213,9 @@ def call(path: str, payload: dict[str, object] | None = None) -> bytes:
 
 def generate(mood: Mood, seed: int, cfg: float) -> Image.Image:
     """Queue one image, wait for it and return it."""
-    prompt_id: str = json.loads(call("/prompt", {"prompt": build_graph(mood, seed, cfg)}))["prompt_id"]
+    prompt_id: str = json.loads(
+        call("/prompt", {"prompt": build_graph(mood, seed, cfg)})
+    )["prompt_id"]
     while True:
         history = json.loads(call(f"/history/{prompt_id}"))
         if prompt_id in history:
@@ -202,7 +226,11 @@ def generate(mood: Mood, seed: int, cfg: float) -> Image.Image:
         raise RuntimeError(f"{mood.name}: ComfyUI run failed: {entry['status']}")
     saved = entry["outputs"]["10"]["images"][0]
     query = urllib.parse.urlencode(
-        {"filename": saved["filename"], "subfolder": saved["subfolder"], "type": saved["type"]}
+        {
+            "filename": saved["filename"],
+            "subfolder": saved["subfolder"],
+            "type": saved["type"],
+        }
     )
     return Image.open(io.BytesIO(call(f"/view?{query}"))).convert("RGB")
 
@@ -219,9 +247,18 @@ def save_webp(image: Image.Image, path: Path) -> None:
 def main() -> None:
     names = [mood.name for mood in MOODS]
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("names", nargs="*", help=f"images to make (default: all of {', '.join(names)})")
-    parser.add_argument("--seed", type=int, action="append", help="try this seed, not the recorded one (repeatable)")
-    parser.add_argument("--cfg", type=float, default=CFG, help="try this guidance scale")
+    parser.add_argument(
+        "names", nargs="*", help=f"images to make (default: all of {', '.join(names)})"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        action="append",
+        help="try this seed, not the recorded one (repeatable)",
+    )
+    parser.add_argument(
+        "--cfg", type=float, default=CFG, help="try this guidance scale"
+    )
     parser.add_argument("--out", type=Path, default=Path(__file__).parent / "review")
     args = parser.parse_args()
     if unknown := set(args.names) - set(names):
@@ -234,7 +271,9 @@ def main() -> None:
             image = generate(mood, seed, args.cfg)
             file_name = mood.file_name if not args.seed else f"{mood.name}_{seed}.webp"
             save_webp(image, args.out / file_name)
-            print(f"{args.out / file_name}  seed={seed}  cfg={args.cfg}  {time.monotonic() - started:.0f}s")
+            print(
+                f"{args.out / file_name}  seed={seed}  cfg={args.cfg}  {time.monotonic() - started:.0f}s"
+            )
 
 
 if __name__ == "__main__":

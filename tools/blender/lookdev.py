@@ -26,6 +26,7 @@ Shots: a, b, c (dawn candidates), eye, noon, dusk, gem, marble-a, marble-b.
 from __future__ import annotations
 
 import argparse
+import itertools
 import math
 import random
 import sys
@@ -60,8 +61,12 @@ ARC_ANGLE = math.radians(110)
 STRAIGHT_OUT = 1.5
 BANK = math.radians(11)
 FORK_AT = 0.95  # the beam leaves the safe route this far along it
-BEAM_LANDING = math.radians(230)  # where the beam meets the terrace, counter-clockwise from +X at its centre
-BRIDGE_ANGLE = math.radians(150)  # where the bridge leaves the plaza, counter-clockwise from +X
+BEAM_LANDING = math.radians(
+    230
+)  # where the beam meets the terrace, counter-clockwise from +X at its centre
+BRIDGE_ANGLE = math.radians(
+    150
+)  # where the bridge leaves the plaza, counter-clockwise from +X
 BRIDGE_LENGTH = 1.8
 OVERLAP = 0.3  # a route reaches this far onto a pad
 STEP = 0.002  # a route lies this much above the floor that it overlaps, so no two faces coincide
@@ -84,9 +89,30 @@ Profile = list[tuple[float, float]]
 # pointed at both ends, flat at both ends, or flat on top and pointed below.
 # The rings are (radius, z) from top to bottom, in units of GEM_SIZE.
 GEM_RINGS: dict[GemCut, list[tuple[float, float]]] = {
-    "bipyramid": [(0.0, 0.5), (0.24, 0.19), (0.33, 0.025), (0.33, -0.025), (0.24, -0.19), (0.0, -0.5)],
-    "hexagon": [(0.26, 0.44), (0.42, 0.32), (0.5, 0.16), (0.5, -0.16), (0.42, -0.32), (0.26, -0.44)],
-    "brilliant": [(0.28, 0.24), (0.42, 0.17), (0.5, 0.05), (0.5, -0.01), (0.3, -0.3), (0.0, -0.58)],
+    "bipyramid": [
+        (0.0, 0.5),
+        (0.24, 0.19),
+        (0.33, 0.025),
+        (0.33, -0.025),
+        (0.24, -0.19),
+        (0.0, -0.5),
+    ],
+    "hexagon": [
+        (0.26, 0.44),
+        (0.42, 0.32),
+        (0.5, 0.16),
+        (0.5, -0.16),
+        (0.42, -0.32),
+        (0.26, -0.44),
+    ],
+    "brilliant": [
+        (0.28, 0.24),
+        (0.42, 0.17),
+        (0.5, 0.05),
+        (0.5, -0.01),
+        (0.3, -0.3),
+        (0.0, -0.58),
+    ],
 }
 GEM_COLORS: dict[GemCut, Color] = {
     "bipyramid": (0.01, 0.1, 0.55),
@@ -110,7 +136,11 @@ def poly_haven(stem: str) -> Maps:
 
 def ambient_cg(stem: str) -> Maps:
     """Return the maps of an ambientCG texture set (2K-JPG), for a stem like "metal/Metal007"."""
-    return Maps(f"{stem}_2K-JPG_Color.jpg", f"{stem}_2K-JPG_Roughness.jpg", f"{stem}_2K-JPG_NormalGL.jpg")
+    return Maps(
+        f"{stem}_2K-JPG_Color.jpg",
+        f"{stem}_2K-JPG_Roughness.jpg",
+        f"{stem}_2K-JPG_NormalGL.jpg",
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -190,7 +220,9 @@ class Shot:
 
 # Gold inlays: the clock face, the lines on the beam, and (polished) the marble's metal.
 GOLD = Surface(name="gold", maps=ambient_cg("metal/Metal048A"), tile=0.6, metallic=1.0, tint=(1.0, 0.82, 0.5), roughness_scale=5.0)  # fmt: skip
-POLISHED_GOLD = Surface(name="polished_gold", maps=ambient_cg("metal/Metal048A"), tile=0.2, metallic=1.0)
+POLISHED_GOLD = Surface(
+    name="polished_gold", maps=ambient_cg("metal/Metal048A"), tile=0.2, metallic=1.0
+)
 # Marble B: polished blue-black stone.
 BLUE_STONE = Surface(name="blue_stone", maps=ambient_cg("stone/Marble023"), tile=1.0, tint=(0.55, 0.8, 1.5), roughness_scale=0.3, normal_strength=0.3, coat=1.0)  # fmt: skip
 
@@ -232,7 +264,11 @@ DUSK = PhysicalSky(
     sun_strength=12.0, exposure=0.2, cloud_drop=70.0, cloud_color=(0.035, 0.05, 0.085), stars=4.0, planet=True,
 )  # fmt: skip
 
-OVERVIEW_EYE: Point = (-1.0, -8.8, 4.2)  # a high three-quarter view, like a level overview
+OVERVIEW_EYE: Point = (
+    -1.0,
+    -8.8,
+    4.2,
+)  # a high three-quarter view, like a level overview
 OVERVIEW_TARGET: Point = (1.7, 3.9, 0.3)
 OVERVIEW_LENS = 24.0
 GEM_AT = (1.95, -0.85)  # the plaza gem, between the clock face and the lip
@@ -274,7 +310,12 @@ class Frame:
 
     def moved(self, along: float) -> Frame:
         """Return this frame moved `along` the path direction."""
-        return Frame(self.origin + self.forward * along, self.right, self.up, self.distance + along)
+        return Frame(
+            self.origin + self.forward * along,
+            self.right,
+            self.up,
+            self.distance + along,
+        )
 
 
 def direction(azimuth: float, elevation: float) -> Vector:
@@ -292,7 +333,9 @@ def smoothstep(t: float) -> float:
     return t * t * (3 - 2 * t)
 
 
-def path_frame(origin: Vector, heading: float, slope: float, bank: float, distance: float) -> Frame:
+def path_frame(
+    origin: Vector, heading: float, slope: float, bank: float, distance: float
+) -> Frame:
     """Return the frame of a path that points along `heading` (radians, clockwise from +Y) and climbs at `slope`."""
     forward = Vector((math.sin(heading), math.cos(heading), slope)).normalized()
     flat_right = forward.cross(UP).normalized()
@@ -325,7 +368,9 @@ def route_frames(step: float = 0.1) -> list[Frame]:
     return frames
 
 
-def line_frames(start: Vector, end: Vector, rise: Callable[[float], float], step: float = 0.1) -> list[Frame]:
+def line_frames(
+    start: Vector, end: Vector, rise: Callable[[float], float], step: float = 0.1
+) -> list[Frame]:
     """Return the frames of a path that is straight in plan from `start` to `end`.
 
     `rise(t)` is the height above `start` at the fraction t of the plan length.
@@ -337,7 +382,9 @@ def line_frames(start: Vector, end: Vector, rise: Callable[[float], float], step
     frames: list[Frame] = []
     for index in range(count + 1):
         t = index / count
-        slope = (rise(min(t + 0.5 / count, 1.0)) - rise(max(t - 0.5 / count, 0.0))) / (length / count)
+        slope = (rise(min(t + 0.5 / count, 1.0)) - rise(max(t - 0.5 / count, 0.0))) / (
+            length / count
+        )
         origin = Vector((start.x + plan.x * t, start.y + plan.y * t, start.z + rise(t)))
         frames.append(path_frame(origin, heading, slope, 0.0, length * t))
     return frames
@@ -350,17 +397,30 @@ def ring_frames(centre: Vector, radius: float, axis: Vector = UP, segments: int 
     radii; `girth` is then the radius at which the texture is laid around it.
     """
     axis = axis.normalized()
-    side = Vector((1.0, 0.0, 0.0)) if abs(axis.z) > 0.99 else axis.orthogonal().normalized()
+    side = (
+        Vector((1.0, 0.0, 0.0))
+        if abs(axis.z) > 0.99
+        else axis.orthogonal().normalized()
+    )
     other = axis.cross(side)
     frames: list[Frame] = []
     for index in range(segments):
         angle = 2 * math.pi * index / segments
         outward = side * math.cos(angle) + other * math.sin(angle)
-        frames.append(Frame(centre + outward * radius, outward, axis, (radius if girth is None else girth) * angle))
+        frames.append(
+            Frame(
+                centre + outward * radius,
+                outward,
+                axis,
+                (radius if girth is None else girth) * angle,
+            )
+        )
     return frames
 
 
-def open_runs(frames: list[Frame], blocked: Callable[[Frame], bool]) -> list[list[Frame]]:
+def open_runs(
+    frames: list[Frame], blocked: Callable[[Frame], bool]
+) -> list[list[Frame]]:
     """Split a path into the runs of frames that are not blocked."""
     runs: list[list[Frame]] = [[]]
     for frame in frames:
@@ -371,7 +431,9 @@ def open_runs(frames: list[Frame], blocked: Callable[[Frame], bool]) -> list[lis
     return [run for run in runs if len(run) >= 3]
 
 
-def ring_runs(ring: list[Frame], mouths: list[tuple[Vector, float]]) -> list[list[Frame]]:
+def ring_runs(
+    ring: list[Frame], mouths: list[tuple[Vector, float]]
+) -> list[list[Frame]]:
     """Split a closed ring into the runs that stay clear of every mouth.
 
     A mouth is a point on the ring and a half-width: the place where a route
@@ -379,7 +441,9 @@ def ring_runs(ring: list[Frame], mouths: list[tuple[Vector, float]]) -> list[lis
     """
 
     def blocked(frame: Frame) -> bool:
-        return any((frame.origin - point).to_2d().length < half for point, half in mouths)
+        return any(
+            (frame.origin - point).to_2d().length < half for point, half in mouths
+        )
 
     first = next(index for index, frame in enumerate(ring) if blocked(frame))
     return open_runs(ring[first:] + ring[:first], blocked)
@@ -389,7 +453,9 @@ def circle_profile(radius: float, segments: int = 10) -> Profile:
     return [(radius * math.cos(2 * math.pi * i / segments), radius * math.sin(2 * math.pi * i / segments)) for i in range(segments)]  # fmt: skip
 
 
-def rect_profile(x0: float, x1: float, z0: float, z1: float, bevel: float = 0.0) -> Profile:
+def rect_profile(
+    x0: float, x1: float, z0: float, z1: float, bevel: float = 0.0
+) -> Profile:
     """Return a rectangle cross-section, with its four corners cut by `bevel`."""
     if bevel == 0.0:
         return [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
@@ -403,11 +469,18 @@ def lip_profile(width: float, height: float, drop: float) -> Profile:
     X is 0 at the outer edge of the floor and negative inward. The slope starts
     flush with the floor at -width, so a marble rolls up it and back.
     """
-    points: Profile = [(0.045, -drop), (0.045, height - 0.02), (0.025, height), (-0.03, height)]
+    points: Profile = [
+        (0.045, -drop),
+        (0.045, height - 0.02),
+        (0.025, height),
+        (-0.03, height),
+    ]
     steps = 10
     for index in range(1, steps + 1):
         t = index / steps
-        points.append((-0.03 - (width - 0.03) * t, STEP + (height - STEP) * (1 - t) ** 2))
+        points.append(
+            (-0.03 - (width - 0.03) * t, STEP + (height - STEP) * (1 - t) ** 2)
+        )
     return [*points, (-width, -0.012), (-0.06, -0.012), (-0.06, -drop)]
 
 
@@ -427,7 +500,9 @@ class Builder:
         self.name = name
         self.bm = bmesh.new()
         self.uv = self.bm.loops.layers.uv.verify()
-        self.shade = self.bm.faces.layers.float.new("shade")  # per face: how much darker than the material
+        self.shade = self.bm.faces.layers.float.new(
+            "shade"
+        )  # per face: how much darker than the material
 
     def darken(self, first: int, amount: float) -> None:
         """Darken the faces added since the face count `first` by `amount` (0..1), as a vertex colour."""
@@ -440,7 +515,9 @@ class Builder:
 
         UVs run along the path (U) and around the profile (V), moved by `shift`.
         """
-        rings = [[self.bm.verts.new(frame.at(x, z)) for x, z in profile] for frame in frames]
+        rings = [
+            [self.bm.verts.new(frame.at(x, z)) for x, z in profile] for frame in frames
+        ]
         girth = [0.0]
         for (x0, z0), (x1, z1) in zip(profile, [*profile[1:], profile[0]], strict=True):
             girth.append(girth[-1] + math.hypot(x1 - x0, z1 - z0))
@@ -449,12 +526,20 @@ class Builder:
             pairs.append((len(frames) - 1, 0))
         for a, b in pairs:
             u0 = frames[a].distance + shift[0]
-            u1 = (frames[b].distance if b else frames[a].distance + frames[1].distance - frames[0].distance) + shift[0]
+            u1 = (
+                frames[b].distance
+                if b
+                else frames[a].distance + frames[1].distance - frames[0].distance
+            ) + shift[0]
             for j in range(len(profile)):
                 k = (j + 1) % len(profile)
-                face = self.bm.faces.new((rings[a][j], rings[a][k], rings[b][k], rings[b][j]))
+                face = self.bm.faces.new(
+                    (rings[a][j], rings[a][k], rings[b][k], rings[b][j])
+                )
                 v0, v1 = girth[j] + shift[1], girth[j + 1] + shift[1]
-                for loop, uv in zip(face.loops, ((u0, v0), (u0, v1), (u1, v1), (u1, v0)), strict=True):
+                for loop, uv in zip(
+                    face.loops, ((u0, v0), (u0, v1), (u1, v1), (u1, v0)), strict=True
+                ):
                     loop[self.uv].uv = uv
         if not closed:
             for ring in (rings[0], rings[-1]):
@@ -468,10 +553,24 @@ class Builder:
         rows = []
         for index in range(count + 1):
             out = polar(1.0, a0 + (a1 - a0) * index / count)
-            rows.append([self.bm.verts.new(centre + out * r - UP * d) for r in (r0, r1) for d in (0.0, thickness)])
-        quads = [(rows[0][0], rows[0][1], rows[0][3], rows[0][2]), (rows[-1][0], rows[-1][2], rows[-1][3], rows[-1][1])]
-        for a, b in zip(rows, rows[1:], strict=False):
-            quads += [(a[0], a[2], b[2], b[0]), (a[1], b[1], b[3], a[3]), (a[0], b[0], b[1], a[1]), (a[2], a[3], b[3], b[2])]
+            rows.append(
+                [
+                    self.bm.verts.new(centre + out * r - UP * d)
+                    for r in (r0, r1)
+                    for d in (0.0, thickness)
+                ]
+            )
+        quads = [
+            (rows[0][0], rows[0][1], rows[0][3], rows[0][2]),
+            (rows[-1][0], rows[-1][2], rows[-1][3], rows[-1][1]),
+        ]
+        for a, b in itertools.pairwise(rows):
+            quads += [
+                (a[0], a[2], b[2], b[0]),
+                (a[1], b[1], b[3], a[3]),
+                (a[0], b[0], b[1], a[1]),
+                (a[2], a[3], b[3], b[2]),
+            ]
         for quad in quads:
             face = self.bm.faces.new(quad)
             for loop in face.loops:
@@ -496,7 +595,12 @@ class Builder:
     def add_box(self, matrix: Matrix, size: tuple[float, float, float]) -> None:
         """Add a box of `size` centred on `matrix`, with UVs in metres."""
         start = len(self.bm.faces)
-        bmesh.ops.create_cube(self.bm, size=1.0, matrix=matrix @ Matrix.Diagonal((*size, 1.0)), calc_uvs=False)
+        bmesh.ops.create_cube(
+            self.bm,
+            size=1.0,
+            matrix=matrix @ Matrix.Diagonal((*size, 1.0)),
+            calc_uvs=False,
+        )
         self.bm.faces.ensure_lookup_table()
         inverse = matrix.inverted()
         for face in self.bm.faces[start:]:
@@ -504,28 +608,46 @@ class Builder:
                 local = inverse @ loop.vert.co
                 loop[self.uv].uv = (local.x + local.z, local.y + local.z)
 
-    def add_disc(self, centre: Vector, radius: float, thickness: float, uv: Matrix, segments: int = 64) -> None:
+    def add_disc(
+        self,
+        centre: Vector,
+        radius: float,
+        thickness: float,
+        uv: Matrix,
+        segments: int = 64,
+    ) -> None:
         """Add a round floor slab whose top face is at `centre`. `uv` maps world XY to UV."""
         start = len(self.bm.faces)
-        self.add_cylinder(centre - UP * thickness, UP, thickness, radius, segments=segments)
+        self.add_cylinder(
+            centre - UP * thickness, UP, thickness, radius, segments=segments
+        )
         self.bm.faces.ensure_lookup_table()
         for face in self.bm.faces[start:]:
             for loop in face.loops:
                 loop[self.uv].uv = (uv @ loop.vert.co).to_2d()
 
-    def add_spindle(self, centre: Vector, rings: list[tuple[float, float]], sides: int) -> None:
+    def add_spindle(
+        self, centre: Vector, rings: list[tuple[float, float]], sides: int
+    ) -> None:
         """Add a faceted solid of revolution: `rings` are (radius, z) from top to bottom; radius 0 is a point."""
         loops: list[list[bmesh.types.BMVert]] = []
         for radius, z in rings:
             if radius == 0.0:
                 loops.append([self.bm.verts.new(centre + UP * z)])
             else:
-                loops.append([self.bm.verts.new(centre + polar(radius, 2 * math.pi * i / sides, z)) for i in range(sides)])
+                loops.append(
+                    [
+                        self.bm.verts.new(
+                            centre + polar(radius, 2 * math.pi * i / sides, z)
+                        )
+                        for i in range(sides)
+                    ]
+                )
         if len(loops[0]) > 1:
             self.bm.faces.new(loops[0])
         if len(loops[-1]) > 1:
             self.bm.faces.new(loops[-1])
-        for upper, lower in zip(loops, loops[1:], strict=False):
+        for upper, lower in itertools.pairwise(loops):
             for i in range(sides):
                 j = (i + 1) % sides
                 if len(upper) == 1:
@@ -537,20 +659,34 @@ class Builder:
 
     def add_gem(self, centre: Vector, cut: GemCut, size: float) -> None:
         """Add a cut gem whose largest dimension is `size`, centred on `centre`."""
-        self.add_spindle(centre, [(r * size, z * size) for r, z in GEM_RINGS[cut]], 12 if cut == "brilliant" else 6)
+        self.add_spindle(
+            centre,
+            [(r * size, z * size) for r, z in GEM_RINGS[cut]],
+            12 if cut == "brilliant" else 6,
+        )
 
-    def add_gear(self, matrix: Matrix, radius: float, teeth: int, thickness: float, bore: float) -> None:
+    def add_gear(
+        self, matrix: Matrix, radius: float, teeth: int, thickness: float, bore: float
+    ) -> None:
         """Add a spur gear in the XY plane of `matrix`: `radius` is the tooth tip, `bore` the hole."""
         root = radius - 0.55 * (2 * math.pi * radius / teeth)
         outline: Profile = []
         for tooth in range(teeth):
-            for fraction, r in ((0.0, root), (0.18, radius), (0.5, radius), (0.68, root)):
+            for fraction, r in (
+                (0.0, root),
+                (0.18, radius),
+                (0.5, radius),
+                (0.68, root),
+            ):
                 angle = 2 * math.pi * (tooth + fraction) / teeth
                 outline.append((r * math.cos(angle), r * math.sin(angle)))
         layers = []
         for z in (-thickness / 2, thickness / 2):
             outer = [Vector((x, y, z)) for x, y in outline]
-            inner = [Vector((x * bore / math.hypot(x, y), y * bore / math.hypot(x, y), z)) for x, y in outline]
+            inner = [
+                Vector((x * bore / math.hypot(x, y), y * bore / math.hypot(x, y), z))
+                for x, y in outline
+            ]
             layers.append((outer, inner))
         (outer0, inner0), (outer1, inner1) = layers
         count = len(outline)
@@ -563,9 +699,15 @@ class Builder:
                 ((outer0[i], outer0[j], outer1[j], outer1[i]), False),
                 ((inner0[i], inner0[j], inner1[j], inner1[i]), False),
             ):
-                face = self.bm.faces.new([self.bm.verts.new(matrix @ corner) for corner in corners])
+                face = self.bm.faces.new(
+                    [self.bm.verts.new(matrix @ corner) for corner in corners]
+                )
                 for loop, corner in zip(face.loops, corners, strict=True):
-                    loop[self.uv].uv = (corner.x, corner.y) if flat else (around + (corner - corners[0]).length, corner.z)
+                    loop[self.uv].uv = (
+                        (corner.x, corner.y)
+                        if flat
+                        else (around + (corner - corners[0]).length, corner.z)
+                    )
         bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts[:], dist=1e-5)
 
     def finish(self, material: bpy.types.Material, parent: bpy.types.Object, *, tile: float = 1.0, sharp_angle: float = 40.0, flat: bool = False) -> bpy.types.Object:  # fmt: skip
@@ -590,7 +732,9 @@ class Builder:
         return obj
 
 
-def new_material(name: str) -> tuple[bpy.types.Material, bpy.types.NodeTree, bpy.types.Node]:
+def new_material(
+    name: str,
+) -> tuple[bpy.types.Material, bpy.types.NodeTree, bpy.types.Node]:
     """Return a material with an empty node tree and its output node."""
     material = bpy.data.materials.new(name)
     tree = material.node_tree
@@ -615,7 +759,9 @@ def node(tree: bpy.types.NodeTree, kind: str, /, **settings: object) -> bpy.type
     return new
 
 
-def math_node(tree: bpy.types.NodeTree, operation: str, *values: object) -> bpy.types.NodeSocket:
+def math_node(
+    tree: bpy.types.NodeTree, operation: str, *values: object
+) -> bpy.types.NodeSocket:
     """Add a Math node on constants or sockets and return its result socket."""
     new = tree.nodes.new("ShaderNodeMath")
     new.operation = operation
@@ -640,19 +786,43 @@ def pbr_material(surface: Surface, *, box: float | None = None) -> bpy.types.Mat
     settings: dict[str, object] = {}
     if box is not None:
         coords = node(tree, "ShaderNodeTexCoord")
-        mapping = node(tree, "ShaderNodeMapping", Vector=coords.outputs["Object"], Scale=(box, box, box))
-        settings = {"projection": "BOX", "projection_blend": 0.25, "Vector": mapping.outputs["Vector"]}
+        mapping = node(
+            tree,
+            "ShaderNodeMapping",
+            Vector=coords.outputs["Object"],
+            Scale=(box, box, box),
+        )
+        settings = {
+            "projection": "BOX",
+            "projection_blend": 0.25,
+            "Vector": mapping.outputs["Vector"],
+        }
 
     def texture(file: str, *, data: bool) -> bpy.types.NodeSocket:
-        return node(tree, "ShaderNodeTexImage", image=load_image(TEXTURES / file, data=data), **settings).outputs["Color"]
+        return node(
+            tree,
+            "ShaderNodeTexImage",
+            image=load_image(TEXTURES / file, data=data),
+            **settings,
+        ).outputs["Color"]
 
     # Colour = map x tint x vertex colour, as in Godot with "vertex colour as albedo" on.
     tint = node(tree, "ShaderNodeMix", data_type="RGBA", blend_type="MULTIPLY", Factor=1.0, A=texture(surface.maps.color, data=False), B=(*surface.tint, 1.0))  # fmt: skip
     if box is None:
         vertex = node(tree, "ShaderNodeVertexColor", layer_name="tint")
         tint = node(tree, "ShaderNodeMix", data_type="RGBA", blend_type="MULTIPLY", Factor=1.0, A=tint.outputs["Result"], B=vertex.outputs["Color"])  # fmt: skip
-    roughness = math_node(tree, "MULTIPLY", texture(surface.maps.roughness, data=True), surface.roughness_scale)
-    normal = node(tree, "ShaderNodeNormalMap", Strength=surface.normal_strength, Color=texture(surface.maps.normal, data=True))
+    roughness = math_node(
+        tree,
+        "MULTIPLY",
+        texture(surface.maps.roughness, data=True),
+        surface.roughness_scale,
+    )
+    normal = node(
+        tree,
+        "ShaderNodeNormalMap",
+        Strength=surface.normal_strength,
+        Color=texture(surface.maps.normal, data=True),
+    )
     shader = node(
         tree, "ShaderNodeBsdfPrincipled", Base_Color=tint.outputs["Result"], Roughness=roughness,
         Metallic=surface.metallic, Normal=normal.outputs["Normal"], Coat_Weight=surface.coat, Coat_Roughness=0.03,
@@ -664,7 +834,14 @@ def pbr_material(surface: Surface, *, box: float | None = None) -> bpy.types.Mat
 def glass_material(name: str) -> bpy.types.Material:
     """Return the glass of the marble: clear, with a pale cool tint and a strong rim, so that it stands out on warm stone."""
     material, tree, output = new_material(name)
-    shader = node(tree, "ShaderNodeBsdfPrincipled", Base_Color=(0.74, 0.9, 1.0, 1.0), Roughness=0.0, IOR=1.65, Transmission_Weight=1.0)
+    shader = node(
+        tree,
+        "ShaderNodeBsdfPrincipled",
+        Base_Color=(0.74, 0.9, 1.0, 1.0),
+        Roughness=0.0,
+        IOR=1.65,
+        Transmission_Weight=1.0,
+    )
     tree.links.new(shader.outputs["BSDF"], output.inputs["Surface"])
     return material
 
@@ -686,13 +863,19 @@ def beam_material(name: str, color: Color, strength: float) -> bpy.types.Materia
     In Godot this is an unshaded additive material with a vertical gradient and a rim fade.
     """
     material, tree, output = new_material(name)
-    height = node(tree, "ShaderNodeSeparateXYZ", Vector=node(tree, "ShaderNodeTexCoord").outputs["Generated"]).outputs["Z"]
+    height = node(
+        tree,
+        "ShaderNodeSeparateXYZ",
+        Vector=node(tree, "ShaderNodeTexCoord").outputs["Generated"],
+    ).outputs["Z"]
     fade = math_node(tree, "POWER", math_node(tree, "SUBTRACT", 1.0, height), 1.6)
     facing = node(tree, "ShaderNodeLayerWeight", Blend=0.5).outputs["Facing"]
     core = math_node(tree, "POWER", math_node(tree, "SUBTRACT", 1.0, facing), 2.5)
     glow = node(tree, "ShaderNodeEmission", Color=(*color, 1.0), Strength=math_node(tree, "MULTIPLY", math_node(tree, "MULTIPLY", fade, core), strength))  # fmt: skip
     add = node(tree, "ShaderNodeAddShader")
-    tree.links.new(node(tree, "ShaderNodeBsdfTransparent").outputs["BSDF"], add.inputs[0])
+    tree.links.new(
+        node(tree, "ShaderNodeBsdfTransparent").outputs["BSDF"], add.inputs[0]
+    )
     tree.links.new(glow.outputs["Emission"], add.inputs[1])
     tree.links.new(add.outputs["Shader"], output.inputs["Surface"])
     return material
@@ -718,13 +901,36 @@ def cloud_material(top: float, depth: float) -> bpy.types.Material:
     """Return the cloud-sea volume: noise that thins out toward `top` (world Z, metres)."""
     material, tree, output = new_material("cloud_sea")
     position = node(tree, "ShaderNodeNewGeometry").outputs["Position"]
-    noise = node(tree, "ShaderNodeTexNoise", Vector=position, Scale=0.0045, Detail=6.0, Roughness=0.55)
+    noise = node(
+        tree,
+        "ShaderNodeTexNoise",
+        Vector=position,
+        Scale=0.0045,
+        Detail=6.0,
+        Roughness=0.55,
+    )
     split = node(tree, "ShaderNodeSeparateXYZ", Vector=position)
     # The cover threshold rises with height, so only the strongest noise reaches the top: cloud heaps.
     threshold = node(tree, "ShaderNodeMapRange", Value=split.outputs["Z"], From_Min=top - 40.0, From_Max=top, To_Min=0.3, To_Max=0.6)  # fmt: skip
-    cover = math_node(tree, "SUBTRACT", noise.outputs["Factor"], threshold.outputs["Result"])
-    density = node(tree, "ShaderNodeMapRange", Value=cover, From_Min=0.0, From_Max=0.08, To_Min=0.0, To_Max=0.3)
-    volume = node(tree, "ShaderNodeVolumePrincipled", Color=(1.0, 1.0, 1.0, 1.0), Anisotropy=0.35, Density=density.outputs["Result"])
+    cover = math_node(
+        tree, "SUBTRACT", noise.outputs["Factor"], threshold.outputs["Result"]
+    )
+    density = node(
+        tree,
+        "ShaderNodeMapRange",
+        Value=cover,
+        From_Min=0.0,
+        From_Max=0.08,
+        To_Min=0.0,
+        To_Max=0.3,
+    )
+    volume = node(
+        tree,
+        "ShaderNodeVolumePrincipled",
+        Color=(1.0, 1.0, 1.0, 1.0),
+        Anisotropy=0.35,
+        Density=density.outputs["Result"],
+    )
     tree.links.new(volume.outputs["Volume"], output.inputs["Volume"])
     return material
 
@@ -741,7 +947,12 @@ class Parts:
     def slab_uv(self) -> Matrix:
         """Return a random placement of the stone texture, so that no two slabs look alike."""
         turn = Matrix.Rotation(self.rng.choice((0.0, 0.5, 1.0, 1.5)) * math.pi, 4, "Z")
-        return Matrix.Translation((self.rng.uniform(0.0, 8.0), self.rng.uniform(0.0, 8.0), 0.0)) @ turn
+        return (
+            Matrix.Translation(
+                (self.rng.uniform(0.0, 8.0), self.rng.uniform(0.0, 8.0), 0.0)
+            )
+            @ turn
+        )
 
     def slab_shade(self) -> float:
         """Return how much darker one slab is than the stone: real slabs differ a little."""
@@ -761,10 +972,23 @@ def add_pad(parts: Parts, centre: Vector, radius: float, mouths: list[tuple[Vect
         if inner == 0.0:
             parts.stone.add_disc(floor, outer - JOINT / 2, 0.1, parts.slab_uv())
         for index in range(count if inner > 0.0 else 0):
-            gap = JOINT / (inner + outer)  # half the joint, as an angle at the middle radius
-            a0, a1 = phase + 2 * math.pi * index / count, phase + 2 * math.pi * (index + 1) / count
+            gap = JOINT / (
+                inner + outer
+            )  # half the joint, as an angle at the middle radius
+            a0, a1 = (
+                phase + 2 * math.pi * index / count,
+                phase + 2 * math.pi * (index + 1) / count,
+            )
             first = len(parts.stone.bm.faces)
-            parts.stone.add_sector(floor, inner + JOINT / 2, outer - JOINT / 2, a0 + gap, a1 - gap, 0.1, parts.slab_uv())
+            parts.stone.add_sector(
+                floor,
+                inner + JOINT / 2,
+                outer - JOINT / 2,
+                a0 + gap,
+                a1 - gap,
+                0.1,
+                parts.slab_uv(),
+            )
             parts.stone.darken(first, parts.slab_shade())
         inner = outer
     first = len(parts.stone.bm.faces)
@@ -782,9 +1006,21 @@ def add_pad(parts: Parts, centre: Vector, radius: float, mouths: list[tuple[Vect
         profile += [(drum, z + 0.025), (drum - 0.03, z), (drum, z - 0.025)]
         z -= 0.5
     bowl = 0.9 * radius
-    profile += [(drum, -depth), (drum - 0.09, -depth - 0.07), (drum - 0.09, -depth - 0.18), (0.3, -depth - bowl), (0.01, -depth - bowl)]
+    profile += [
+        (drum, -depth),
+        (drum - 0.09, -depth - 0.07),
+        (drum - 0.09, -depth - 0.18),
+        (0.3, -depth - bowl),
+        (0.01, -depth - bowl),
+    ]
     parts.stone.add_sweep(ring_frames(centre, 0.0, girth=radius), profile, closed=True)
-    parts.brass.add_gear(Matrix.Translation(centre - UP * 0.48), radius + 0.1, round(2 * math.pi * radius / 0.36), 0.2, radius - 0.4)
+    parts.brass.add_gear(
+        Matrix.Translation(centre - UP * 0.48),
+        radius + 0.1,
+        round(2 * math.pi * radius / 0.36),
+        0.2,
+        radius - 0.4,
+    )
     parts.brass.add_cylinder(centre - UP * (depth + bowl + 0.55), UP, 0.62, 0.0, 0.3)
     parts.brass.add_sphere(centre - UP * (depth + bowl + 0.62), 0.14, segments=24)
 
@@ -793,9 +1029,20 @@ def add_pad(parts: Parts, centre: Vector, radius: float, mouths: list[tuple[Vect
         parts.brass.add_sweep(run, lip_profile(width, height, 0.19))
         for end in (run[0], run[-1]):  # a low bollard closes each end of the lip
             foot = end.at(-width * 0.45, 0.0)
-            parts.brass.add_cylinder(foot, UP, height + 0.04, width * 0.4, width * 0.34, segments=24)
-            parts.brass.add_cylinder(foot + UP * (height + 0.04), UP, 0.05, width * 0.2, width * 0.16, segments=24)
-            parts.brass.add_sphere(foot + UP * (height + 0.08 + width * 0.3), width * 0.32, segments=32)
+            parts.brass.add_cylinder(
+                foot, UP, height + 0.04, width * 0.4, width * 0.34, segments=24
+            )
+            parts.brass.add_cylinder(
+                foot + UP * (height + 0.04),
+                UP,
+                0.05,
+                width * 0.2,
+                width * 0.16,
+                segments=24,
+            )
+            parts.brass.add_sphere(
+                foot + UP * (height + 0.08 + width * 0.3), width * 0.32, segments=32
+            )
 
 
 def add_deck(parts: Parts, frames: list[Frame], width: float, *, slab: float, kerb: tuple[float, float] | None, blocked: Callable[[Frame, int], bool] | None = None) -> None:  # fmt: skip
@@ -805,10 +1052,20 @@ def add_deck(parts: Parts, frames: list[Frame], width: float, *, slab: float, ke
     a border open where another route crosses it; side is -1 (left) or 1 (right).
     """
     half = width / 2
-    parts.stone.add_sweep(frames, rect_profile(-half + 0.01, half - 0.01, -DECK_THICKNESS, -0.014, bevel=0.01))
-    parts.brass.add_sweep(frames, rect_profile(-0.09, 0.09, -DECK_THICKNESS - 0.14, -DECK_THICKNESS + 0.01, bevel=0.03))
+    parts.stone.add_sweep(
+        frames,
+        rect_profile(-half + 0.01, half - 0.01, -DECK_THICKNESS, -0.014, bevel=0.01),
+    )
+    parts.brass.add_sweep(
+        frames,
+        rect_profile(
+            -0.09, 0.09, -DECK_THICKNESS - 0.14, -DECK_THICKNESS + 0.01, bevel=0.03
+        ),
+    )
     first = len(parts.stone.bm.faces)
-    parts.stone.add_sweep(frames, rect_profile(-half + 0.02, half - 0.02, -0.03, -FLUSH))
+    parts.stone.add_sweep(
+        frames, rect_profile(-half + 0.02, half - 0.02, -0.03, -FLUSH)
+    )
     parts.stone.darken(first, MORTAR)
     per_slab = max(2, round(slab / (frames[1].distance - frames[0].distance)))
     for start in range(0, len(frames) - 1, per_slab):
@@ -822,8 +1079,13 @@ def add_deck(parts: Parts, frames: list[Frame], width: float, *, slab: float, ke
         parts.stone.darken(first, parts.slab_shade())
     if kerb is not None:
         for side in (-1, 1):
-            profile = offset_profile(lip_profile(kerb[0], kerb[1], 0.1), side * half, mirror=side < 0)
-            for run in open_runs(frames, lambda frame, side=side: blocked is not None and blocked(frame, side)):
+            profile = offset_profile(
+                lip_profile(kerb[0], kerb[1], 0.1), side * half, mirror=side < 0
+            )
+            for run in open_runs(
+                frames,
+                lambda frame, side=side: blocked is not None and blocked(frame, side),
+            ):
                 parts.brass.add_sweep(run, profile)
 
 
@@ -835,22 +1097,46 @@ def add_clock_face(parts: Parts, radius: float, ring: float) -> None:
     """
     low, high = -0.012, 0.004
     for r in (ring, radius):
-        parts.gold.add_sweep(ring_frames(Vector((0.0, 0.0, 0.0)), r), rect_profile(-0.03, 0.03, low, high), closed=True)
+        parts.gold.add_sweep(
+            ring_frames(Vector((0.0, 0.0, 0.0)), r),
+            rect_profile(-0.03, 0.03, low, high),
+            closed=True,
+        )
     for hour in range(12):
         spin = Matrix.Rotation(-2 * math.pi * hour / 12, 4, "Z")
         wide = 0.14 if hour % 3 == 0 else 0.075
-        parts.gold.add_box(spin @ Matrix.Translation((0.0, (ring + radius) / 2, (low + high) / 2)), (wide, radius - ring - 0.3, high - low))
-    for hour_angle, length, wide in ((-2 * math.pi * 10.17 / 12, ring * 0.7, 0.13), (-2 * math.pi * 2 / 12, ring * 0.97, 0.09)):
+        parts.gold.add_box(
+            spin @ Matrix.Translation((0.0, (ring + radius) / 2, (low + high) / 2)),
+            (wide, radius - ring - 0.3, high - low),
+        )
+    for hour_angle, length, wide in (
+        (-2 * math.pi * 10.17 / 12, ring * 0.7, 0.13),
+        (-2 * math.pi * 2 / 12, ring * 0.97, 0.09),
+    ):
         spin = Matrix.Rotation(hour_angle, 4, "Z")
         tip, tail = Vector((0.0, length, 0.0)), Vector((0.0, -0.28, 0.0))
-        corners = [Vector((-wide / 2, 0.0, 0.0)), tail, Vector((wide / 2, 0.0, 0.0)), tip]
-        lower = [parts.gold.bm.verts.new(spin @ (corner + UP * low)) for corner in corners]
-        upper = [parts.gold.bm.verts.new(spin @ (corner + UP * (high + 0.002))) for corner in corners]
+        corners = [
+            Vector((-wide / 2, 0.0, 0.0)),
+            tail,
+            Vector((wide / 2, 0.0, 0.0)),
+            tip,
+        ]
+        lower = [
+            parts.gold.bm.verts.new(spin @ (corner + UP * low)) for corner in corners
+        ]
+        upper = [
+            parts.gold.bm.verts.new(spin @ (corner + UP * (high + 0.002)))
+            for corner in corners
+        ]
         parts.gold.bm.faces.new(lower)
         parts.gold.bm.faces.new(upper)
         for i in range(4):
-            parts.gold.bm.faces.new((lower[i], lower[(i + 1) % 4], upper[(i + 1) % 4], upper[i]))
-    parts.gold.add_cylinder(Vector((0.0, 0.0, low)), UP, high + 0.008 - low, 0.17, segments=48)
+            parts.gold.bm.faces.new(
+                (lower[i], lower[(i + 1) % 4], upper[(i + 1) % 4], upper[i])
+            )
+    parts.gold.add_cylinder(
+        Vector((0.0, 0.0, low)), UP, high + 0.008 - low, 0.17, segments=48
+    )
 
 
 @dataclass(frozen=True)
@@ -873,7 +1159,9 @@ def build_gems(gems: list[Gem], root: bpy.types.Object, glow: float) -> None:
     the same luminance, so that no gem outshines another.
     """
     for cut, color in GEM_COLORS.items():
-        level = 0.2 / (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2])  # brings this colour to one luminance
+        level = 0.2 / (
+            0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]
+        )  # brings this colour to one luminance
         mine = [gem for gem in gems if gem.cut == cut]
         if not mine:
             continue
@@ -890,9 +1178,20 @@ def build_gems(gems: list[Gem], root: bpy.types.Object, glow: float) -> None:
             lamp.location = gem.floor + UP * (GEM_HOVER * 0.75)
             lamp.parent = root
             bpy.context.scene.collection.objects.link(lamp)
-        jewel = shell.finish(gem_material(f"gem_{cut}", color, 0.22 * glow * level), root, flat=True)
-        jewel.visible_shadow = False  # the light on the floor marks the spot below a gem
-        rays = beam.finish(beam_material(f"gem_beam_{cut}", tuple(0.12 + channel * level for channel in color), 0.5 * glow), root)
+        jewel = shell.finish(
+            gem_material(f"gem_{cut}", color, 0.22 * glow * level), root, flat=True
+        )
+        jewel.visible_shadow = (
+            False  # the light on the floor marks the spot below a gem
+        )
+        rays = beam.finish(
+            beam_material(
+                f"gem_beam_{cut}",
+                tuple(0.12 + channel * level for channel in color),
+                0.5 * glow,
+            ),
+            root,
+        )
         rays.visible_shadow = False
         rays.visible_diffuse = False
         rays.visible_glossy = False
@@ -913,8 +1212,14 @@ def build_course(look: Look, root: bpy.types.Object, *, caustics: bool) -> list[
     half = DECK_WIDTH / 2
     plaza = Vector((0.0, 0.0, 0.0))
     last = route[-1]
-    terrace = last.origin + Vector((math.sin(ARC_ANGLE), math.cos(ARC_ANGLE), 0.0)) * (TERRACE_RADIUS - OVERLAP)
-    islet = polar(PLAZA_RADIUS + BRIDGE_LENGTH + ISLET_RADIUS - 2 * OVERLAP, BRIDGE_ANGLE, -ISLET_DROP)
+    terrace = last.origin + Vector((math.sin(ARC_ANGLE), math.cos(ARC_ANGLE), 0.0)) * (
+        TERRACE_RADIUS - OVERLAP
+    )
+    islet = polar(
+        PLAZA_RADIUS + BRIDGE_LENGTH + ISLET_RADIUS - 2 * OVERLAP,
+        BRIDGE_ANGLE,
+        -ISLET_DROP,
+    )
 
     # The beam: level while it lies on the route, then one smooth climb to the terrace.
     fork = next(frame for frame in route if frame.distance >= FORK_AT)
@@ -923,20 +1228,40 @@ def build_course(look: Look, root: bpy.types.Object, *, caustics: bool) -> list[
     toward = (landing - beam_start).to_2d().normalized().to_3d()
     beam_end = landing + toward * OVERLAP
     level = 1.7 / (beam_end - beam_start).length
-    beam = line_frames(beam_start, beam_end, lambda t: TERRACE_HEIGHT * smoothstep((t - level) / (0.94 - level)))
+    beam = line_frames(
+        beam_start,
+        beam_end,
+        lambda t: TERRACE_HEIGHT * smoothstep((t - level) / (0.94 - level)),
+    )
 
     def beam_crosses(frame: Frame, side: int) -> bool:
         edge = frame.at(side * (half - 0.1), 0.0) - beam_start
         along = edge.dot(toward)
-        return side > 0 and along > 0.0 and (edge - toward * along).to_2d().length < BEAM_WIDTH / 2 + 0.08
+        return (
+            side > 0
+            and along > 0.0
+            and (edge - toward * along).to_2d().length < BEAM_WIDTH / 2 + 0.08
+        )
 
-    add_deck(parts, route, DECK_WIDTH, slab=1.2, kerb=(0.24, 0.08), blocked=beam_crosses)
+    add_deck(
+        parts, route, DECK_WIDTH, slab=1.2, kerb=(0.24, 0.08), blocked=beam_crosses
+    )
     add_deck(parts, beam, BEAM_WIDTH, slab=1.15, kerb=None)
     for side in (-1, 1):  # a gold line along each edge marks the shortcut
-        parts.gold.add_sweep(beam, rect_profile(side * (BEAM_WIDTH / 2 - 0.07) - 0.02, side * (BEAM_WIDTH / 2 - 0.07) + 0.02, -0.01, 0.004))
+        parts.gold.add_sweep(
+            beam,
+            rect_profile(
+                side * (BEAM_WIDTH / 2 - 0.07) - 0.02,
+                side * (BEAM_WIDTH / 2 - 0.07) + 0.02,
+                -0.01,
+                0.004,
+            ),
+        )
     bridge_start = polar(PLAZA_RADIUS - OVERLAP, BRIDGE_ANGLE, STEP)
     bridge_end = polar(PLAZA_RADIUS + BRIDGE_LENGTH - OVERLAP, BRIDGE_ANGLE, STEP)
-    bridge = line_frames(bridge_start, bridge_end, lambda t: -ISLET_DROP * smoothstep((t - 0.2) / 0.6))
+    bridge = line_frames(
+        bridge_start, bridge_end, lambda t: -ISLET_DROP * smoothstep((t - 0.2) / 0.6)
+    )
     add_deck(parts, bridge, BRIDGE_WIDTH, slab=1.1, kerb=(0.2, 0.07))
 
     clock, ring = 2.1, 1.45
@@ -965,20 +1290,32 @@ def build_course(look: Look, root: bpy.types.Object, *, caustics: bool) -> list[
     parts.brass.finish(pbr_material(look.brass), root, tile=look.brass.tile)
     parts.gold.finish(pbr_material(GOLD), root, tile=GOLD.tile)
 
-    arc_middle = next(frame for frame in route if frame.distance >= STRAIGHT_IN + ARC_RADIUS * ARC_ANGLE * 0.5)
+    arc_middle = next(
+        frame
+        for frame in route
+        if frame.distance >= STRAIGHT_IN + ARC_RADIUS * ARC_ANGLE * 0.5
+    )
     return [
         Gem("bipyramid", Vector((*GEM_AT, 0.0))),
         Gem("bipyramid", terrace + Vector((0.5, -0.2, 0.0))),
         Gem("hexagon", arc_middle.origin.copy()),
         Gem("hexagon", islet.copy()),
-        Gem("brilliant", beam[round(len(beam) * 0.56)].origin.copy()),  # the reward for the risky route
+        Gem(
+            "brilliant", beam[round(len(beam) * 0.56)].origin.copy()
+        ),  # the reward for the risky route
     ]
 
 
-def build_marble(look: MarbleLook, at: tuple[float, float], root: bpy.types.Object) -> None:
+def build_marble(
+    look: MarbleLook, at: tuple[float, float], root: bpy.types.Object
+) -> None:
     """Build the marble at rest on the plaza, and its blob shadow straight below it."""
     centre = Vector((*at, MARBLE_RADIUS))
-    tilts = (Vector((0.35, 0.2, 1.0)), Vector((1.0, 0.3, 0.45)), Vector((-0.4, 1.0, 0.3)))
+    tilts = (
+        Vector((0.35, 0.2, 1.0)),
+        Vector((1.0, 0.3, 0.45)),
+        Vector((-0.4, 1.0, 0.3)),
+    )
     shell = Builder("marble")
     shell.add_sphere(centre, MARBLE_RADIUS, segments=96)
     detail = Builder("marble_detail")
@@ -987,7 +1324,9 @@ def build_marble(look: MarbleLook, at: tuple[float, float], root: bpy.types.Obje
         ball = shell.finish(glass_material("marble_glass"), root)
         ball.cycles.is_caustics_caster = True
         detail.add_sphere(centre, 0.075, segments=32)
-        for index, (axis, radius) in enumerate(zip(tilts, (0.105, 0.13, 0.155), strict=True)):
+        for index, (axis, radius) in enumerate(
+            zip(tilts, (0.105, 0.13, 0.155), strict=True)
+        ):
             ring = ring_frames(centre, radius, axis, segments=64)
             detail.add_sweep(ring, circle_profile(0.011, 8), closed=True)
             detail.add_sphere(ring[index * 23 % 64].origin, 0.022, segments=16)
@@ -1014,7 +1353,10 @@ def build_cloud_sea(root: bpy.types.Object) -> None:
     """Build the sea of clouds close below the course as one large volume (the dawn backdrop)."""
     top, depth, half_size = -50.0, 100.0, 30000.0
     box = Builder("cloud_sea")
-    box.add_box(Matrix.Translation((0.0, 0.0, top - depth / 2)), (2 * half_size, 2 * half_size, depth))
+    box.add_box(
+        Matrix.Translation((0.0, 0.0, top - depth / 2)),
+        (2 * half_size, 2 * half_size, depth),
+    )
     box.finish(cloud_material(top, depth), root)
 
 
@@ -1023,7 +1365,9 @@ def sky_sun_azimuth(image: bpy.types.Image) -> float:
     width, height = image.size
     pixels = np.empty(width * height * 4, dtype=np.float32)
     image.pixels.foreach_get(pixels)
-    luminance = pixels.reshape(height, width, 4)[..., :3] @ np.array((0.2126, 0.7152, 0.0722), dtype=np.float32)
+    luminance = pixels.reshape(height, width, 4)[..., :3] @ np.array(
+        (0.2126, 0.7152, 0.0722), dtype=np.float32
+    )
     _, columns = np.nonzero(luminance >= np.quantile(luminance, 0.9997))
     u = (float(np.median(columns)) + 0.5) / width
     return (0.5 - u) * 360.0  # Cycles maps a direction to u = 0.5 - atan2(y, x) / 2pi
@@ -1039,8 +1383,16 @@ def hdri_world(sky: HdriSky) -> tuple[bpy.types.World, float]:
     capped = node(tree, "ShaderNodeVectorMath", operation="MINIMUM")
     tree.links.new(picture.outputs["Color"], capped.inputs[0])
     capped.inputs[1].default_value = (SKY_CAP,) * 3
-    background = node(tree, "ShaderNodeBackground", Color=capped.outputs["Vector"], Strength=sky.strength)
-    tree.links.new(background.outputs["Background"], tree.nodes.new("ShaderNodeOutputWorld").inputs["Surface"])
+    background = node(
+        tree,
+        "ShaderNodeBackground",
+        Color=capped.outputs["Vector"],
+        Strength=sky.strength,
+    )
+    tree.links.new(
+        background.outputs["Background"],
+        tree.nodes.new("ShaderNodeOutputWorld").inputs["Surface"],
+    )
     return world, sky_sun_azimuth(image)
 
 
@@ -1065,37 +1417,110 @@ def physical_world(sky: PhysicalSky) -> bpy.types.World:
     # Where the view ray meets the cloud sphere: t = -b - sqrt(b2 - c), in km.
     earth, drop = 6371.0, sky.cloud_drop
     b = math_node(tree, "MULTIPLY", split.outputs["Z"], earth + drop)
-    inside = math_node(tree, "SUBTRACT", math_node(tree, "MULTIPLY", b, b), 2 * earth * drop + drop * drop)
-    reach = math_node(tree, "SUBTRACT", math_node(tree, "MULTIPLY", b, -1.0), math_node(tree, "SQRT", math_node(tree, "MAXIMUM", inside, 0.0)))
+    inside = math_node(
+        tree,
+        "SUBTRACT",
+        math_node(tree, "MULTIPLY", b, b),
+        2 * earth * drop + drop * drop,
+    )
+    reach = math_node(
+        tree,
+        "SUBTRACT",
+        math_node(tree, "MULTIPLY", b, -1.0),
+        math_node(tree, "SQRT", math_node(tree, "MAXIMUM", inside, 0.0)),
+    )
     ground = node(tree, "ShaderNodeVectorMath", operation="SCALE", Scale=reach)
     tree.links.new(view, ground.inputs[0])
     flat = node(tree, "ShaderNodeVectorMath", operation="MULTIPLY")
     tree.links.new(ground.outputs["Vector"], flat.inputs[0])
     flat.inputs[1].default_value = (1.0, 1.0, 0.0)
-    fields = node(tree, "ShaderNodeTexNoise", Vector=flat.outputs["Vector"], Scale=0.035, Detail=9.0, Roughness=0.62)
-    puffs = node(tree, "ShaderNodeTexNoise", Vector=flat.outputs["Vector"], Scale=0.4, Detail=6.0, Roughness=0.6)
-    both = math_node(tree, "ADD", fields.outputs["Factor"], math_node(tree, "MULTIPLY", puffs.outputs["Factor"], 0.35))
-    cover = node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=both, From_Min=0.62, From_Max=0.8)
-    below = node(tree, "ShaderNodeMapRange", Value=inside, From_Min=0.0, From_Max=2 * earth * drop * 0.02)
+    fields = node(
+        tree,
+        "ShaderNodeTexNoise",
+        Vector=flat.outputs["Vector"],
+        Scale=0.035,
+        Detail=9.0,
+        Roughness=0.62,
+    )
+    puffs = node(
+        tree,
+        "ShaderNodeTexNoise",
+        Vector=flat.outputs["Vector"],
+        Scale=0.4,
+        Detail=6.0,
+        Roughness=0.6,
+    )
+    both = math_node(
+        tree,
+        "ADD",
+        fields.outputs["Factor"],
+        math_node(tree, "MULTIPLY", puffs.outputs["Factor"], 0.35),
+    )
+    cover = node(
+        tree,
+        "ShaderNodeMapRange",
+        interpolation_type="SMOOTHSTEP",
+        Value=both,
+        From_Min=0.62,
+        From_Max=0.8,
+    )
+    below = node(
+        tree,
+        "ShaderNodeMapRange",
+        Value=inside,
+        From_Min=0.0,
+        From_Max=2 * earth * drop * 0.02,
+    )
     looking_down = math_node(tree, "LESS_THAN", split.outputs["Z"], 0.0)
-    haze = math_node(tree, "POWER", 2.718, math_node(tree, "DIVIDE", reach, -28.0 * drop))  # e^(-distance / visibility)
+    haze = math_node(
+        tree, "POWER", 2.718, math_node(tree, "DIVIDE", reach, -28.0 * drop)
+    )  # e^(-distance / visibility)
     amount = math_node(tree, "MULTIPLY", math_node(tree, "MULTIPLY", cover.outputs["Result"], below.outputs["Result"]), math_node(tree, "MULTIPLY", looking_down, haze))  # fmt: skip
     clouded = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=math_node(tree, "MULTIPLY", amount, 0.9), A=air.outputs["Vector"], B=(*sky.cloud_color, 1.0))  # fmt: skip
     color = clouded.outputs["Result"]
 
     if sky.stars > 0.0:
         cells = node(tree, "ShaderNodeTexVoronoi", Vector=view, Scale=170.0)
-        point = node(tree, "ShaderNodeMapRange", Value=cells.outputs["Distance"], From_Min=0.0, From_Max=0.045, To_Min=1.0, To_Max=0.0)
-        size = math_node(tree, "POWER", node(tree, "ShaderNodeSeparateColor", Color=cells.outputs["Color"]).outputs["Red"], 6.0)
-        above = node(tree, "ShaderNodeMapRange", Value=split.outputs["Z"], From_Min=-0.1, From_Max=0.05)
+        point = node(
+            tree,
+            "ShaderNodeMapRange",
+            Value=cells.outputs["Distance"],
+            From_Min=0.0,
+            From_Max=0.045,
+            To_Min=1.0,
+            To_Max=0.0,
+        )
+        size = math_node(
+            tree,
+            "POWER",
+            node(tree, "ShaderNodeSeparateColor", Color=cells.outputs["Color"]).outputs[
+                "Red"
+            ],
+            6.0,
+        )
+        above = node(
+            tree,
+            "ShaderNodeMapRange",
+            Value=split.outputs["Z"],
+            From_Min=-0.1,
+            From_Max=0.05,
+        )
         star = math_node(tree, "MULTIPLY", math_node(tree, "MULTIPLY", point.outputs["Result"], size), math_node(tree, "MULTIPLY", above.outputs["Result"], sky.stars))  # fmt: skip
         lit = node(tree, "ShaderNodeVectorMath", operation="ADD")
         tree.links.new(color, lit.inputs[0])
-        tree.links.new(node(tree, "ShaderNodeCombineXYZ", X=star, Y=star, Z=star).outputs["Vector"], lit.inputs[1])
+        tree.links.new(
+            node(tree, "ShaderNodeCombineXYZ", X=star, Y=star, Z=star).outputs[
+                "Vector"
+            ],
+            lit.inputs[1],
+        )
         color = lit.outputs["Vector"]
 
     background = node(tree, "ShaderNodeBackground", Color=color, Strength=1.0)
-    tree.links.new(background.outputs["Background"], tree.nodes.new("ShaderNodeOutputWorld").inputs["Surface"])
+    tree.links.new(
+        background.outputs["Background"],
+        tree.nodes.new("ShaderNodeOutputWorld").inputs["Surface"],
+    )
     return world
 
 
@@ -1107,29 +1532,65 @@ def build_planet(sky: PhysicalSky, to_sun: Vector) -> None:
     direction by itself, and lets it fade out toward the Earth's horizon.
     """
     distance, half_angle = 20000.0, math.radians(5.0)
-    horizon = -math.acos(6371.0 / (6371.0 + sky.altitude / 1000.0))  # the dip of the Earth's edge
+    horizon = -math.acos(
+        6371.0 / (6371.0 + sky.altitude / 1000.0)
+    )  # the dip of the Earth's edge
     ball = Builder("planet")
-    ball.add_sphere(Vector((0.0, 0.0, 0.0)), distance * math.tan(half_angle), segments=96)
+    ball.add_sphere(
+        Vector((0.0, 0.0, 0.0)), distance * math.tan(half_angle), segments=96
+    )
     material, tree, output = new_material("planet")
-    image = node(tree, "ShaderNodeTexImage", image=load_image(TEXTURES / "planet" / "PIA07782.jpg", data=False))
-    pale = node(tree, "ShaderNodeHueSaturation", Saturation=0.3, Value=1.0, Color=image.outputs["Color"])
-    soft = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=0.45, A=pale.outputs["Color"], B=(0.5, 0.47, 0.43, 1.0))
+    image = node(
+        tree,
+        "ShaderNodeTexImage",
+        image=load_image(TEXTURES / "planet" / "PIA07782.jpg", data=False),
+    )
+    pale = node(
+        tree,
+        "ShaderNodeHueSaturation",
+        Saturation=0.3,
+        Value=1.0,
+        Color=image.outputs["Color"],
+    )
+    soft = node(
+        tree,
+        "ShaderNodeMix",
+        data_type="RGBA",
+        Factor=0.45,
+        A=pale.outputs["Color"],
+        B=(0.5, 0.47, 0.43, 1.0),
+    )
     geometry = node(tree, "ShaderNodeNewGeometry")
     facing = node(tree, "ShaderNodeVectorMath", operation="DOT_PRODUCT")
     tree.links.new(geometry.outputs["Normal"], facing.inputs[0])
     facing.inputs[1].default_value = to_sun
     lit = node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=facing.outputs["Value"], From_Min=-0.08, From_Max=0.9, To_Min=0.0, To_Max=sky.sun_strength * 0.12)  # fmt: skip
-    surface = node(tree, "ShaderNodeEmission", Color=soft.outputs["Result"], Strength=lit.outputs["Result"])
+    surface = node(
+        tree,
+        "ShaderNodeEmission",
+        Color=soft.outputs["Result"],
+        Strength=lit.outputs["Result"],
+    )
     incoming = node(tree, "ShaderNodeSeparateXYZ", Vector=geometry.outputs["Incoming"])
-    rise = math_node(tree, "MULTIPLY", incoming.outputs["Z"], -1.0)  # the sine of the view ray's elevation
+    rise = math_node(
+        tree, "MULTIPLY", incoming.outputs["Z"], -1.0
+    )  # the sine of the view ray's elevation
     veil = node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=rise, From_Min=math.sin(horizon + math.radians(0.6)), From_Max=math.sin(horizon + math.radians(6.5)), To_Min=0.0, To_Max=0.9)  # fmt: skip
     mix = node(tree, "ShaderNodeMixShader", Factor=veil.outputs["Result"])
-    tree.links.new(node(tree, "ShaderNodeBsdfTransparent").outputs["BSDF"], mix.inputs[1])
+    tree.links.new(
+        node(tree, "ShaderNodeBsdfTransparent").outputs["BSDF"], mix.inputs[1]
+    )
     tree.links.new(surface.outputs["Emission"], mix.inputs[2])
     tree.links.new(mix.outputs["Shader"], output.inputs["Surface"])
     planet = ball.finish(material, None)
-    planet.location = direction(SUN_AZIMUTH - 76.0, math.degrees(horizon) + 3.4) * distance
-    planet.rotation_euler = (math.radians(14.0), math.radians(-20.0), math.radians(200.0))
+    planet.location = (
+        direction(SUN_AZIMUTH - 76.0, math.degrees(horizon) + 3.4) * distance
+    )
+    planet.rotation_euler = (
+        math.radians(14.0),
+        math.radians(-20.0),
+        math.radians(200.0),
+    )
     planet.visible_shadow = False
     planet.visible_diffuse = False
     planet.visible_glossy = False
@@ -1167,7 +1628,9 @@ def build_camera(shot: Shot, root: bpy.types.Object) -> None:
     eye, target = Vector(shot.eye), Vector(shot.target)
     if shot.fstop is not None:
         data.dof.use_dof = True
-        data.dof.focus_distance = (Vector((*shot.marble_at, MARBLE_RADIUS)) - eye).length
+        data.dof.focus_distance = (
+            Vector((*shot.marble_at, MARBLE_RADIUS)) - eye
+        ).length
         data.dof.aperture_fstop = shot.fstop
     camera = bpy.data.objects.new("camera", data)
     camera.location = eye
@@ -1232,16 +1695,34 @@ def render_shot(shot: Shot, out: Path, samples: int, scale: int, use_gpu: bool) 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--only", nargs="+", choices=[shot.name for shot in SHOTS], help="shots to render (default: all)")
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        choices=[shot.name for shot in SHOTS],
+        help="shots to render (default: all)",
+    )
     parser.add_argument("--out", type=Path, default=REPO / "docs" / "style" / "review")
     parser.add_argument("--samples", type=int, default=384)
-    parser.add_argument("--scale", type=int, default=100, help="resolution in percent, for quick previews")
-    parser.add_argument("--cpu", action="store_true", help="render on the CPU, for when ComfyUI holds the GPU memory")
-    args = parser.parse_args(sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else [])
+    parser.add_argument(
+        "--scale",
+        type=int,
+        default=100,
+        help="resolution in percent, for quick previews",
+    )
+    parser.add_argument(
+        "--cpu",
+        action="store_true",
+        help="render on the CPU, for when ComfyUI holds the GPU memory",
+    )
+    args = parser.parse_args(
+        sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    )
     args.out.mkdir(parents=True, exist_ok=True)
     for shot in SHOTS:
         if args.only is None or shot.name in args.only:
-            path = render_shot(shot, args.out.resolve(), args.samples, args.scale, not args.cpu)
+            path = render_shot(
+                shot, args.out.resolve(), args.samples, args.scale, not args.cpu
+            )
             print(f"lookdev: wrote {path}")
 
 
