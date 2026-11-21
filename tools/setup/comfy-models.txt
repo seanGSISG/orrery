@@ -1,0 +1,12 @@
+# Music models for the local ComfyUI.
+# Columns: <hf repo> <file in repo> <ComfyUI models subfolder> [license gate repo]
+# A line with a license gate is skipped until Sean accepts that repo's license
+# on its Hugging Face page. Files land in the Hugging Face cache and are
+# linked into ComfyUI's models folder.
+Comfy-Org/ACE-Step-1.5   split_files/diffusion_models/acestep_v1.5_xl_turbo_bf16.safetensors  diffusion_models
+Comfy-Org/ACE-Step-1.5   split_files/text_encoders/qwen_0.6b_ace15.safetensors                text_encoders
+Comfy-Org/ACE-Step-1.5   split_files/text_encoders/qwen_1.7b_ace15.safetensors                text_encoders
+Comfy-Org/ACE-Step-1.5   split_files/vae/ace_1.5_vae.safetensors                              vae
+Comfy-Org/stable-audio-3 checkpoints/stable_audio_3_medium.safetensors                        checkpoints     stabilityai/stable-audio-3-medium
+Comfy-Org/stable-audio-3 text_encoders/t5gemma_b_b_ul2.safetensors                            text_encoders   stabilityai/stable-audio-3-medium
+Comfy-Org/Qwen3.5        text_encoders/qwen3.5_2b_bf16.safetensors                            text_encoders   stabilityai/stable-audio-3-medium

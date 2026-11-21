@@ -382,12 +382,14 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 1. **System packages:** `sudo pacman -S --needed mise git-lfs`, then `git lfs install`.
 2. **Godot:** `mise use godot@4.7.2` (writes `mise.toml`), then confirm `mise which godot` runs 4.7.2. Export templates: download `Godot_v4.7.2-stable_export_templates.tpz` from the GitHub release, check it against `SHA512-SUMS.txt`, unzip its `templates/` into `~/.local/share/godot/export_templates/4.7.2.stable/`.
-3. **Blender 5.2.4 LTS:** download the official Linux tarball from `download.blender.org`, check its SHA-256, extract to `~/.local/opt/blender-5.2.4/`, link `~/.local/bin/blender-5.2`. `just setup` first tries `mise` (HTTP backend) and falls back to this script.
+3. **Blender 5.2.4 LTS:** download the official Linux tarball from an official Blender mirror (`download.blender.org` refuses scripted downloads), check it against the SHA-256 pinned in `tools/setup/pins.env`, extract to `~/.local/opt/blender-5.2.4/`, link `~/.local/bin/blender-5.2`.
 4. **Blender Lab MCP:** clone `https://projects.blender.org/lab/blender_mcp.git` at a pinned commit into `~/.local/share/orrery/blender_mcp/`, install its add-on into Blender 5.2.4 from the command line, and register it in `.mcp.json`.
 5. **Godot add-ons:** vendor GUT 9.7.1 into `game/addons/gut/`.
 6. **Python tools:** `uv sync` in `tools/harness/` (MCP SDK, `evdev` for the virtual controller). `gdtoolkit` runs through `uvx`.
 7. **glTF tools:** Khronos `glTF-Validator` release binary into `~/.local/bin/`; `@gltf-transform/cli` through `bunx`.
-8. **Music models:** download ACE-Step 1.5 XL and Stable Audio 3 Medium (plus its T5Gemma and Qwen text encoders) into the local ComfyUI with `hf download`, following the docs.comfy.org tutorials. Stable Audio 3 needs the license click from the wizard first.
+8. **Music models:** `tools/setup/comfy-models.txt` lists the ComfyUI files for ACE-Step 1.5 XL and Stable Audio 3 Medium (with its T5Gemma and Qwen text encoders). `hf download` puts them in the Hugging Face cache and setup links them into ComfyUI's models folder. Stable Audio 3 files wait until Sean accepts its license in the wizard.
+
+Pins: Godot in `mise.toml`; everything else in `tools/setup/pins.env`. `just check-env` reruns the first-run checks (6.3) alone.
 
 `.mcp.json` (project scope):
 
