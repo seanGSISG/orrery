@@ -60,8 +60,10 @@ var colourblind: bool = false
 var bindings: Dictionary[String, String] = {}
 
 
-## Puts every setting into the game. Call it after a change; Save calls it at start.
-func apply() -> void:
+## Puts every setting into the game. Call it after a change; Save calls it at start. With
+## resize, a windowed game takes the resolution setting even when it was applied before, so
+## a new choice of the player wins over a resize of the window by hand.
+func apply(resize: bool = false) -> void:
 	FollowCamera.shake_enabled = camera_shake
 	Rumble.enabled = rumble
 	InputHub.dead_zone = dead_zone
@@ -72,7 +74,7 @@ func apply() -> void:
 	AudioBuses.apply(self)
 	Palette.use(colourblind)
 	Bindings.apply(bindings)
-	_apply_display()
+	_apply_display(resize)
 
 
 ## Returns the Window.Mode that window_mode names; windowed for a name that is not one.
@@ -88,12 +90,12 @@ func vsync_mode() -> DisplayServer.VSyncMode:
 ## Sets the window mode, the size of a window, the frame cap, V-Sync and HDR output. It
 ## changes the window only where the setting changed, so a change of another setting does not
 ## move it.
-func _apply_display() -> void:
+func _apply_display(resize: bool) -> void:
 	var window: Window = (Engine.get_main_loop() as SceneTree).root
 	var mode: Window.Mode = window_mode_id()
 	if window.mode != mode:
 		window.mode = mode
-	if mode == Window.MODE_WINDOWED and resolution != _applied_resolution:
+	if mode == Window.MODE_WINDOWED and (resize or resolution != _applied_resolution):
 		_applied_resolution = resolution
 		window.size = resolution if resolution != Vector2i.ZERO else _start_size()
 		window.move_to_center()

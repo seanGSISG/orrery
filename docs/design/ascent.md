@@ -38,7 +38,7 @@ Rules for a zone script:
 4. **Routes.** Carry a `first_run` route and an `expert` route from the start pad to the finish pad, as every level does. `just test-levels zone_<n>` drives them on the zone alone.
 5. **Par and gold.** Ascent has no par time, but `just test-levels` compares each route with the level's `par` and `gold`. Set them with `just suggest-times zone_<n>`.
 6. **No carried power-ups** (plan §2.9). The HUD of a climb has no power-up slot.
-7. **Light.** Do not rely on the zone's own sun or sky. In the climb, the mode removes each zone's `WorldEnvironment`, `DirectionalLight3D` and `LightmapGI`.
+7. **Light.** Do not rely on the zone's own sun or sky. In the climb, the mode removes each zone's `WorldEnvironment`, `DirectionalLight3D`, `LightmapGI` and `ReflectionProbe` nodes: the light changes with the height, and a probe that looks once would keep the light of the start. The sky lights the reflections.
 
 What the mode does with the zones:
 
@@ -101,7 +101,9 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 
 Each hour also has the sun's compass turn, colour and energy, the sky colours (overhead, at the horizon and below the horizon), the sky energy and the exposure. The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again.
 
-Zones 1 to 3 are on the Earth only. M2 adds the hours of the higher zones (sunset, the stars). The real skies of the look baseline (#24) replace the procedural sky in `AscentSky._apply()`, which is the only place that writes the sun and the environment.
+Zones 1 to 3 are on the Earth only. M2 adds the hours of the higher zones (sunset, the stars).
+
+The look baseline (#24) merged after this mode was built. Its sky presets (`game/skies/*.tres`, `SkyPreset`) are panoramas with fog and glow settings. `AscentSky` still has a procedural sky. To use the presets, change `AscentSky._apply()`, which is the only place that writes the sun and the environment: blend two panoramas in a sky shader, and take the fog and the glow from `SkyPreset.environment()`.
 
 ## 5. HUD and menus
 

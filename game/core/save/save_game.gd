@@ -95,7 +95,7 @@ func write() -> bool:
 ## change settings through it.
 func change_settings(values: Dictionary) -> bool:
 	settings.fill(values)
-	settings.apply()
+	settings.apply(values.has("resolution"))
 	return write()
 
 

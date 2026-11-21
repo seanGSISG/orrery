@@ -66,6 +66,14 @@ _Avoid_: normal route, safe route
 The `route` of kind `expert`: the fastest line, with shortcuts and skips. The route bot must finish it under gold.
 _Avoid_: speedrun route, fast route
 
+**Kit material**:
+The surface finish of a kit face by name: `limestone`, `brass` or `gold`. A level script names it, and the importer gives the face the material `game/materials/<set>/<name>.tres`. The surface type (friction and bounce) is a separate name.
+_Avoid_: texture, skin (a skin is a choice of marble)
+
+**Sky preset**:
+One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. A level's `sky` names it, or else the level's tier picks it.
+_Avoid_: skybox, environment
+
 ## Scoring and progress
 
 **Par**:

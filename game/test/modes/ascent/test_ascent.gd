@@ -40,6 +40,7 @@ func test_the_climb_has_one_sun_and_one_sky() -> void:
 	assert_eq(run.find_children("*", "DirectionalLight3D", true, false).size(), 1)
 	assert_eq(run.find_children("*", "WorldEnvironment", true, false).size(), 1)
 	assert_eq(run.find_children("*", "LightmapGI", true, false).size(), 0)
+	assert_eq(run.find_children("*", "ReflectionProbe", true, false).size(), 0)
 
 
 ## The state gives the height above the climb start.

@@ -15,8 +15,8 @@ extends Node3D
 ##   its start pad up. A change of zone changes the music (Music.set_zone());
 ## - the finish pads go away, except the last one, which gets the "to be continued" gate
 ##   (AscentGate) and ends the run;
-## - the sun, the sky and the lightmap of each zone go away: AscentSky (a child of the Ascent
-##   node) lights the climb by the height;
+## - the sun, the sky, the lightmap and the reflection probes of each zone go away: AscentSky
+##   (a child of the Ascent node) lights the climb by the height;
 ## - a checkpoint of a zone goes away too: the climb has no checkpoints but those of Assist;
 ## - every mesh gets a visibility range, so the zones far above and below are not drawn.
 ##
@@ -249,9 +249,10 @@ func _build(ids: Array[StringName]) -> Level:
 	return level
 
 
-## Removes what a zone has for a play of its own: the sun, the sky and the lightmap
-## (AscentSky lights the whole climb), and every checkpoint (the climb has none, but those of
-## Assist).
+## Removes what a zone has for a play of its own: the sun, the sky, the lightmap and the
+## reflection probes (AscentSky lights the whole climb, and its light changes with the
+## height, so a probe that looks once would keep the light of the start), and every
+## checkpoint (the climb has none, but those of Assist).
 func _strip(zone_level: Level) -> void:
 	var own: Array[Node] = []
 	_find(
@@ -262,6 +263,7 @@ func _strip(zone_level: Level) -> void:
 				node is WorldEnvironment
 				or node is DirectionalLight3D
 				or node is LightmapGI
+				or node is ReflectionProbe
 				or node is Checkpoint
 			)
 	)
