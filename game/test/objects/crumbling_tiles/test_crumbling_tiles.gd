@@ -100,6 +100,27 @@ func test_fixture_tiles_have_their_marker_settings_and_drop_the_marble() -> void
 	assert_lt(run.state.position.y, -2.0, "the marble fell through")
 
 
+func test_tiles_are_worn_kit_limestone_on_kit_brass() -> void:
+	var tiles: CrumblingTiles = TILES.instantiate() as CrumblingTiles
+	add_child_autofree(tiles)
+	var stone: ShaderMaterial = KitMaterials.find("limestone") as ShaderMaterial
+	var stone_map: Texture2D = stone.get_shader_parameter("albedo_map")
+	var brass: Material = KitMaterials.find("brass")
+	var solids: Array[Node] = tiles.find_children("Tile*", "", false, false)
+	assert_eq(solids.size(), 4, "a 4 x 4 m grid of 2 m tiles")
+	for solid: Node in solids:
+		var look: MeshInstance3D = solid.get_node("Look") as MeshInstance3D
+		var tray: MeshInstance3D = solid.get_node("Look/Tray") as MeshInstance3D
+		var worn: ShaderMaterial = look.material_override as ShaderMaterial
+		assert_not_null(worn)
+		if worn == null:
+			continue
+		var map: Texture2D = worn.get_shader_parameter("albedo_map")
+		assert_eq(worn.shader, stone.shader, "the kit shader")
+		assert_eq(map, stone_map, "the kit limestone's texture")
+		assert_eq(tray.material_override, brass, "the tray is the kit brass")
+
+
 ## Starts a run of level with the extra nodes and records its feedback in heard.
 func _start(level: PackedScene, extra: Array[Node3D] = []) -> void:
 	for node: Node3D in extra:

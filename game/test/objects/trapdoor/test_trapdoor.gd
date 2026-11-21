@@ -82,6 +82,15 @@ func test_fixture_door_has_its_marker_settings_and_drops_the_marble() -> void:
 	assert_lt(run.state.position.y, -2.0, "the marble fell through")
 
 
+func test_door_is_a_plate_of_the_kit_brass() -> void:
+	var door: Trapdoor = _door(5.0)
+	add_child_autofree(door)
+	var brass: Material = KitMaterials.find("brass")
+	var look: MeshInstance3D = door.get_node("Solid/Mesh") as MeshInstance3D
+	assert_not_null(brass, "the kit has a brass material")
+	assert_eq(look.material_override, brass)
+
+
 ## Returns a test door at DOOR that starts to shut close_after s after its drop.
 func _door(close_after: float) -> Trapdoor:
 	var door: Trapdoor = TRAPDOOR.instantiate() as Trapdoor

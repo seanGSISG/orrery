@@ -4,10 +4,20 @@ extends LevelObject
 ## face at the marker and centred on it. Each tile shakes from the marble's first touch, breaks
 ## and falls away `delay` s later, and stays gone until a respawn or a restart. Tilt the marker
 ## for a ramp or a slope. Each tile is its own Solid; a broken tile leaves the solid layer.
+## A tile is worn stone, the kit's limestone (KitMaterials) darker and more worn than the floor
+## round it, on a thin brass tray that shows as a brass line in the gap round the tile. So loose
+## tiles read apart from solid floor. The tray falls with its tile.
 
-const LOOK: Material = preload("res://objects/crumbling_tiles/tile.tres")
+## The worn look against the kit limestone: its tint is this much darker, and its normal map
+## has this strength (the kit limestone keeps the shader's 1.0).
+const WORN_SHADE: float = 0.78
+const WORN_RELIEF: float = 1.8
 ## Gap between the tiles that shows on screen, m. The colliders have no gap.
-const GAP: float = 0.02
+const GAP: float = 0.05
+## The brass tray under a tile: as wide as the tile's collider, this thick, its top this far
+## below the tile's top, m.
+const TRAY: float = 0.04
+const TRAY_DROP: float = 0.01
 ## Largest shake offset of a cracked tile, m.
 const SHAKE: float = 0.03
 ## Shakes per second of a cracked tile.
@@ -16,6 +26,9 @@ const SHAKE_RATE: float = 25.0
 const FALL: float = 9.8
 ## Seconds that a broken tile shows as it falls, before it hides.
 const FALL_TIME: float = 1.0
+
+## The worn look of every tile; worn_look() makes it once.
+static var _worn: ShaderMaterial = null
 
 ## Seconds from a tile's first touch until it breaks.
 @export var delay: float = 0.5
@@ -41,7 +54,7 @@ var _touched_at: PackedFloat64Array = []
 var _now: float = 0.0
 
 
-## Builds one Solid with a box shape and a mesh for each tile of the grid.
+## Builds one Solid with a box shape, a mesh and a brass tray for each tile of the grid.
 func _ready() -> void:
 	if delay < 0.0 or tile <= 0.0:
 		push_error("crumbling_tiles %s: needs delay >= 0 and tile > 0" % name)
@@ -54,6 +67,9 @@ func _ready() -> void:
 	box.size = _size
 	var mesh: BoxMesh = BoxMesh.new()
 	mesh.size = _size - Vector3(GAP, 0, GAP)
+	var tray: BoxMesh = BoxMesh.new()
+	tray.size = Vector3(_size.x, TRAY, _size.z)
+	var brass: Material = KitMaterials.find("brass")
 	for row: int in _rows:
 		for column: int in _columns:
 			var solid: Solid = Solid.new()
@@ -68,13 +84,34 @@ func _ready() -> void:
 			shape.position.y = -thickness / 2.0
 			solid.add_child(shape)
 			var look: MeshInstance3D = MeshInstance3D.new()
+			look.name = "Look"
 			look.mesh = mesh
-			look.material_override = LOOK
+			look.material_override = worn_look()
 			solid.add_child(look)
+			var under: MeshInstance3D = MeshInstance3D.new()
+			under.name = "Tray"
+			under.mesh = tray
+			under.material_override = brass
+			under.position.y = thickness / 2.0 - TRAY_DROP - TRAY / 2.0
+			look.add_child(under)
 			_solids.append(solid)
 			_looks.append(look)
 	_touched_at.resize(_solids.size())
 	reset(true)
+
+
+## Returns the tiles' look: a copy of the kit limestone, darker, with a stronger normal map and
+## no paving. A tile moves as it shakes and falls, and the paving picks each slab's look from
+## the piece's world position, so it would flicker on a tile.
+static func worn_look() -> ShaderMaterial:
+	if _worn == null:
+		var stone: ShaderMaterial = KitMaterials.find("limestone").duplicate() as ShaderMaterial
+		var tint: Vector3 = stone.get_shader_parameter("tint")
+		stone.set_shader_parameter("tint", tint * WORN_SHADE)
+		stone.set_shader_parameter("normal_strength", WORN_RELIEF)
+		stone.set_shader_parameter("slab_size", Vector2.ZERO)
+		_worn = stone
+	return _worn
 
 
 ## Brings every tile back whole.

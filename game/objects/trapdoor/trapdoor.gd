@@ -4,7 +4,8 @@ extends LevelObject
 ## touches it, and swings shut again `close_after` s after it starts to open. While it is open,
 ## the marble falls through. The top face is at the marker, centred on it. The hinge runs along
 ## the marker's x axis at the bottom of the back edge (Blender -y), so the front edge drops. A
-## respawn or a restart shuts the door at once.
+## respawn or a restart shuts the door at once. The door is a plate of the kit's brass
+## (KitMaterials), so it reads as a hinged metal plate set into the stone.
 
 ## Seconds for the door to swing open, and again to swing shut.
 const SWING: float = 0.3
@@ -36,7 +37,8 @@ var _hinge: Vector3 = Vector3.ZERO
 @onready var _solid: Solid = $Solid
 
 
-## Sizes the panel round a Solid origin on the hinge line, so that the swing turns round it.
+## Sizes the panel round a Solid origin on the hinge line, so that the swing turns round it,
+## and gives it the kit's brass.
 func _ready() -> void:
 	if delay < 0.0 or close_after < SWING:
 		push_error("trapdoor %s: needs delay >= 0 and close_after >= %.2f s" % [name, SWING])
@@ -52,6 +54,7 @@ func _ready() -> void:
 	mesh.size = box.size - Vector3(GAP, 0, GAP)
 	var look: MeshInstance3D = $Solid/Mesh
 	look.mesh = mesh
+	look.material_override = KitMaterials.find("brass")
 	look.position = shape.position
 	_place(-INF)
 
