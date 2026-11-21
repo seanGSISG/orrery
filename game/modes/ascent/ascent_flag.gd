@@ -6,15 +6,17 @@ extends Node3D
 ## no physics.
 
 const BEAM: Shader = preload("res://objects/gem/beam.gdshader")
-## The colour of gold medals and records in the HUD (UiLook.GOLD).
+## The gold of medals and records in the HUD (UiLook.GOLD), and a deeper gold for the pennant:
+## its glow makes it paler on the screen.
 const GOLD: Color = Color("#f4d17e")
+const PENNANT_GOLD: Color = Color("#f2b23a")
 const POLE: Color = Color(0.2, 0.15, 0.1)
 ## Height of the pole, and length and height of the pennant, m.
 const POLE_HEIGHT: float = 2.0
 const PENNANT: Vector2 = Vector2(1.0, 0.56)
 ## Height of the beam above the foot, and its radius, m.
 const BEAM_HEIGHT: float = 16.0
-const BEAM_RADIUS: float = 0.12
+const BEAM_RADIUS: float = 0.16
 
 
 ## Builds the pole, the pennant and the beam.
@@ -64,7 +66,7 @@ static func _pennant() -> ArrayMesh:
 	tool.add_vertex(Vector3.ZERO)
 	tool.add_vertex(Vector3(PENNANT.x, -PENNANT.y * 0.5, 0.0))
 	tool.add_vertex(Vector3(0.0, -PENNANT.y, 0.0))
-	tool.set_material(_paint(GOLD, true))
+	tool.set_material(_paint(PENNANT_GOLD, true))
 	return tool.commit()
 
 
@@ -80,5 +82,5 @@ static func _paint(color: Color, pennant: bool) -> StandardMaterial3D:
 		paint.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 		paint.emission_enabled = true
 		paint.emission = color
-		paint.emission_energy_multiplier = 0.8
+		paint.emission_energy_multiplier = 0.5
 	return paint

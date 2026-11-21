@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AscentHour" format=3]
+
+[ext_resource type="Script" path="res://modes/ascent/ascent_hour.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+height = 0.0
+elevation = 10.0
+turn = 80.0
+sun_color = Color(1, 0.72, 0.5, 1)
+sun_energy = 0.9
+sky_top = Color(0.26, 0.36, 0.6, 1)
+sky_horizon = Color(0.98, 0.72, 0.52, 1)
+sky_below = Color(0.56, 0.46, 0.46, 1)
+sky_energy = 0.9
+exposure = 1.05

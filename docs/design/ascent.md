@@ -1,0 +1,131 @@
+# Ascent mode design
+
+Status: built in #27. It follows `docs/plan.md` §2.9. Where this file and the plan differ, the plan wins.
+
+Terms used in this file:
+
+- **Climb:** one play of Ascent, from the climb start to the gate. A climb can have many sessions.
+- **Zone:** one part of the climb. Each zone is a level script of its own.
+- **Climb start:** the start pad of the first zone. Heights are in metres above it.
+- **Gate:** the "to be continued" gate. It stands on the finish pad of the last built zone.
+- **Spot:** the saved place of a climb that is not finished.
+- **Fall:** a drop of more than 3 m below the floor that the marble was on.
+
+## 1. Files
+
+| Path | What it is |
+|---|---|
+| `game/modes/ascent/ascent.gd` | `Ascent`: the mode. `Ascent.start()` builds the climb and plays it; one `Ascent` node is in the run. |
+| `game/modes/ascent/ascent_falls.gd` | `AscentFalls`: counts the falls and the metres fallen. |
+| `game/modes/ascent/ascent_sky.gd` | `AscentSky`: the sun and the sky of the climb, set by the height. |
+| `game/modes/ascent/ascent_hour.gd`, `hours/*.tres` | `AscentHour`: the time of day at one height. |
+| `game/modes/ascent/ascent_flag.gd` | `AscentFlag`: the flag at the best height. |
+| `game/modes/ascent/ascent_gate.gd` | `AscentGate`: the gate. |
+| `game/ui/hud/height_meter.gd`, `game/ui/widgets/height_scale.gd` | The height meter of the HUD. |
+| `game/ui/screens/ascent_screen.gd` | The Ascent menu: Continue, New climb, Assist. |
+| `game/ui/screens/ascent_stats_screen.gd` | The stats screen at the gate. |
+| `levels/test/ascent_fixture_<n>.py` | Three fixture zones, 12 m each, for the tests. |
+
+## 2. How a zone plugs in
+
+A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The mode loads every zone that is built, so the climb works while only some zones exist.
+
+Rules for a zone script:
+
+1. **Coordinates.** Use the coordinates of the climb, not of the zone. Zone 2 has its floors at 150 m to 300 m. The mode loads every zone at the origin and does not move it.
+2. **Start pad.** Put the `start` marker on a floor of the zone itself. It is the zone start: the marble is in the zone from the height of this pad up, and Assist puts its checkpoint here. In zone 1 it is the climb start.
+3. **Finish pad.** Put the `finish` marker at the top of the zone, on a floor of the zone. The zone above starts beside it, on its own floor, flush with this one. Do not build the same floor in two zones.
+4. **Routes.** Carry a `first_run` route and an `expert` route from the start pad to the finish pad, as every level does. `just test-levels zone_<n>` drives them on the zone alone.
+5. **Par and gold.** Ascent has no par time, but `just test-levels` compares each route with the level's `par` and `gold`. Set them with `just suggest-times zone_<n>`.
+6. **No carried power-ups** (plan §2.9). The HUD of a climb has no power-up slot.
+7. **Light.** Do not rely on the zone's own sun or sky. In the climb, the mode removes each zone's `WorldEnvironment`, `DirectionalLight3D` and `LightmapGI`.
+
+What the mode does with the zones:
+
+- It removes every finish pad but the last. So the marble rolls from the top floor of a zone onto the start floor of the next zone. The last finish pad gets the gate and ends the run.
+- It gives every mesh a visibility range: `Ascent.FAR` (300 m) from the nearest side of the mesh, with a fade over the last 40 m. A zone must be made of many meshes for this to help. One mesh for a whole tower is drawn as a whole.
+- A zone that has no scene, or no start pad, is left out with a warning.
+
+Object names must be different in every zone only when a bot drives the whole climb: a `wait_until <object>` action finds the first object of that name in the run.
+
+## 3. What the mode does in a climb
+
+**Height.** `GameState.height` is the marble's height above the climb start, along the up of the climb start. The mode writes it each tick. `Ascent.zone_heights` has the height of each zone start, and `Ascent.top` the height of the gate.
+
+**Zones and music.** The marble enters a zone 0.5 m below its start and leaves it 3 m below. On a change, the mode calls `Music.set_zone(zone)` and emits `Ascent.zone_changed`.
+
+**Falls** (`AscentFalls`). The stats are `falls` and `fallen` (total metres).
+
+| Number | Value | Why |
+|---|---|---|
+| `FALL_HEIGHT` | 3 m | A jump is 1.4 m high, and the highest step that a level asks for is 1.3 m. So a normal move is never a fall. |
+| `FLOOR_MEMORY` | 2 s | On lower ground, the marble forgets the old floor after this time. So a slow way down is not a fall. |
+| `SETTLE` | 0.25 s | A fall ends when the marble stays on the ground this long and gets no lower. So bounces and slides are part of one fall. |
+| `TELEPORT` | 3 m in one tick | A larger move is a teleport (a respawn, a continued climb, the harness). It is not a fall, and it ends a fall in progress. |
+
+- The floor is the highest height at which the marble stood on a floor. A floor is a contact whose normal is within 60° of up.
+- A fall starts when the marble is more than `FALL_HEIGHT` below the floor. `fallen` grows by the way from the floor to the lowest point of the fall.
+- A fast slide down a slope is a fall too.
+- Limit: a climb that is saved in the middle of a fall counts the rest of that fall as a new fall.
+
+**Best height and flag.** The best height is the highest floor of the level geometry that the marble stood on, in any climb. The floor of an object (a lift, a trapdoor) does not count, because it can move away. `AscentFlag` stands at that place. It moves only when a fall starts, so it is never under a marble that climbs past its best. A best height below 3 m has no flag.
+
+**Assist.** `Save.ascent.assist` is the switch. It is in the Ascent menu and counts from the next start of the climb. With Assist:
+
+- the climb has a `Checkpoint` on the start pad of each zone (`assist_1`, `assist_2`, ...);
+- a fall of `ASSIST_DROP` (10 m) below the last checkpoint puts the marble back on it, through the out-of-bounds rule of `Rules`;
+- `Save.ascent.assisted` marks the climb. The mark stays when the player turns Assist off again. The stats screen shows it.
+
+**The spot.** `Ascent.save_spot()` writes the place, the velocity, the clock, the run's tick, the height, the falls, the metres fallen and the best height to `Save.ascent`. It also keeps the ghost recording of the climb so far under the ghost id `ascent_climb`. It runs:
+
+- when the game pauses, so a crash in the pause menu loses nothing;
+- when the run leaves the tree (Save and quit, a new level, the end of the game);
+- when the player closes the window.
+
+The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run starts at the saved tick, so every mover has the pose that it had. The clock runs on. While the marble waits for a respawn, the spot is the place of that respawn. Objects with a state of their own (a trapdoor, crumbling tiles) start again in their first state.
+
+**The gate.** The last finish pad ends the run. The mode removes the spot. `RunTracker` saves the time and the ghost with `Save.finish()` under the level id `ascent`, as for any level. So the best time is `Save.level(&"ascent").best_time`, and the ghost of the best climb plays in the next climb when `Settings.ghost` is on.
+
+**Restart.** A climb is not restartable (`LevelRun.restartable` is false): the `restart` action does nothing, so one press cannot lose a long climb. New climb in the Ascent menu starts at the bottom. `LevelRun.restart()` itself (the route bot, the harness) starts a new climb with new stats.
+
+## 4. Light
+
+`AscentSky` has one sun and one procedural sky. `show_height()` blends from one `AscentHour` to the next. The hours are resources, so the light can change with no code change.
+
+| Hour | Height | Sun elevation | Use |
+|---|---|---|---|
+| `dawn.tres` | 0 m | 10° | The town square |
+| `morning.tres` | 150 m | 30° | The top of zone 1 |
+| `noon.tres` | 500 m | 62° | The gate of M1 |
+
+Each hour also has the sun's compass turn, colour and energy, the sky colours (overhead, at the horizon and below the horizon), the sky energy and the exposure. The light changes in steps of 1 m of height, because each change makes Godot draw the light of the sky again.
+
+Zones 1 to 3 are on the Earth only. M2 adds the hours of the higher zones (sunset, the stars). The real skies of the look baseline (#24) replace the procedural sky in `AscentSky._apply()`, which is the only place that writes the sun and the environment.
+
+## 5. HUD and menus
+
+- **Title.** Ascent opens the Ascent menu. The item is off while no zone is built.
+- **Ascent menu** (`Game.screen` `ascent`). Continue (only with a spot), New climb, and the Assist switch. Above them: the saved climb, the best height and the best time, each only when it exists.
+- **HUD.** A climb shows the clock and the height meter: the height in whole metres over a scale with a tick at each zone start, a ring for the gate, a gold pennant at the best height and the accent ring at the marble. It has no gems, no target times and no power-up slot.
+- **Pause.** Resume, Settings, Save and quit. Save and quit opens the Ascent menu.
+- **Stats** (`Game.screen` `ascent_stats`). Time, new record or best time, height, falls, metres fallen and the Assist mark. Done opens the Ascent menu.
+
+## 6. Harness
+
+`load_mode {mode: "ascent", zone?, zones?, resume?, assist?}` starts a climb and returns the state (`tools/harness/README.md`). The MCP tool is `game_load_mode`. Until the first zone is built, a debug build climbs the fixture zones.
+
+## 7. Tests
+
+- `game/test/modes/ascent/` drives the fixture climb through `MarbleInput` and `LevelRun.teleport()`, and reads `GameState`, the `Ascent` node and the save. `AscentTest` (`game/test/support/ascent_test.gd`) is the base.
+- `test_route_bot_climbs_to_the_gate` lets the route bot play the first-run route of each zone in turn, from the climb start through the gate.
+- `game/test/ui/test_ascent_screens.gd` drives the menus with the pad.
+- `just test-levels ascent_fixture_1 ascent_fixture_2 ascent_fixture_3` drives both routes of each fixture zone.
+- `just ui-shots` saves the Ascent menu, the HUD of a climb, its pause menu and the stats screen.
+
+## 8. Open points
+
+1. **Eggs.** Ascent has 10 eggs, but the save has one egg for each level id. In a climb, any egg sets the egg of the level id `ascent`, and an egg is closed again after a continue. The zone tickets need an egg save for each zone.
+2. **Assisted records.** An assisted climb can set the best time and the ghost. The stats screen marks the climb, but the best time has no mark.
+3. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
+4. **More zones.** When M2 adds zones 4 to 8, the best time and the ghost of the 3-zone climb are of a shorter climb.
+5. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).

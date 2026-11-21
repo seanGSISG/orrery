@@ -180,8 +180,11 @@ func _init() -> void:
 
 
 ## Saves the spot when the run leaves the tree: a quit to the menus, or the end of the game.
+## After that the mode saves no more: the run is gone, and a later save would put its old
+## spot over the save of the next run.
 func _exit_tree() -> void:
 	save_spot()
+	_run = null
 
 
 ## Saves the spot when the player closes the window.
