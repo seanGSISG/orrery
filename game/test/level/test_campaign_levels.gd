@@ -22,19 +22,24 @@ func test_each_campaign_level_has_one_egg_off_the_first_run_route() -> void:
 		add_child_autofree(level)
 		checked += 1
 		var eggs: Array[Egg] = []
-		var line: PackedVector3Array = []
+		var start: StartPad = null
+		var route: Route = null
 		for node: Node in level.find_children("*", "", true, false):
 			if node is Egg:
 				eggs.append(node as Egg)
 			elif node is StartPad:
-				line.insert(0, (node as StartPad).global_position)
+				start = node as StartPad
 			elif node is Route and (node as Route).kind == &"first_run":
-				for point: Route.Waypoint in (node as Route).plan().waypoints:
-					line.append(point.position)
+				route = node as Route
 		assert_eq(eggs.size(), 1, "%s has one Clockwork Egg" % level.id)
-		assert_gt(line.size(), 2, "%s has a start and a first-run route" % level.id)
-		if eggs.size() != 1 or line.size() < 2:
+		# The level lint gives every campaign level one start and one first-run route.
+		assert_not_null(start, "%s has a start pad" % level.id)
+		assert_not_null(route, "%s has a first-run route" % level.id)
+		if eggs.size() != 1 or start == null or route == null:
 			continue
+		var line: PackedVector3Array = [start.global_position]
+		for point: Route.Waypoint in route.plan().waypoints:
+			line.append(point.position)
 		var nearest: float = INF
 		for i: int in line.size() - 1:
 			var on_line: Vector3 = Geometry3D.get_closest_point_to_segment(

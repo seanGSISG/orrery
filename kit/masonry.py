@@ -32,6 +32,8 @@ from kit.surfaces import surface as surface_material
 SMOOTH_ANGLE = 30.0
 # The rings of a dish are this far apart, m.
 DISH_RING = 0.2
+# Two outline points that are nearer than this are one point, m.
+SAME_POINT = 1e-6
 # A gear tooth: its size along the wall, out from the wall and down, and how far its top is
 # below the top edge of the wall, m.
 TOOTH_WIDTH = 0.32
@@ -100,6 +102,8 @@ def dish(
     `holes=[kit.arc(centre, radius, 0, 360, segments)]`: the same `segments` makes the rim
     fit the hole."""
     name = name or default_name("dish", "-col")
+    if not 0.0 <= flat < radius:
+        raise ValueError(f"kit.dish: flat must be from 0 to below the radius {radius}")
     rings = max(2, math.ceil((radius - flat) / DISH_RING))
     radii = [
         flat + (radius - flat) * k / rings
@@ -455,8 +459,13 @@ def _plate(
 ) -> None:
     """Adds a block to bm: the outline, minus the holes, from the height `top` down to
     `bottom`, with outward faces. through: a hole goes down through the block and has
-    walls; else it is an opening in the top face only. closed: the block has a bottom face."""
-    loops = [turned(outline), *(turned(hole, clockwise=True) for hole in holes)]
+    walls; else it is an opening in the top face only. closed: the block has a bottom face.
+    A point that repeats the point before it is left out, so an outline can join an arc to
+    the point where the arc ends."""
+    loops = [
+        _distinct(turned(outline)),
+        *(_distinct(turned(hole, clockwise=True)) for hole in holes),
+    ]
     upper = [[bm.verts.new((x, y, top)) for x, y in loop] for loop in loops]
     _fill(bm, loops, upper, up=True)
     walled = loops if through else loops[:1]
@@ -493,6 +502,15 @@ def _fill(
             if counter == up
             else (flat[a], flat[c], flat[b])
         )
+
+
+def _distinct(outline: Sequence[Point]) -> list[Point]:
+    """Returns the closed outline without each point that repeats the point before it."""
+    return [
+        point
+        for i, point in enumerate(outline)
+        if math.dist(point, outline[i - 1]) > SAME_POINT
+    ]
 
 
 def _left(start: Vec3, end: Vec3) -> Point:
