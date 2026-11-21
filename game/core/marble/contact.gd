@@ -1,7 +1,9 @@
 class_name Contact
 extends RefCounted
 ## One touch between the marble and a Solid. WorldQuery.contacts() makes them; the solver and
-## LevelObject.on_touch() read them.
+## LevelObject.on_touch() read them. At the edge of a flush Solid, a contact copies the point,
+## normal, depth and velocity of the surface that the edge continues, and keeps its own surface
+## and object (WorldQuery).
 
 ## The touched point, on the surface.
 var point: Vector3
