@@ -506,7 +506,7 @@ FINISH = (0.0, 66.0, 5.0)
 kit.marker("start", at=START)
 kit.marker("finish", at=FINISH)
 ring("start_ring", START[:2], 0.6, 0.75, 0.0)
-cog("start_cog", START[:2], 2.6, 18, 2.0, 0.0)
+cog("start_cog", START[:2], 1.5, 12, 1.15, 0.0)
 ring("finish_ring", FINISH[:2], 1.3, 1.5, 5.0)
 GEMS = {
     "channel": (6.0, 16.5, 0.6),

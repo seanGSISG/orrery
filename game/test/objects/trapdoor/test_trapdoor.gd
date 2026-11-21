@@ -85,10 +85,18 @@ func test_fixture_door_has_its_marker_settings_and_drops_the_marble() -> void:
 func test_door_is_a_plate_of_the_kit_brass() -> void:
 	var door: Trapdoor = _door(5.0)
 	add_child_autofree(door)
-	var brass: Material = KitMaterials.find("brass")
+	var brass: ShaderMaterial = KitMaterials.find("brass") as ShaderMaterial
+	var brass_map: Texture2D = brass.get_shader_parameter("albedo_map")
 	var look: MeshInstance3D = door.get_node("Solid/Mesh") as MeshInstance3D
-	assert_not_null(brass, "the kit has a brass material")
-	assert_eq(look.material_override, brass)
+	var plate: ShaderMaterial = look.material_override as ShaderMaterial
+	assert_not_null(plate)
+	if plate == null:
+		return
+	var plate_map: Texture2D = plate.get_shader_parameter("albedo_map")
+	var repeat: float = plate.get_shader_parameter("tile")
+	assert_eq(plate.shader, brass.shader, "the kit shader")
+	assert_eq(plate_map, brass_map, "the kit brass texture")
+	assert_almost_eq(repeat, door.width, 0.001, "one texture repeat across the door")
 
 
 ## Returns a test door at DOOR that starts to shut close_after s after its drop.

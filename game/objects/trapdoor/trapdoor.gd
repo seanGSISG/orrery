@@ -54,9 +54,17 @@ func _ready() -> void:
 	mesh.size = box.size - Vector3(GAP, 0, GAP)
 	var look: MeshInstance3D = $Solid/Mesh
 	look.mesh = mesh
-	look.material_override = KitMaterials.find("brass")
+	look.material_override = _plate_look()
 	look.position = shape.position
 	_place(-INF)
+
+
+## Returns this door's brass: a copy of the kit brass whose texture spans the whole door once,
+## so a large door shows no repeat.
+func _plate_look() -> ShaderMaterial:
+	var brass: ShaderMaterial = KitMaterials.find("brass").duplicate() as ShaderMaterial
+	brass.set_shader_parameter("tile", maxf(width, depth))
+	return brass
 
 
 ## Shuts the door at once and waits for the next touch.
