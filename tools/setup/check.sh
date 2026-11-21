@@ -101,6 +101,20 @@ else
   report FAIL "Windows export under Wine" "export failed; see $LOG/win-export.log"
 fi
 
+# 6. Blender MCP: run code, take a window screenshot and search the API docs through
+# the official server, against a Blender in a hidden gamescope display.
+gamescope --backend headless -W 1600 -H 900 -- "$BLENDER" --online-mode >"$LOG/blender-mcp-ui.log" 2>&1 &
+bl=$!
+for _ in $(seq 1 60); do (exec 3<>/dev/tcp/127.0.0.1/9876) 2>/dev/null && break; sleep 1; done
+if BLENDER_PATH="$BLENDER" timeout 120 uv run --quiet "$ROOT/tools/setup/checks/blender_mcp_check.py" \
+  "$HOME/.local/share/orrery/blender_mcp/mcp" >"$LOG/blender-mcp.log" 2>&1 \
+  && grep -q '^BLENDER-MCP ok' "$LOG/blender-mcp.log"; then
+  report PASS "Blender MCP" "$(grep -o 'blender=.*' "$LOG/blender-mcp.log")"
+else
+  report FAIL "Blender MCP" "see $LOG/blender-mcp*.log; the plan's fallback is ahujasid/mcp-for-blender"
+fi
+kill "$bl" 2>/dev/null; wait "$bl" 2>/dev/null
+
 echo
 (( fails == 0 )) && echo "   All checks passed or have a working fallback." || echo "   $fails check(s) failed."
 exit $(( fails > 0 ))

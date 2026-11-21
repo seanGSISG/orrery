@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "uv",
+      "args": ["--directory", "${HOME}/.local/share/orrery/blender_mcp/mcp", "run", "--quiet", "blender-mcp"],
+      "env": { "BLENDER_PATH": "${HOME}/.local/bin/blender-5.2" }
+    }
+  }
+}

@@ -24,7 +24,8 @@ M0 is not finished: the `justfile`, `game/`, `kit/`, `levels/` and the harness a
 ## Seeing the game and the scene
 
 - The `orrery` MCP server launches the game in `gamescope` with no window. It gives you game state, input, frame stepping, screenshots and the route bot.
-- The `blender` MCP server runs code in a live Blender, takes viewport screenshots and searches the Blender 5.2 API docs. Search the docs before you use an unfamiliar `bpy` call.
+- The `blender` MCP server runs code in a live Blender, takes viewport screenshots and searches the Blender 5.2 API docs. Search the docs before you use an unfamiliar `bpy` call. Its search matches whole words, so query `export_scene gltf`, not `export_scene.gltf`.
+- Live Blender tools need a running Blender: start `just blender-agent` in the background (hidden, in gamescope), or ask Sean to run `just blender` for a window. The bridge listens on `localhost:9876`. The `_for_cli` tools and the doc search work without it.
 
 ## Gotchas
 

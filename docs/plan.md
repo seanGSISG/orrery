@@ -383,7 +383,7 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 1. **System packages:** `sudo pacman -S --needed mise git-lfs`, then `git lfs install`.
 2. **Godot:** `mise use godot@4.7.2` (writes `mise.toml`), then confirm `mise which godot` runs 4.7.2. Export templates: download `Godot_v4.7.2-stable_export_templates.tpz` from the GitHub release, check it against `SHA512-SUMS.txt`, unzip its `templates/` into `~/.local/share/godot/export_templates/4.7.2.stable/`.
 3. **Blender 5.2.4 LTS:** download the official Linux tarball from an official Blender mirror (`download.blender.org` refuses scripted downloads), check it against the SHA-256 pinned in `tools/setup/pins.env`, extract to `~/.local/opt/blender-5.2.4/`, link `~/.local/bin/blender-5.2`.
-4. **Blender Lab MCP:** clone `https://projects.blender.org/lab/blender_mcp.git` at a pinned commit into `~/.local/share/orrery/blender_mcp/`, install its add-on into Blender 5.2.4 from the command line, and register it in `.mcp.json`.
+4. **Blender Lab MCP:** clone `https://projects.blender.org/lab/blender_mcp.git` at the commit pinned in `pins.env` into `~/.local/share/orrery/blender_mcp/`, build its add-on and install it into Blender 5.2.4 with `blender --command extension`, and `uv sync` its server. The add-on starts its bridge (`localhost:9876`) by itself when Blender runs with `--online-mode`: `just blender` (a window) or `just blender-agent` (hidden, in gamescope).
 5. **Godot add-ons:** vendor GUT 9.7.1 into `game/addons/gut/`.
 6. **Python tools:** `uv sync` in `tools/harness/` (MCP SDK, `evdev` for the virtual controller). `gdtoolkit` runs through `uvx`.
 7. **glTF tools:** Khronos `glTF-Validator` release binary into `~/.local/bin/`; `@gltf-transform/cli` through `bunx`.
@@ -398,7 +398,8 @@ Pins: Godot in `mise.toml`; everything else in `tools/setup/pins.env`. `just che
   "mcpServers": {
     "blender": {
       "command": "uv",
-      "args": ["--directory", "${HOME}/.local/share/orrery/blender_mcp/mcp", "run", "blender-mcp"]
+      "args": ["--directory", "${HOME}/.local/share/orrery/blender_mcp/mcp", "run", "--quiet", "blender-mcp"],
+      "env": { "BLENDER_PATH": "${HOME}/.local/bin/blender-5.2" }
     },
     "orrery": {
       "command": "uv",
@@ -416,7 +417,7 @@ Each check has a fallback, so a failure changes the plan, not the schedule.
 |---|---|---|
 | `mise` installs Godot 4.7.2 | `godot --version` prints 4.7.2.stable | Official zip pinned by the setup script |
 | Blender EEVEE renders with no display | A cube renders to a non-black PNG under `blender -b` with `DISPLAY` and `WAYLAND_DISPLAY` unset | `xvfb-run`, or a window on the desktop |
-| Blender Lab MCP | Runs code and returns a viewport screenshot | `ahujasid/mcp-for-blender` with telemetry off |
+| Blender Lab MCP | Runs code, returns a window screenshot and finds a `bpy` call in the API docs | `ahujasid/mcp-for-blender` with telemetry off |
 | `gamescope --backend headless` | Godot renders a non-blank screenshot through it on the RTX 5090 | A small window on the KDE desktop |
 | Virtual Xbox controller | Godot lists it as a joypad and reads A | Test through the harness input path only |
 | Windows export under Wine | Boots headless and exits cleanly | CI Windows runner only |

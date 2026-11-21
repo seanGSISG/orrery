@@ -13,3 +13,11 @@ setup:
 # Run the first-run checks only
 check-env:
     tools/setup/check.sh
+
+# Open Blender 5.2 with the MCP bridge on localhost:9876 (a window on the desktop)
+blender *args:
+    blender-5.2 --online-mode {{args}}
+
+# Blender with the MCP bridge in a hidden gamescope display; run it in the background
+blender-agent:
+    gamescope --backend headless -W 1920 -H 1080 -- blender-5.2 --online-mode
