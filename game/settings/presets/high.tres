@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="GraphicsPreset" format=3]
+
+[ext_resource type="Script" path="res://settings/graphics_preset.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+scaling_3d_mode = 2
+texture_mipmap_bias = -0.5
+positional_shadow_atlas_size = 4096
+glow = true
+ssao = true
+ssr = true
+volumetric_fog = true
+sun_shadow_filter = 3
+sun_shadow_distance = 120.0
+sun_angular_size = 0.5
