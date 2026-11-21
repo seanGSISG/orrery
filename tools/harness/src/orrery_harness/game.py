@@ -166,34 +166,39 @@ def end(session: Session) -> None:
         _kill(session)
 
 
-def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
-    port = _free_port()
+def command(
+    binary: str, display: Display, port: int, options: LaunchOptions
+) -> list[str]:
+    """The command line that starts the game on display with the harness on port. The game
+    is always silent (the Dummy audio driver), so test runs play no sound on the speakers."""
     width, height = options.resolution
+    game = [binary, "--audio-driver", "Dummy", "--path", str(GAME)]
     args = ["--", f"--harness-port={port}"]
     if options.level:
         args += ["--level", options.level]
     size = ["--resolution", f"{width}x{height}"]
-    command = {
-        "headless": [
-            *(
-                "gamescope",
-                "--backend",
-                "headless",
-                "-W",
-                str(width),
-                "-H",
-                str(height),
-                "--",
-            ),
-            *(binary, "--path", str(GAME), *size, *args),
-        ],
-        "window": [binary, "--path", str(GAME), *size, *args],
-        "none": [binary, "--headless", "--path", str(GAME), *args],
+    gamescope = [
+        "gamescope",
+        "--backend",
+        "headless",
+        "-W",
+        str(width),
+        "-H",
+        str(height),
+    ]
+    return {
+        "headless": [*gamescope, "--", *game, *size, *args],
+        "window": [*game, *size, *args],
+        "none": [*game, "--headless", *args],
     }[display]
+
+
+def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
+    port = _free_port()
     log = RUNS / f"game-{port}.log"
     with log.open("wb") as out:
         process = subprocess.Popen(
-            command,
+            command(binary, display, port, options),
             stdin=subprocess.DEVNULL,
             stdout=out,
             stderr=subprocess.STDOUT,

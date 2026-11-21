@@ -164,6 +164,14 @@ def test_protocol_errors(harness: Harness) -> None:
     assert empty.value.code == INVALID_REQUEST
 
 
+@pytest.mark.parametrize("display", ["headless", "window", "none"])
+def test_launch_is_silent(display: game.Display) -> None:
+    """Every launch passes the Dummy audio driver to Godot, so tests play no sound."""
+    line = game.command("godot", display, 1234, game.LaunchOptions(level="flat"))
+    at = line.index("godot")
+    assert line[at + 1 : at + 3] == ["--audio-driver", "Dummy"]
+
+
 def test_quit() -> None:
     session = game.start(game.LaunchOptions(display="none"))
     with session.connect() as harness:
