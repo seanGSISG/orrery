@@ -61,7 +61,9 @@
       "task_id": "",
       "seed": null,
       "billed_usd": 0.0623,
-      "refs": []
+      "refs": [
+        "build/art/images/zone1/props/barrels-a.png"
+      ]
     },
     "views": {
       "file": "build/art/models/zone1-barrels-views.json",
@@ -99,8 +101,31 @@
       "task_id": "c927bfcf-6532-445f-ada0-474b7ceeb10d",
       "seed": 1,
       "billed_usd": 0.1
-    }
+    },
+    "discarded_geometry": [
+      {
+        "file": "build/art/models/zone1-barrels-shape.glb.json",
+        "service": "Tripo API /generation/multiview-to-model",
+        "model": "P1-20260311",
+        "task_id": "a1fae61f-a5a8-4e85-bbbc-fa0a76d6739a",
+        "seed": 1,
+        "billed_usd": 0.4,
+        "settings": {
+          "model": "P1-20260311",
+          "texture": false,
+          "pbr": false,
+          "inputs": [
+            {
+              "task_id": "583b8eba-48ec-45d7-ac59-35d95b13f5a6"
+            }
+          ],
+          "face_limit": 2000,
+          "model_seed": 1
+        }
+      }
+    ]
   },
   "downsampled_textures_px": 1024,
-  "material_fix": "--size 1024 --name barrels --stone 1.0 --metal-threshold 0.6"
+  "material_fix": "--size 1024 --name barrels --stone 1.0 --metal-threshold 0.6",
+  "total_billed_usd": 1.1517
 }
