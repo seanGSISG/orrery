@@ -32,10 +32,6 @@ Place = tuple[float, float, float]
 # A route point and its actions, separated by ";" (route.gd), for example "jump; speed 4".
 Leg = tuple[Place, str]
 
-# TEMPORARY (development): the bot drives the sections DEV_FROM to DEV_TO (1 to 5).
-DEV_FROM = 1
-DEV_TO = 5
-
 # --- The tower ---------------------------------------------------------------------------------
 
 TOWER = (0.0, 39.0)
@@ -75,7 +71,9 @@ def ring(radius: float, angle: float) -> Point:
 def sector(inner: float, outer: float, start: float, end: float) -> list[Point]:
     """Returns the outline of the ring between two radii and two angles round the tower."""
     count = max(2, math.ceil(abs(end - start) / 5.0))
-    outer_arc = [ring(outer, start + (end - start) * i / count) for i in range(count + 1)]
+    outer_arc = [
+        ring(outer, start + (end - start) * i / count) for i in range(count + 1)
+    ]
     inner_arc = [ring(inner, end - (end - start) * i / count) for i in range(count + 1)]
     return outer_arc + inner_arc
 
@@ -109,7 +107,10 @@ def spiral(
             span=(start + sign * cuts[i], start + sign * cuts[i + 1]),
         )
     kit.wall(
-        [town.helix_point(centre, R_OUT, start, turn, rise, a) for a in _angles(start, turn)],
+        [
+            town.helix_point(centre, R_OUT, start, turn, rise, a)
+            for a in _angles(start, turn)
+        ],
         height=0.3,
         width=0.2,
         side="left" if turn > 0 else "right",
@@ -119,7 +120,9 @@ def spiral(
     )
 
 
-def on_spiral(bottom: float, start: float, turn: float, rise: float, angle: float) -> Place:
+def on_spiral(
+    bottom: float, start: float, turn: float, rise: float, angle: float
+) -> Place:
     """Returns the route point on a spiral() at `angle` degrees. It lies outside the centre
     line, at R_ROUTE, so that a straight leg of up to ROUTE_STEP degrees clears the inner kerb:
     a route has at most 100 points (kit.marker), so a ramp gets few of them."""
@@ -133,7 +136,9 @@ def along_spiral(end: float, waits: Sequence[float] = ()) -> list[float]:
     angles = [5.0]
     for mark in marks:
         count = math.ceil((mark - angles[-1]) / ROUTE_STEP)
-        angles += [angles[-1] + (mark - angles[-1]) * (i + 1) / count for i in range(count)]
+        angles += [
+            angles[-1] + (mark - angles[-1]) * (i + 1) / count for i in range(count)
+        ]
     return angles
 
 
@@ -175,7 +180,9 @@ def storey(
         )
 
 
-def door(along: float, bottom: float, width: float = 2.4, height: float = 3.2) -> town.Opening:
+def door(
+    along: float, bottom: float, width: float = 2.4, height: float = 3.2
+) -> town.Opening:
     """Returns a door opening on a tower wall."""
     return (along, width, bottom, bottom + height)
 
@@ -186,27 +193,43 @@ def door(along: float, bottom: float, width: float = 2.4, height: float = 3.2) -
 # the last one ended.
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
-# The foot of each section: where the start pad goes when the bot starts there.
+# The foot of each section above the town: the floor point where the routes of the section
+# below end and its own routes start.
 FOOT: dict[int, Place] = {}
 
 
-kit.level(title="Clockmaker's Square", par=300.0, gold=200.0, sky="ground_dawn")
+kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky="ground_dawn")
 
 # --- The town ground ----------------------------------------------------------------------------
 
 kit.deck(kit.rect(-60, -45, 60, 85), top=0.0, depth=1.0, name="ground")
 # The square: a brass band round its edge.
 SQUARE = kit.rect(-17, 0, 17, 32)
-kit.inlay(SQUARE, holes=[kit.rect(-16.75, 0.25, 16.75, 31.75)], name="square_band", material="brass")
-START: Place = (0.0, 27.0, 0.0)
-FOOT[1] = START
+kit.inlay(
+    SQUARE,
+    holes=[kit.rect(-16.75, 0.25, 16.75, 31.75)],
+    name="square_band",
+    material="brass",
+)
+START: Place = (0.0, 23.5, 0.0)
 
 # The fountain in the middle of the square.
 FOUNTAIN = (0.0, 15.0)
 kit.lathe(
     (*FOUNTAIN, 0.0),
-    [(2.6, 0.0), (2.6, 0.55), (2.35, 0.6), (2.2, 0.25), (0.5, 0.25), (0.45, 1.6), (1.3, 1.8),
-     (1.35, 1.95), (0.3, 2.0), (0.2, 2.9), (0.0, 3.0)],
+    [
+        (2.6, 0.0),
+        (2.6, 0.55),
+        (2.35, 0.6),
+        (2.2, 0.25),
+        (0.5, 0.25),
+        (0.45, 1.6),
+        (1.3, 1.8),
+        (1.35, 1.95),
+        (0.3, 2.0),
+        (0.2, 2.9),
+        (0.0, 3.0),
+    ],
     name="fountain",
 )
 
@@ -245,7 +268,7 @@ TERRACE_Y = 33.0
 # The hall walls, with a door to the square in the east wall.
 for name, a, b, openings in (
     ("south", (gx0, gy0), (gx1, gy0), ()),
-    ("east", (gx1, gy0), (gx1, TERRACE_Y), [(5.5, 1.8, 0.0, 2.6)]),
+    ("east", (gx1, gy0), (gx1, TERRACE_Y), [(5.5, 2.4, 0.0, 3.0)]),
     ("west", (gx0, TERRACE_Y), (gx0, gy0), ()),
 ):
     town.facade(f"guildhall_{name}", a, b, 0.0, EAVE, 0.5, openings, side="left")
@@ -267,15 +290,38 @@ town.floor(
     kit.rect(gx0, gy0, RIDGE_X[1], TERRACE_Y),
     RIDGE,
     RIDGE - EAVE + 0.5,
-    holes=[kit.rect(DRY_CHIMNEY[0] - FLUE / 2, DRY_CHIMNEY[1] - FLUE / 2, DRY_CHIMNEY[0] + FLUE / 2, DRY_CHIMNEY[1] + FLUE / 2)],
+    holes=[
+        kit.rect(
+            DRY_CHIMNEY[0] - FLUE / 2,
+            DRY_CHIMNEY[1] - FLUE / 2,
+            DRY_CHIMNEY[0] + FLUE / 2,
+            DRY_CHIMNEY[1] + FLUE / 2,
+        )
+    ],
 )
 # A brass gutter along the eave catches a marble that rolls back down the roof.
-kit.wall([(gx1, gy0, EAVE), (gx1, TERRACE_Y, EAVE)], height=0.4, width=0.25, side="left", bevel=0.03, name="guildhall_gutter", material="brass")
-town.block("guildhall_ridge_parapet", (gx0, gy0, RIDGE), (gx0 + 0.35, TERRACE_Y, RIDGE + 0.9))
+kit.wall(
+    [(gx1, gy0, EAVE), (gx1, TERRACE_Y, EAVE)],
+    height=0.4,
+    width=0.25,
+    side="left",
+    bevel=0.03,
+    name="guildhall_gutter",
+    material="brass",
+)
+town.block(
+    "guildhall_ridge_parapet", (gx0, gy0, RIDGE), (gx0 + 0.35, TERRACE_Y, RIDGE + 0.9)
+)
 # The north block and its terrace.
 town.block("guildhall_north", (gx0, TERRACE_Y, 0.0), (gx1, gy1, RIDGE))
 kit.wall(
-    [(gx0, TERRACE_Y, RIDGE), (gx0, gy1, RIDGE), (gx1, gy1, RIDGE), (gx1, TERRACE_Y, RIDGE), (RIDGE_X[1], TERRACE_Y, RIDGE)],
+    [
+        (gx0, TERRACE_Y, RIDGE),
+        (gx0, gy1, RIDGE),
+        (gx1, gy1, RIDGE),
+        (gx1, TERRACE_Y, RIDGE),
+        (RIDGE_X[1], TERRACE_Y, RIDGE),
+    ],
     height=0.9,
     width=0.35,
     side="right",
@@ -288,7 +334,11 @@ town.chimney("guildhall_chimney", (-30.2, 37.4, RIDGE), 1.0, 1.8)
 town.chimney("guildhall_dry_chimney", (*DRY_CHIMNEY, RIDGE), 2.0, 0.7, flue=FLUE)
 # The flue goes down to the hearth in the hall, where the egg is.
 town.chimney("guildhall_flue", (*DRY_CHIMNEY, 1.2), 2.0, EAVE - 0.5 - 1.2, flue=FLUE)
-town.block("hearth_back", (DRY_CHIMNEY[0] - 1.0, DRY_CHIMNEY[1] - 1.0, 0.0), (DRY_CHIMNEY[0] - 0.65, DRY_CHIMNEY[1] + 1.0, 1.2))
+town.block(
+    "hearth_back",
+    (DRY_CHIMNEY[0] - 1.0, DRY_CHIMNEY[1] - 1.0, 0.0),
+    (DRY_CHIMNEY[0] - 0.65, DRY_CHIMNEY[1] + 1.0, 1.2),
+)
 for side in (-1, 1):
     town.block(
         f"hearth_cheek_{(side + 1) // 2}",
@@ -303,7 +353,15 @@ BEAM_Y = RIDGE_VENT[1]
 BEAM_LOW = (-26.0, 21.2)
 BEAM_HIGH = (-8.6, 27.2)
 HEEL = 1.8
-kit.track(at=(BEAM_LOW[0], BEAM_Y, BEAM_LOW[1]), width=0.8, length=HEEL, yaw=-90, name="crane_heel", material="brass", trim="gold")
+kit.track(
+    at=(BEAM_LOW[0], BEAM_Y, BEAM_LOW[1]),
+    width=0.8,
+    length=HEEL,
+    yaw=-90,
+    name="crane_heel",
+    material="brass",
+    trim="gold",
+)
 kit.ramp(
     at=(BEAM_LOW[0] + HEEL, BEAM_Y, BEAM_LOW[1]),
     width=0.8,
@@ -314,7 +372,12 @@ kit.ramp(
     material="brass",
     trim="gold",
 )
-town.block("crane_mast", (BEAM_LOW[0] + 0.7, BEAM_Y - 0.2, RIDGE), (BEAM_LOW[0] + 1.1, BEAM_Y + 0.2, BEAM_LOW[1] - 0.5), "iron")
+town.block(
+    "crane_mast",
+    (BEAM_LOW[0] + 0.7, BEAM_Y - 0.2, RIDGE),
+    (BEAM_LOW[0] + 1.1, BEAM_Y + 0.2, BEAM_LOW[1] - 0.5),
+    "iron",
+)
 
 # The builder's hoist: a deck from above the terrace to the gallery landing, 12 s a cycle.
 HOIST_Y = 38.0
@@ -336,8 +399,14 @@ LANDING = (-9.0, 33.6, X0, 40.4)
 lx0, ly0, lx1, ly1 = LANDING
 town.block("gallery_landing", (lx0, ly0, GALLERY - 1.0), (lx1, ly1, GALLERY))
 for name, path in (
-    ("south", [(lx1, ly0, GALLERY), (lx0, ly0, GALLERY), (lx0, HOIST_Y - 1.6, GALLERY)]),
-    ("north", [(lx0, HOIST_Y + 1.6, GALLERY), (lx0, ly1, GALLERY), (lx1, ly1, GALLERY)]),
+    (
+        "south",
+        [(lx1, ly0, GALLERY), (lx0, ly0, GALLERY), (lx0, HOIST_Y - 1.6, GALLERY)],
+    ),
+    (
+        "north",
+        [(lx0, HOIST_Y + 1.6, GALLERY), (lx0, ly1, GALLERY), (lx1, ly1, GALLERY)],
+    ),
 ):
     kit.wall(path, height=1.0, width=0.3, side="right", name=f"gallery_landing_{name}")
 
@@ -349,43 +418,83 @@ town.crate("crate_2", (11.0, 7.6, 0.0), (14.0, 10.4, 1.0))
 town.crate("crate_3", (11.15, 7.75, 1.0), (13.85, 10.25, 2.0))
 # The second gear lifts from the workshop roof to the planks at the base top. Its axis is set
 # so that its exit is level with BASE; the workshop roof is its boarding floor.
-GEAR_2 = town.lift("gear_town_2", (10.6, 36.5, BASE - 2.7 + 0.45), 2.7, yaw=90, exit=1, period=10.0, teeth=10)
+GEAR_2 = town.lift(
+    "gear_town_2",
+    (10.6, 36.5, BASE - 2.7 + 0.45),
+    2.7,
+    yaw=90,
+    exit=1,
+    period=10.0,
+    teeth=10,
+)
 ROOF = GEAR_2.floor
 # The waterwheel gear lifts from the balcony to the workshop roof.
-WHEEL = town.lift("gear_town_1", (25.6, 9.25, ROOF - 3.1 + 0.45), 3.1, yaw=0, exit=1, period=12.0)
+WHEEL = town.lift(
+    "gear_town_1", (25.6, 9.25, ROOF - 3.1 + 0.45), 3.1, yaw=0, exit=1, period=12.0
+)
 BALCONY = WHEEL.floor
 WORKSHOP = (14.5, 10.0, 22.5, 28.0)
 wx0, wy0, wx1, wy1 = WORKSHOP
 town.block("workshop", (wx0, wy0, 0.0), (wx1, wy1, ROOF))
+# The roof's parapet has a gap at the wheel's exit (south-east) and at the walk to the
+# second gear (north-west).
 kit.wall(
-    [(wx0 + 2.0, wy0, ROOF), (wx0, wy0, ROOF), (wx0, wy1, ROOF), (wx1 - 6.0, wy1, ROOF)],
+    [(wx1, wy0, ROOF), (wx0, wy0, ROOF), (wx0, wy1 - 2.0, ROOF)],
     height=0.9,
     width=0.35,
-    side="left",
-    name="workshop_parapet",
+    side="right",
+    name="workshop_parapet_sw",
 )
-kit.wall([(wx1, wy0 + 2.6, ROOF), (wx1, wy1, ROOF)], height=0.9, width=0.35, side="right", name="workshop_parapet_east")
+kit.wall(
+    [(wx0, wy1, ROOF), (wx1, wy1, ROOF), (wx1, wy0 + 2.6, ROOF)],
+    height=0.9,
+    width=0.35,
+    side="right",
+    name="workshop_parapet_ne",
+)
 town.block("balcony", (wx0, 7.5, BALCONY - 0.4), (21.4, wy0, BALCONY))
-kit.wall([(wx0 + 0.2, 7.5, BALCONY), (21.4, 7.5, BALCONY)], height=0.9, width=0.25, side="left", name="balcony_rail")
-town.block("wheel_lane", (21.4, 9.25 - 0.62, BALCONY - 0.4), (25.6, 9.25 + 0.62, BALCONY))
+kit.wall(
+    [(wx0 + 0.2, 7.5, BALCONY), (21.4, 7.5, BALCONY)],
+    height=0.9,
+    width=0.25,
+    side="left",
+    name="balcony_rail",
+)
+town.block(
+    "wheel_lane", (21.4, 9.25 - 0.62, BALCONY - 0.4), (25.6, 9.25 + 0.62, BALCONY)
+)
 # The wheel's exit deck joins the roof at its south-east corner.
 town.block("wheel_exit", (wx1, 9.9, ROOF - 0.4), (27.0, 12.6, ROOF))
 # From the roof's north-west corner a walk leads to the second gear's lane.
 town.block("gear_walk", (9.5, wy1 - 2.0, ROOF - 0.4), (wx0 + 0.01, wy1, ROOF))
 town.block("gear_lane", (9.5, wy1, ROOF - 0.4), (11.7, 34.6, ROOF))
 town.block("gear_lane_slot", (10.6 - 0.62, 34.6, ROOF - 0.4), (10.6 + 0.62, 36.5, ROOF))
-kit.wall([(9.5, wy1 - 2.0, ROOF), (9.5, 34.6, ROOF)], height=0.9, width=0.25, side="right", name="gear_walk_rail")
+kit.wall(
+    [(9.5, wy1 - 2.0, ROOF), (9.5, 34.6, ROOF)],
+    height=0.9,
+    width=0.25,
+    side="right",
+    name="gear_walk_rail",
+)
 # The second gear lets the marble off west onto a ledge, then the loose planks to the door.
 town.block("planks_ledge", (7.6, 35.3, BASE - 0.4), (10.6 - 0.66, 37.7, BASE))
-kit.marker("crumbling_tiles", at=(6.8, 36.5, BASE), width=1.6, depth=2.4, tile=0.8, name="planks")
+kit.marker(
+    "crumbling_tiles",
+    at=(6.8, 36.5, BASE),
+    width=1.6,
+    depth=2.4,
+    tile=0.8,
+    name="planks",
+)
 
 # --- The tower base and the gallery ------------------------------------------------------------
 
 kit.deck(kit.rect(X0, Y0, X1, Y1), top=BASE, depth=BASE + 1.0, name="tower_base")
 EAST_DOOR_Y = 36.5
 storey("tower_a", BASE, GALLERY - SLAB, east=[door(EAST_DOOR_Y - Y0, BASE)])
-# The base ramp: from the east door up to the gallery, 2.5 half turns.
-BASE_START = math.degrees(math.atan2(EAST_DOOR_Y - TOWER[1], IN)) - 2.0
+# The base ramp: from beside the east door up to the gallery, 2.5 half turns. It starts north
+# of the door, so it passes the door well above its head.
+BASE_START = 0.0
 BASE_TURN = (GALLERY - BASE) / CLIMB
 spiral("ramp_base", BASE, BASE_START, BASE_TURN, GALLERY - BASE)
 BASE_END = BASE_START + BASE_TURN
@@ -405,13 +514,17 @@ storey(
 # west opening and the south door well above their heads.
 SHAFT_START = 165.0
 SHAFT_TURN = -(GEAR_ROOM - GALLERY) / CLIMB
-spiral("ramp_shaft", GALLERY, SHAFT_START, SHAFT_TURN, GEAR_ROOM - GALLERY, gaps=[180.0])
+spiral(
+    "ramp_shaft", GALLERY, SHAFT_START, SHAFT_TURN, GEAR_ROOM - GALLERY, gaps=[180.0]
+)
 SHAFT_END = SHAFT_START + SHAFT_TURN
 
 
 def shaft(angle: float) -> Place:
     """Returns the point on the shaft ramp `angle` degrees along it from its start."""
-    return on_spiral(GALLERY, SHAFT_START, SHAFT_TURN, GEAR_ROOM - GALLERY, SHAFT_START - angle)
+    return on_spiral(
+        GALLERY, SHAFT_START, SHAFT_TURN, GEAR_ROOM - GALLERY, SHAFT_START - angle
+    )
 
 
 # The counterweight in the middle of the shaft.
@@ -432,8 +545,72 @@ PENDULUMS = {"pendulum_1": 300.0, "pendulum_2": 620.0}
 for name, along in PENDULUMS.items():
     x, y, z = shaft(along)
     angle = SHAFT_START - along
-    kit.marker("pendulum", at=(x, y, z + 4.6), rotation=(0, 0, angle - 90.0), period=4.0, swing=40.0, name=name)
-floor("gear_room", GEAR_ROOM, [sector(R_IN - 0.1, R_OUT + 0.15, SHAFT_END, SHAFT_END + 90.0)])
+    kit.marker(
+        "pendulum",
+        at=(x, y, z + 4.6),
+        rotation=(0, 0, angle - 90.0),
+        period=4.0,
+        swing=40.0,
+        name=name,
+    )
+floor(
+    "gear_room",
+    GEAR_ROOM,
+    [sector(R_IN - 0.1, R_OUT + 0.15, SHAFT_END, SHAFT_END + 90.0)],
+)
+
+# The east scaffold, outside the gallery's south door: steps east to a vent, a deck with a
+# bumper, steps back west to a second vent, and the balcony at the gear room's east door.
+SCAFFOLD_Y = (30.4, 33.0)
+town.block("scaffold_balcony", (1.5, SCAFFOLD_Y[0], GALLERY - 0.4), (6.8, Y0, GALLERY))
+SCAFFOLD_STEPS = [(7.1, 9.4), (9.7, 12.0), (12.3, 14.6), (14.9, 18.6)]
+for i, (x0, x1) in enumerate(SCAFFOLD_STEPS):
+    town.block(
+        f"scaffold_step_{i + 1}",
+        (x0, SCAFFOLD_Y[0], GALLERY + 0.6 + i),
+        (x1, SCAFFOLD_Y[1], GALLERY + 1.0 + i),
+    )
+SCAFFOLD_VENT_1 = (17.6, (SCAFFOLD_Y[0] + SCAFFOLD_Y[1]) / 2)
+kit.marker(
+    "steam_vent", at=(*SCAFFOLD_VENT_1, GALLERY + 4.0), lift=8.6, name="vent_scaffold_1"
+)
+SCAFFOLD_DECK = (19.8, 29.4, 24.6, 34.0, 37.0)
+sx0, sy0, sx1, sy1, sz = SCAFFOLD_DECK
+town.block("scaffold_deck", (sx0, sy0, sz - 0.4), (sx1, sy1, sz))
+kit.marker("bumper", at=(23.8, 30.3, sz), name="bumper_scaffold_1")
+SCAFFOLD_ROW_2 = (34.3, 36.6)
+SCAFFOLD_STEPS_2 = [(19.8, 22.6), (16.9, 19.5), (12.6, 16.6)]
+for i, (x0, x1) in enumerate(SCAFFOLD_STEPS_2):
+    town.block(
+        f"scaffold_step_{i + 5}",
+        (x0, SCAFFOLD_ROW_2[0], sz + 0.6 + i),
+        (x1, SCAFFOLD_ROW_2[1], sz + 1.0 + i),
+    )
+SCAFFOLD_VENT_2 = (13.6, (SCAFFOLD_ROW_2[0] + SCAFFOLD_ROW_2[1]) / 2)
+kit.marker(
+    "steam_vent", at=(*SCAFFOLD_VENT_2, sz + 3.0), lift=11.2, name="vent_scaffold_2"
+)
+town.block("gear_east_balcony", (X1, 33.6, GEAR_ROOM - 0.4), (10.0, 37.6, GEAR_ROOM))
+kit.marker("bumper", at=(9.4, 37.0, GEAR_ROOM), name="bumper_scaffold_2")
+# Iron stays hang the scaffold from the tower: from the outer corners of each deck and step up
+# to the tower wall, 8 m higher. They do not collide.
+stays = town.Parts()
+for x0, y0, x1, y1, z in (
+    *(
+        (x0, SCAFFOLD_Y[0], x1, SCAFFOLD_Y[1], GALLERY + 0.6 + i)
+        for i, (x0, x1) in enumerate(SCAFFOLD_STEPS)
+    ),
+    (sx0, sy0, sx1, sy1, sz - 0.4),
+    *(
+        (x0, SCAFFOLD_ROW_2[0], x1, SCAFFOLD_ROW_2[1], sz + 0.6 + i)
+        for i, (x0, x1) in enumerate(SCAFFOLD_STEPS_2)
+    ),
+    (X1, 33.6, 10.0, 37.6, GEAR_ROOM - 0.4),
+):
+    anchor_y = min(max((y0 + y1) / 2, Y0 + 0.5), Y1 - 0.5)
+    for corner in ((x1 - 0.1, y0 + 0.1), (x1 - 0.1, y1 - 0.1)):
+        stays.bar((*corner, z), (X1 + 0.05, anchor_y, z + 8.0), 0.09, "iron")
+stays.add("scaffold_stays", collide=False)
 
 # --- 3. Gear room -------------------------------------------------------------------------------
 
@@ -447,22 +624,61 @@ storey(
     west=[door(WEST_DOOR, GEAR_ROOM)],
 )
 # Three flat gears are steps of 1 m from the floor to a ledge in the south-west corner.
-FLAT_GEARS = {"gear_flat_1": (1.6, 35.2, 51.0), "gear_flat_2": (-0.9, 35.2, 52.0), "gear_flat_3": (-3.9, 35.0, 53.0)}
+FLAT_GEARS = {
+    "gear_flat_1": (1.6, 35.2, 51.0),
+    "gear_flat_2": (-0.9, 35.2, 52.0),
+    "gear_flat_3": (-3.9, 35.0, 53.0),
+}
 for i, (name, (x, y, top)) in enumerate(FLAT_GEARS.items()):
-    kit.marker("turning_gear", at=(x, y, top), period=8.0, clockwise=i % 2 == 1, radius=1.2, teeth=10, name=name)
-    town.block(f"{name}_axle", (x - 0.15, y - 0.15, GEAR_ROOM), (x + 0.15, y + 0.15, top - 0.5), "iron")
+    kit.marker(
+        "turning_gear",
+        at=(x, y, top),
+        period=8.0,
+        clockwise=i % 2 == 1,
+        radius=1.2,
+        teeth=10,
+        name=name,
+    )
+    town.block(
+        f"{name}_axle",
+        (x - 0.15, y - 0.15, GEAR_ROOM),
+        (x + 0.15, y + 0.15, top - 0.5),
+        "iron",
+    )
 LIFT_1_FLOOR = 54.0
 # Lift gear 1 stands across x by the west wall and lets the marble off east, at the top, into
 # the lane of lift gear 2.
-LIFT_1 = town.lift("gear_lift_1", (-3.9, 40.0, LIFT_1_FLOOR + 3.6 + town.LIFT_GAP), 3.6, yaw=90, exit=-1)
-town.block("gear_lift_1_lane", (-3.9 - 0.62, 36.8, LIFT_1_FLOOR - 0.3), (-3.9 + 0.62, 40.0, LIFT_1_FLOOR))
-LIFT_2 = town.lift("gear_lift_2", (0.5, 40.0, LIFT_1.exit + 3.6 + town.LIFT_GAP), 3.6, yaw=0, exit=-1)
-town.block("gear_lift_2_lane", (-1.5, 40.0 - 0.62, LIFT_1.exit - 0.3), (0.5, 40.0 + 0.62, LIFT_1.exit))
+LIFT_1 = town.lift(
+    "gear_lift_1",
+    (-3.9, 40.0, LIFT_1_FLOOR + 3.6 + town.LIFT_GAP),
+    3.6,
+    yaw=90,
+    exit=-1,
+)
+town.block(
+    "gear_lift_1_lane",
+    (-3.9 - 0.62, 36.8, LIFT_1_FLOOR - 0.3),
+    (-3.9 + 0.62, 40.0, LIFT_1_FLOOR),
+)
+LIFT_2 = town.lift(
+    "gear_lift_2", (0.5, 40.0, LIFT_1.exit + 3.6 + town.LIFT_GAP), 3.6, yaw=0, exit=-1
+)
+town.block(
+    "gear_lift_2_lane",
+    (-1.5, 40.0 - 0.62, LIFT_1.exit - 0.3),
+    (0.5, 40.0 + 0.62, LIFT_1.exit),
+)
 # Where lift gear 1 lets the marble off, the lane is wider than the gear's window.
-town.block("gear_lift_1_exit", (-3.9 + 0.65, 40.0 - 1.2, LIFT_1.exit - 0.3), (-1.5, 40.0 + 1.2, LIFT_1.exit))
+town.block(
+    "gear_lift_1_exit",
+    (-3.9 + 0.65, 40.0 - 1.2, LIFT_1.exit - 0.3),
+    (-1.5, 40.0 + 1.2, LIFT_1.exit),
+)
 # Lift gear 2 lets the marble off south onto a deck, and two spiral ramps climb clockwise from
 # the west to the clock floor, with a level landing between them.
-town.block("gear_lift_2_deck", (X0 + WALL, 36.2, LIFT_2.exit - 0.3), (2.0, 39.15, LIFT_2.exit))
+town.block(
+    "gear_lift_2_deck", (X0 + WALL, 36.2, LIFT_2.exit - 0.3), (2.0, 39.15, LIFT_2.exit)
+)
 GEAR_RISE = (CLOCK_FLOOR - LIFT_2.exit) / 2
 GEAR_TURN = -225.0
 GEAR_RAMP_1 = 180.0
@@ -488,18 +704,34 @@ def gear_ramp(ramp: int, along: float) -> Place:
 # Outside the west door: three vents in a line, each on the near end of a ledge, and five steps
 # back to a balcony at the clock floor's west door.
 VENT_Y = TOWER[1]
-town.block("gear_west_balcony", (X0 - 3.2, VENT_Y - 2.0, GEAR_ROOM - 0.4), (X0, VENT_Y + 2.0, GEAR_ROOM))
-WEST_VENTS = {"vent_west_1": (-8.2, GEAR_ROOM), "vent_west_2": (-11.7, 58.0), "vent_west_3": (-15.2, 66.0)}
+town.block(
+    "gear_west_balcony",
+    (X0 - 3.2, VENT_Y - 2.0, GEAR_ROOM - 0.4),
+    (X0, VENT_Y + 2.0, GEAR_ROOM),
+)
+WEST_VENTS = {
+    "vent_west_1": (-8.2, GEAR_ROOM),
+    "vent_west_2": (-11.7, 58.0),
+    "vent_west_3": (-15.2, 66.0),
+}
 for name, (x, z) in WEST_VENTS.items():
     kit.marker("steam_vent", at=(x, VENT_Y, z), lift=9.5, name=name)
-for i, (x0, x1, z) in enumerate(((-16.0, -10.6, 58.0), (-19.5, -14.1, 66.0), (-23.0, -17.6, 74.0))):
-    town.block(f"gear_west_ledge_{i + 1}", (x0, VENT_Y - 1.5, z - 0.5), (x1, VENT_Y + 1.5, z))
+for i, (x0, x1, z) in enumerate(
+    ((-16.0, -10.6, 58.0), (-19.5, -14.1, 66.0), (-23.0, -17.6, 74.0))
+):
+    town.block(
+        f"gear_west_ledge_{i + 1}", (x0, VENT_Y - 1.5, z - 0.5), (x1, VENT_Y + 1.5, z)
+    )
 # Each step is 1 m higher than the one before; the gaps of 0.3 m are narrower than the marble.
 WEST_STEPS = [(-21.6 + 2.6 * i, -19.3 + 2.6 * i) for i in range(5)]
 STEP_Y = (40.8, 43.0)
 for i, (x0, x1) in enumerate(WEST_STEPS):
-    town.block(f"gear_west_step_{i + 1}", (x0, STEP_Y[0], 74.5 + i), (x1, STEP_Y[1], 75.0 + i))
-town.block("clock_west_balcony", (-8.6, 37.0, CLOCK_FLOOR - 0.4), (X0, STEP_Y[1], CLOCK_FLOOR))
+    town.block(
+        f"gear_west_step_{i + 1}", (x0, STEP_Y[0], 74.5 + i), (x1, STEP_Y[1], 75.0 + i)
+    )
+town.block(
+    "clock_west_balcony", (-8.6, 37.0, CLOCK_FLOOR - 0.4), (X0, STEP_Y[1], CLOCK_FLOOR)
+)
 FOOT[4] = (0.5, 41.0, CLOCK_FLOOR)
 
 # --- 4. Clock floor -----------------------------------------------------------------------------
@@ -549,11 +781,19 @@ for name, (x, z, offset) in BELL_WEIGHTS.items():
         name=name,
     )
 for i, z in enumerate((CLOCK_FLOOR + 10.0, CLOCK_FLOOR + 20.0)):
-    town.block(f"bell_ledge_{i + 1}", (-1.65, TOWER[1] - 1.5, z - 0.4), (1.65, TOWER[1] + 1.5, z))
+    town.block(
+        f"bell_ledge_{i + 1}",
+        (-1.65, TOWER[1] - 1.5, z - 0.4),
+        (1.65, TOWER[1] + 1.5, z),
+    )
 # Outside the east door: a loose slate slope up to a landing with a vent and a bumper, a ledge,
 # a second loose slope west, a vent to a ledge north of the tower, and two steps to the belfry.
 SLATE_Y = CLOCK_EAST_DOOR_Y
-town.block("clock_east_balcony", (X1, SLATE_Y - 2.0, CLOCK_FLOOR - 0.4), (9.0, SLATE_Y + 2.0, CLOCK_FLOOR))
+town.block(
+    "clock_east_balcony",
+    (X1, SLATE_Y - 2.0, CLOCK_FLOOR - 0.4),
+    (9.0, SLATE_Y + 2.0, CLOCK_FLOOR),
+)
 SLOPE_1, SLOPE_1_ANGLE = 12.0, 31.0
 s1 = math.radians(SLOPE_1_ANGLE)
 SLOPE_1_TOP = (9.0 + SLOPE_1 * math.cos(s1), CLOCK_FLOOR + SLOPE_1 * math.sin(s1))
@@ -566,9 +806,15 @@ kit.marker(
     tile=1.5,
     name="slates_1",
 )
-town.block("slate_landing_1", (SLOPE_1_TOP[0], SLATE_Y - 2.5, SLOPE_1_TOP[1] - 0.5), (25.6, SLATE_Y + 2.5, SLOPE_1_TOP[1]))
+town.block(
+    "slate_landing_1",
+    (SLOPE_1_TOP[0], SLATE_Y - 2.5, SLOPE_1_TOP[1] - 0.5),
+    (25.6, SLATE_Y + 2.5, SLOPE_1_TOP[1]),
+)
 SLATE_VENT_1 = (22.6, 44.0)
-kit.marker("steam_vent", at=(*SLATE_VENT_1, SLOPE_1_TOP[1]), lift=9.3, name="vent_slate_1")
+kit.marker(
+    "steam_vent", at=(*SLATE_VENT_1, SLOPE_1_TOP[1]), lift=9.3, name="vent_slate_1"
+)
 kit.marker("bumper", at=(25.0, SLATE_Y - 1.6, SLOPE_1_TOP[1]), name="bumper_slate")
 LEDGE_94 = 94.0
 SLATE_ROW = 49.0
@@ -585,19 +831,39 @@ kit.marker(
     tile=1.5,
     name="slates_2",
 )
-town.block("slate_landing_2", (7.0, SLATE_ROW - 1.5, SLOPE_2_TOP[1] - 0.5), (SLOPE_2_TOP[0], SLATE_ROW + 1.5, SLOPE_2_TOP[1]))
+town.block(
+    "slate_landing_2",
+    (7.0, SLATE_ROW - 1.5, SLOPE_2_TOP[1] - 0.5),
+    (SLOPE_2_TOP[0], SLATE_ROW + 1.5, SLOPE_2_TOP[1]),
+)
 SLATE_VENT_2 = (8.5, SLATE_ROW)
-kit.marker("steam_vent", at=(*SLATE_VENT_2, SLOPE_2_TOP[1]), lift=9.2, name="vent_slate_2")
-town.block("slate_ledge_107", (1.0, SLATE_ROW - 1.5, 106.5), (6.1, SLATE_ROW + 1.5, 107.0))
+kit.marker(
+    "steam_vent", at=(*SLATE_VENT_2, SLOPE_2_TOP[1]), lift=9.2, name="vent_slate_2"
+)
+town.block(
+    "slate_ledge_107", (1.0, SLATE_ROW - 1.5, 106.5), (6.1, SLATE_ROW + 1.5, 107.0)
+)
 for i, (x0, x1) in enumerate(((-1.4, 0.7), (-3.9, -1.7))):
-    town.block(f"slate_step_{i + 1}", (x0, SLATE_ROW - 1.5, 107.5 + i), (x1, SLATE_ROW + 1.5, 108.0 + i))
+    town.block(
+        f"slate_step_{i + 1}",
+        (x0, SLATE_ROW - 1.5, 107.5 + i),
+        (x1, SLATE_ROW + 1.5, 108.0 + i),
+    )
 NORTH_DOOR_X = -2.8
-town.block("belfry_bridge", (NORTH_DOOR_X - 1.5, Y1, BELFRY - 0.4), (NORTH_DOOR_X + 1.5, SLATE_ROW - 1.8, BELFRY))
+town.block(
+    "belfry_bridge",
+    (NORTH_DOOR_X - 1.5, Y1, BELFRY - 0.4),
+    (NORTH_DOOR_X + 1.5, SLATE_ROW - 1.8, BELFRY),
+)
 FOOT[5] = (0.5, 39.0, BELFRY)
 
 # --- 5. Belfry and crown ------------------------------------------------------------------------
 
-floor("belfry", BELFRY, [kit.rect(BELL_X - 1.6, TOWER[1] - 1.6, BELL_X + 1.6, TOWER[1] + 1.6)])
+floor(
+    "belfry",
+    BELFRY,
+    [kit.rect(BELL_X - 1.6, TOWER[1] - 1.6, BELL_X + 1.6, TOWER[1] + 1.6)],
+)
 storey(
     "tower_e",
     BELFRY,
@@ -613,13 +879,24 @@ BELFRY_END = BELFRY_START + BELFRY_TURN
 
 def belfry(along: float) -> Place:
     """Returns the point on the belfry ramp `along` degrees from its start."""
-    return on_spiral(BELFRY, BELFRY_START, BELFRY_TURN, BELL_FLOOR - BELFRY, BELFRY_START + along)
+    return on_spiral(
+        BELFRY, BELFRY_START, BELFRY_TURN, BELL_FLOOR - BELFRY, BELFRY_START + along
+    )
 
 
 # The great bell hangs still in the middle; its clapper is a long pendulum over the ramp.
 kit.lathe(
     (*TOWER, BELL_FLOOR - 9.0),
-    [(2.3, 0.0), (2.25, 0.35), (1.9, 1.2), (1.45, 3.4), (1.35, 6.0), (1.1, 7.3), (0.5, 8.0), (0.0, 8.2)],
+    [
+        (2.3, 0.0),
+        (2.25, 0.35),
+        (1.9, 1.2),
+        (1.45, 3.4),
+        (1.35, 6.0),
+        (1.1, 7.3),
+        (0.5, 8.0),
+        (0.0, 8.2),
+    ],
     name="great_bell",
     material="brass",
 )
@@ -633,7 +910,11 @@ kit.marker(
     swing=40.0,
     name="great_bell_clapper",
 )
-floor("bell_floor", BELL_FLOOR, [sector(R_IN - 0.1, R_OUT + 0.15, BELFRY_END - 90.0, BELFRY_END)])
+floor(
+    "bell_floor",
+    BELL_FLOOR,
+    [sector(R_IN - 0.1, R_OUT + 0.15, BELFRY_END - 90.0, BELFRY_END)],
+)
 # The broken top: stubs of the walls, the east wall up to the crown, and a gap where the
 # first rafter leaves.
 RAFTER_Y = 35.5
@@ -644,12 +925,20 @@ for name, lo, hi in (
     ("west_n", (X0, TOWER[1] + 2.0, BELL_FLOOR), (X0 + WALL, Y1, BELL_FLOOR + 1.2)),
     ("east_s", (X1 - WALL, Y0, BELL_FLOOR), (X1, RAFTER_Y - 1.2, CROWN - 1.0)),
     ("east_n", (X1 - WALL, RAFTER_Y + 1.2, BELL_FLOOR), (X1, Y1, CROWN - 1.0)),
-    ("east_arch", (X1 - WALL, RAFTER_Y - 1.2, BELL_FLOOR + 3.4), (X1, RAFTER_Y + 1.2, CROWN - 1.0)),
+    (
+        "east_arch",
+        (X1 - WALL, RAFTER_Y - 1.2, BELL_FLOOR + 3.4),
+        (X1, RAFTER_Y + 1.2, CROWN - 1.0),
+    ),
 ):
     town.block(f"tower_top_{name}", lo, hi)
 # The west hoist: from a landing at the belfry's west door to one at the bell floor.
 for name, z in (("belfry", BELFRY), ("bell", BELL_FLOOR)):
-    town.block(f"hoist_west_landing_{name}", (X0 - 3.0, TOWER[1] - 2.0, z - 0.4), (X0, TOWER[1] + 2.0, z))
+    town.block(
+        f"hoist_west_landing_{name}",
+        (X0 - 3.0, TOWER[1] - 2.0, z - 0.4),
+        (X0, TOWER[1] + 2.0, z),
+    )
 kit.marker(
     "moving_platform",
     at=(X0 - 4.5, TOWER[1], BELFRY),
@@ -665,13 +954,21 @@ kit.marker(
 FRAGMENT_Y = (42.0, 44.2)
 FRAGMENTS = [(2.1, 4.6), (-0.7, 1.8), (-3.5, -1.0), (-6.3, -3.8)]
 for i, (x0, x1) in enumerate(FRAGMENTS):
-    town.block(f"stair_fragment_{i + 1}", (x0, FRAGMENT_Y[0], BELL_FLOOR + 0.5 + i), (x1, FRAGMENT_Y[1], BELL_FLOOR + 1.0 + i))
+    town.block(
+        f"stair_fragment_{i + 1}",
+        (x0, FRAGMENT_Y[0], BELL_FLOOR + 0.5 + i),
+        (x1, FRAGMENT_Y[1], BELL_FLOOR + 1.0 + i),
+    )
 PLATFORM_135 = BELL_FLOOR + 5.0
-town.block("stair_platform", (-11.0, 37.6, PLATFORM_135 - 0.6), (-6.6, 45.0, PLATFORM_135))
+town.block(
+    "stair_platform", (-11.0, 37.6, PLATFORM_135 - 0.6), (-6.6, 45.0, PLATFORM_135)
+)
 CROWN_VENT = (-9.0, 38.8)
 kit.marker("steam_vent", at=(*CROWN_VENT, PLATFORM_135), lift=9.5, name="vent_crown")
 FRAGMENT_143 = 143.0
-town.block("stair_fragment_143", (-11.0, 31.0, FRAGMENT_143 - 0.6), (-7.5, 36.5, FRAGMENT_143))
+town.block(
+    "stair_fragment_143", (-11.0, 31.0, FRAGMENT_143 - 0.6), (-7.5, 36.5, FRAGMENT_143)
+)
 CRADLE: Place = (-6.0, 32.5, FRAGMENT_143)
 kit.marker(
     "moving_platform",
@@ -695,9 +992,22 @@ CAP = 1.6  # the radius of the round cap where the rafters meet
 r1 = math.radians(RAFTER_1[2])
 RAFTER_START: Place = (5.0, RAFTER_Y, BELL_FLOOR)
 reach = RAFTER_1[0] + CAP
-APEX: Place = (RAFTER_START[0] + reach * math.cos(r1), RAFTER_START[1] + reach * math.sin(r1), BELL_FLOOR + RAFTER_1[1])
+APEX: Place = (
+    RAFTER_START[0] + reach * math.cos(r1),
+    RAFTER_START[1] + reach * math.sin(r1),
+    BELL_FLOOR + RAFTER_1[1],
+)
 RAFTER_END: Place = (X1, 39.0, CROWN)
-kit.ramp(at=RAFTER_START, width=0.8, length=RAFTER_1[0], rise=RAFTER_1[1], yaw=RAFTER_1[2] - 90.0, name="rafter_1", material="brass", trim="gold")
+kit.ramp(
+    at=RAFTER_START,
+    width=0.8,
+    length=RAFTER_1[0],
+    rise=RAFTER_1[1],
+    yaw=RAFTER_1[2] - 90.0,
+    name="rafter_1",
+    material="brass",
+    trim="gold",
+)
 town.floor("rafter_cap", kit.arc(APEX[:2], CAP, 0, 360), APEX[2], 0.5, finish="brass")
 r2 = math.atan2(RAFTER_END[1] - APEX[1], RAFTER_END[0] - APEX[0])
 kit.ramp(
@@ -710,6 +1020,356 @@ kit.ramp(
     material="brass",
     trim="gold",
 )
+
+# --- The tower's dress --------------------------------------------------------------------------
+
+# A plinth, a cornice at each floor, a pilaster at each corner, glazed windows, the great door
+# of the base and the louvres of the belfry. None of it collides: it stands at most 0.25 m
+# proud of the walls.
+dress = town.Parts()
+dress.box((X0 - 0.25, Y0 - 0.25, 0.0), (X1 + 0.25, Y1 + 0.25, 0.9))
+for z, finish in (
+    (BASE, "limestone"),
+    (GALLERY, "limestone"),
+    (GEAR_ROOM, "limestone"),
+    (CLOCK_FLOOR, "brass"),
+    (BELFRY, "brass"),
+    (BELL_FLOOR, "limestone"),
+):
+    for lo, hi in (
+        ((X0 - 0.25, Y0 - 0.25), (X1 + 0.25, Y0)),
+        ((X0 - 0.25, Y1), (X1 + 0.25, Y1 + 0.25)),
+        ((X0 - 0.25, Y0), (X0, Y1)),
+        ((X1, Y0), (X1 + 0.25, Y1)),
+    ):
+        dress.box((*lo, z - 0.5), (*hi, z), finish)
+for cx, cy in ((X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)):
+    sx, sy = (1.0 if cx < 0 else -1.0), (1.0 if cy < TOWER[1] else -1.0)
+    top = CROWN - 1.0 if cx > 0 else BELL_FLOOR - SLAB
+    dress.box(
+        (min(cx, cx + sx * 1.0), min(cy, cy - sy * 0.12), 0.9),
+        (max(cx, cx + sx * 1.0), max(cy, cy - sy * 0.12), top),
+    )
+    dress.box(
+        (min(cx, cx - sx * 0.12), min(cy, cy + sy * 1.0), 0.9),
+        (max(cx, cx - sx * 0.12), max(cy, cy + sy * 1.0), top),
+    )
+TOWER_FACES = town.faces((X0, Y0), (X1, Y1))
+# Two windows on each face of each storey, clear of the doors, the dials and the louvres.
+for side, face in TOWER_FACES.items():
+    for bottom, top in (
+        (BASE + 4.0, GALLERY - 1.0),
+        (GALLERY + 5.0, GEAR_ROOM - 1.0),
+        (GEAR_ROOM + 5.0, CLOCK_FLOOR - 1.0),
+    ):
+        z = bottom
+        while z + 3.0 < top:
+            for along in (2.6, face.length - 2.6):
+                town.window(dress, face, along, 1.1, z, z + 2.6)
+            z += 6.0
+    town.window(
+        dress, face, face.length / 2, 3.2, BELFRY + 5.0, BELFRY + 13.0, pane="iron"
+    )
+town.window(dress, TOWER_FACES["s"], 6.0, 3.0, 0.9, 5.4, door=True)
+town.spot(
+    "decal",
+    "tower_door_plaque",
+    (TOWER[0], Y0 - 0.06, 6.2),
+    (90.0, 0.0, 0.0),
+    (2.4, 0.02, 0.6),
+    "name plaque over the great door",
+)
+dress.add("tower_dress", collide=False)
+# The broken crown: merlons at the corners.
+for i, (mx, my) in enumerate(
+    ((cx0, cy0), (cx1 - 1.0, cy0), (cx1 - 1.0, cy1 - 1.0), (cx0, cy1 - 1.0))
+):
+    town.block(
+        f"crown_merlon_{i + 1}", (mx, my, CROWN), (mx + 1.0, my + 1.0, CROWN + 0.8)
+    )
+    kit.ball((mx + 0.5, my + 0.5, CROWN + 1.05), 0.25, name=f"crown_finial_{i + 1}")
+
+# --- The town round the square ------------------------------------------------------------------
+
+
+def street(
+    name: str,
+    houses: Sequence[tuple[Point, Point, float, str, str]],
+    along: str,
+    door: str,
+    roof: str = "limestone",
+) -> None:
+    """Adds a row of houses as one mesh: each house is (lo, hi, eave, blind sides, roof
+    paint), with its ridge 3.4 m above the eave."""
+    parts = town.Parts()
+    for lo, hi, eave, blind, finish in houses:
+        town.house(parts, lo, hi, eave, eave + 3.4, along, door, finish or roof, blind)
+    parts.add(name)
+
+
+def row(
+    start: float,
+    widths: Sequence[float],
+    eaves: Sequence[float],
+    other: tuple[float, float],
+    along: str,
+) -> list[tuple[Point, Point, float, str, str]]:
+    """Returns the houses of a row whose fronts follow `along` (x or y) from `start`, each
+    `width` wide, between the two cross coordinates of `other`. The houses between the ends
+    have no windows on their shared sides."""
+    out = []
+    at = start
+    blind_inner = "ew" if along == "x" else "ns"
+    for i, (width, eave) in enumerate(zip(widths, eaves, strict=True)):
+        if along == "x":
+            lo, hi = (at, other[0]), (at + width, other[1])
+        else:
+            lo, hi = (other[0], at), (other[1], at + width)
+        ends = blind_inner
+        if i == 0:
+            ends = ends.replace("w" if along == "x" else "s", "")
+        if i == len(widths) - 1:
+            ends = ends.replace("e" if along == "x" else "n", "")
+        out.append((lo, hi, eave, ends, "slate" if i % 3 == 1 else ""))
+        at += width
+    return out
+
+
+# The south side of the square, with a street going south from its middle.
+street(
+    "town_south_w",
+    row(-40.0, [7, 6, 8, 6.5, 8.5], [9, 7.5, 10, 8, 9.5], (-9.0, -1.0), "x"),
+    "x",
+    "n",
+)
+street(
+    "town_south_e",
+    row(4.0, [8, 6, 7.5, 7, 7.5], [8.5, 10, 7.5, 9, 8], (-9.0, -1.0), "x"),
+    "x",
+    "n",
+)
+# West of the bakery and the guildhall, across a lane.
+street(
+    "town_west",
+    row(
+        -1.0, [7, 8, 6, 7, 8, 6, 6], [8, 9.5, 7.5, 10, 8.5, 9, 7.5], (-42.0, -33.0), "y"
+    ),
+    "y",
+    "e",
+)
+street("town_west_inner", [((-31.5, 4.0), (-25.6, 18.8), 7.0, "", "")], "y", "e")
+# North-west and north of the tower, across a street from it.
+street("town_north_w", row(-40.0, [9, 9], [8, 9.5], (41.0, 49.0), "x"), "x", "s")
+street(
+    "town_north",
+    row(-40.0, [8, 7, 9, 6, 7, 6], [9, 8, 10, 7.5, 9.5, 8], (51.0, 59.0), "x"),
+    "x",
+    "s",
+)
+street(
+    "town_north_e",
+    row(6.0, [7, 8, 6, 9, 7], [8.5, 9.5, 7.5, 10, 8], (51.0, 59.0), "x"),
+    "x",
+    "s",
+)
+street(
+    "town_north_e_inner",
+    [
+        ((14.0, 41.0), (21.0, 48.0), 8.0, "", ""),
+        ((22.0, 41.0), (29.0, 48.0), 9.0, "", "slate"),
+    ],
+    "x",
+    "s",
+)
+# East of the waterwheel, and a low house under the scaffold.
+street(
+    "town_east",
+    row(-1.0, [8, 7, 9, 6, 8, 7], [9, 7.5, 10, 8, 9.5, 8.5], (31.0, 40.0), "y"),
+    "y",
+    "w",
+)
+street("town_east_inner", [((19.5, -1.0), (27.5, 6.5), 8.0, "", "")], "x", "s")
+# The outer ring: streets of plainer houses out to the edge of the ground.
+street(
+    "town_ring_s",
+    row(
+        -52.0,
+        [9, 8, 10, 9, 8, 10, 9, 8, 10, 9, 8, 10],
+        [7, 8, 9, 7.5, 8.5, 7, 9, 8, 7.5, 9, 8, 7],
+        (-24.0, -15.0),
+        "x",
+    ),
+    "x",
+    "n",
+)
+street(
+    "town_ring_w",
+    row(
+        -15.0,
+        [10, 9, 10, 8, 10, 9, 10, 9, 10],
+        [8, 7, 9, 8, 7.5, 9, 8, 7, 8.5],
+        (-56.0, -47.0),
+        "y",
+    ),
+    "y",
+    "e",
+)
+street(
+    "town_ring_e",
+    row(
+        -15.0,
+        [10, 9, 10, 8, 10, 9, 10, 9, 10],
+        [7.5, 9, 8, 7, 9, 8.5, 7, 8, 9],
+        (47.0, 56.0),
+        "y",
+    ),
+    "y",
+    "w",
+)
+street(
+    "town_ring_n",
+    row(
+        -47.0,
+        [9, 10, 8, 9, 10, 9, 8, 10, 9, 10],
+        [8, 9, 7, 8.5, 9, 7.5, 8, 9, 7, 8],
+        (66.0, 75.0),
+        "x",
+    ),
+    "x",
+    "s",
+)
+
+# Street lamps round the square, off the ways up.
+lamps = town.Parts()
+for at in (
+    (-12.0, 1.0),
+    (12.0, 1.0),
+    (-16.2, 22.0),
+    (13.4, 30.0),
+    (-7.0, 29.6),
+    (7.0, 29.6),
+    (-3.5, 0.6),
+    (3.5, 0.6),
+):
+    town.lamp(lamps, (*at, 0.0))
+lamps.add("town_lamps")
+# The fountain's water.
+water = town.Parts()
+water.solid(kit.arc(FOUNTAIN, 2.3, 0, 360), 0.3, 0.45, "glass")
+water.add("fountain_water")
+
+# The windows and doors of the bakery, the workshop and the guildhall. They do not collide.
+fronts = town.Parts()
+town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["e"], BAKERY_TOP, door=True)
+town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["s"], BAKERY_TOP)
+workshop_faces = town.faces((wx0, wy0), (wx1, wy1))
+town.windows(fronts, workshop_faces["w"], ROOF, door=True)
+town.windows(fronts, workshop_faces["n"], ROOF)
+town.windows(fronts, workshop_faces["s"], ROOF, bottom=BALCONY)
+hall = town.Face((gx1, gy0), (0.0, 1.0), (1.0, 0.0), TERRACE_Y - gy0)
+for along in (2.0, 9.0, 11.4):
+    town.window(fronts, hall, along, 1.3, 1.6, 6.8)
+town.windows(
+    fronts,
+    town.Face((gx1, TERRACE_Y), (0.0, 1.0), (1.0, 0.0), gy1 - TERRACE_Y),
+    RIDGE,
+    storey=3.5,
+)
+for along in (3.0, 6.5):
+    town.window(
+        fronts,
+        town.Face((gx1, gy0), (-1.0, 0.0), (0.0, -1.0), gx1 - gx0),
+        along,
+        1.3,
+        1.6,
+        6.8,
+    )
+fronts.add("town_fronts", collide=False)
+# Shop signs: decal spots on hanging boards.
+town.sign("sign_bakery", (bx1, 16.2, 3.4), (1.0, 0.0))
+town.sign("sign_clockmaker", (wx0, 20.0, 4.6), (-1.0, 0.0), width=1.2, height=0.8)
+town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0))
+town.spot(
+    "decal",
+    "guildhall_crest",
+    (gx1 + 0.06, 25.5, 5.2),
+    (90.0, 0.0, 90.0),
+    (1.6, 0.02, 1.6),
+    "the guild's crest over the hall door",
+)
+town.spot(
+    "decal",
+    "street_name_south",
+    (4.0, -1.0 + 0.06, 3.0),
+    (90.0, 0.0, 180.0),
+    (1.0, 0.02, 0.3),
+    "street name plate",
+)
+town.spot(
+    "decal",
+    "street_name_east",
+    (14.5 - 0.06, 6.0, 3.0),
+    (90.0, 0.0, -90.0),
+    (1.0, 0.02, 0.3),
+    "street name plate",
+)
+# Prop spots: decorative props come later (docs/levels/ascent-z1.md). None is on a way up.
+PROP_SPOTS = {
+    "bench_1": ((-10.5, 30.8, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
+    "bench_2": ((10.5, 29.6, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
+    "bench_3": (
+        (-15.8, 26.0, 0.0),
+        90.0,
+        (1.8, 0.6, 0.9),
+        "bench by the guildhall lane",
+    ),
+    "barrels_bakery": (
+        (-17.4, 16.6, 0.0),
+        0.0,
+        (1.2, 1.2, 1.1),
+        "flour barrels by the bakery door",
+    ),
+    "handcart": ((6.0, 3.0, 0.0), 30.0, (1.6, 2.6, 1.2), "baker's handcart"),
+    "flower_tub_1": (
+        (-3.6, 15.0, 0.0),
+        0.0,
+        (0.9, 0.9, 0.8),
+        "flower tub by the fountain",
+    ),
+    "flower_tub_2": (
+        (3.6, 15.0, 0.0),
+        0.0,
+        (0.9, 0.9, 0.8),
+        "flower tub by the fountain",
+    ),
+    "goods_stall_2": (
+        (-12.5, 9.95, 0.95),
+        0.0,
+        (2.6, 0.6, 0.5),
+        "bread loaves on the counter",
+    ),
+    "goods_stall_3": (
+        (-16.0, 9.95, 0.95),
+        0.0,
+        (2.6, 0.6, 0.5),
+        "fruit baskets on the counter",
+    ),
+    "clock_parts": (
+        (13.8, 22.5, 0.0),
+        -90.0,
+        (1.2, 0.8, 1.0),
+        "a crate of clock parts by the workshop",
+    ),
+    "hay_cart": (
+        (0.0, -5.0, 0.0),
+        0.0,
+        (1.8, 3.2, 1.6),
+        "a hay cart in the south street",
+    ),
+    "anvil": ((25.0, 14.0, 0.0), 0.0, (0.8, 0.5, 0.8), "anvil by the waterwheel"),
+}
+for name, (at, yaw, size, note) in PROP_SPOTS.items():
+    town.spot("prop", name, at, (0.0, 0.0, yaw), size, note)
 
 # --- Routes: section 1 -------------------------------------------------------------------------
 
@@ -724,7 +1384,14 @@ FIRST[1] = [
     ((-17.0, STALL_ROW, 3.0), "jump; speed 4"),
     ((-19.6, STALL_ROW, BAKERY_TOP), "speed 4"),
     ((CHIMNEY_VENT[0], 15.8, BAKERY_TOP), "speed 3"),
-    ((CHIMNEY_VENT[0], 22.4, EAVE + (gx1 - CHIMNEY_VENT[0]) * (RIDGE - EAVE) / (gx1 - RIDGE_X[1])), "speed 3"),
+    (
+        (
+            CHIMNEY_VENT[0],
+            22.4,
+            EAVE + (gx1 - CHIMNEY_VENT[0]) * (RIDGE - EAVE) / (gx1 - RIDGE_X[1]),
+        ),
+        "speed 3",
+    ),
     ((-29.4, 25.4, RIDGE), ""),
     ((-29.4, 32.6, RIDGE), ""),
 ]
@@ -733,8 +1400,22 @@ _hoist_dir = (HOIST_LOW[0] - RIDGE_VENT[0], HOIST_LOW[1] - RIDGE_VENT[1])
 _hoist_len = math.hypot(*_hoist_dir)
 _hoist_unit = (_hoist_dir[0] / _hoist_len, _hoist_dir[1] / _hoist_len)
 FIRST[1] += [
-    ((RIDGE_VENT[0] - 2.0 * _hoist_unit[0], RIDGE_VENT[1] - 2.0 * _hoist_unit[1], RIDGE), "wait_until hoist 10.4 11.6"),
-    ((RIDGE_VENT[0] - 1.15 * _hoist_unit[0], RIDGE_VENT[1] - 1.15 * _hoist_unit[1], RIDGE), "speed 3"),
+    (
+        (
+            RIDGE_VENT[0] - 2.0 * _hoist_unit[0],
+            RIDGE_VENT[1] - 2.0 * _hoist_unit[1],
+            RIDGE,
+        ),
+        "wait_until hoist 10.4 11.6",
+    ),
+    (
+        (
+            RIDGE_VENT[0] - 1.15 * _hoist_unit[0],
+            RIDGE_VENT[1] - 1.15 * _hoist_unit[1],
+            RIDGE,
+        ),
+        "speed 3",
+    ),
     (HOIST_LOW, "speed 3; wait_until hoist 6.0 7.8"),
     ((lx0 + 1.5, HOIST_Y, GALLERY), ""),
     (FOOT[2], ""),
@@ -758,7 +1439,12 @@ FIRST[2] = [(shaft(-10.0), "")] + [
 ]
 FIRST[2] += [((*ring(R_MID, SHAFT_END - 14.0), GEAR_ROOM), ""), (FOOT[3], "")]
 _cw_at = SHAFT_START - 180.0
-EXPERT[2] = [(shaft(-10.0), ""), (shaft(5.0), ""), (shaft(90.0), ""), (shaft(160.0), "")]
+EXPERT[2] = [
+    (shaft(-10.0), ""),
+    (shaft(5.0), ""),
+    (shaft(90.0), ""),
+    (shaft(160.0), ""),
+]
 EXPERT[2] += [
     ((*ring(4.85, _cw_at), shaft(180.0)[2]), "wait_until counterweight 7.2 7.8"),
     ((*ring(3.95, _cw_at), shaft(180.0)[2]), "jump; speed 4.8"),
@@ -768,7 +1454,14 @@ _cw_out = shaft(800.0)
 _cw_dir = (_cw_out[0] - TOWER[0], _cw_out[1] - TOWER[1])
 _cw_len = math.hypot(*_cw_dir)
 EXPERT[2] += [
-    ((TOWER[0] + _cw_dir[0] / _cw_len * 0.9, TOWER[1] + _cw_dir[1] / _cw_len * 0.9, COUNTER_HIGH), "jump; speed 4.5"),
+    (
+        (
+            TOWER[0] + _cw_dir[0] / _cw_len * 0.9,
+            TOWER[1] + _cw_dir[1] / _cw_len * 0.9,
+            COUNTER_HIGH,
+        ),
+        "jump; speed 4.5",
+    ),
     ((_cw_out[0], _cw_out[1], _cw_out[2]), "speed 4.5"),
     (shaft(845.0), ""),
     (shaft(895.0), ""),
@@ -800,7 +1493,9 @@ for ramp in (1, 2):
     for along in (10.0, 82.0, 154.0, 222.0):
         FIRST[3].append((gear_ramp(ramp, along), ""))
     if ramp == 1:
-        FIRST[3].append(((*ring(R_MID, GEAR_RAMP_2 + 15.0), LIFT_2.exit + GEAR_RISE), ""))
+        FIRST[3].append(
+            ((*ring(R_MID, GEAR_RAMP_2 + 15.0), LIFT_2.exit + GEAR_RISE), "")
+        )
 FIRST[3] += [((*ring(R_MID, GEAR_RAMP_END - 14.0), CLOCK_FLOOR), ""), (FOOT[4], "")]
 EXPERT[3] = [
     ((-2.0, VENT_Y, GEAR_ROOM), ""),
@@ -856,7 +1551,11 @@ EXPERT[4] = [
 
 BELL_START: list[Leg] = [((-2.6, 35.3, BELFRY), "")]
 for along in along_spiral(745.0, [GREAT_BELL - PENDULUM_WAIT]):
-    action = "wait_until great_bell_clapper 1.4 1.8" if along == GREAT_BELL - PENDULUM_WAIT else ""
+    action = (
+        "wait_until great_bell_clapper 1.4 1.8"
+        if along == GREAT_BELL - PENDULUM_WAIT
+        else ""
+    )
     BELL_START.append((belfry(along), action))
 BELL_START += [
     ((*ring(R_MID, BELFRY_END + 14.0), BELL_FLOOR), ""),
@@ -878,20 +1577,26 @@ FIRST[5] += [
 ]
 EXPERT[5] = BELL_START + [
     ((3.6, RAFTER_Y, BELL_FLOOR), ""),
-    ((RAFTER_START[0] + 0.6 * math.cos(r1), RAFTER_Y + 0.6 * math.sin(r1), BELL_FLOOR + 0.3), "speed 5"),
+    (
+        (
+            RAFTER_START[0] + 0.6 * math.cos(r1),
+            RAFTER_Y + 0.6 * math.sin(r1),
+            BELL_FLOOR + 0.3,
+        ),
+        "speed 5",
+    ),
     (APEX, ""),
-    ((RAFTER_END[0] - 0.8 * math.cos(r2), RAFTER_END[1] - 0.8 * math.sin(r2), CROWN), ""),
+    (
+        (RAFTER_END[0] - 0.8 * math.cos(r2), RAFTER_END[1] - 0.8 * math.sin(r2), CROWN),
+        "",
+    ),
     (FINISH, ""),
 ]
 
 # --- Start, finish, routes ------------------------------------------------------------------------
 
-FIRST_ROUTE: list[Leg] = [leg for s in range(DEV_FROM, DEV_TO + 1) for leg in FIRST[s]]
-EXPERT_ROUTE: list[Leg] = [leg for s in range(DEV_FROM, DEV_TO + 1) for leg in EXPERT[s]]
-START_AT = FOOT[DEV_FROM]
-FINISH_AT = FIRST_ROUTE[-1][0]
-kit.marker("start", at=START_AT)
-kit.marker("finish", at=FINISH_AT)
+kit.marker("start", at=START)
+kit.marker("finish", at=FINISH)
 
 
 def route(kind: str, legs: list[Leg]) -> None:
@@ -904,7 +1609,7 @@ def route(kind: str, legs: list[Leg]) -> None:
     ]
     kit.marker(
         "route",
-        at=START_AT,
+        at=START,
         points=[point for point, _ in legs],
         name=f"route_{kind}",
         kind=kind,
@@ -912,12 +1617,21 @@ def route(kind: str, legs: list[Leg]) -> None:
     )
 
 
-route("first_run", FIRST_ROUTE)
-route("expert", EXPERT_ROUTE)
+route("first_run", [leg for section in sorted(FIRST) for leg in FIRST[section]])
+route("expert", [leg for section in sorted(EXPERT) for leg in EXPERT[section]])
 
 # --- Shots ----------------------------------------------------------------------------------------
 
-kit.shot("overview", at=(-58, -38, 75), rotation=(-30, 0, -40))
-kit.shot("start", at=(0, 24.5, 1.2), rotation=(4, 0, 0))
+kit.shot("overview", at=(-46, -30, 62), rotation=(-24, 0, -36))
+kit.shot("start", at=(0, 19.5, 1.6), rotation=(10, 0, 0))
+kit.shot("square", at=(0.0, -6.5, 2.2), rotation=(14, 0, 0))
+kit.shot("market", at=(4.0, 3.0, 3.0), rotation=(4, 0, 58))
+kit.shot("workshop", at=(-2.0, 4.0, 3.0), rotation=(6, 0, -52))
+kit.shot("tower", at=(26, -26, 30), rotation=(16, 0, 34))
+kit.shot("crown_down", at=(0.0, 33.5, 154.0), rotation=(-72, 0, 180))
 kit.shot("finish", at=(14, 20, 158), rotation=(-22, 0, 35))
 kit.shot("egg", at=(EGG[0] + 3.5, EGG[1] - 1.5, 1.6), rotation=(-12, 0, 70))
+kit.shot("shaft", at=(-4.2, 37.0, 33.0), rotation=(-25, 0, -60))
+kit.shot("gear_room", at=(4.6, 34.2, 59.0), rotation=(-12, 0, 45))
+kit.shot("clock_floor", at=(-4.6, 34.2, 84.0), rotation=(8, 0, -40))
+kit.shot("belfry", at=(4.6, 43.6, 118.0), rotation=(-15, 0, 140))

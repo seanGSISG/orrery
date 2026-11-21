@@ -7,7 +7,9 @@ Play pieces (they collide):
   It carries the marble from its bottom to its top, a half turn, and lets it off to one side.
 - casing(): a curved band round a level axis; lift() is made of it.
 - facade(): a straight wall with openings (doors, windows).
-- block(): a box. stall(), crate(), chimney(), lamp() and house() are dressed boxes.
+- block(): a box. stall(), crate() and chimney() are dressed boxes. house() and lamp() add a
+  building or a street lamp to a Parts mesh, so that a street of them is one mesh;
+  windows() and window() dress any wall face.
 
 Decoration (no collision): sign() and clock_face().
 
@@ -22,6 +24,7 @@ kit.surface(); the plain colours of wood, canvas and glass come from paint(). A 
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import Literal
 
 import bmesh
@@ -152,11 +155,26 @@ class Parts:
 
         def at(across: float, z: float, along: float) -> Vector:
             return (
-                Vector((along, across, z)) if axis == "x" else Vector((across, along, z))
+                Vector((along, across, z))
+                if axis == "x"
+                else Vector((across, along, z))
             )
 
         first = [self.bm.verts.new(at(u, z, start)) for u, z in section]
         last = [self.bm.verts.new(at(u, z, end)) for u, z in section]
+        self.faces([first, last, *_sides(first, last)], finish)
+
+    def bar(self, a: Vec3, b: Vec3, width: float, finish: str) -> None:
+        """Adds a square bar `width` m thick from the point a to b, for a strut or a rope."""
+        axis = Vector(b) - Vector(a)
+        side = axis.cross(Vector((0.0, 0.0, 1.0)))
+        if side.length < 1e-6:
+            side = Vector((1.0, 0.0, 0.0))
+        side = side.normalized() * width / 2
+        up = axis.cross(side).normalized() * width / 2
+        ring = [side + up, -side + up, -side - up, side - up]
+        first = [self.bm.verts.new(Vector(a) + c) for c in ring]
+        last = [self.bm.verts.new(Vector(b) + c) for c in ring]
         self.faces([first, last, *_sides(first, last)], finish)
 
     def add(self, name: str, collide: bool = True) -> bpy.types.Object:
@@ -201,10 +219,16 @@ def floor(
     points = [point for loop in loops for point in loop]
     for verts, up in ((high, True), (low, False)):
         flat = [vert for loop in verts for vert in loop]
-        for a, b, c in tessellate_polygon([[(x, y, 0.0) for x, y in loop] for loop in loops]):
+        for a, b, c in tessellate_polygon(
+            [[(x, y, 0.0) for x, y in loop] for loop in loops]
+        ):
             (ax, ay), (bx, by), (cx, cy) = points[a], points[b], points[c]
             counter = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay) > 0.0
-            tri = (flat[a], flat[b], flat[c]) if counter == up else (flat[a], flat[c], flat[b])
+            tri = (
+                (flat[a], flat[b], flat[c])
+                if counter == up
+                else (flat[a], flat[c], flat[b])
+            )
             bm.faces.new(tri).material_index = index
     for upper, lower in zip(high, low, strict=True):
         for side in _sides(lower, upper):
@@ -465,7 +489,9 @@ def stall(
     if counter > 0.4:
         parts.box((x0 + 0.1, y0 + 0.1, 0.0), (x1 - 0.1, y0 + 0.8, counter), "wood")
         parts.box(
-            (x0 + 0.05, y0 + 0.05, counter), (x1 - 0.05, y0 + 0.85, counter + 0.05), "wood"
+            (x0 + 0.05, y0 + 0.05, counter),
+            (x1 - 0.05, y0 + 0.85, counter + 0.05),
+            "wood",
         )
     else:
         parts.box((x0 + 0.1, y0 + 0.1, 0.0), (x1 - 0.1, y1 - 0.1, under), "wood")
@@ -517,24 +543,59 @@ def chimney(
     return parts.add(name)
 
 
-def lamp(name: str, at: Vec3, height: float = 3.2) -> bpy.types.Object:
-    """Adds a street lamp standing on the floor at `at`: an iron post and a glass lantern."""
+def lamp(parts: Parts, at: Vec3, height: float = 3.2) -> None:
+    """Adds a street lamp to parts, standing on the floor at `at`: an iron post and a glass
+    lantern."""
     x, y, z = at
     top = z + height
-    parts = Parts()
     parts.box((x - 0.18, y - 0.18, z), (x + 0.18, y + 0.18, z + 0.35), "iron")
     parts.box((x - 0.07, y - 0.07, z + 0.35), (x + 0.07, y + 0.07, top - 0.6), "iron")
-    parts.box((x - 0.17, y - 0.17, top - 0.6), (x + 0.17, y + 0.17, top - 0.55), "brass")
-    parts.box((x - 0.14, y - 0.14, top - 0.55), (x + 0.14, y + 0.14, top - 0.15), "glass")
-    parts.box((x - 0.22, y - 0.22, top - 0.15), (x + 0.22, y + 0.22, top - 0.05), "brass")
-    return parts.add(name)
+    parts.box(
+        (x - 0.17, y - 0.17, top - 0.6), (x + 0.17, y + 0.17, top - 0.55), "brass"
+    )
+    parts.box(
+        (x - 0.14, y - 0.14, top - 0.55), (x + 0.14, y + 0.14, top - 0.15), "glass"
+    )
+    parts.box(
+        (x - 0.22, y - 0.22, top - 0.15), (x + 0.22, y + 0.22, top - 0.05), "brass"
+    )
 
 
 # --- Buildings ------------------------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class Face:
+    """A wall face in plan: it starts at `start` and runs `length` m along the unit direction
+    `along`; `out` is the unit direction out of the wall."""
+
+    start: Point
+    along: Point
+    out: Point
+    length: float
+
+    def at(self, s: float, o: float = 0.0) -> Point:
+        """Returns the plan point `s` m along the face and `o` m out from it."""
+        return (
+            self.start[0] + self.along[0] * s + self.out[0] * o,
+            self.start[1] + self.along[1] * s + self.out[1] * o,
+        )
+
+
+def faces(lo: Point, hi: Point) -> dict[str, Face]:
+    """Returns the four faces of a box between the plan corners lo and hi, by side: s (low y),
+    e, n and w, each running counter-clockwise round the box."""
+    (x0, y0), (x1, y1) = lo, hi
+    return {
+        "s": Face((x0, y0), (1.0, 0.0), (0.0, -1.0), x1 - x0),
+        "e": Face((x1, y0), (0.0, 1.0), (1.0, 0.0), y1 - y0),
+        "n": Face((x1, y1), (-1.0, 0.0), (0.0, 1.0), x1 - x0),
+        "w": Face((x0, y1), (0.0, -1.0), (-1.0, 0.0), y1 - y0),
+    }
+
+
 def house(
-    name: str,
+    parts: Parts,
     lo: Point,
     hi: Point,
     eave: float,
@@ -544,22 +605,21 @@ def house(
     roof: str = "limestone",
     blind: str = "",
     storey: float = 3.0,
-) -> bpy.types.Object:
-    """Adds a town house between the plan corners lo and hi, on the floor at height 0: stone
-    walls up to `eave`, a gable roof up to `ridge` whose ridge runs along `along`, a door on
-    the side `door` (s, n, e or w; s is low y) and windows on each storey. blind: the sides
-    with no windows, for example "ew" for a house between two others."""
+) -> None:
+    """Adds a town house to parts between the plan corners lo and hi, on the floor at height
+    0: stone walls up to `eave`, a gable roof up to `ridge` whose ridge runs along `along`,
+    a door on the side `door` (s, e, n or w; "" for none) and windows on each storey. blind:
+    the sides with no windows, for example "ew" for a house between two others."""
     (x0, y0), (x1, y1) = lo, hi
-    parts = Parts()
     parts.box((x0, y0, 0.0), (x1, y1, eave))
     over = 0.35
     if along == "x":
-        mid, ends = (y0 + y1) / 2, (x0, x1)
-        low, high = y0, y1
+        mid, ends, low, high = (y0 + y1) / 2, (x0, x1), y0, y1
     else:
-        mid, ends = (x0 + x1) / 2, (y0, y1)
-        low, high = x0, x1
-    parts.prism([(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, "limestone")
+        mid, ends, low, high = (x0 + x1) / 2, (y0, y1), x0, x1
+    parts.prism(
+        [(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, "limestone"
+    )
     parts.prism(
         [(low - over, eave - 0.25), (high + over, eave - 0.25), (mid, ridge)],
         ends[0] - 0.15,
@@ -570,69 +630,87 @@ def house(
     cap = [(mid - 0.12, ridge - 0.1), (mid + 0.12, ridge - 0.1)]
     cap += [(mid + 0.12, ridge + 0.08), (mid - 0.12, ridge + 0.08)]
     parts.prism(cap, ends[0] - 0.2, ends[1] + 0.2, along, "brass")
-    _windows(parts, lo, hi, eave, storey, door, blind)
-    return parts.add(name)
+    # A chimney stack on the ridge, a quarter of the way along.
+    at = ends[0] + (ends[1] - ends[0]) * 0.25
+    lo_c, hi_c = (at - 0.45, mid - 0.3), (at + 0.45, mid + 0.3)
+    if along == "y":
+        lo_c, hi_c = (mid - 0.3, at - 0.45), (mid + 0.3, at + 0.45)
+    parts.box((*lo_c, ridge - 1.0), (*hi_c, ridge + 1.1))
+    parts.box(
+        (lo_c[0] - 0.06, lo_c[1] - 0.06, ridge + 0.95),
+        (hi_c[0] + 0.06, hi_c[1] + 0.06, ridge + 1.1),
+        "brass",
+    )
+    for key, face in faces(lo, hi).items():
+        if key not in blind:
+            windows(parts, face, eave, storey, door=key == door)
 
 
-def _windows(
-    parts: Parts, lo: Point, hi: Point, eave: float, storey: float, door: str, blind: str
-) -> None:
-    """Adds the windows of each storey and the door of a house: glass with a stone sill and
-    lintel, and a painted door in a stone frame."""
-    (x0, y0), (x1, y1) = lo, hi
-    sides: dict[str, tuple[Point, Point, Point, float]] = {
-        "s": ((x0, y0), (1.0, 0.0), (0.0, -1.0), x1 - x0),
-        "n": ((x1, y1), (-1.0, 0.0), (0.0, 1.0), x1 - x0),
-        "e": ((x1, y0), (0.0, 1.0), (1.0, 0.0), y1 - y0),
-        "w": ((x0, y1), (0.0, -1.0), (-1.0, 0.0), y1 - y0),
-    }
-    for key, (start, along, out, length) in sides.items():
-        if key in blind:
-            continue
-        count = max(1, int((length - 1.2) // 2.6))
-        step = length / count
-        for floor in range(max(1, int((eave - 0.4) // storey))):
-            base = floor * storey
-            for i in range(count):
-                door_here = key == door and floor == 0 and i == count // 2
-                width = 1.4 if door_here else 1.0
-                sill = base + (0.0 if door_here else 0.9 if floor == 0 else 0.8)
-                head = base + (2.4 if door_here else 2.2)
-                if head < eave - 0.3:
-                    _opening(
-                        parts, start, along, out, step * (i + 0.5), width, sill, head, door_here
-                    )
-
-
-def _opening(
+def windows(
     parts: Parts,
-    start: Point,
-    along: Point,
-    out: Point,
+    face: Face,
+    top: float,
+    storey: float = 3.0,
+    bottom: float = 0.0,
+    door: bool = False,
+    spacing: float = 2.6,
+) -> None:
+    """Adds a row of windows on each storey of a wall face from the height bottom up to top,
+    about `spacing` m apart, and a door in the middle of the lowest row when `door`."""
+    count = max(1, int((face.length - 1.2) // spacing))
+    step = face.length / count
+    for floor in range(max(1, int((top - bottom - 0.4) // storey))):
+        base = bottom + floor * storey
+        for i in range(count):
+            door_here = door and floor == 0 and i == count // 2
+            sill = base + (0.0 if door_here else 0.9 if floor == 0 else 0.8)
+            head = base + (2.4 if door_here else 2.2)
+            if head < top - 0.3:
+                width = 1.4 if door_here else 1.0
+                window(parts, face, step * (i + 0.5), width, sill, head, door_here)
+
+
+def window(
+    parts: Parts,
+    face: Face,
     centre: float,
     width: float,
     sill: float,
     head: float,
-    door: bool,
+    door: bool = False,
+    pane: str = "",
 ) -> None:
-    """Adds one window or door on a wall face: a panel just proud of the face, a stone
-    lintel above it, and a stone sill below a window or a frame round a door."""
+    """Adds one window or door on a wall face, `centre` m along it: a panel just proud of the
+    face (glass, a painted door, or the paint `pane`), a stone lintel above it, and a stone
+    sill below a window or a frame round a door."""
 
-    def at(s: float, o: float) -> Point:
-        return (
-            start[0] + along[0] * s + out[0] * o,
-            start[1] + along[1] * s + out[1] * o,
-        )
-
-    def piece(s0: float, s1: float, o: float, z0: float, z1: float, finish: str) -> None:
-        corners = [at(s0, 0.0), at(s1, 0.0), at(s1, o), at(s0, o)]
+    def piece(
+        s0: float, s1: float, o: float, z0: float, z1: float, finish: str
+    ) -> None:
+        corners = [face.at(s0), face.at(s1), face.at(s1, o), face.at(s0, o)]
         parts.solid(_counter_clockwise(corners), z0, z1, finish)
 
     half = width / 2
-    piece(centre - half, centre + half, 0.04, sill, head, "door" if door else "glass")
-    piece(centre - half - 0.15, centre + half + 0.15, 0.14, head, head + 0.22, "limestone")
+    piece(
+        centre - half,
+        centre + half,
+        0.04,
+        sill,
+        head,
+        pane or ("door" if door else "glass"),
+    )
+    piece(
+        centre - half - 0.15, centre + half + 0.15, 0.14, head, head + 0.22, "limestone"
+    )
     if not door:
-        piece(centre - half - 0.1, centre + half + 0.1, 0.12, sill - 0.12, sill, "limestone")
+        piece(
+            centre - half - 0.1,
+            centre + half + 0.1,
+            0.12,
+            sill - 0.12,
+            sill,
+            "limestone",
+        )
         return
     for side in (-1, 1):
         s = centre + side * (half + 0.075)
@@ -652,7 +730,14 @@ def sign(
     left = (-out[1], out[0])
     reach = width + 0.3
     parts = Parts()
-    parts.slab((x - left[0] * 0.03, y - left[1] * 0.03), out, reach, 0.06, (z - 0.06, z), "iron")
+    parts.slab(
+        (x - left[0] * 0.03, y - left[1] * 0.03),
+        out,
+        reach,
+        0.06,
+        (z - 0.06, z),
+        "iron",
+    )
     near = (x + out[0] * 0.2 - left[0] * 0.03, y + out[1] * 0.2 - left[1] * 0.03)
     board = (z - 0.1 - height, z - 0.1)
     parts.slab(near, out, width, 0.06, board, "wood")
@@ -669,7 +754,12 @@ def sign(
 
 
 def clock_face(
-    name: str, at: Vec3, yaw: float, radius: float, hour: float = 6.0, minute: float = 0.0
+    name: str,
+    at: Vec3,
+    yaw: float,
+    radius: float,
+    hour: float = 6.0,
+    minute: float = 0.0,
 ) -> bpy.types.Object:
     """Adds a clock dial on a wall: `at` is the dial's middle on the wall face, and yaw turns
     the dial from facing -y. A stone dial plate, a gold rim, twelve brass hour bars (no
@@ -684,18 +774,33 @@ def clock_face(
     for h in range(12):
         bar = 0.18 if h % 3 == 0 else 0.11
         angle = math.radians(90.0 - 30.0 * h)
-        _dial_bar(parts, at, right, out, angle, (radius * 0.72, radius * 0.88), bar, (0.12, 0.17))
+        _dial_bar(
+            parts,
+            at,
+            right,
+            out,
+            angle,
+            (radius * 0.72, radius * 0.88),
+            bar,
+            (0.12, 0.17),
+        )
     hour_angle = math.radians(90.0 - 30.0 * (hour + minute / 60.0))
-    _dial_bar(parts, at, right, out, hour_angle, (-0.3, radius * 0.5), 0.22, (0.17, 0.24))
+    _dial_bar(
+        parts, at, right, out, hour_angle, (-0.3, radius * 0.5), 0.22, (0.17, 0.24)
+    )
     minute_angle = math.radians(90.0 - 6.0 * minute)
-    _dial_bar(parts, at, right, out, minute_angle, (-0.4, radius * 0.75), 0.14, (0.24, 0.3))
+    _dial_bar(
+        parts, at, right, out, minute_angle, (-0.4, radius * 0.75), 0.14, (0.24, 0.3)
+    )
     middle = (at[0] + out[0] * 0.125, at[1] + out[1] * 0.125, at[2])
     size = (2 * radius, 0.02, 2 * radius)
     spot("decal", name, middle, (90.0, 0.0, yaw), size, "clock dial art, no numerals")
     return parts.add(name, collide=False)
 
 
-def _dial(at: Vec3, right: Point, out: Point, r: float, angle: float, depth: float) -> Vector:
+def _dial(
+    at: Vec3, right: Point, out: Point, r: float, angle: float, depth: float
+) -> Vector:
     """Returns the point at radius r and angle (radians from the dial's right) on a dial,
     `depth` m out from the wall."""
     return Vector(
@@ -722,18 +827,30 @@ def _dial_ring(
     angles = [math.tau * i / sides for i in range(sides)]
     if inner <= 0.0:
         for d0, d1 in (depth,):
-            back = [parts.bm.verts.new(_dial(at, right, out, outer, t, d0)) for t in angles]
-            front = [parts.bm.verts.new(_dial(at, right, out, outer, t, d1)) for t in angles]
+            back = [
+                parts.bm.verts.new(_dial(at, right, out, outer, t, d0)) for t in angles
+            ]
+            front = [
+                parts.bm.verts.new(_dial(at, right, out, outer, t, d1)) for t in angles
+            ]
             parts.faces([back, front, *_sides(back, front)], finish)
         return
     rings = [
         [parts.bm.verts.new(_dial(at, right, out, r, t, d)) for t in angles]
-        for r, d in ((inner, depth[0]), (outer, depth[0]), (outer, depth[1]), (inner, depth[1]))
+        for r, d in (
+            (inner, depth[0]),
+            (outer, depth[0]),
+            (outer, depth[1]),
+            (inner, depth[1]),
+        )
     ]
     for k in range(4):
         here, there = rings[k], rings[(k + 1) % 4]
         parts.faces(
-            [[here[i], here[(i + 1) % sides], there[(i + 1) % sides], there[i]] for i in range(sides)],
+            [
+                [here[i], here[(i + 1) % sides], there[(i + 1) % sides], there[i]]
+                for i in range(sides)
+            ],
             finish,
         )
 
@@ -813,7 +930,8 @@ def _counter_clockwise(points: list[Point]) -> list[Point]:
     """Returns a plan outline with its points in counter-clockwise order."""
     count = len(points)
     area = sum(
-        points[i][0] * points[(i + 1) % count][1] - points[(i + 1) % count][0] * points[i][1]
+        points[i][0] * points[(i + 1) % count][1]
+        - points[(i + 1) % count][0] * points[i][1]
         for i in range(count)
     )
     return points if area > 0 else points[::-1]
@@ -829,7 +947,11 @@ def _turn(v: Vector, yaw: float) -> Vector:
     """Returns v turned by yaw degrees round z."""
     a = math.radians(yaw)
     return Vector(
-        (v.x * math.cos(a) - v.y * math.sin(a), v.x * math.sin(a) + v.y * math.cos(a), v.z)
+        (
+            v.x * math.cos(a) - v.y * math.sin(a),
+            v.x * math.sin(a) + v.y * math.cos(a),
+            v.z,
+        )
     )
 
 
@@ -840,7 +962,7 @@ def _loft(sections: Sequence[Sequence[Vector]]) -> bmesh.types.BMesh:
     bm = bmesh.new()
     loops = [[bm.verts.new(p) for p in ring] for ring in sections]
     count = len(sections[0])
-    for a, b in zip(loops, loops[1:], strict=False):
+    for a, b in pairwise(loops):
         for i in range(count):
             j = (i + 1) % count
             bm.faces.new((a[i], a[j], b[j], b[i])).smooth = True
