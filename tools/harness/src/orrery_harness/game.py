@@ -15,9 +15,13 @@ command and the MCP server reach the same game.
 Each launch gets its own empty user:// in a new build/harness/user-<port>-<random>/ folder
 (XDG_DATA_HOME), so a harness session never reads or writes the player's saves, ghosts and
 settings, nor another session's. Session.data names it, and end() deletes it.
+
+stop() raises ShaderError when the game's log shows a shader compile error. `--headless`
+compiles no shaders, so only a display that renders can show one.
 """
 
 import os
+import re
 import shutil
 import signal
 import socket
@@ -88,6 +92,31 @@ class LaunchError(RuntimeError):
     """The game did not start, or its harness did not answer in time."""
 
 
+class ShaderError(RuntimeError):
+    """The game's log shows a shader that did not compile. The game draws that material as
+    a grey solid or not at all, and no other check fails."""
+
+
+# The engine prints `SHADER ERROR: <message>` and an `at: (res://<shader>:<line>)` line below it,
+# then `ERROR: Shader compilation failed.`
+_SHADER_ERROR = re.compile(r"^(SHADER ERROR:|ERROR: Shader compilation failed)")
+_SHOWN_ERRORS = 3
+
+
+def shader_errors(log: str) -> list[str]:
+    """The first shader compile errors in a game log, each with the line below it (the
+    shader path and line). Empty when the log has none."""
+    lines = log.splitlines()
+    found = [i for i, line in enumerate(lines) if _SHADER_ERROR.match(line)]
+    return [text for i in found[:_SHOWN_ERRORS] for text in lines[i : i + 2]]
+
+
+def check_log(log: str, name: str) -> None:
+    """Raises ShaderError, naming the log, when the log text has a shader compile error."""
+    if errors := shader_errors(log):
+        raise ShaderError(f"shader compile error in {name}:\n" + "\n".join(errors))
+
+
 def godot() -> str:
     """The Godot binary: $ORRERY_GODOT, else the mise pin, else `godot` on PATH."""
     if path := os.environ.get("ORRERY_GODOT"):
@@ -107,7 +136,7 @@ def godot() -> str:
 
 def launch(options: LaunchOptions) -> Session:
     """Stops the recorded game, starts a new one and records it."""
-    stop()
+    _end_recorded()
     session = start(options)
     SESSION.write_text(session.model_dump_json())
     return session
@@ -145,11 +174,20 @@ def current() -> Session:
 
 
 def stop() -> None:
-    """Ends the recorded game and forgets it."""
-    if SESSION.exists():
-        session = current()
-        SESSION.unlink()
-        end(session)
+    """Ends the recorded game and forgets it. Raises ShaderError, after the game ended,
+    when its log shows a shader compile error."""
+    if session := _end_recorded():
+        check_log(Path(session.log).read_text(errors="replace"), session.log)
+
+
+def _end_recorded() -> Session | None:
+    """Ends the recorded game and forgets it; returns it, or None when none was recorded."""
+    if not SESSION.exists():
+        return None
+    session = current()
+    SESSION.unlink()
+    end(session)
+    return session
 
 
 def end(session: Session) -> None:
