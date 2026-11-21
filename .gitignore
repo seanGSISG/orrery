@@ -2,6 +2,9 @@
 build/
 game/.godot/
 game/levels/built/
+# Copies of the kit textures from assets/textures/ (`just import` makes them); their .import files are committed
+game/materials/textures/*
+!game/materials/textures/*.import
 *.blend1
 
 # Python
