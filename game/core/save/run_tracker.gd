@@ -7,7 +7,8 @@ extends Node
 ## On each LevelRun.stepped it reads run.state (the state of the new tick) and:
 ## - calls save.find_egg() for each egg that the rules count as found, under the id of the
 ##   level that holds the egg (in an Ascent climb: its zone), and save.finish() with the
-##   recorded ghost when the status becomes &"finished", so no event waits for a later tick;
+##   recorded ghost when the status becomes &"finished", so no event waits for a later tick.
+##   A run with keeps_records false (an assisted Ascent climb) saves no finish;
 ## - records the marble's pose into a Ghost at Ghost.RATE per second of level clock;
 ## - puts the ghost marble of the best run at the level clock, shown while
 ##   save.settings.ghost is true.
@@ -80,7 +81,7 @@ func _save_events() -> void:
 	if state.status == &"finished" and not _finish_saved:
 		_finish_saved = true
 		recording.finish(state.timer, state.position, run.marble.ball_rotation)
-		if save.finish(level, state.timer, state.medal, recording):
+		if run.keeps_records and save.finish(level, state.timer, state.medal, recording):
 			_new_best = recording
 
 

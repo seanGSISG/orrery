@@ -160,9 +160,9 @@ func test_gate_shows_the_stats() -> void:
 	assert_false(ui.ascent.continue_item.visible, "a finished climb has no spot")
 
 
-## The stats mark a climb that used Assist, and a slower climb is no new record.
+## The stats mark a climb that used Assist. It is no new record, also as the first climb to
+## the gate.
 func test_stats_mark_an_assisted_climb() -> void:
-	Save.finish(Ascent.record_id(Ascent.FIXTURE), 0.001, &"none", null)
 	Save.ascent.assist = true
 	if not climb():
 		return

@@ -75,6 +75,7 @@ Object names must be different in every zone only when a bot drives the whole cl
 - the climb has a `Checkpoint` on the start pad of each zone (`assist_1`, `assist_2`, ...);
 - a fall of `ASSIST_DROP` (10 m) below the last checkpoint puts the marble back on it, through the out-of-bounds rule of `Rules`;
 - `Save.ascent.assisted` marks the climb. The mark stays when the player turns Assist off again. The stats screen shows it.
+- An assisted climb never replaces a record (Sean, 2026-11-21): it writes no best time, no ghost and no best height. The mode sets `LevelRun.keeps_records` to false, and `RunTracker` then saves no finish. The stats screen still shows the time of the climb, with the best time as it was.
 
 **The spot.** `Ascent.save_spot()` writes the place, the velocity, the clock, the run's tick, the height, the zone ids of the climb, the last Assist checkpoint, the state of the fall counter, the falls, the metres fallen and the best height to `Save.ascent`. It also keeps the ghost recording of the climb so far under the ghost id `ascent_climb`. It runs:
 
@@ -131,9 +132,8 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 ## 8. Open points
 
 1. **Eggs in the menus.** The save keeps every egg of every zone, but no screen of Ascent shows them yet (the Ascent menu or the stats screen can count them: 10 in all).
-2. **Assisted records.** An assisted climb can set the best time and the ghost. The stats screen marks the climb, but the best time has no mark.
-3. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
-4. **SDFGI.** Ascent has no SDFGI on Ultra yet (plan §4.7).
-5. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws.
-6. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
-7. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
+2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
+3. **SDFGI.** Ascent has no SDFGI on Ultra yet (plan §4.7).
+4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws.
+5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
+6. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).

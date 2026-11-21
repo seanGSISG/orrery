@@ -206,6 +206,33 @@ func test_record_is_of_the_zones_of_the_climb() -> void:
 	assert_null(tracker.ghost_marble, "and no ghost")
 
 
+## An assisted climb never replaces a record: a finish with Assist that is faster than the
+## best time leaves the best time and the ghost as they were, and it sets no best height.
+func test_assisted_climb_replaces_no_record() -> void:
+	if not climb():
+		return
+	run.step(roll(Vector2(0, 1)))
+	hold(2.0)
+	put(GATE)
+	var id: StringName = run.level.id
+	var best: float = Save.level(id).best_time
+	var height: float = Save.ascent.best_height
+	assert_gt(best, 2.0, "the record of the climb with no Assist")
+	assert_almost_eq(Save.ghost(id).duration, best, 0.0001)
+	Save.ascent.assist = true
+	if not climb(true):
+		return
+	run.step(roll(Vector2(0, 1)))
+	put(ZONE_3)
+	put(GATE)
+	assert_eq(run.state.status, &"finished")
+	assert_true(ascent.assisted)
+	assert_lt(run.state.timer, best, "the assisted climb is faster")
+	assert_eq(Save.level(id).best_time, best)
+	assert_almost_eq(Save.ghost(id).duration, best, 0.0001, "the ghost is of the record")
+	assert_eq(Save.ascent.best_height, height, "24 m with Assist is no best height")
+
+
 ## A restart of the run (the route bot, the harness) starts a new climb.
 func test_restart_of_the_run_starts_a_new_climb() -> void:
 	if not climb():

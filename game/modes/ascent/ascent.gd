@@ -31,7 +31,8 @@ extends Node3D
 ##   marble that climbs past its best.
 ## - Assist (Save.ascent.assist). The climb has a checkpoint at each zone start. A fall of
 ##   ASSIST_DROP m below the last one puts the marble back on it. The climb is marked as
-##   assisted, for good.
+##   assisted, for good. An assisted climb never replaces a record: it writes no best time,
+##   no ghost and no best height (Sean, 2026-11-21). The stats screen shows its time.
 ## - The spot. save_spot() keeps the place, the clock, the stats and the recording of the
 ##   climb so far. It runs when the game pauses and when the run ends, also by a closed
 ##   window. The next start() continues there: the movers are where they were, the last
@@ -345,6 +346,7 @@ func _new_climb() -> void:
 	_falls = AscentFalls.new()
 	_ended = false
 	Save.ascent.assisted = Save.ascent.assist
+	_run.keeps_records = not Save.ascent.assisted
 
 
 ## Puts the run at the saved spot, with the stats and the recording of the climb so far.
@@ -356,6 +358,7 @@ func _continue() -> void:
 	_falls.fallen = record.fallen
 	_falls.resume(record.spot_position, record.spot_floor, record.spot_low)
 	record.assisted = record.assisted or record.assist
+	_run.keeps_records = not record.assisted
 	var tracker: RunTracker = _tracker()
 	if tracker != null:
 		var recording: Ghost = Save.ghost(CLIMB_GHOST)
@@ -381,8 +384,8 @@ func _on_stepped() -> void:
 		var ground: Contact = _floor(state)
 		if _falls.track(state.position, height, ground != null):
 			_plant_flag()
-		var fixed: bool = ground != null and ground.object == null
-		if fixed and height > Save.ascent.best_height + BEST_STEP:
+		var counts: bool = ground != null and ground.object == null and _run.keeps_records
+		if counts and height > Save.ascent.best_height + BEST_STEP:
 			Save.ascent.best_height = height
 			Save.ascent.best_position = ground.point
 	elif state.status == &"finished" and not _ended:
