@@ -28,7 +28,7 @@ Terms used in this file:
 
 ## 2. How a zone plugs in
 
-A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The mode loads every zone that is built, so the climb works while only some zones exist.
+A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The mode loads every zone that is built, so the climb works while only some zones exist. While none is built, New climb in the Ascent menu is off. The game never climbs the fixture zones: its save is of its own zones.
 
 Rules for a zone script:
 
@@ -66,7 +66,7 @@ Object names must be different in every zone only when a bot drives the whole cl
 - The floor is the highest height at which the marble stood on a floor. A floor is a contact whose normal is within 60° of up.
 - A fall starts when the marble is more than `FALL_HEIGHT` below the floor. `fallen` grows by the way from the floor to the lowest point of the fall.
 - A fast slide down a slope is a fall too.
-- Limit: a climb that is saved in the middle of a fall counts the rest of that fall as a new fall.
+- The spot keeps the floor and the lowest point, so a fall with a quit in it is still one fall.
 
 **Best height and flag.** The best height is the highest floor of the level geometry that the marble stood on, in any climb. The floor of an object (a lift, a trapdoor) does not count, because it can move away. `AscentFlag` stands at that place. It moves only when a fall starts, so it is never under a marble that climbs past its best. A best height below 3 m has no flag.
 
@@ -76,13 +76,13 @@ Object names must be different in every zone only when a bot drives the whole cl
 - a fall of `ASSIST_DROP` (10 m) below the last checkpoint puts the marble back on it, through the out-of-bounds rule of `Rules`;
 - `Save.ascent.assisted` marks the climb. The mark stays when the player turns Assist off again. The stats screen shows it.
 
-**The spot.** `Ascent.save_spot()` writes the place, the velocity, the clock, the run's tick, the height, the falls, the metres fallen and the best height to `Save.ascent`. It also keeps the ghost recording of the climb so far under the ghost id `ascent_climb`. It runs:
+**The spot.** `Ascent.save_spot()` writes the place, the velocity, the clock, the run's tick, the height, the zone ids of the climb, the last Assist checkpoint, the state of the fall counter, the falls, the metres fallen and the best height to `Save.ascent`. It also keeps the ghost recording of the climb so far under the ghost id `ascent_climb`. It runs:
 
 - when the game pauses, so a crash in the pause menu loses nothing;
 - when the run leaves the tree (Save and quit, a new level, the end of the game);
 - when the player closes the window.
 
-The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run starts at the saved tick, so every mover has the pose that it had. The clock runs on. While the marble waits for a respawn, the spot is the place of that respawn. Objects with a state of their own (a trapdoor, crumbling tiles) start again in their first state.
+The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run starts at the saved tick, so every mover has the pose that it had. The clock runs on, and the last Assist checkpoint is the one that the marble reached. The spot counts only in a climb that starts with the zones of the spot: more zones on top are fine, and a climb of other zones starts at the bottom. While the marble waits for a respawn, the spot is the place of that respawn. Objects with a state of their own (a trapdoor, crumbling tiles) start again in their first state.
 
 **The gate.** The last finish pad ends the run. The mode removes the spot. `RunTracker` saves the time and the ghost with `Save.finish()` under the level id `ascent`, as for any level. So the best time is `Save.level(&"ascent").best_time`, and the ghost of the best climb plays in the next climb when `Settings.ghost` is on.
 
@@ -104,15 +104,15 @@ Zones 1 to 3 are on the Earth only. M2 adds the hours of the higher zones (sunse
 
 ## 5. HUD and menus
 
-- **Title.** Ascent opens the Ascent menu. The item is off while no zone is built.
-- **Ascent menu** (`Game.screen` `ascent`). Continue (only with a spot), New climb, and the Assist switch. Above them: the saved climb, the best height and the best time, each only when it exists.
+- **Title.** Ascent opens the Ascent menu.
+- **Ascent menu** (`Game.screen` `ascent`). Continue (only with a spot), New climb (off while no zone is built), and the Assist switch. Above them: the saved climb, the best height and the best time, each only when it exists.
 - **HUD.** A climb shows the clock and the height meter: the height in whole metres over a scale with a tick at each zone start, a ring for the gate, a gold pennant at the best height and the accent ring at the marble. It has no gems, no target times and no power-up slot.
 - **Pause.** Resume, Settings, Save and quit. Save and quit opens the Ascent menu.
 - **Stats** (`Game.screen` `ascent_stats`). Time, new record or best time, height, falls, metres fallen and the Assist mark. Done opens the Ascent menu.
 
 ## 6. Harness
 
-`load_mode {mode: "ascent", zone?, zones?, resume?, assist?}` starts a climb and returns the state (`tools/harness/README.md`). The MCP tool is `game_load_mode`. Until the first zone is built, a debug build climbs the fixture zones.
+`load_mode {mode: "ascent", zone?, zones?, resume?, assist?}` starts a climb and returns the state (`tools/harness/README.md`). The MCP tool is `game_load_mode`. Until the first zone is built, the harness climbs the fixture zones. `LevelRun.teleported` lets the mode write the height after a teleport, so the state is whole with no step.
 
 ## 7. Tests
 

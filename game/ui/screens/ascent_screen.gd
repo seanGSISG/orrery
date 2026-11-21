@@ -4,14 +4,15 @@ extends Screen
 ## climb and the Assist switch, under the facts of the saved climb and of the best climb. B
 ## or Esc goes back to the title.
 ##
-## Continue and New climb start the mode (Ascent.start()). Assist is Save.ascent.assist: the
-## item turns it on and off and saves it. It counts from the next start of the climb.
+## Continue and New climb start the mode (Ascent.start()). While no zone of the climb is
+## built, New climb is off and Continue does not show. Assist is Save.ascent.assist: the item
+## turns it on and off and saves it. It counts from the next start of the climb.
 
 ## Width of the title, the rule and the facts.
 const WIDTH: float = 640.0
 
-## The zone level ids of the climb, from the bottom; empty for the zones of the game. A test
-## sets it to the fixture zones.
+## The zone level ids of the climb, from the bottom; empty for the built zones of the game. A
+## test sets it to the fixture zones.
 var zones: Array[StringName] = []
 var continue_item: MenuItem = MenuItem.new("ASCENT_CONTINUE", &"ui_accept", true)
 var new_item: MenuItem = MenuItem.new("ASCENT_NEW", &"ui_accept", true)
@@ -55,8 +56,8 @@ func _init() -> void:
 	column.add_child(_gap(36.0))
 	column.add_child(hints)
 	add_safe_area().add_child(column)
-	continue_item.pressed.connect(func() -> void: Ascent.start(false, zones))
-	new_item.pressed.connect(func() -> void: Ascent.start(true, zones))
+	continue_item.pressed.connect(func() -> void: Ascent.start(false, _climb()))
+	new_item.pressed.connect(func() -> void: Ascent.start(true, _climb()))
 	assist_item.pressed.connect(_on_assist)
 
 
@@ -65,9 +66,10 @@ func _ready() -> void:
 
 
 ## Shows the saved climb and the best climb, and gives the focus to Continue, or to New
-## climb when no spot is saved.
+## climb when no spot is saved, or to Assist when there is no climb yet.
 func open() -> void:
 	var record: AscentRecord = Save.ascent
+	var built: bool = not _climb().is_empty()
 	var best_time: float = Save.level(Ascent.ID).best_time
 	_spot.text = "%s · %s" % [HeightText.metres(record.spot_height), TimeText.full(record.spot_time)]
 	_best_height.text = HeightText.metres(record.best_height)
@@ -76,17 +78,25 @@ func open() -> void:
 	_height_line.visible = record.best_height >= 1.0
 	_time_line.visible = best_time >= 0.0
 	_table.visible = _spot_line.visible or _height_line.visible or _time_line.visible
-	continue_item.visible = record.has_spot
+	continue_item.visible = record.has_spot and built
+	new_item.set_enabled(built)
 	_show_assist()
-	if record.has_spot:
+	if continue_item.visible:
 		continue_item.grab_focus()
-	else:
+	elif built:
 		new_item.grab_focus()
+	else:
+		assist_item.grab_focus()
 
 
 func back() -> bool:
 	Game.screen = &"title"
 	return true
+
+
+## Returns the zone level ids that Continue and New climb start.
+func _climb() -> Array[StringName]:
+	return zones if not zones.is_empty() else Ascent.zones()
 
 
 ## Turns Assist on or off, and saves it.

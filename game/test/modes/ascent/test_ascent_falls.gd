@@ -94,6 +94,23 @@ func test_teleport_is_no_fall() -> void:
 	assert_almost_eq(counter.fallen, 6.0, 0.001)
 
 
+## A new counter that resumes the floor and the lowest point of a saved fall goes on with
+## the same fall.
+func test_resumed_fall_is_the_same_fall() -> void:
+	_stand(20.0, 0.1)
+	_move(20.0, 12.0, 0.8, false)
+	var saved: AscentFalls = counter
+	counter = AscentFalls.new()
+	counter.falls = saved.falls
+	counter.fallen = saved.fallen
+	counter.resume(Vector3(0.0, 12.0, 0.0), saved.floor_height, saved.low_height)
+	assert_true(counter.falling)
+	_move(12.0, 0.0, 0.8, false)
+	_stand(0.0, 0.5)
+	assert_eq(counter.falls, 1)
+	assert_almost_eq(counter.fallen, 20.0, 0.001)
+
+
 ## The first call of track() tells the start of a fall.
 func test_track_tells_the_start_of_a_fall() -> void:
 	_stand(10.0, 0.1)

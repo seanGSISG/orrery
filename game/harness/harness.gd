@@ -201,8 +201,9 @@ func _load_level(params: Params) -> Variant:
 
 ## Starts a mode; "ascent" is the only one so far. It starts a new Ascent climb, or continues
 ## the saved spot when resume is true. zones are the zone level ids from the bottom (default:
-## Ascent.zones()), assist turns Assist on or off first, and zone (1 is the first) puts the
-## marble on the start pad of that zone.
+## the built zones of the game, or the fixture zones while none is built), assist turns Assist
+## on or off first, and zone (1 is the first) puts the marble on the start pad of that zone.
+## A request that fails changes nothing: the run and Assist stay as they were.
 func _load_mode(params: Params) -> Variant:
 	var mode: String = params.text("mode", "", true)
 	var zones: Array[StringName] = params.names("zones")
@@ -213,17 +214,26 @@ func _load_mode(params: Params) -> Variant:
 		return params.failure
 	if mode != "ascent":
 		return Failure.new(NOT_FOUND, "no mode %s; the modes are: ascent" % mode)
-	Save.ascent.assist = assist
-	var run: LevelRun = Ascent.start(not resume, zones)
-	if run == null:
+	if zones.is_empty():
+		zones = Ascent.zones() if not Ascent.zones().is_empty() else Ascent.FIXTURE
+	var built: Array[StringName] = []
+	for id: StringName in zones:
+		if Game.level_path(id) != "":
+			built.append(id)
+	if built.is_empty():
 		return Failure.new(NOT_FOUND, "no zone level of the climb is built")
+	if zone < 1 or zone > built.size():
+		return Failure.new(INVALID_PARAMS, "zone must be in 1..%d" % built.size())
+	var before: bool = Save.ascent.assist
+	Save.ascent.assist = assist
+	var run: LevelRun = Ascent.start(not resume, built)
+	if run == null:
+		Save.ascent.assist = before
+		return Failure.new(NOT_FOUND, "no zone level of the climb has a start pad")
 	run.auto_step = false
 	_owed = 0.0
-	var climb: Ascent = Ascent.of(run)
-	if zone < 1 or zone > climb.zone_heights.size():
-		return Failure.new(INVALID_PARAMS, "zone must be in 1..%d" % climb.zone_heights.size())
 	if zone > 1:
-		run.teleport(climb.start_of(zone - 1), Vector3.ZERO)
+		run.teleport(Ascent.of(run).start_of(zone - 1), Vector3.ZERO)
 	return Game.snapshot().to_dict()
 
 

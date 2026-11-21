@@ -42,6 +42,61 @@ func test_quit_saves_the_spot_and_the_climb_continues_there() -> void:
 	assert_almost_eq(run.state.timer, before.timer + 0.5, 0.001, "the clock runs on")
 
 
+## A quit in the middle of a fall does not cut the fall in two: after the continue it is
+## still one fall of its whole height.
+func test_fall_with_a_quit_in_it_counts_once() -> void:
+	if not climb():
+		return
+	put(LANDING)
+	hold(1.5, roll(Vector2(0.3, 0)))
+	hold(0.5)
+	assert_false(run.state.on_ground, "the marble is in the air")
+	assert_eq(ascent.falls, 1, "the fall started")
+	quit_climb()
+	if not climb():
+		return
+	hold(5.0)
+	assert_true(run.state.on_ground)
+	assert_eq(ascent.falls, 1)
+	assert_almost_eq(ascent.fallen, 16.0, 0.1)
+
+
+## With Assist, the continue keeps the last checkpoint that the marble reached, not the one of
+## the zone that the marble is in.
+func test_continue_keeps_the_last_checkpoint() -> void:
+	Save.ascent.assist = true
+	if not climb():
+		return
+	put(ZONE_2)
+	# A landing of zone 3: the marble is above the start of zone 3, but was not on its pad.
+	put(Vector3(22, 18, 28))
+	assert_eq(run.state.checkpoint, &"assist_2")
+	quit_climb()
+	if not climb():
+		return
+	assert_eq(run.state.checkpoint, &"assist_2")
+	assert_eq(ascent.zone, 2)
+
+
+## A spot counts only in a climb that starts with the zones of the spot. A climb with one
+## more zone on top continues; a climb of other zones starts at the bottom.
+func test_spot_counts_only_in_its_zones() -> void:
+	var lower: Array[StringName] = [Ascent.FIXTURE[0], Ascent.FIXTURE[1]]
+	var upper: Array[StringName] = [Ascent.FIXTURE[1], Ascent.FIXTURE[2]]
+	run = Ascent.start(true, lower)
+	if run == null:
+		fail_test("the fixture climb is not built: run `just build-levels`")
+		return
+	run.auto_step = false
+	put(ZONE_2)
+	quit_climb()
+	run = Ascent.start(false, Ascent.FIXTURE)
+	assert_almost_eq(run.state.height, 12.0, 0.01, "one more zone on top: the spot counts")
+	quit_climb()
+	run = Ascent.start(false, upper)
+	assert_almost_eq(run.state.height, 0.0, 0.01, "other zones: a new climb")
+
+
 ## The pause saves the spot too, so a crash in the pause menu loses nothing.
 func test_pause_saves_the_spot() -> void:
 	if not climb():

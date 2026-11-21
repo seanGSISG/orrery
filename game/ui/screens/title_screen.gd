@@ -3,8 +3,7 @@ extends Screen
 ## The title screen: the name of the game, the chart, and the menu Play, Ascent, Settings and
 ## Quit. The live level behind it is Ui's Backdrop.
 ##
-## Ascent opens the Ascent menu (AscentScreen). Its item is off while no zone of the climb is
-## built: it shows faint and the focus passes it by.
+## Ascent opens the Ascent menu (AscentScreen).
 
 ## Width of the name and the rule under it.
 const NAME_WIDTH: float = 640.0
@@ -50,5 +49,4 @@ func _ready() -> void:
 
 
 func open() -> void:
-	ascent.set_enabled(not Ascent.zones().is_empty())
 	play.grab_focus()

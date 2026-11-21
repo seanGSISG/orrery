@@ -31,8 +31,10 @@ extends Node3D
 ##   assisted, for good.
 ## - The spot. save_spot() keeps the place, the clock, the stats and the recording of the
 ##   climb so far. It runs when the game pauses and when the run ends, also by a closed
-##   window. The next start() continues there: the movers are where they were. The gate ends
-##   the climb and removes the spot.
+##   window. The next start() continues there: the movers are where they were, the last
+##   Assist checkpoint is the same, and a fall goes on as the same fall. The spot counts only
+##   in a climb that starts with the zones that it was saved in. The gate ends the climb and
+##   removes the spot.
 ## - A restart (LevelRun.restart(); the player has no button for it) starts a new climb.
 
 ## Emitted when the marble enters another zone; zone is its index, 0 for the first.
@@ -42,7 +44,9 @@ signal zone_changed(zone: int)
 const ID: StringName = &"ascent"
 ## The zone levels of the game, from the bottom (levels/ascent/zone_<n>.py).
 const ZONES: Array[StringName] = [&"zone_1", &"zone_2", &"zone_3"]
-## The zones of a debug build in which no zone of the game is built yet (levels/test/).
+## The zones of the test climb (levels/test/). The tests climb it, and so do the harness and
+## the screenshot run while no zone of the game is built. The game itself never does: its
+## save is of its own zones.
 const FIXTURE: Array[StringName] = [
 	&"ascent_fixture_1", &"ascent_fixture_2", &"ascent_fixture_3"
 ]
@@ -94,6 +98,8 @@ var _falls: AscentFalls = AscentFalls.new()
 ## The start pad of each zone, and its Assist checkpoint (empty with Assist off).
 var _starts: Array[StartPad] = []
 var _checkpoints: Array[Checkpoint] = []
+## The ids of the zones in the climb, from the bottom.
+var _zone_ids: PackedStringArray = []
 var _gate: Finish
 ## The climb start (the marble centre on the first start pad) and the up there.
 var _base: Vector3 = Vector3.ZERO
@@ -127,16 +133,13 @@ static func of(run: LevelRun) -> Ascent:
 	return run.get_node_or_null(^"Ascent") as Ascent if run != null else null
 
 
-## Returns the ids of the zones that are built, from the bottom. A debug build with none of
-## them gives the fixture zones, so the mode works before the first zone exists.
+## Returns the ids of the zones of the game that are built, from the bottom. With none, the
+## game has no climb yet.
 static func zones() -> Array[StringName]:
 	var built: Array[StringName] = []
-	for ids: Array[StringName] in [ZONES, FIXTURE]:
-		for id: StringName in ids:
-			if Game.level_path(id) != "":
-				built.append(id)
-		if not built.is_empty() or not OS.is_debug_build():
-			break
+	for id: StringName in ZONES:
+		if Game.level_path(id) != "":
+			built.append(id)
 	return built
 
 
@@ -167,6 +170,10 @@ func save_spot() -> void:
 		record.spot_position = _run.spawn_point(pad)
 		record.spot_velocity = Vector3.ZERO
 	record.spot_height = _height_of(record.spot_position)
+	record.spot_zones = ",".join(_zone_ids)
+	record.spot_checkpoint = _checkpoints.find(_run.rules.checkpoint as Checkpoint)
+	record.spot_floor = _falls.floor_height
+	record.spot_low = _falls.low_height
 	var tracker: RunTracker = _tracker()
 	if record.has_spot and tracker != null:
 		Save.keep_ghost(CLIMB_GHOST, tracker.recording)
@@ -216,6 +223,7 @@ func _build(ids: Array[StringName]) -> Level:
 		_light_by_height(zone_level)
 		_set_ranges(zone_level)
 		_starts.append(pads[0] as StartPad)
+		_zone_ids.append(id)
 		level.add_child(zone_level)
 	if _starts.is_empty():
 		level.free()
@@ -286,14 +294,26 @@ func _begin(run: LevelRun, new_climb: bool) -> void:
 		zone_heights.append(_height_of(run.spawn_point(start)))
 	top = _height_of(run.spawn_point(_gate)) if _gate != null else zone_heights[-1]
 	_kill_height = run.rules.kill_height
-	if new_climb or not Save.ascent.has_spot:
+	if new_climb or not _has_spot():
 		_new_climb()
 	else:
 		_continue()
-	_follow(run.state)
+	_follow()
 	_plant_flag()
 	run.stepped.connect(_on_stepped)
+	run.teleported.connect(_follow)
 	Game.screen_changed.connect(_on_screen_changed)
+
+
+## Returns true when the save has a spot of this climb: the climb starts with the zones that
+## the spot was saved in. A spot of other zones is a place in another world.
+func _has_spot() -> bool:
+	var saved: PackedStringArray = Save.ascent.spot_zones.split(",", false)
+	return (
+		Save.ascent.has_spot
+		and not saved.is_empty()
+		and saved == _zone_ids.slice(0, saved.size())
+	)
 
 
 ## Starts the stats of a new climb. The spot of the last climb is gone at the next save.
@@ -310,6 +330,7 @@ func _continue() -> void:
 	_falls = AscentFalls.new()
 	_falls.falls = record.falls
 	_falls.fallen = record.fallen
+	_falls.resume(record.spot_position, record.spot_floor, record.spot_low)
 	record.assisted = record.assisted or record.assist
 	var tracker: RunTracker = _tracker()
 	if tracker != null:
@@ -322,9 +343,8 @@ func _continue() -> void:
 			tracker.recording.record(float(size) / Ghost.RATE, record.spot_position, rotation)
 			if tracker.recording.size() == size:
 				break
-	# The last checkpoint is the one of the zone that the marble is in.
-	if not _checkpoints.is_empty():
-		_run.rules.reach_checkpoint(_checkpoints[_zone_at(_height_of(record.spot_position), 0)])
+	if record.spot_checkpoint >= 0 and record.spot_checkpoint < _checkpoints.size():
+		_run.rules.reach_checkpoint(_checkpoints[record.spot_checkpoint])
 
 
 ## Follows the tick that just ran.
@@ -332,7 +352,7 @@ func _on_stepped() -> void:
 	var state: GameState = _run.state
 	if state.tick == 1:
 		_new_climb()
-	_follow(state)
+	_follow()
 	if state.status == &"playing":
 		var ground: Contact = _floor(state)
 		if _falls.track(state.position, height, ground != null):
@@ -346,8 +366,10 @@ func _on_stepped() -> void:
 		save_spot()
 
 
-## Writes the height, and follows the zone, the Assist checkpoint and the light.
-func _follow(state: GameState) -> void:
+## Writes the height of the marble's place into the state, and follows the zone, the Assist
+## checkpoint and the light. It runs after each tick and after each teleport.
+func _follow() -> void:
+	var state: GameState = _run.state
 	height = _height_of(state.position)
 	state.height = height
 	var now: int = _zone_at(height, zone)

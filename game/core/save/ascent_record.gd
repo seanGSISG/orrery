@@ -16,6 +16,14 @@ var spot_velocity: Vector3 = Vector3.ZERO
 var spot_time: float = 0.0
 var spot_tick: int = 0
 var spot_height: float = 0.0
+## The zone level ids of the climb of the spot, from the bottom, with a comma between them.
+## The spot counts only in a climb that starts with these zones.
+var spot_zones: String = ""
+## The zone index of the last Assist checkpoint at quit; -1 for none.
+var spot_checkpoint: int = -1
+## AscentFalls.floor_height and low_height at quit, so that a fall goes on as the same fall.
+var spot_floor: float = 0.0
+var spot_low: float = 0.0
 ## True when Assist was on at any time in this climb.
 var assisted: bool = false
 ## Stats of the current climb: falls and total metres fallen.

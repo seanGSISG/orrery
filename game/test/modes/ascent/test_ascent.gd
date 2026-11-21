@@ -53,6 +53,8 @@ func test_state_gives_the_height() -> void:
 	assert_almost_eq(run.state.height, 36.0, 0.01)
 	var reported: float = Game.snapshot().to_dict()["height"]
 	assert_almost_eq(reported, 36.0, 0.01, "the harness gets the same height")
+	run.teleport(on(ZONE_3), Vector3.ZERO)
+	assert_almost_eq(run.state.height, 24.0, 0.01, "a teleport shows with no step")
 
 
 ## The marble is in a zone from the height of its start up, and goes back to the zone below

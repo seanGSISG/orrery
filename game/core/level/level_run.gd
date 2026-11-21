@@ -10,6 +10,9 @@ signal feedback(kind: StringName, strength: float, at: Vector3)
 ## At the end of each step(), when state holds the new tick. It comes once per tick, also
 ## when the harness or a test steps many ticks in one frame.
 signal stepped
+## At the end of teleport(), when state holds the new place. A mode that writes state from the
+## marble's place (the height of Ascent) follows it, so the state is whole with no step.
+signal teleported
 
 const MARBLE: PackedScene = preload("res://core/marble/marble.tscn")
 
@@ -126,6 +129,7 @@ func resume(tick: int, clock: float, at: Vector3, new_velocity: Vector3) -> void
 func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	marble.teleport(at, new_velocity)
 	_write_state()
+	teleported.emit()
 
 
 ## The marble centre that rests on pad: one radius above its origin, along its up. Above the
