@@ -87,6 +87,7 @@ func _save_ascent() -> void:
 	ui.ascent.zones = zones
 	Save.finish(Ascent.ID, 552.4, &"none", null)
 	Save.ascent.has_spot = true
+	Save.ascent.spot_zones = ",".join(PackedStringArray(zones))
 	Save.ascent.spot_height = 132.0
 	Save.ascent.spot_time = 431.27
 	Save.ascent.best_height = 187.0

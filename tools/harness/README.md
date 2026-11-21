@@ -50,7 +50,7 @@ One JSON-RPC 2.0 request or response per line on `127.0.0.1:<port>`. The game st
 
 ## Modes
 
-`load_mode {mode, zone?, zones?, resume?, assist?}` starts a mode. `ascent` is the only one (`game/modes/ascent/ascent.gd`): it starts a new climb of every built zone and returns the state, in which `height` is the marble's height above the climb start in m. While no zone of the game is built, it climbs the fixture zones (`levels/test/ascent_fixture_<n>.py`). A request that fails keeps the run and Assist as they were. `resume` continues the saved spot. `zones` gives the zone level ids from the bottom, for a climb of some zones or of test levels. `assist` turns Assist on or off first. `zone` (1 is the first) puts the marble on the start pad of that zone.
+`load_mode {mode, zone?, zones?, resume?, assist?}` starts a mode. `ascent` is the only one (`game/modes/ascent/ascent.gd`): it starts a new climb of every built zone and returns the state, in which `height` is the marble's height above the climb start in m. While no zone of the game is built, it climbs the fixture zones (`levels/test/ascent_fixture_<n>.py`). A request with an unknown mode, no built zone or a zone number above the number of zone scenes fails before the start, and keeps the run and Assist as they were. `resume` continues the saved spot. `zones` gives the zone level ids from the bottom, for a climb of some zones or of test levels. `assist` turns Assist on or off first. `zone` (1 is the first) puts the marble on the start pad of that zone.
 
 ```sh
 just harness load_mode ascent --zone 2          # a new climb, with the marble at the start of zone 2
