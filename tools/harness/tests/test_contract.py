@@ -156,6 +156,9 @@ def test_saves_go_to_the_session_user_data(
 def test_set_setting(harness: Harness) -> None:
     key = "physics/common/max_physics_steps_per_frame"
     assert harness.set_setting(key, 8) == 8
+    # A player setting goes through the settings store, as the settings menu does.
+    assert harness.set_setting("invert_y", True) is True
+    assert harness.set_setting("invert_y", False) is False
     with pytest.raises(HarnessError) as missing:
         harness.set_setting("no/such/setting", 1)
     assert missing.value.code == NOT_FOUND

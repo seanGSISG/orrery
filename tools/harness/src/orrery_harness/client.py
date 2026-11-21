@@ -220,5 +220,5 @@ class Harness:
         return BotResult.model_validate(self.call("run_bot", route=route))
 
     def set_setting(self, key: str, value: object) -> object:
-        """Sets an existing project setting and returns its new value."""
+        """Sets a player setting or an existing project setting; returns its new value."""
         return self.call("set_setting", key=key, value=value)["value"]

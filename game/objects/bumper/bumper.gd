@@ -4,7 +4,7 @@ extends LevelObject
 ## away from its axis (the marker's up axis, Blender z) at `speed`. The push is across the
 ## floor, also from the top face, so a bumper never lifts the marble onto a ledge. A marble
 ## that already leaves faster keeps its speed. The bottom face is at the marker. Each push
-## emits `bumper.hit` and makes the drum pulse.
+## emits `bumper.hit` and makes the drum pulse. The drum has the hazard colour of Palette.
 
 ## Seconds that the pulse lasts.
 const PULSE_TIME: float = 0.15
@@ -41,6 +41,13 @@ func _ready() -> void:
 	mesh.height = height
 	_look.mesh = mesh
 	_look.position = shape.position
+	add_to_group(Palette.GROUP)
+	apply_palette()
+
+
+## Colours the drum with the hazard colour of the palette. Every bumper shares the material.
+func apply_palette() -> void:
+	(_look.material_override as StandardMaterial3D).albedo_color = Palette.hazard()
 
 
 ## Ends a pulse.

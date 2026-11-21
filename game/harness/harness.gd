@@ -362,13 +362,17 @@ func _logs(params: Params) -> Variant:
 	return {"lines": _log.since(since)}
 
 
-## Sets an existing project setting, converted to the type it has. #23 routes this through
-## the settings store.
+## Sets a player setting (a var of Settings, such as `graphics_preset`) as the settings menu
+## does: through Save.change_settings(), which applies and saves it. Any other key sets an
+## existing project setting, converted to the type it has.
 func _set_setting(params: Params) -> Variant:
 	var key: String = params.text("key", "", true)
 	var value: Variant = params.any("value")
 	if params.failed():
 		return params.failure
+	if Save.settings.to_dict().has(key):
+		Save.change_settings({key: value})
+		return {"key": key, "value": Save.settings.to_dict()[key]}
 	if not ProjectSettings.has_setting(key):
 		return Failure.new(NOT_FOUND, "no setting %s" % key)
 	var old: Variant = ProjectSettings.get_setting(key)
