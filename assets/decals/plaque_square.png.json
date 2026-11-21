@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for a plaque on a stone wall. Straight-on orthographic view.\nSUBJECT: A rectangular aged-brass plaque with rounded corners and four small round screw heads. Engraved capital letters, dark with age in the grooves, centred in two lines. Line 1: \"CLOCKMAKERS' SQUARE\". Line 2: \"Set in stone, kept in brass.\" A fine engraved line border runs inside the edge.\nTEXT RULES: Exactly these two lines, once each. No other text. Spelling of line 1: C-L-O-C-K-M-A-K-E-R-S, apostrophe, S-Q-U-A-R-E.\nSTYLE: Photographic realism with restraint. Aged brass with soft warm tarnish and fine scratches. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the plaque, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for a plaque on a stone wall. Straight-on orthographic view.\nSUBJECT: A rectangular aged-brass plaque with rounded corners and four small round screw heads. Engraved capital letters, dark with age in the grooves, centred in two lines. Line 1: \"CLOCKMAKERS' SQUARE\". Line 2: \"Set in stone, kept in brass.\" A fine engraved line border runs inside the edge.\nTEXT RULES: Exactly these two lines, once each. No other text. Spelling of line 1: C-L-O-C-K-M-A-K-E-R-S, apostrophe, S-Q-U-A-R-E.\nSTYLE: Photographic realism with restraint. Aged brass with soft warm tarnish and fine scratches. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the plaque, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No logos, no watermarks. Original design only.",
+    "size": "1536x1024",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 237,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 237
+      },
+      "output_tokens": 1372,
+      "total_tokens": 1609,
+      "output_tokens_details": {
+        "image_tokens": 1372,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0423,
+  "billed_usd": 0.0423,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}

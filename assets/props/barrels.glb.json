@@ -1,0 +1,106 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"2939a86b-a4c9-4b2a-914a-90d67027d6d6\"",
+  "settings": {
+    "input": "2939a86b-a4c9-4b2a-914a-90d67027d6d6",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-barrels-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-barrels-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-barrels-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-barrels-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "c927bfcf-6532-445f-ada0-474b7ceeb10d",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-trial.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1/props/barrels-a.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0447
+      },
+      {
+        "file": "build/art/images/zone1/props/barrels-b.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0447
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1/props/barrels-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0623,
+      "refs": []
+    },
+    "views": {
+      "file": "build/art/models/zone1-barrels-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "583b8eba-48ec-45d7-ac59-35d95b13f5a6",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-barrels-shape-s2.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "2939a86b-a4c9-4b2a-914a-90d67027d6d6",
+      "seed": 2,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "583b8eba-48ec-45d7-ac59-35d95b13f5a6"
+          }
+        ],
+        "face_limit": 2000,
+        "model_seed": 2
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-barrels.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "c927bfcf-6532-445f-ada0-474b7ceeb10d",
+      "seed": 1,
+      "billed_usd": 0.1
+    }
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name barrels --stone 1.0 --metal-threshold 0.6"
+}

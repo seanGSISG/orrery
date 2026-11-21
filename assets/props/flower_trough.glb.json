@@ -1,0 +1,106 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"2e6d0a79-92f7-4a17-9449-ce6f4720c65d\"",
+  "settings": {
+    "input": "2e6d0a79-92f7-4a17-9449-ce6f4720c65d",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-flower_trough-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-flower_trough-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-flower_trough-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-flower_trough-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "b39fbfcb-1a44-4eb5-9386-07f45dda3dee",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-trial.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1/props/flower_trough-a.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0448
+      },
+      {
+        "file": "build/art/images/zone1/props/flower_trough-b.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0448
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1/props/flower_trough-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0624,
+      "refs": []
+    },
+    "views": {
+      "file": "build/art/models/zone1-flower_trough-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "ba53d044-2f81-45ff-8c46-1e87b8f4037a",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-flower_trough-shape-s2.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "2e6d0a79-92f7-4a17-9449-ce6f4720c65d",
+      "seed": 2,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "ba53d044-2f81-45ff-8c46-1e87b8f4037a"
+          }
+        ],
+        "face_limit": 2000,
+        "model_seed": 2
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-flower_trough.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "b39fbfcb-1a44-4eb5-9386-07f45dda3dee",
+      "seed": 1,
+      "billed_usd": 0.1
+    }
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name flower_trough --stone 0.4 --metal-threshold 0.6"
+}
