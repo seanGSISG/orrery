@@ -151,6 +151,29 @@ export-debug: import
     mkdir -p build/linux-debug
     "{{ godot }}" --headless --path game --export-debug "Linux Debug" ../build/linux-debug/orrery.x86_64
 
+# --- Controller (#18) ---
+
+# Drive a virtual Xbox pad on /dev/uinput (local only). The pad plugs in while the game runs;
+# the test checks that Godot sees it, A makes the marble jump and the left stick rolls it
+[script("bash")]
+test-pad: import
+    set -euo pipefail
+    if [[ ! -w /dev/uinput ]]; then echo "just test-pad: /dev/uinput is not writable" >&2; exit 1; fi
+    log=$(mktemp) padlog=$(mktemp)
+    steps="press a 0.3; wait 0.7; stick left 0 1 0.6; stick left 0 -1 0.6; wait 0.3"
+    (sleep 3; exec uv run --quiet tools/pad/virtual_pad.py --seconds 60 --sequence "$steps") >"$padlog" 2>&1 &
+    pad=$!
+    trap 'pkill -P "$pad" || true; kill "$pad" 2>/dev/null || true; rm -f "$log" "$padlog"' EXIT
+    status=0
+    ORRERY_VIRTUAL_PAD=1 "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd \
+        -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log" || status=$?
+    # A failed Godot run falls through to here, so the pad log explains it before cleanup.
+    if (( status != 0 )) || ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
+        cat "$padlog" >&2
+        echo "just test-pad: the virtual pad test did not pass" >&2
+        exit 1
+    fi
+
 # --- Gallery and performance (#20) ---
 
 # Render every shot of each level (all, or the given ids) on High into build/gallery/index.html

@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://objects/pendulum/pendulum.gd" id="1"]
+[ext_resource type="Script" path="res://core/level/solid.gd" id="2"]
+
+[sub_resource type="StandardMaterial3D" id="look"]
+albedo_color = Color(0.8, 0.62, 0.3, 1)
+metallic = 0.8
+roughness = 0.3
+
+[node name="Pendulum" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Solid" type="StaticBody3D" parent="."]
+script = ExtResource("2")
+
+[node name="RodShape" type="CollisionShape3D" parent="Solid"]
+
+[node name="RodMesh" type="MeshInstance3D" parent="Solid"]
+material_override = SubResource("look")
+
+[node name="BobShape" type="CollisionShape3D" parent="Solid"]
+
+[node name="BobMesh" type="MeshInstance3D" parent="Solid"]
+material_override = SubResource("look")
