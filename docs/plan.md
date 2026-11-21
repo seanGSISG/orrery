@@ -158,7 +158,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 - **Vocals:** gameplay music is instrumental with short vocal chops. One full vocal theme song plays on the title screen and in the credits.
 - **Rules:** no melody copied from any song. Prompts never name an artist or a song.
 - **Production:** see 4.9. Sean picks every final track.
-- **Picked so far** (M1): the title theme "Wind-up", the Beginner track "Roll call" and the first Ascent track "Spiral stair". Each is an ACE-Step 1.5 XL instrumental bed with our own hook and clockwork layer on top (`docs/research/music.md`; the pipeline is `tools/audio/music/`, ticket #26, PR #67).
+- **Picked so far** (M1): the title theme "Wind-up", the Beginner track "Roll call" and the first Ascent track "Spiral stair". Each is an ACE-Step 1.5 XL instrumental bed with our own hook and clockwork layer on top (`docs/research/music.md`; the pipeline and its README are in `tools/audio/music/`, ticket #26, PR #67).
 - **Sound effects:** synthesised (sfxr-style) and layered with CC0 samples. Agents check them; Sean does not need to review them.
 
 ### 2.13 Settings and defaults
