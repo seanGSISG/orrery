@@ -40,6 +40,10 @@ run level="flat": import
 build-levels *ids:
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
+# Build the feel-review course and play it in a window with the tuning overlay (LB+Y or F1)
+feel: (build-levels "feel")
+    "{{ godot }}" --path game res://debug/feel.tscn
+
 # Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
 [script("bash")]
 test: import
