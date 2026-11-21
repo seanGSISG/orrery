@@ -53,7 +53,7 @@ func _ready() -> void:
 ## Drives the route of kind on run. limit is the time to beat.
 static func _drive(run: LevelRun, kind: StringName, limit: float) -> Outcome:
 	var route: Route = RouteBot.find(run, kind)
-	if route == null:
+	if route == null or route.kind != kind:
 		return Outcome.new(&"skip", "no %s route" % kind)
 	var bot: RouteBot = RouteBot.new(run, route)
 	if not bot.problems.is_empty():

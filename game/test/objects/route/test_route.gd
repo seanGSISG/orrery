@@ -42,7 +42,8 @@ func test_actions_set_their_waypoints() -> void:
 	var second: Route.Waypoint = plan.waypoints[1]
 	assert_eq([second.use, second.wait, second.stops()], [true, 1.5, true])
 	var third: Route.Waypoint = plan.waypoints[2]
-	assert_eq([third.mover, third.window, third.stops()], [&"gear_00", Vector2(7.5, 0.5), true])
+	assert_eq([third.mover, third.window_from, third.window_to], [&"gear_00", 7.5, 0.5])
+	assert_true(third.stops())
 	assert_eq(third.position, Vector3(0, 0, -3))
 
 

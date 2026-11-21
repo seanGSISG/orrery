@@ -54,8 +54,8 @@ const PULL_BACK: float = 0.02
 const SLOW_MARGIN: float = 0.1
 ## In the air the bot pushes only when the velocity is this far from the wish, m/s.
 const AIR_DEADBAND: float = 0.3
-## The bot holds a jump for at most this many ticks, until the marble rises at half the jump
-## impulse.
+## The bot holds a jump for at most this many ticks: until the marble, after a press on the
+## ground, rises at half the jump impulse. A jump reached in the air jumps at the landing.
 const JUMP_TICKS: int = 36
 
 ## The route problems that stop drive(): bad actions, or a missing mover.
@@ -86,6 +86,8 @@ var _waiting: bool = false
 var _wait_left: float = 0.0
 var _use_ticks: int = 0
 var _jump_ticks: int = 0
+## True after the queued jump was pressed on the ground.
+var _jump_grounded: bool = false
 var _yaw: float = 0.0
 var _best: float = INF
 var _since_best: float = 0.0
@@ -195,30 +197,34 @@ func _follow(state: GameState) -> bool:
 
 
 ## Goes along the route: waits at a stop, leaves each point it reached, then steers to the next.
-## The bot does not leave the last point: it steers back to it until the run finishes, because a
-## jump can fly over the finish.
+## After a point with a press it stops for this tick, so the press goes out before the next
+## point can start a wait. The bot does not leave the last point: it steers back to it until the
+## run finishes, because a jump can fly over the finish.
 func _act(state: GameState, input: MarbleInput) -> void:
 	while not _at_end:
 		var point: Route.Waypoint = _points[waypoint]
+		var from: Vector3 = point.position
 		if _waiting:
 			if _holding(point, state):
 				return
 			_waiting = false
-			_leave(point, state.position)
+			from = state.position
 		elif not _reached(point, state):
 			break
 		elif point.stops():
 			_waiting = true
 			_wait_left = maxf(point.wait, 0.0)
-		else:
-			_leave(point, point.position)
+			continue
+		_leave(point, from)
+		if point.jump or point.use:
+			break
 	_press(state, input)
 	_steer(state, input)
 	_watch_progress(state)
 
 
-## True when the marble reached point. A stop needs the marble within STOP_REACH and nearly
-## still over the ground. Another point needs it past the line through the point across the
+## True when the marble reached point. A stop needs the marble on the ground within STOP_REACH,
+## nearly still over the ground. Another point needs it past the line through the point across the
 ## way there, within PASS_WIDTH; a point without a jump or a use also counts within REACH. A
 ## point on another floor does not count.
 func _reached(point: Route.Waypoint, state: GameState) -> bool:
@@ -229,7 +235,7 @@ func _reached(point: Route.Waypoint, state: GameState) -> bool:
 	var to: Vector3 = _flat(offset, up)
 	if point.stops():
 		var slip: Vector3 = _flat(state.velocity - _ground_velocity(up), up)
-		return to.length() < STOP_REACH and slip.length() < STOP_SPEED
+		return state.on_ground and to.length() < STOP_REACH and slip.length() < STOP_SPEED
 	var near: bool = to.length() < REACH
 	if near and not (point.jump or point.use):
 		return true
@@ -251,8 +257,8 @@ func _holding(point: Route.Waypoint, state: GameState) -> bool:
 		return false
 	var cycle: Vector2 = _cycles[point.mover]
 	var at: float = fposmod(state.tick * _dt + cycle.y, cycle.x)
-	var from: float = point.window.x
-	var to: float = point.window.y
+	var from: float = point.window_from
+	var to: float = point.window_to
 	var open: bool = (from <= at and at < to) if from < to else (at >= from or at < to)
 	return not open
 
@@ -265,6 +271,7 @@ func _leave(point: Route.Waypoint, from: Vector3) -> void:
 		_use_ticks = 1
 	if point.jump:
 		_jump_ticks = JUMP_TICKS
+		_jump_grounded = false
 	if waypoint == _points.size() - 1:
 		_at_end = true
 		return
@@ -274,16 +281,18 @@ func _leave(point: Route.Waypoint, from: Vector3) -> void:
 	_since_best = 0.0
 
 
-## Presses the queued actions: use for one tick, jump until the marble rises.
+## Presses the queued actions: use for one tick, jump until the marble rises after a press on
+## the ground.
 func _press(state: GameState, input: MarbleInput) -> void:
 	if _use_ticks > 0:
 		_use_ticks -= 1
 		input.use = true
 	if _jump_ticks > 0:
 		var rise: float = (state.velocity - _ground_velocity(state.up)).dot(state.up)
-		if rise > 0.5 * _tuning.jump_impulse:
+		if _jump_grounded and rise > 0.5 * _tuning.jump_impulse:
 			_jump_ticks = 0
 		else:
+			_jump_grounded = _jump_grounded or state.on_ground
 			_jump_ticks -= 1
 			input.jump = true
 
@@ -411,9 +420,9 @@ func _bind(point: Route.Waypoint) -> void:
 		var shift: float = offset if offset is float else 0.0
 		if length <= 0.0:
 			problems.append("wait_until: %s has no period setting" % point.mover)
-		elif point.window.x > length or point.window.y > length:
+		elif point.window_from > length or point.window_to > length:
 			problems.append("wait_until: %s has a period of %.2f s" % [point.mover, length])
-		elif point.window == Vector2(length, 0.0):
+		elif point.window_from == length and point.window_to == 0.0:
 			problems.append("wait_until: the window %.2f to 0 of %s is empty" % [length, point.mover])
 		_cycles[point.mover] = Vector2(length, shift)
 		return

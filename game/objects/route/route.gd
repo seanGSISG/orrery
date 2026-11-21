@@ -96,7 +96,8 @@ static func _read(words: PackedStringArray, waypoints: Array[Waypoint]) -> Strin
 			if numbers[0] == numbers[1]:
 				return "from and to are the same time"
 			point.mover = StringName(values[0])
-			point.window = Vector2(numbers[0], numbers[1])
+			point.window_from = numbers[0]
+			point.window_to = numbers[1]
 		"speed":
 			if numbers[0] == 0.0:
 				return "speed must be more than 0"
@@ -115,8 +116,10 @@ class Waypoint:
 	var wait: float = -1.0
 	## The object whose cycle the bot waits for; empty means none.
 	var mover: StringName = &""
-	## The cycle times [from, to) in s that end the wait for mover.
-	var window: Vector2 = Vector2.ZERO
+	## The cycle times [window_from, window_to) in s that end the wait for mover. Two floats,
+	## not a Vector2, so they keep the precision of the period.
+	var window_from: float = 0.0
+	var window_to: float = 0.0
 	## Top speed on the way to the point, m/s; 0 means no limit.
 	var speed: float = 0.0
 
