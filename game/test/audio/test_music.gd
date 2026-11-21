@@ -67,7 +67,7 @@ func test_zone_track_changes_only_on_the_next_bar_line() -> void:
 	assert_almost_eq(at, BAR * 2.0, STEP * 1.5, "on the bar line after the request, not before")
 
 
-func test_set_zone_waits_for_the_bar_line() -> void:
+func test_set_zone_switches_the_live_track_on_the_bar_line() -> void:
 	Music.play(Music.zones(Music.load_tracks(LOOPS)))
 	var music: AudioStreamPlayer = _playing(&"AudioStreamInteractive")
 	assert_not_null(music, "a music player plays the zones")
@@ -77,6 +77,11 @@ func test_set_zone_waits_for_the_bar_line() -> void:
 		)
 		Music.set_zone(7)
 		assert_eq(playback.get_current_clip_index(), 0, "no switch before the bar line")
+		# The audio thread mixes in real time; the first bar line is BAR seconds in.
+		await wait_seconds(BAR * 0.5)
+		assert_eq(playback.get_current_clip_index(), 0, "the first track still plays mid-bar")
+		await wait_seconds(BAR * 0.5 + 0.5)
+		assert_eq(playback.get_current_clip_index(), 1, "zone 7 plays the last track")
 	await _silence()
 
 
