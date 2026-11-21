@@ -3,9 +3,10 @@ extends LevelObject
 ## The `steam_vent` marker: a column of steam that rises `lift` m along the marker's up axis
 ## (Blender z) from a grate at the marker. Inside the column the steam pushes the marble up at
 ## `push` until it rises fast enough to coast to the top of the column, so the marble reaches
-## `lift` m above the grate from any entry speed, and hovers there while it stays inside. A
-## marble that drifts through the column leaves it on an arc: steer it over the next vent or a
-## ledge. The column is a trigger, so the marble passes through it; put the grate on a floor.
+## `lift` m above the grate, and hovers there while it stays inside. The steam only pushes: a
+## marble that enters faster (for example from a Coil Spring) keeps its speed and flies higher.
+## A marble that drifts through the column leaves it on an arc: steer it over the next vent or
+## a ledge. The column is a trigger, so the marble passes through it; put the grate on a floor.
 ## The lift assumes the axis points against gravity, at MarbleTuning.gravity. Entry emits
 ## `steam_vent.blow`.
 

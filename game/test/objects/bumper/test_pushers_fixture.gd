@@ -5,10 +5,10 @@ extends RunTest
 
 const FIXTURE: String = "res://levels/built/pushers.glb"
 const TUNING: MarbleTuning = preload("res://core/marble_tuning.tres")
-## The fixture's markers, Blender (0, 8, 0), (0, 16, 0) and (0, 26, 4.65), in Godot axes.
+## The fixture's markers, Blender (0, 8, 0), (0, 16, 0) and (0, 26, 4.05), in Godot axes.
 const BUMPER_AT: Vector3 = Vector3(0, 0, -8)
 const VENT_AT: Vector3 = Vector3(0, 0, -16)
-const PIVOT_AT: Vector3 = Vector3(0, 4.65, -26)
+const PIVOT_AT: Vector3 = Vector3(0, 4.05, -26)
 
 
 ## Starts a run of the built fixture and watches its feedback. Returns false (and fails the
@@ -46,13 +46,13 @@ func test_fixture_bumper_has_its_marker_settings_and_pushes_the_marble() -> void
 	assert_not_null(bumper)
 	if bumper == null:
 		return
-	assert_almost_eq(bumper.speed, 15.0, 0.001)
-	assert_almost_eq(bumper.radius, 0.5, 0.001)
-	assert_almost_eq(bumper.height, 1.0, 0.001)
+	assert_almost_eq(bumper.speed, 12.0, 0.001)
+	assert_almost_eq(bumper.radius, 0.6, 0.001)
+	assert_almost_eq(bumper.height, 1.2, 0.001)
 	assert_almost_eq(bumper.global_position, BUMPER_AT, Vector3.ONE * 0.001)
 	run.marble.teleport(BUMPER_AT + Vector3(0, TUNING.radius, 1.5), Vector3(0, 0, -5))
 	hold(rolling(Vector2.ZERO), 0.3)
-	assert_almost_eq(run.state.velocity.z, 15.0, 1.0, "pushed back toward the start")
+	assert_almost_eq(run.state.velocity.z, 12.0, 1.0, "pushed back toward the start")
 	assert_eq(_count(&"bumper.hit"), 1)
 
 
@@ -64,8 +64,8 @@ func test_fixture_vent_has_its_marker_settings_and_lifts_the_marble() -> void:
 	if vent == null:
 		return
 	assert_almost_eq(vent.lift, 6.0, 0.001)
-	assert_almost_eq(vent.radius, 1.0, 0.001)
-	assert_almost_eq(vent.push, 60.0, 0.001)
+	assert_almost_eq(vent.radius, 1.2, 0.001)
+	assert_almost_eq(vent.push, 50.0, 0.001)
 	assert_almost_eq(vent.global_position, VENT_AT, Vector3.ONE * 0.001)
 	run.marble.teleport(VENT_AT + Vector3(0, TUNING.radius, 0), Vector3.ZERO)
 	hold(rolling(Vector2.ZERO), 1.5)
@@ -80,12 +80,14 @@ func test_fixture_pendulum_has_its_marker_settings_and_knocks_the_marble_aside()
 	assert_not_null(pendulum)
 	if pendulum == null:
 		return
-	assert_almost_eq(pendulum.period, 4.0, 0.001)
-	assert_almost_eq(pendulum.swing, 60.0, 0.001)
-	assert_almost_eq(pendulum.length, 4.0, 0.001)
-	assert_almost_eq(pendulum.radius, 0.6, 0.001)
+	assert_almost_eq(pendulum.period, 3.0, 0.001)
+	assert_almost_eq(pendulum.swing, 50.0, 0.001)
+	assert_almost_eq(pendulum.length, 3.5, 0.001)
+	assert_almost_eq(pendulum.radius, 0.5, 0.001)
+	assert_almost_eq(pendulum.offset, 0.5, 0.001)
 	assert_almost_eq(pendulum.global_position, PIVOT_AT, Vector3.ONE * 0.001)
-	run.marble.teleport(PIVOT_AT + Vector3(1.0, TUNING.radius - 4.65, 0), Vector3.ZERO)
-	hold(rolling(Vector2.ZERO), 0.3)
-	assert_gt(run.state.velocity.x, 3.0, "knocked across the track along +x")
+	# Offset 0.5 s of a 3 s swing: the bob passes the bottom along -x at t = 1 s.
+	run.marble.teleport(PIVOT_AT + Vector3(-1.0, TUNING.radius - PIVOT_AT.y, 0), Vector3.ZERO)
+	hold(rolling(Vector2.ZERO), 1.2)
+	assert_lt(run.state.velocity.x, -3.0, "knocked across the track along -x")
 	assert_eq(_count(&"pendulum.hit"), 1)
