@@ -1,7 +1,8 @@
 class_name UiTest
 extends GutTest
-## Base for tests of the HUD and the menus. Each test gets a new Ui on the title screen and
-## an empty save in user://test_ui/. A test sends controller and keyboard events with
+## Base for tests of the HUD and the menus. Each test gets an empty save in user://test_ui/
+## and a new Ui that starts as in a new game: no run, and the default screen &"play". So the
+## Ui itself shows the title. A test sends controller and keyboard events with
 ## Input.parse_input_event, as a real pad and keyboard do, and reads the screen from
 ## Game.snapshot().
 ##
@@ -19,7 +20,10 @@ func before_each() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(ROOT).path_join(SaveGame.FILE))
 	Save.dir = ROOT
 	Save.read()
+	# A menu screen ends a run that an earlier test left. Then &"play" is the state of a new
+	# game.
 	Game.screen = &"title"
+	Game.screen = &"play"
 	ui = Ui.new()
 	add_child_autofree(ui)
 

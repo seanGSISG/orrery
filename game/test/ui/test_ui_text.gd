@@ -31,6 +31,7 @@ func test_time_text() -> void:
 	assert_eq(TimeText.target(48.0), "0:48")
 	assert_eq(TimeText.target(46.82), "0:46.82", "a target keeps its hundredths")
 	assert_eq(TimeText.difference(4.38), "4.38")
+	assert_eq(TimeText.difference(0.5), "0.50", "a difference under one second keeps one zero")
 	assert_eq(TimeText.difference(64.38), "1:04.38")
 
 
