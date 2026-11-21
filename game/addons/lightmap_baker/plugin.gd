@@ -133,7 +133,9 @@ func _remove_orphans(data: LightmapGIData) -> void:
 	)
 	for file: String in DirAccess.get_files_at(folder):
 		var path: String = folder.path_join(file)
-		if atlas.search(file) != null and path not in kept:
+		# <id>_1.exr is also the atlas of a level named <id>_1, when that level has a bake.
+		var other_level: bool = FileAccess.file_exists(path.get_basename() + ".lmbake")
+		if atlas.search(file) != null and path not in kept and not other_level:
 			print("BAKE removes %s" % path)
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path + ".import"))
