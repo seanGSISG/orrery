@@ -71,7 +71,10 @@ func read() -> void:
 ## Writes save.json. Returns false when the file could not be written.
 func write() -> bool:
 	if _damaged != "" and FileAccess.file_exists(_damaged):
-		DirAccess.copy_absolute(_damaged, _path() + ".bad")
+		var error: Error = DirAccess.copy_absolute(_damaged, _path() + ".bad")
+		if error != OK:
+			push_warning("Save: cannot keep a copy of %s (%s)" % [_damaged, error_string(error)])
+			return false
 	_damaged = ""
 	var levels: Dictionary[String, Variant] = {}
 	for id: StringName in _levels:
@@ -168,10 +171,13 @@ static func _section(data: Dictionary, key: String) -> Dictionary:
 	return value if value is Dictionary else {}
 
 
-## Writes bytes to path.tmp and renames it over path. Returns false on an error.
+## Writes bytes to path.tmp and renames it over path. Returns false on an error. A path.tmp
+## with no path is the last good write (read() falls back to it), so it becomes path first.
 static func _write_atomic(path: String, bytes: PackedByteArray) -> bool:
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var temp: String = path + ".tmp"
+	if not FileAccess.file_exists(path) and FileAccess.file_exists(temp):
+		DirAccess.rename_absolute(temp, path)
 	var file: FileAccess = FileAccess.open(temp, FileAccess.WRITE)
 	if file == null:
 		push_warning("Save: cannot write %s (%s)" % [temp, error_string(FileAccess.get_open_error())])

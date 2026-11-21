@@ -13,4 +13,4 @@ var egg: bool = false
 
 ## Returns true when the level has a finish at or under par.
 func qualified() -> bool:
-	return medal != &"none"
+	return medal == &"qualified" or medal == &"gold"

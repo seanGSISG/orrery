@@ -29,12 +29,12 @@ func after_each() -> void:
 		DirAccess.remove_absolute(folder)
 
 
-## The egg saves on the tick after the marble finds it, before any finish.
+## The egg saves before any finish, also on a restart right after the marble finds it.
 func test_egg_saves_when_found() -> void:
 	run.step(rolling(Vector2(0, 1)))
 	visit(EGG)
 	assert_true(run.state.egg_found)
-	run.step(MarbleInput.new())
+	run.restart()
 	var loaded: SaveGame = _save()
 	loaded.read()
 	assert_true(loaded.level(&"rules").egg)
@@ -51,13 +51,14 @@ func test_next_attempt_races_the_ghost() -> void:
 	visit(GEM_EAST)
 	visit(FINISH)
 	assert_eq(run.state.status, &"finished")
-	run.step(MarbleInput.new())
+	var time: float = run.state.timer
+	# A restart on the finish tick still saves the finish.
+	run.restart()
 	var loaded: SaveGame = _save()
 	loaded.read()
-	assert_eq(loaded.level(&"rules").best_time, run.state.timer)
+	assert_eq(loaded.level(&"rules").best_time, time)
 	assert_eq(loaded.level(&"rules").medal, &"gold")
-	assert_almost_eq(loaded.ghost(&"rules").duration, run.state.timer, 0.0001)
-	run.restart()
+	assert_almost_eq(loaded.ghost(&"rules").duration, time, 0.0001)
 	assert_not_null(tracker.ghost_marble)
 	assert_almost_eq(tracker.ghost_marble.position, path[0], Vector3.ONE * 0.001)
 	run.step(rolling(Vector2(1, 0)))
@@ -75,22 +76,21 @@ func test_next_attempt_races_the_ghost() -> void:
 ## A slower finish keeps the first ghost.
 func test_slower_finish_keeps_the_ghost() -> void:
 	_finish_after(1.0)
-	var first: float = save.ghost(&"rules").duration
 	run.restart()
+	var first: float = save.ghost(&"rules").duration
 	_finish_after(2.0)
+	run.restart()
 	assert_almost_eq(save.ghost(&"rules").duration, first, 0.0001)
 	assert_almost_eq(save.level(&"rules").best_time, first, 0.0001)
 
 
-## Starts the clock, waits until the clock shows seconds, collects both gems, finishes, and
-## steps once more so that the tracker sees the finish.
+## Starts the clock, waits until the clock shows seconds, collects both gems and finishes.
 func _finish_after(seconds: float) -> void:
 	run.step(rolling(Vector2(0, 1)))
 	hold(MarbleInput.new(), seconds - run.state.timer)
 	visit(GEM_WEST)
 	visit(GEM_EAST)
 	visit(FINISH)
-	run.step(MarbleInput.new())
 
 
 ## Returns a SaveGame in this test's folder.

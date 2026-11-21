@@ -6,11 +6,13 @@ extends LevelObject
 ##
 ## Each tick it reads run.state (the state after the last tick) and:
 ## - records the marble's pose into a Ghost at Ghost.RATE per second of level clock;
-## - calls save.find_egg() when egg_found becomes true;
-## - calls save.finish() when the status becomes &"finished", with the recorded ghost;
 ## - puts the ghost marble of the best run at the current level clock, shown while
 ##   save.settings.ghost is true.
-## A restart starts a new recording, and the ghost of a new best run races from then on.
+## It calls save.find_egg() when egg_found becomes true, and save.finish() with the recorded
+## ghost when the status becomes &"finished". It checks for both on each tick, each frame
+## (also when the run no longer steps or the game is paused), at a restart and when the run
+## leaves the tree, so no event is lost. A restart starts a new recording, and the ghost of a
+## new best run races from then on.
 ##
 ## No marker places it. It is a LevelObject only because advance() is the one hook that
 ## LevelRun calls on every tick, also when the harness or a test steps many ticks at once.
@@ -46,10 +48,12 @@ static func attach(run: LevelRun, save: SaveGame) -> RunTracker:
 	return tracker
 
 
-## Starts a new recording at a restart. A respawn keeps the recording.
+## Saves what the ending attempt still owes, then starts a new recording at a restart. A
+## respawn keeps the recording.
 func reset(restart: bool) -> void:
 	if not restart:
 		return
+	_save_events()
 	recording = Ghost.new()
 	_egg_saved = false
 	_finish_saved = false
@@ -61,27 +65,52 @@ func reset(restart: bool) -> void:
 		ghost_marble.reset_physics_interpolation()
 
 
+## Keeps _process() running while the game is paused.
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+## Saves an egg or a finish that the steps of this frame made.
+func _process(_delta: float) -> void:
+	_save_events()
+
+
+## Saves an egg or a finish before the run goes away.
+func _exit_tree() -> void:
+	_save_events()
+
+
 ## Records, saves and moves the ghost marble from the state of the last tick.
 func advance(_run: LevelRun, _t: float) -> void:
 	var state: GameState = run.state
-	var level: StringName = run.level.id
-	var rotation: Quaternion = _ball.quaternion if _ball != null else Quaternion()
-	if state.egg_found and not _egg_saved:
-		_egg_saved = true
-		save.find_egg(level)
-	if state.status == &"finished":
-		if not _finish_saved:
-			_finish_saved = true
-			recording.finish(state.timer, state.position, rotation)
-			if save.finish(level, state.timer, state.medal, recording):
-				_new_best = recording
-	elif state.status != &"none":
-		recording.record(state.timer, state.position, rotation)
+	_save_events()
+	if state.status == &"playing" or state.status == &"respawning":
+		recording.record(state.timer, state.position, _rotation())
 	if ghost_marble != null:
 		ghost_marble.visible = save.settings.ghost
 		# The clock runs on by one tick in this step, unless it has not started yet.
 		var running: bool = state.timer > 0.0 and state.status != &"finished"
 		ghost_marble.show_at(state.timer + (_dt if running else 0.0))
+
+
+## Saves the egg once when egg_found is true, and the finish with the recording once when the
+## status is &"finished".
+func _save_events() -> void:
+	var state: GameState = run.state
+	var level: StringName = run.level.id
+	if state.egg_found and not _egg_saved:
+		_egg_saved = true
+		save.find_egg(level)
+	if state.status == &"finished" and not _finish_saved:
+		_finish_saved = true
+		recording.finish(state.timer, state.position, _rotation())
+		if save.finish(level, state.timer, state.medal, recording):
+			_new_best = recording
+
+
+## Returns the rotation of the marble's ball.
+func _rotation() -> Quaternion:
+	return _ball.quaternion if _ball != null else Quaternion()
 
 
 ## Makes the ghost marble play ghost, when there is one.

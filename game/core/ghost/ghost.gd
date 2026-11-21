@@ -63,7 +63,7 @@ func transform_at(time: float) -> Transform3D:
 	time = maxf(time, 0.0)
 	var i: int = mini(floori(time * RATE), last - 1)
 	var start: float = float(i) / RATE
-	var end: float = minf(float(i + 1) / RATE, duration)
+	var end: float = duration if i + 1 == last else float(i + 1) / RATE
 	var weight: float = clampf((time - start) / (end - start), 0.0, 1.0) if end > start else 1.0
 	return _pose(i, i + 1, weight)
 
@@ -121,9 +121,7 @@ static func from_bytes(bytes: PackedByteArray) -> Ghost:
 			samples.decode_s16(at + 18) / 32767.0
 		)
 		ghost._add(position, rotation)
-	if not is_finite(ghost.duration) or ghost.duration < float(count - 2) / RATE:
-		return null
-	return ghost
+	return ghost if is_finite(ghost.duration) else null
 
 
 ## Appends one sample with a unit rotation.
