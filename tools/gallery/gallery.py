@@ -22,6 +22,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote
 
 from PIL import Image
 
@@ -146,7 +147,8 @@ def inline(text: str) -> str:
 
 def figure(name: str, path: Path, flags: str = "") -> str:
     """Returns the HTML for one image, linked to the full-size file, with a caption."""
-    src = path.relative_to(OUT).as_posix()
+    src = html.escape(quote(path.relative_to(OUT).as_posix()))
+    name = html.escape(name)
     return (
         f'<figure><a href="{src}"><img src="{src}" alt="{name}" loading="lazy"></a>'
         f"<figcaption><b>{name}</b> {flags}</figcaption></figure>"
@@ -170,20 +172,21 @@ def section(level: str, shots: list[Shot], checks: list[tuple[str, str]]) -> str
     if all(path.exists() for path in motion):
         pair = "".join(figure(path.stem, path) for path in motion)
     else:
-        pair = f"<p>No motion pair yet: run <code>just perf {level}</code>.</p>"
-    exposed = all(shot.exposed for shot in shots)
+        pair = f"<p>No motion pair yet: run <code>just perf {html.escape(level)}</code>.</p>"
+    exposed = bool(shots) and all(shot.exposed for shot in shots)
+    verdict = "no shots" if not shots else "pass" if exposed else "FAIL"
     items = []
     for number, (check, how) in enumerate(checks, 1):
         checked, note = "", ""
         if number == 6:
             checked = " checked" if exposed else ""
-            note = f" <em>(script: {'pass' if exposed else 'FAIL'})</em>"
+            note = f" <em>(script: {verdict})</em>"
         items.append(
             f'<li><label><input type="checkbox"{checked}> <b>{number}. {inline(check)}</b>'
             f"</label><br><span>{inline(how)}{note}</span></li>"
         )
     return (
-        f'<section id="{level}"><h2>{level}</h2>'
+        f'<section id="{html.escape(level)}"><h2>{html.escape(level)}</h2>'
         f'<div class="shots">{"".join(shot_figure(shot) for shot in shots)}</div>'
         f'<h3>Motion</h3><div class="shots">{pair}</div>'
         f'<h3>Rubric</h3><ol class="rubric">{"".join(items)}</ol></section>'

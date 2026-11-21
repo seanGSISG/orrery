@@ -105,9 +105,15 @@ def measure(level: str, run: Run) -> Result:
     done = subprocess.run(
         command, capture_output=True, text=True, timeout=300, check=False
     )
-    if not out.exists():
-        raise RuntimeError(f"{level} {run.name}: no report\n{done.stdout}{done.stderr}")
+    if done.returncode != 0 or not out.exists():
+        log = f"{done.stdout}{done.stderr}"
+        raise RuntimeError(
+            f"{level} {run.name}: failed (exit {done.returncode})\n{log}"
+        )
     report = json.loads(out.read_text())
+    if (report["width"], report["height"]) != (run.width, run.height):
+        size = f"{report['width']}x{report['height']}"
+        raise RuntimeError(f"{level} {run.name}: rendered at {size}")
     gpu = report["gpu_ms"]
     return Result(
         run,

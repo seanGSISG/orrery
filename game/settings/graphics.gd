@@ -48,4 +48,9 @@ func _sync() -> void:
 ## A new environment or sun gets the current preset after it has entered the world.
 func _on_node_added(node: Node) -> void:
 	if _preset != null and (node is WorldEnvironment or node is DirectionalLight3D):
-		_preset.apply.call_deferred(get_viewport())
+		_apply_current.call_deferred()
+
+
+## Applies the preset that is current when the deferred call runs, not when it was queued.
+func _apply_current() -> void:
+	_preset.apply(get_viewport())

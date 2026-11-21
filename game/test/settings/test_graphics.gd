@@ -19,6 +19,16 @@ func test_use_applies_the_preset_to_the_window_and_a_new_environment() -> void:
 	assert_true(world.environment.volumetric_fog_enabled)
 
 
+## A preset change right after an environment enters wins over the apply that the entry queued.
+func test_a_preset_change_after_a_new_environment_stays() -> void:
+	var world: WorldEnvironment = WorldEnvironment.new()
+	world.environment = Environment.new()
+	add_child_autofree(world)
+	Graphics.use("ultra")
+	await wait_process_frames(2)
+	assert_true(world.environment.ssil_enabled)
+
+
 ## A change of the project setting, as the harness `set_setting` makes it, applies the preset.
 func test_a_setting_change_applies_the_preset() -> void:
 	ProjectSettings.set_setting(Graphics.SETTING, "low")

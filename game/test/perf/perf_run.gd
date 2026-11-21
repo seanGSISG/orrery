@@ -6,14 +6,16 @@ extends Node
 ##         [--motion build/gallery/fixture]
 ## It flies a camera along the level's shots, then once fast around the marble. It measures
 ## the GPU time of each frame with RenderingServer.viewport_get_measured_render_time_gpu and
-## the VRAM with Performance.RENDER_VIDEO_MEM_USED, writes them to --out as JSON and quits.
-## With --motion it then saves two orbit frames 1/60 s apart as motion-1.png and motion-2.png
-## (rubric check 3). A level without a WorldEnvironment gets a stand-in sky and sun, so that
-## the presets have effects to turn on.
+## the peak VRAM with Performance.RENDER_VIDEO_MEM_USED. With --motion it then saves two orbit
+## frames 1/60 s apart as motion-1.png and motion-2.png (rubric check 3). Last it writes the
+## report to --out as JSON and quits; a failed run writes no report and quits with 1. A level
+## without a WorldEnvironment gets a stand-in sky and sun, so that the presets have effects to
+## turn on.
 
 ## The path visits these shots in this order, then the level's other shots.
 const SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
-## Frames before the measurement starts: shader compilation and the first shadow updates.
+## The fewest frames before the measurement starts; the warm-up flies the whole path at least
+## once, for shader compilation and the first shadow updates.
 const WARMUP: int = 120
 ## Frames from one shot to the next; the path moves 1/60 s per frame.
 const LEG: int = 120
@@ -31,7 +33,7 @@ func _ready() -> void:
 	_run.call_deferred()
 
 
-## Runs the measurement and quits with 0, or with 1 on bad arguments.
+## Runs the measurement and quits with 0, or with 1 on bad arguments or a failed save.
 func _run() -> void:
 	var args: Dictionary[String, String] = _args()
 	var level: String = args.get("level", "")
@@ -55,12 +57,17 @@ func _run() -> void:
 	var viewport: RID = get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(viewport, true)
 	var frames: int = maxi(_poses.size() - 1, 0) * LEG + ORBIT
-	for frame: int in WARMUP:
+	for frame: int in maxi(WARMUP, frames):
 		await _draw(_pose(frame % frames))
 	var times: PackedFloat64Array = []
+	var vram: float = 0.0
 	for frame: int in frames:
 		await _draw(_pose(frame))
 		times.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport))
+		vram = maxf(vram, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED))
+	if motion != "" and not await _save_motion(motion, frames - ORBIT):
+		get_tree().quit(1)
+		return
 	var size: Vector2i = get_viewport().get_visible_rect().size
 	var report: Dictionary = {
 		"level": level,
@@ -70,13 +77,11 @@ func _run() -> void:
 		"adapter": RenderingServer.get_video_adapter_name(),
 		"frames": times.size(),
 		"gpu_ms": _stats(times),
-		"vram_mb": Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0,
+		"vram_mb": vram / 1048576.0,
 		"stand_in_sky": stand_in,
 	}
 	DirAccess.make_dir_recursive_absolute(out.get_base_dir())
 	FileAccess.open(out, FileAccess.WRITE).store_string(JSON.stringify(report, "  "))
-	if motion != "":
-		await _save_motion(motion, frames - ORBIT)
 	get_tree().quit()
 
 
@@ -151,8 +156,8 @@ func _draw(pose: Transform3D) -> void:
 
 
 ## Flies the orbit again from its first frame orbit_start, and saves two frames next to each
-## other, half a turn in, so the upscaler has history.
-func _save_motion(dir: String, orbit_start: int) -> void:
+## other, half a turn in, so the upscaler has history. Returns false when a save fails.
+func _save_motion(dir: String, orbit_start: int) -> bool:
 	DirAccess.make_dir_recursive_absolute(dir)
 	var half: int = roundi(ORBIT * 0.5)
 	for frame: int in half:
@@ -160,7 +165,12 @@ func _save_motion(dir: String, orbit_start: int) -> void:
 	for i: int in 2:
 		await _draw(_pose(orbit_start + half + i))
 		var image: Image = get_viewport().get_texture().get_image()
-		image.save_png(dir.path_join("motion-%d.png" % (i + 1)))
+		var path: String = dir.path_join("motion-%d.png" % (i + 1))
+		var error: Error = image.save_png(path)
+		if error != OK:
+			printerr("perf_run: cannot save %s (%s)" % [path, error_string(error)])
+			return false
+	return true
 
 
 ## Returns the mean, median and 99th percentile (nearest rank) of times, in ms.
