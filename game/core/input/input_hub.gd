@@ -20,8 +20,10 @@ var dead_zone: float = 0.15
 var _source: InputSource = PlayerSource.new()
 
 
-## Watches pad hot-plug and every LevelRun that enters the tree.
+## Watches pad hot-plug and every LevelRun that enters the tree. It runs in pause too, so the
+## device and the button glyphs follow the player in the pause menu.
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	get_tree().node_added.connect(_on_node_added)
 

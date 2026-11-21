@@ -1,5 +1,6 @@
 extends Node3D
-## The entry scene. User arguments (after `--`):
+## The entry scene. Its child Ui (ui/ui.gd) shows the HUD and the menus: the title when no
+## level loads here. User arguments (after `--`):
 ## - `--smoke` prints the boot marker "ORRERY boot ok" and quits; `just smoke-wine` and CI use
 ##   it to check that an export boots.
 ## - `--level <id>` plays level <id> (see Game.load_level); `just run` uses it.
