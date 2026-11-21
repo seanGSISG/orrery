@@ -97,9 +97,11 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 ## only closes the gap. Returns the speed taken away along the normal. #10 adds the bounce
 ## and the slide here.
 func _meet(contact: Contact, h: float) -> float:
-	if contact.depth > -SKIN:
-		position += contact.normal * (contact.depth + SKIN)
-	var gap: float = maxf(-contact.depth - SKIN, 0.0)
+	# The depth at the current position: an earlier contact may have pushed the marble out.
+	var depth: float = tuning.radius - (position - contact.point).dot(contact.normal)
+	if depth > -SKIN:
+		position += contact.normal * (depth + SKIN)
+	var gap: float = maxf(-depth - SKIN, 0.0)
 	var excess: float = (contact.velocity - velocity).dot(contact.normal) - gap / h
 	if excess <= 0.0:
 		return 0.0

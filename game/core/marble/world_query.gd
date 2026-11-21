@@ -34,21 +34,25 @@ func contacts(center: Vector3) -> Array[Contact]:
 	var rids: Array[RID] = []
 	# One body can fill several entries (F4), so ask for more than the Solids we expect.
 	for hit: Dictionary in _space.intersect_shape(_query, 32):
+		var rid: RID = hit["rid"]
+		if rids.has(rid):
+			continue
+		rids.append(rid)
 		var collider: Object = hit["collider"]
 		var solid: Solid = collider as Solid
-		if solid != null and not solids.has(solid):
+		if solid != null:
 			solids.append(solid)
-			rids.append(solid.get_rid())
 	var out: Array[Contact] = []
-	# collide_shape gives points only (F1), so query each Solid alone to know its owner.
-	for i: int in solids.size():
+	# collide_shape gives points only (F1), so query each Solid alone, with every other body
+	# excluded (also a body that is not a Solid), to know its owner.
+	for solid: Solid in solids:
 		var others: Array[RID] = rids.duplicate()
-		others.remove_at(i)
+		others.erase(solid.get_rid())
 		_query.exclude = others
 		var pairs: Array[Vector3] = _space.collide_shape(_query, 16)
 		var own: Array[Contact] = []
 		for k: int in range(1, pairs.size(), 2):
-			_add_contact(own, center, pairs[k], solids[i])
+			_add_contact(own, center, pairs[k], solid)
 		out.append_array(own)
 	_query.exclude = []
 	return out
@@ -105,5 +109,5 @@ func _add_contact(out: Array[Contact], center: Vector3, point: Vector3, solid: S
 	contact.normal = offset / distance
 	contact.depth = _radius - distance
 	contact.velocity = solid.velocity_at(point)
-	contact.surface = solid.surface
+	contact.surface = solid.surface if solid.surface != null else Solid.DEFAULT_SURFACE
 	contact.object = solid.owner as LevelObject
