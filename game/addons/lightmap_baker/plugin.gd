@@ -90,6 +90,10 @@ func _bake(scene_path: String) -> String:
 	)
 	if editors.is_empty():
 		return "LightmapGIEditorPlugin not found"
+	# Forget the last bake's textures (in memory only), so a bake that fails before it writes
+	# anything cannot pass the check below with the old lightmap.
+	var none: Array[TextureLayered] = []
+	lightmap.light_data.lightmap_textures = none
 	var started: int = Time.get_ticks_msec()
 	editors[0].call("_bake")
 	var seconds: float = (Time.get_ticks_msec() - started) / 1000.0
