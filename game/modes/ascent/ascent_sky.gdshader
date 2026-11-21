@@ -20,6 +20,6 @@ uniform float blend : hint_range(0.0, 1.0) = 0.0;
 void sky() {
 	vec3 from = texture(from_panorama, SKY_COORDS).rgb * from_energy;
 	vec3 to = texture(to_panorama, SKY_COORDS).rgb * to_energy;
-	float below = smoothstep(0.0, -HORIZON_BAND, EYEDIR.y);
+	float below = 1.0 - smoothstep(-HORIZON_BAND, 0.0, EYEDIR.y);
 	COLOR = mix(from, to, mix(blend, pow(blend, LAND_HOLD), below));
 }
