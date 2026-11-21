@@ -13,6 +13,7 @@ import pytest
 from orrery_harness import game
 from orrery_harness.client import (
     INVALID_PARAMS,
+    INVALID_REQUEST,
     METHOD_NOT_FOUND,
     NO_FRAME,
     NOT_AVAILABLE,
@@ -137,6 +138,9 @@ def test_protocol_errors(harness: Harness) -> None:
     with pytest.raises(HarnessError) as garbled:
         harness.send_line("{not json")
     assert garbled.value.code == PARSE_ERROR
+    with pytest.raises(HarnessError) as empty:
+        harness.send_line("{}")
+    assert empty.value.code == INVALID_REQUEST
 
 
 def test_quit() -> None:

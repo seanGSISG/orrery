@@ -69,19 +69,22 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Run before LevelRun._physics_process, so that a new run never steps itself.
 	process_physics_priority = -100
-	OS.add_logger(_log)
-	InputHub.use_source(_source)
 	var port: int = port_in(OS.get_cmdline_user_args())
 	var error: Error = _server.listen(port, HOST) if port > 0 else ERR_INVALID_PARAMETER
 	if error != OK:
+		# Without a listener the harness leaves the game to the player.
 		push_error("Harness: cannot listen on %s:%d (%s)" % [HOST, port, error_string(error)])
+		queue_free()
 		return
+	OS.add_logger(_log)
+	InputHub.use_source(_source)
 	print("ORRERY harness listening on %s:%d" % [HOST, port])
 
 
 func _exit_tree() -> void:
-	OS.remove_logger(_log)
-	_server.stop()
+	if _server.is_listening():
+		OS.remove_logger(_log)
+		_server.stop()
 
 
 func _physics_process(_delta: float) -> void:
@@ -133,7 +136,9 @@ func _reply(line: String) -> String:
 	var params: Variant = request.get("params", {})
 	var result: Variant
 	var version: Variant = request.get("jsonrpc")
-	if not (version is String and version == "2.0") or not method is String:
+	# Only a valid request without an id is a notification; an invalid one gets an error.
+	var valid: bool = version is String and version == "2.0" and method is String
+	if not valid:
 		result = Failure.new(INVALID_REQUEST, "a request needs jsonrpc 2.0 and a method")
 	elif not _commands.has(method):
 		result = Failure.new(METHOD_NOT_FOUND, "no method %s" % method)
@@ -143,7 +148,7 @@ func _reply(line: String) -> String:
 		var command: Callable = _commands[method]
 		var fields: Dictionary = params
 		result = await command.call(Params.new(fields))
-	if not request.has("id"):
+	if valid and not request.has("id"):
 		return ""
 	return _response(id, result)
 
