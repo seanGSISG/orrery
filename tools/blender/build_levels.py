@@ -125,8 +125,6 @@ def import_and_check(levels: list[Level]) -> list[str]:
     imported = run([*godot, "--import"])
     ids = [level.id for level in levels]
     checked = run([*godot, "--script", "res://levels/check_levels.gd", "--", *ids])
-    if imported.returncode == 0 and checked.returncode == 0:
-        return []
     # LevelConverter errors start with "level <id>:"; SCRIPT ERROR means a bug in a script.
     ours = ("ERROR: level ", "SCRIPT ERROR")
     log = (imported.stdout + imported.stderr).splitlines()
@@ -134,13 +132,26 @@ def import_and_check(levels: list[Level]) -> list[str]:
     unloaded = [
         line for line in checked.stderr.splitlines() if line.startswith("level ")
     ]
-    return [*errors, *unloaded] or [f"Godot failed:\n{imported.stderr}{checked.stderr}"]
+    problems = [*errors, *unloaded]
+    if not problems and (imported.returncode != 0 or checked.returncode != 0):
+        problems = [f"Godot failed:\n{imported.stderr}{checked.stderr}"]
+    return problems
+
+
+def remove_stale(levels: list[Level]) -> None:
+    """Deletes the built files of levels whose script is gone, so Godot does not import them."""
+    ids = {level.id for level in levels}
+    for path in BUILT.glob("*.glb*"):
+        if path.name.split(".")[0] not in ids:
+            path.unlink()
 
 
 def main() -> None:
     """Builds the levels named on the command line (all when none) and exits 1 on a problem."""
     levels = find_levels(sys.argv[1:])
     BUILT.mkdir(parents=True, exist_ok=True)
+    if not sys.argv[1:]:
+        remove_stale(levels)
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
         problems = dict(zip(levels, pool.map(build, levels), strict=True))
     for level, errors in problems.items():
