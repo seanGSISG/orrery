@@ -14,10 +14,10 @@ kit.marker(
     "moving_platform",
     at=(0, 10, 0),
     points=[(0, 22, 0)],
-    period=8.0,
+    period=9.0,
     stop=1.5,
 )
-kit.marker("turning_gear", at=(0, 26.1, 0), period=8.0, radius=2.1, teeth=12)
+kit.marker("turning_gear", at=(0, 26.1, 0), period=6.0, radius=2.1, teeth=10)
 
 kit.track(at=(0, 28.2, 0), length=8)
 kit.marker("finish", at=(0, 34, 0))

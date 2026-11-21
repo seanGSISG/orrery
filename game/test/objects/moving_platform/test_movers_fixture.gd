@@ -35,12 +35,12 @@ func test_fixture_platform_has_its_marker_settings_and_carries_the_marble() -> v
 	assert_not_null(platform)
 	if platform == null:
 		return
-	assert_almost_eq(platform.period, 8.0, 0.001)
+	assert_almost_eq(platform.period, 9.0, 0.001)
 	assert_almost_eq(platform.stop, 1.5, 0.001)
 	assert_almost_eq(platform.global_position, DECK_FROM, Vector3.ONE * 0.001)
 	run.marble.teleport(DECK_FROM + Vector3.UP * TUNING.radius, Vector3.ZERO)
-	# Wait 1.5 s, then move 2.5 s, then wait at the far point.
-	hold(rolling(Vector2.ZERO), 4.5)
+	# Wait 1.5 s, then move 3 s, then wait at the far point.
+	hold(rolling(Vector2.ZERO), 5.0)
 	assert_almost_eq(run.state.position, DECK_TO + Vector3.UP * TUNING.radius, Vector3.ONE * 0.2)
 	assert_true(run.state.on_ground)
 
@@ -52,10 +52,11 @@ func test_fixture_gear_has_its_marker_settings_and_carries_the_marble() -> void:
 	assert_not_null(gear)
 	if gear == null:
 		return
-	assert_eq(gear.teeth, 12)
+	assert_almost_eq(gear.period, 6.0, 0.001)
+	assert_eq(gear.teeth, 10)
 	assert_almost_eq(gear.global_position, GEAR_AT, Vector3.ONE * 0.001)
 	run.marble.teleport(GEAR_AT + Vector3(1.2, TUNING.radius, 0), Vector3.ZERO)
-	hold(rolling(Vector2.ZERO), 2.0)
+	hold(rolling(Vector2.ZERO), 1.5)
 	# A quarter turn counter-clockwise from above takes +x to -z.
 	var expected: Vector3 = GEAR_AT + Vector3(0, TUNING.radius, -1.2)
 	assert_almost_eq(run.state.position, expected, Vector3.ONE * 0.3)

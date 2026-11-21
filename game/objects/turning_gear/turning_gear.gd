@@ -30,8 +30,12 @@ var _spin: Vector3 = Vector3.ZERO
 @onready var _solid: Solid = $Solid
 
 
-## Builds the disc and its teeth from the settings.
+## Builds the disc and its teeth from the settings. A radius too small for teeth gives a plain
+## disc.
 func _ready() -> void:
+	if teeth > 0 and radius <= TOOTH_LENGTH + TOOTH_ROOT:
+		push_error("turning_gear %s: radius %.2f m is too small for teeth" % [name, radius])
+		teeth = 0
 	var disc: CylinderShape3D = CylinderShape3D.new()
 	disc.radius = radius - TOOTH_LENGTH if teeth > 0 else radius
 	disc.height = thickness

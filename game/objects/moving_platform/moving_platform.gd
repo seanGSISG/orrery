@@ -59,8 +59,8 @@ func advance(_run: LevelRun, t: float) -> void:
 	_place(t)
 
 
-## Fills _stops and _times. A path with no length, or a period too short for its stops, keeps
-## the deck at the marker.
+## Fills _stops and _times. A path with no length, a negative stop, or a period too short for
+## its stops keeps the deck at the marker.
 func _plan() -> void:
 	var points: PackedVector3Array = [global_position]
 	for child: Node in get_children():
@@ -77,10 +77,11 @@ func _plan() -> void:
 		lengths.append(_stops[i].distance_to(_stops[(i + 1) % _stops.size()]))
 		total += lengths[i]
 	var moving: float = period - stop * _stops.size()
-	if total > 0.0 and moving <= 0.0:
+	var valid: bool = moving > 0.0 and stop >= 0.0
+	if total > 0.0 and not valid:
 		var stops: String = "%d stops of %.2f s" % [_stops.size(), stop]
-		push_error("moving_platform %s: period %.2f s is not longer than %s" % [name, period, stops])
-	if total <= 0.0 or moving <= 0.0:
+		push_error("moving_platform %s: needs stop >= 0 and period > %s" % [name, stops])
+	if total <= 0.0 or not valid:
 		_stops = [global_position]
 		_times = [0.0]
 		return
