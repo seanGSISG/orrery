@@ -150,7 +150,7 @@ func _stays_down(point: Vector3, plane: Contact) -> bool:
 		return false
 	var at: Vector3 = hit["position"]
 	var normal: Vector3 = hit["normal"]
-	return (at - spot).dot(plane.normal) <= FLUSH and normal.dot(along) >= -RISE
+	return (at - plane.point).dot(plane.normal) <= FLUSH and normal.dot(along) >= -RISE
 
 
 ## Adds the contact at point on solid to out, which holds only that Solid's contacts. deepest
