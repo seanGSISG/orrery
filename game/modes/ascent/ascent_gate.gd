@@ -61,12 +61,12 @@ func _init() -> void:
 	words.text = TEXT
 	words.font = FONT
 	words.font_size = 160
-	words.pixel_size = 0.004
+	words.pixel_size = 0.0034
 	words.modulate = INK
 	words.outline_modulate = Color(NIGHT, 0.85)
 	words.outline_size = 18
 	words.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	words.position = Vector3.UP * (RADIUS * 2.0 + 0.7)
+	words.position = Vector3.UP * (RADIUS * 2.0 + 0.45)
 	add_child(words)
 
 

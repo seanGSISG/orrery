@@ -1,8 +1,9 @@
 class_name AscentFlag
 extends Node3D
-## The flag at the best height of Ascent: a pole with a gold pennant that sways, and a faint
-## beam above it, so that the marble sees it from far below. Its origin is the foot of the
-## pole, on the floor. The Ascent mode puts it in place and shows it; it has no physics.
+## The flag at the best height of Ascent: a pole with a gold pennant that turns its face to
+## the camera, and a thin beam above it, so that the marble sees it from far below. Its origin
+## is the foot of the pole, on the floor. The Ascent mode puts it in place and shows it; it has
+## no physics.
 
 const BEAM: Shader = preload("res://objects/gem/beam.gdshader")
 ## The colour of gold medals and records in the HUD (UiLook.GOLD).
@@ -10,15 +11,10 @@ const GOLD: Color = Color("#f4d17e")
 const POLE: Color = Color(0.2, 0.15, 0.1)
 ## Height of the pole, and length and height of the pennant, m.
 const POLE_HEIGHT: float = 2.0
-const PENNANT: Vector2 = Vector2(0.9, 0.5)
-## Height of the beam above the foot, m.
-const BEAM_HEIGHT: float = 12.0
-## The pennant turns this far to each side of its rest, rad, once in SWAY_PERIOD s.
-const SWAY: float = 0.35
-const SWAY_PERIOD: float = 2.6
-
-var _cloth: MeshInstance3D = MeshInstance3D.new()
-var _time: float = 0.0
+const PENNANT: Vector2 = Vector2(1.0, 0.56)
+## Height of the beam above the foot, and its radius, m.
+const BEAM_HEIGHT: float = 16.0
+const BEAM_RADIUS: float = 0.12
 
 
 ## Builds the pole, the pennant and the beam.
@@ -33,14 +29,15 @@ func _init() -> void:
 	pole.mesh = shaft
 	pole.position.y = POLE_HEIGHT * 0.5
 	add_child(pole)
-	_cloth.mesh = _pennant()
-	_cloth.position.y = POLE_HEIGHT
-	_cloth.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_cloth)
+	var cloth: MeshInstance3D = MeshInstance3D.new()
+	cloth.mesh = _pennant()
+	cloth.position.y = POLE_HEIGHT
+	cloth.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(cloth)
 	var beam: MeshInstance3D = MeshInstance3D.new()
 	var column: CylinderMesh = CylinderMesh.new()
-	column.top_radius = 0.3
-	column.bottom_radius = 0.3
+	column.top_radius = BEAM_RADIUS
+	column.bottom_radius = BEAM_RADIUS
 	column.height = BEAM_HEIGHT
 	column.radial_segments = 16
 	column.rings = 1
@@ -49,7 +46,7 @@ func _init() -> void:
 	var glow: ShaderMaterial = ShaderMaterial.new()
 	glow.shader = BEAM
 	glow.set_shader_parameter(&"height", BEAM_HEIGHT)
-	glow.set_shader_parameter(&"strength", 0.4)
+	glow.set_shader_parameter(&"strength", 0.5)
 	column.material = glow
 	beam.mesh = column
 	beam.position.y = BEAM_HEIGHT * 0.5
@@ -58,13 +55,8 @@ func _init() -> void:
 	add_child(beam)
 
 
-## Sways the pennant round the pole.
-func _process(delta: float) -> void:
-	_time += delta
-	_cloth.rotation.y = sin(_time / SWAY_PERIOD * TAU) * SWAY
-
-
-## Returns the pennant: a triangle from the top of the pole, seen from both sides.
+## Returns the pennant: a triangle from the top of the pole, which turns round the pole to
+## face the camera.
 static func _pennant() -> ArrayMesh:
 	var tool: SurfaceTool = SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -76,15 +68,17 @@ static func _pennant() -> ArrayMesh:
 	return tool.commit()
 
 
-## Returns a plain material of color. bright makes it glow a little and show from both sides,
-## so that the pennant reads against a dark wall and against the sky.
-static func _paint(color: Color, bright: bool) -> StandardMaterial3D:
+## Returns a plain material of color. pennant makes it glow and turn round the upright axis
+## to the camera, so that the pennant reads at its full size against a dark wall and against
+## the sky.
+static func _paint(color: Color, pennant: bool) -> StandardMaterial3D:
 	var paint: StandardMaterial3D = StandardMaterial3D.new()
 	paint.albedo_color = color
 	paint.roughness = 0.7
-	if bright:
+	if pennant:
 		paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+		paint.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
 		paint.emission_enabled = true
 		paint.emission = color
-		paint.emission_energy_multiplier = 0.6
+		paint.emission_energy_multiplier = 0.8
 	return paint

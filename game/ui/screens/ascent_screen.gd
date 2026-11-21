@@ -17,7 +17,7 @@ var continue_item: MenuItem = MenuItem.new("ASCENT_CONTINUE", &"ui_accept", true
 var new_item: MenuItem = MenuItem.new("ASCENT_NEW", &"ui_accept", true)
 var assist_item: MenuItem = MenuItem.new("ASCENT_ASSIST_OFF", &"ui_accept", true)
 
-var _table: StatTable = StatTable.new(WIDTH)
+var _table: StatTable = StatTable.new(WIDTH, false)
 var _spot: Label = UiTheme.label("", &"DataStrong")
 var _best_height: Label = UiTheme.label("", &"DataStrong")
 var _best_time: Label = UiTheme.label("", &"DataStrong")
@@ -42,7 +42,6 @@ func _init() -> void:
 	_spot_line = _table.add_line(UiTheme.label("ASCENT_SPOT", &"Row"), _spot)
 	_height_line = _table.add_line(UiTheme.label("ASCENT_BEST_HEIGHT", &"Row"), _best_height)
 	_time_line = _table.add_line(UiTheme.label("ASCENT_BEST_TIME", &"Row"), _best_time)
-	column.add_child(_gap(28.0))
 	column.add_child(_table)
 	column.add_child(_gap(36.0))
 	var menu: VBoxContainer = UiTheme.column(8)

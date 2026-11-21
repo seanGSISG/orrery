@@ -2,15 +2,17 @@ class_name StatTable
 extends VBoxContainer
 ## A table of facts, as on the results screen: one line per fact, the name on the left and
 ## the value on the right, with a strong rule above the first line and a thin rule below each
-## line. Make it with StatTable.new(width) and add each line with add_line().
+## line. Make it with StatTable.new(width) and add each line with add_line(). top_rule false
+## leaves the strong rule out, for a table that stands under a rule of the screen.
 
 
-func _init(width: float) -> void:
+func _init(width: float, top_rule: bool = true) -> void:
 	theme_type_variation = &"Gap0"
 	custom_minimum_size.x = width
-	var top: HSeparator = HSeparator.new()
-	top.theme_type_variation = &"RuleStrong"
-	add_child(top)
+	if top_rule:
+		var top: HSeparator = HSeparator.new()
+		top.theme_type_variation = &"RuleStrong"
+		add_child(top)
 
 
 ## Adds one line: name_label on the left, value on the right, and a rule below. Returns the

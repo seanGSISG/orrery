@@ -55,10 +55,42 @@ func _ready() -> void:
 	Game.screen = &"play"
 	_finish(run)
 	await _save("results")
+	await _save_ascent()
 	# `just ui-shots` looks for this line: gamescope does not pass the exit code on.
 	if _failed == 0:
 		print("ui-shots: done")
 	get_tree().quit(mini(_failed, 1))
+
+
+## Saves the Ascent screens: the menu with a saved climb, the HUD of a climb with the height
+## meter, its pause menu and the stats at the gate. The climb is the one that the Ascent menu
+## starts: the fixture zones until the zones of the game are built.
+func _save_ascent() -> void:
+	Save.finish(Ascent.ID, 552.4, &"none", null)
+	Save.ascent.has_spot = true
+	Save.ascent.spot_height = 132.0
+	Save.ascent.spot_time = 431.27
+	Save.ascent.best_height = 187.0
+	Game.screen = &"ascent"
+	await _save("ascent")
+	var run: LevelRun = Ascent.start(true)
+	if run == null:
+		push_error("ui-shots: no Ascent zone is built")
+		_failed += 1
+		return
+	run.auto_step = false
+	var climb: Ascent = Ascent.of(run)
+	# The marble stands a little above the start of the second zone, under its best height.
+	Save.ascent.best_height = lerpf(climb.zone_heights[-1], climb.top, 0.5)
+	_play(run, 0.5)
+	run.teleport(climb.start_of(mini(1, climb.zone_heights.size() - 1)), Vector3.ZERO)
+	_play(run, 61.3)
+	await _save("hud_ascent")
+	Game.screen = &"pause"
+	await _save("pause_ascent")
+	Game.screen = &"play"
+	_finish(run)
+	await _save("ascent_stats")
 
 
 ## Points Save at a new demo save: some medals, best times and eggs in the test tier.

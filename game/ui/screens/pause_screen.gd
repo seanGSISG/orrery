@@ -5,7 +5,8 @@ extends Screen
 ## `restart` action restarts (Game handles it). Levels ends the run.
 ##
 ## An Ascent climb has no restart, so Restart does not show. In place of Levels it has Save
-## and quit, which ends the run and opens the Ascent menu; the mode saves the spot.
+## and quit, which ends the run and opens the Ascent menu; the mode saves the spot. The line
+## under the title also gives the marble's height.
 
 var _dial: Dial = Dial.new()
 var _line: Label = UiTheme.label("")
@@ -61,7 +62,10 @@ func open() -> void:
 		_levels.set_text("PAUSE_SAVE_QUIT" if climbing else "PAUSE_LEVELS")
 		_quit_to = &"ascent" if climbing else &"level_select"
 		var level: Level = run.level
-		_line.text = "%s · %s" % [tr(level.title), TimeText.full(run.state.timer)]
+		var facts: PackedStringArray = [tr(level.title), TimeText.full(run.state.timer)]
+		if climbing:
+			facts.insert(1, HeightText.metres(run.state.height))
+		_line.text = " · ".join(facts)
 		_dial.show_times(run.state.timer, level.gold, level.par, false)
 	_resume.grab_focus()
 
