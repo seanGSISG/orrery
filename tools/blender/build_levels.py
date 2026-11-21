@@ -10,7 +10,8 @@ With no ids it builds every `levels/<tier>/<id>.py`.
    .glb, and glTF-Validator checks it. A level that fails loses its old .glb.
 2. Godot imports the project once. Each built level gets a `.glb.import` file that names the
    post-import script game/levels/level_import.gd. Its LevelConverter swaps the markers for
-   objects, builds the collision and runs the level lint.
+   objects, builds the collision and runs the level lint. The file also sets the meshes to
+   Static Lightmaps, so Godot generates their UV2 at 0.1 m per texel for `just bake`.
 3. game/levels/check_levels.gd checks that each built level loads as a Level.
 
 Environment: BLENDER (default blender-5.2), GLTF_VALIDATOR (default gltf_validator) and GODOT
@@ -38,6 +39,8 @@ importer="scene"
 [params]
 
 nodes/use_node_type_suffixes=false
+meshes/light_baking=2
+meshes/lightmap_texel_size=0.1
 import_script/path="res://levels/level_import.gd"
 """
 

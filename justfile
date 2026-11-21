@@ -45,7 +45,7 @@ build-levels *ids:
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py game/levels/level_converter.gd)
+    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)
@@ -185,3 +185,39 @@ gallery *ids: fresh-levels import
 [positional-arguments]
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
+
+# --- Lightmaps (#24) ---
+
+# Bake the lightmaps of levels (all, or the given ids) on this GPU. Close every Godot editor on this project first
+[positional-arguments]
+[script("bash")]
+bake *ids: fresh-levels import
+    set -euo pipefail
+    if (( $# == 0 )); then mapfile -t ids < <(basename -s .py levels/*/*.py); set -- "${ids[@]}"; fi
+    out=game/levels/lightmaps
+    # The editor scans the project at start; the bake can import its files only into a known folder.
+    mkdir -p "$out"
+    scenes=()
+    for id in "$@"; do
+        glb="game/levels/built/$id.glb"
+        if [[ ! -f $glb ]]; then echo "just bake: $glb is missing" >&2; exit 1; fi
+        scenes+=("res://levels/built/$id.glb")
+    done
+    log=$(mktemp) settings=$(mktemp)
+    # The editor rewrites project.godot on exit and drops the settings that equal the defaults.
+    cp game/project.godot "$settings"
+    trap 'cp "$settings" game/project.godot; rm -f "$log" "$settings"' EXIT
+    # A bake needs a real GPU, so the editor runs in a hidden gamescope display. gamescope's exit
+    # code does not follow Godot's, so the plugin's summary line is the only success check.
+    timeout 3600 gamescope --backend headless -W 1280 -H 720 -- \
+        "{{ godot }}" --editor --path game -- --bake-lightmaps "${scenes[@]}" >"$log" 2>&1 || true
+    if ! grep -qx "BAKE done: $# of $# baked" "$log"; then
+        grep -E '^(BAKE|ERROR|SCRIPT ERROR)' "$log" >&2 || true
+        echo "just bake: not every level baked" >&2
+        exit 1
+    fi
+    grep -E '^BAKE' "$log"
+    # The sidecar records the level the bake belongs to; `just test` warns when they differ.
+    for id in "$@"; do
+        sha256sum "game/levels/built/$id.glb" | cut -d' ' -f1 >"$out/$id.sha256"
+    done

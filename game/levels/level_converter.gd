@@ -24,6 +24,9 @@ extends RefCounted
 ##   rig: one sun with shadows and a procedural sky with AgX tonemapping. The level's `sky`
 ##   picks dawn, noon or dusk; without one, the tier does (beginner dawn, intermediate noon,
 ##   advanced dusk, others noon). The look baseline (#24) replaces it with the real skies.
+## - Lightmap: every level gets one LightmapGI, `lightmap`, with the bake settings of
+##   docs/design/visual-quality.md §4. When `just bake <id>` has written LIGHTMAP_DATA for the
+##   level id, the LightmapGI uses it.
 ## Each error names the level id and the node.
 
 const LEVEL_SCRIPT: Script = preload("res://core/level/level.gd")
@@ -32,6 +35,8 @@ const OBJECT_SCENE: String = "res://objects/%s/%s.tscn"
 const SURFACE: String = "res://core/level/%s_surface.tres"
 const ONE_EACH: Array[String] = ["level", "start", "finish"]
 const GALLERY_SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
+## The baked lightmap of a level id. `just bake` writes it; the lightmap baker plugin uses it.
+const LIGHTMAP_DATA: String = "res://levels/lightmaps/%s.lmbake"
 ## The stand-in light rigs by name: sun elevation in degrees, sun colour and sky colours.
 const SUN_ELEVATION: Dictionary[String, float] = {"dawn": 20.0, "noon": 60.0, "dusk": 25.0}
 const SUN_COLOR: Dictionary[String, Color] = {
@@ -103,6 +108,7 @@ func convert(scene: Node3D) -> Level:
 			_place(marker, data)
 	_build_solids(meshes)
 	_add_light_rig(level_data)
+	_add_lightmap()
 	scene.set_script(LEVEL_SCRIPT)
 	_apply(scene, LEVEL_SCRIPT, level_data, "level")
 	if not errors.is_empty():
@@ -350,3 +356,27 @@ func _add_light_rig(level_data: Dictionary) -> void:
 	for node: Node in [world, sun]:
 		_root.add_child(node)
 		node.owner = _root
+
+
+## Adds the LightmapGI with the bake settings, and its committed bake when one exists.
+func _add_lightmap() -> void:
+	var lightmap: LightmapGI = LightmapGI.new()
+	lightmap.name = "lightmap"
+	lightmap.quality = LightmapGI.BAKE_QUALITY_ULTRA
+	lightmap.bounces = 4
+	lightmap.bounce_indirect_energy = 1.0
+	lightmap.directional = false
+	lightmap.supersampling = true
+	lightmap.supersampling_factor = 2.0
+	lightmap.use_denoiser = true
+	lightmap.denoiser_strength = 0.1
+	lightmap.denoiser_range = 10
+	lightmap.environment_mode = LightmapGI.ENVIRONMENT_MODE_SCENE
+	lightmap.interior = false
+	lightmap.shadowmask_mode = LightmapGIData.SHADOWMASK_MODE_REPLACE
+	lightmap.generate_probes_subdiv = LightmapGI.GENERATE_PROBES_SUBDIV_8
+	var data_path: String = LIGHTMAP_DATA % _id
+	if ResourceLoader.exists(data_path):
+		lightmap.light_data = load(data_path) as LightmapGIData
+	_root.add_child(lightmap)
+	lightmap.owner = _root
