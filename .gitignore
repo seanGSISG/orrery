@@ -2,6 +2,7 @@
 build/
 game/.godot/
 game/levels/built/
+game/core/marble/built/
 *.blend1
 
 # Python

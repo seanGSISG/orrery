@@ -26,8 +26,38 @@ blender *args:
 blender-agent:
     gamescope --backend headless -W 1920 -H 1080 -- blender-5.2 --online-mode
 
+# Build the marble's brass core (tools/blender/marble_core.py) into game/core/marble/built/
+[script("bash")]
+build-marble:
+    set -euo pipefail
+    out=game/core/marble/built
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/marble_core.py -- "$tmp/orrery_core.glb" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just build-marble: Blender failed" >&2
+        exit 1
+    fi
+    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/orrery_core.glb"
+    # A new folder drops the textures that Godot took out of the old .glb. The .import file
+    # names the post-import script before Godot can see the .glb.
+    rm -rf "$out"
+    mkdir -p "$out"
+    printf '[remap]\n\nimporter="scene"\n\n[params]\n\nimport_script/path="res://core/marble/core_import.gd"\ngltf/embedded_image_handling=2\n' \
+        >"$out/orrery_core.glb.import"
+    mv "$tmp/orrery_core.glb" "$out/orrery_core.glb"
+
+# Build the marble's core when its .glb is missing or older than its script
+[private]
+[script("bash")]
+fresh-marble:
+    set -euo pipefail
+    glb=game/core/marble/built/orrery_core.glb
+    if [[ ! -f $glb || tools/blender/marble_core.py -nt $glb ]]; then just build-marble; fi
+
 # Import the Godot project headless (fills game/.godot)
-import:
+import: fresh-marble
     "{{ godot }}" --headless --path game --import
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
@@ -37,7 +67,7 @@ run level="flat": import
 
 # Build level scripts (all, or the given ids) into game/levels/built/ and check that they import
 [positional-arguments]
-build-levels *ids:
+build-levels *ids: fresh-marble
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
 # Build the feel-review course and play it in a window with the tuning overlay (LB+Y or F1)
