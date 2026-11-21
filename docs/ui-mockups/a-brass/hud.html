@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" id="keys">
+<head>
+<meta charset="utf-8">
+<title>A · In-level HUD</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop noon or-build"></div>
+<div class="safe">
+  <div class="gems plate"><i class="i i-gem"></i><b>3</b><span>/5</span></div>
+  <!-- One turn of the dial is the par time. The hand is at 0:42.37, the diamond marks gold (0:48). -->
+  <div class="clock">
+    <div class="tab plate gold"><i class="i i-star"></i>0:48</div>
+    <div class="dial">
+      <svg viewBox="-66 -66 132 132">
+        <circle class="ticks" r="58" pathLength="360" stroke-dasharray="1.2 4.8" stroke-dashoffset=".6"/>
+        <circle class="ticks major" r="56" pathLength="360" stroke-dasharray="2 28" stroke-dashoffset="1"/>
+        <circle class="zone" r="45" pathLength="360" stroke-dasharray="246.9 360" transform="rotate(-90)"/>
+        <circle class="swept" r="45" pathLength="360" stroke-dasharray="217.9 360" transform="rotate(-90)"/>
+        <path class="gold" transform="rotate(246.9)" d="M0-67 6.5-57 0-47-6.5-57z"/>
+        <path class="par" d="M-7.5-67h15L0-50z"/>
+        <path class="hand" transform="rotate(217.9)" d="M0-48 3.4 0 0 11-3.4 0z"/>
+        <circle class="hub" r="6.5"/>
+      </svg>
+    </div>
+    <div class="tab plate par"><i class="i i-check"></i>1:10</div>
+    <div class="readout plate"><b>0:42</b>.37</div>
+  </div>
+  <div class="toast plate pad-only"><i class="i i-flag"></i>Checkpoint</div>
+  <div class="toast plate keys-only"><i class="g g-key">Space</i>Jump</div>
+  <div class="slot"><i class="i i-spring"></i><i class="g pad-only">X</i><i class="g g-mouse keys-only"></i></div>
+</div>
+</div>
+</body>
+</html>

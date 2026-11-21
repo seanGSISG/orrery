@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Orrery HUD and menu mockups</title>
+<style>
+  :root {
+    --night: #0b0e14;
+    --deck: #141922;
+    --line: #262d3a;
+    --stone: #ece6da;
+    --haze: #8f97a6;
+    --brass: #d0a85c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--stone);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1800px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px) 96px; }
+  header {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 12px 32px; padding: clamp(28px, 5vw, 56px) 0 8px;
+  }
+  h1 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 650; letter-spacing: -0.01em; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  nav a { color: var(--haze); text-decoration: none; }
+  nav a:hover, nav a:focus-visible { color: var(--brass); }
+  h2 {
+    margin: clamp(48px, 7vw, 88px) 0 20px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: clamp(20px, 2.2vw, 26px); font-weight: 600;
+  }
+  figure { margin: 0; }
+  a.shot { display: block; position: relative; border-radius: 6px; overflow: hidden; background: var(--deck); }
+  a.shot:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+
+  /* The three directions: one line each, the palette, and all seven screens in a strip. */
+  .direction { margin-top: clamp(28px, 4vw, 44px); }
+  .direction p { margin: 0 0 14px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; font-size: clamp(17px, 1.5vw, 20px); color: var(--haze); }
+  .direction b { color: var(--brass); font-weight: 650; font-size: clamp(20px, 2vw, 26px); white-space: nowrap; }
+  .swatches { display: inline-flex; gap: 6px; align-self: center; }
+  .swatches i { width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+  .strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 6px; }
+  .strip a.shot { scroll-snap-align: start; }
+
+  /* One screen, three directions. A swipe row on a phone, three columns on a wide screen. */
+  .trio { display: grid; grid-auto-flow: column; grid-auto-columns: 88%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .trio figure { scroll-snap-align: center; }
+  .trio figcaption { padding-top: 8px; color: var(--brass); font-weight: 650; font-size: 18px; }
+  @media (min-width: 1000px) {
+    .trio { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 1.4vw, 24px); overflow: visible; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Orrery HUD and menu mockups</h1>
+  <nav>
+    <a href="#hud">HUD</a>
+    <a href="#ascent">Ascent</a>
+    <a href="#title">Title</a>
+    <a href="#levels">Levels</a>
+    <a href="#pause">Pause</a>
+    <a href="#settings">Settings</a>
+    <a href="#results">Results</a>
+    <a href="#keys">Keyboard</a>
+  </nav>
+</header>
+
+<section class="direction">
+  <p><b>A · Brass instrument</b> Enamel plates in aged-brass bezels, engraved capitals, the timer as a small dial.
+    <span class="swatches"><i style="background:#0c1322"></i><i style="background:#c9a35b"></i><i style="background:#f3ecda"></i><i style="background:#74cbb8"></i></span></p>
+  <div class="strip">
+    <a class="shot" href="png/a-hud.png"><img src="thumbs/a-hud.webp" width="1280" height="720" alt="A: in-level HUD"></a>
+    <a class="shot" href="png/a-ascent.png"><img src="thumbs/a-ascent.webp" width="1280" height="720" alt="A: Ascent HUD"></a>
+    <a class="shot" href="png/a-title.png"><img src="thumbs/a-title.webp" width="1280" height="720" alt="A: title"></a>
+    <a class="shot" href="png/a-levels.png"><img src="thumbs/a-levels.webp" width="1280" height="720" alt="A: level select"></a>
+    <a class="shot" href="png/a-pause.png"><img src="thumbs/a-pause.webp" width="1280" height="720" alt="A: pause"></a>
+    <a class="shot" href="png/a-settings.png"><img src="thumbs/a-settings.webp" width="1280" height="720" alt="A: settings"></a>
+    <a class="shot" href="png/a-results.png"><img src="thumbs/a-results.webp" width="1280" height="720" alt="A: results"></a>
+  </div>
+</section>
+<section class="direction">
+  <p><b>B · Glass and light</b> Frosted glass, light modern type, thin brass accents, a solid white pill for focus.
+    <span class="swatches"><i style="background:#1a2233"></i><i style="background:#ffffff"></i><i style="background:#e9c988"></i><i style="background:#8fe8c8"></i></span></p>
+  <div class="strip">
+    <a class="shot" href="png/b-hud.png"><img src="thumbs/b-hud.webp" width="1280" height="720" loading="lazy" alt="B: in-level HUD"></a>
+    <a class="shot" href="png/b-ascent.png"><img src="thumbs/b-ascent.webp" width="1280" height="720" loading="lazy" alt="B: Ascent HUD"></a>
+    <a class="shot" href="png/b-title.png"><img src="thumbs/b-title.webp" width="1280" height="720" loading="lazy" alt="B: title"></a>
+    <a class="shot" href="png/b-levels.png"><img src="thumbs/b-levels.webp" width="1280" height="720" loading="lazy" alt="B: level select"></a>
+    <a class="shot" href="png/b-pause.png"><img src="thumbs/b-pause.webp" width="1280" height="720" loading="lazy" alt="B: pause"></a>
+    <a class="shot" href="png/b-settings.png"><img src="thumbs/b-settings.webp" width="1280" height="720" loading="lazy" alt="B: settings"></a>
+    <a class="shot" href="png/b-results.png"><img src="thumbs/b-results.webp" width="1280" height="720" loading="lazy" alt="B: results"></a>
+  </div>
+</section>
+<section class="direction">
+  <p><b>C · Orrery chart</b> Fine line-art rings and ticks like an astronomical chart, no panels, one warm accent.
+    <span class="swatches"><i style="background:#060a14"></i><i style="background:#f1ebdb"></i><i style="background:#ff8f5e"></i><i style="background:#f4d17e"></i></span></p>
+  <div class="strip">
+    <a class="shot" href="png/c-hud.png"><img src="thumbs/c-hud.webp" width="1280" height="720" loading="lazy" alt="C: in-level HUD"></a>
+    <a class="shot" href="png/c-ascent.png"><img src="thumbs/c-ascent.webp" width="1280" height="720" loading="lazy" alt="C: Ascent HUD"></a>
+    <a class="shot" href="png/c-title.png"><img src="thumbs/c-title.webp" width="1280" height="720" loading="lazy" alt="C: title"></a>
+    <a class="shot" href="png/c-levels.png"><img src="thumbs/c-levels.webp" width="1280" height="720" loading="lazy" alt="C: level select"></a>
+    <a class="shot" href="png/c-pause.png"><img src="thumbs/c-pause.webp" width="1280" height="720" loading="lazy" alt="C: pause"></a>
+    <a class="shot" href="png/c-settings.png"><img src="thumbs/c-settings.webp" width="1280" height="720" loading="lazy" alt="C: settings"></a>
+    <a class="shot" href="png/c-results.png"><img src="thumbs/c-results.webp" width="1280" height="720" loading="lazy" alt="C: results"></a>
+  </div>
+</section>
+
+<section id="hud">
+  <h2>In-level HUD</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-hud.png"><img src="thumbs/a-hud.webp" width="1280" height="720" loading="lazy" alt="A: gems plate, timer dial with gold and par tabs, power-up socket, checkpoint plate"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-hud.png"><img src="thumbs/b-hud.webp" width="1280" height="720" loading="lazy" alt="B: glass pills for gems and timer, a line with gold and par marks, glass power-up tile"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-hud.png"><img src="thumbs/c-hud.webp" width="1280" height="720" loading="lazy" alt="C: timer on a ticked arc, gem diamonds, power-up in a ticked ring"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="ascent">
+  <h2>Ascent HUD</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-ascent.png"><img src="thumbs/a-ascent.webp" width="1280" height="720" loading="lazy" alt="A: brass altimeter tube, fall counter wheels"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-ascent.png"><img src="thumbs/b-ascent.webp" width="1280" height="720" loading="lazy" alt="B: thin rail with a glass height capsule and best-height flag"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-ascent.png"><img src="thumbs/c-ascent.webp" width="1280" height="720" loading="lazy" alt="C: curved graduated limb with height ring and best-height diamond"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="title">
+  <h2>Title</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-title.png"><img src="thumbs/a-title.webp" width="1280" height="720" loading="lazy" alt="A: cast-brass logo above four plates"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-title.png"><img src="thumbs/b-title.webp" width="1280" height="720" loading="lazy" alt="B: thin logo with a brass orbit, left-aligned menu"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-title.png"><img src="thumbs/c-title.webp" width="1280" height="720" loading="lazy" alt="C: italic logo beside a line-art orrery"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="levels">
+  <h2>Level select</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-levels.png"><img src="thumbs/a-levels.webp" width="1280" height="720" loading="lazy" alt="A: grid of twenty plates"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-levels.png"><img src="thumbs/b-levels.webp" width="1280" height="720" loading="lazy" alt="B: row of picture cards"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-levels.png"><img src="thumbs/c-levels.webp" width="1280" height="720" loading="lazy" alt="C: one orbit per tier, one body per level"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="pause">
+  <h2>Pause</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-pause.png"><img src="thumbs/a-pause.webp" width="1280" height="720" loading="lazy" alt="A: centred brass plate"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-pause.png"><img src="thumbs/b-pause.webp" width="1280" height="720" loading="lazy" alt="B: glass sheet on the left"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-pause.png"><img src="thumbs/c-pause.webp" width="1280" height="720" loading="lazy" alt="C: menu inside the timer ring"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="settings">
+  <h2>Settings</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-settings.png"><img src="thumbs/a-settings.webp" width="1280" height="720" loading="lazy" alt="A: tab plates, lever switches"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-settings.png"><img src="thumbs/b-settings.webp" width="1280" height="720" loading="lazy" alt="B: side tabs, pill controls"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-settings.png"><img src="thumbs/c-settings.webp" width="1280" height="720" loading="lazy" alt="C: tabs on a scale line, ruled rows"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="results">
+  <h2>Results</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-results.png"><img src="thumbs/a-results.webp" width="1280" height="720" loading="lazy" alt="A: gold coin set in a plate"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-results.png"><img src="thumbs/b-results.webp" width="1280" height="720" loading="lazy" alt="B: very large time, glass tally"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-results.png"><img src="thumbs/c-results.webp" width="1280" height="720" loading="lazy" alt="C: the run drawn as an arc on the par ring"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+<section id="keys">
+  <h2>HUD on today's build, keyboard glyphs</h2>
+  <div class="trio">
+    <figure><a class="shot" href="png/a-hud-keys.png"><img src="thumbs/a-hud-keys.webp" width="1280" height="720" loading="lazy" alt="A: HUD on a frame from the current build with keyboard and mouse glyphs"></a><figcaption>A</figcaption></figure>
+    <figure><a class="shot" href="png/b-hud-keys.png"><img src="thumbs/b-hud-keys.webp" width="1280" height="720" loading="lazy" alt="B: HUD on a frame from the current build with keyboard and mouse glyphs"></a><figcaption>B</figcaption></figure>
+    <figure><a class="shot" href="png/c-hud-keys.png"><img src="thumbs/c-hud-keys.webp" width="1280" height="720" loading="lazy" alt="C: HUD on a frame from the current build with keyboard and mouse glyphs"></a><figcaption>C</figcaption></figure>
+  </div>
+</section>
+</main>
+</body>
+</html>

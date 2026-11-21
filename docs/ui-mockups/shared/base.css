@@ -1,0 +1,102 @@
+/* Shared by all three directions: the 1920x1080 frame, the backdrops, the safe area,
+   the icon shapes and the size of the button glyphs. A direction's theme.css sets
+   the palette, the fonts and the look. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+p, h1, h2, h3, ul, ol, figure { margin: 0; padding: 0; font-weight: inherit; font-size: inherit; }
+ul, ol { list-style: none; }
+i, b, em { font-style: normal; font-weight: inherit; }
+
+.frame { position: relative; width: 1920px; height: 1080px; overflow: hidden; isolation: isolate; }
+
+/* Backdrop. Set --bd-blur, --bd-dim and --bd-sat on the element to soften it behind a menu. */
+.backdrop {
+  position: absolute; z-index: -2;
+  inset: calc(var(--bd-blur, 0px) * -3);
+  background: center / cover no-repeat;
+  filter: blur(var(--bd-blur, 0px)) brightness(var(--bd-dim, 1)) saturate(var(--bd-sat, 1));
+}
+.dawn  { background-image: url(../backdrops/dawn.jpg); }
+.noon  { background-image: url(../backdrops/noon.jpg); }
+.dusk  { background-image: url(../backdrops/dusk.jpg); }
+
+/* Title-safe area: 5 % in from every edge. All HUD and menu content stays inside it. */
+.safe { position: absolute; inset: 54px 96px; }
+
+/* Variant: open a screen as <file>.html#keys to show the keyboard glyphs on a frame
+   from the current build. The <html> element carries id="keys". */
+:root:not(:target) .keys-only { display: none !important; }
+:root:target .pad-only { display: none !important; }
+:root:target .backdrop.or-build { background-image: url(../backdrops/build.jpg); }
+
+/* ---------- Icons: one shape each, filled and line, coloured by currentColor ---------- */
+
+:root {
+  --i-gem: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M2.9 8.3 6.3 3.2h2.3L7.4 8.3zM9.7 3.2h4.6l1.2 5.1h-7zM15.4 3.2h2.3l3.4 5.1h-4.5zM2.8 9.5h4.7L11 19.8zM8.6 9.5h6.8L12 20.9zM16.5 9.5h4.7L13 19.8z'/></svg>");
+  --i-gem-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'><path d='M6 3.5h12l4 5.5-10 12.5L2 9z'/><path d='M2 9h20M9 3.5 7.5 9 12 21.5 16.5 9 15 3.5'/></g></svg>");
+  --i-egg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 2.2c3.7 0 7.2 5.5 7.2 10.8 0 4.8-3.2 8.8-7.2 8.8S4.8 17.8 4.8 13C4.8 7.7 8.3 2.2 12 2.2zm0 7.3-2.7 3.6 2.7 3.6 2.7-3.6z'/></svg>");
+  --i-egg-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'><path d='M12 2.6c3.5 0 6.8 5.3 6.8 10.4 0 4.6-3 8.4-6.8 8.4S5.2 17.6 5.2 13C5.2 7.9 8.5 2.6 12 2.6z'/><path d='M12 9.6 9.4 13l2.6 3.4 2.6-3.4z'/></g></svg>");
+  --i-lock: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M7.2 10V7.8a4.8 4.8 0 0 1 9.6 0V10H18a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 18 21H6a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 6 10zm2.2 0h5.2V7.8a2.6 2.6 0 0 0-5.2 0z'/></svg>");
+  --i-lock-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'><rect x='5' y='10.5' width='14' height='10.5' rx='1.5'/><path d='M8 10.5V8a4 4 0 0 1 8 0v2.5'/></g></svg>");
+  --i-star: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.2l2.9 6.2 6.8.8-5 4.7 1.3 6.7-6-3.4-6 3.4 1.3-6.7-5-4.7 6.8-.8z'/></svg>");
+  --i-star-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round' d='M12 3.2l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6-4.5-4.2 6.1-.7z'/></svg>");
+  --i-check: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='M4.5 12.8l5 5L19.5 6.5'/></svg>");
+  --i-check-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M4.5 12.8l5 5L19.5 6.5'/></svg>");
+  --i-flag: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 2.5h2.2v19H5zM8.5 4h11.5l-3.2 4 3.2 4H8.5z'/></svg>");
+  --i-flag-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round' stroke-linecap='round' d='M6 2.5v19M6 4h13l-3.2 4 3.2 4H6'/></svg>");
+  --i-spring: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 6l4-4 4 4M7 9.5l10 1.7-10 1.7 10 1.7-10 1.7 10 1.7M6 21.5h12'/></svg>");
+  --i-spring-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' d='M8 6l4-4 4 4M7 9.5l10 1.7-10 1.7 10 1.7-10 1.7 10 1.7M6 21.5h12'/></svg>");
+  /* Medals carry a shape cue: a check for par, a star for gold. */
+  --i-par: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zM6.3 12.5l4 4.2 7.4-8.3-1.9-1.7-5.6 6.3-2.2-2.3z'/></svg>");
+  --i-gold: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zM12 5.5l1.66 4.22 4.52.27-3.5 2.87 1.15 4.38L12 14.8l-3.83 2.44 1.15-4.38-3.5-2.87 4.52-.27z'/></svg>");
+  --i-gold-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'><circle cx='12' cy='12' r='9.5'/><path d='M12 6.5l1.4 3.6 3.9.2-3 2.5 1 3.8L12 14.5l-3.3 2.1 1-3.8-3-2.5 3.9-.2z'/></g></svg>");
+  --i-ring-line: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.5' fill='none' stroke='black' stroke-width='1.5'/></svg>");
+  --i-view: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'><path d='M9 9V5.5h11V14h-4'/><rect x='4' y='10' width='11' height='8.5' rx='1'/></g></svg>");
+  --i-menu: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' d='M5 7h14M5 12h14M5 17h14'/></svg>");
+}
+
+.i {
+  display: inline-block; flex: none; width: 1em; height: 1em; vertical-align: -0.14em;
+  background: currentColor;
+  -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat;
+}
+.i-gem    { --i: var(--i-gem); }
+.i-egg    { --i: var(--i-egg); }
+.i-lock   { --i: var(--i-lock); }
+.i-star   { --i: var(--i-star); }
+.i-check  { --i: var(--i-check); }
+.i-flag   { --i: var(--i-flag); }
+.i-spring { --i: var(--i-spring); }
+.i-par    { --i: var(--i-par); }
+.i-gold   { --i: var(--i-gold); }
+/* "Not yet": the same shape as a thin outline. */
+.i-egg.off  { --i: var(--i-egg-line); }
+.i-gem.off  { --i: var(--i-gem-line); }
+.i-medal-none { --i: var(--i-ring-line); }
+
+/* ---------- Button glyphs: geometry only ---------- */
+
+.g {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; position: relative;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 24px; font-weight: 700; line-height: 1; letter-spacing: 0; text-transform: none;
+}
+/* View and Menu: an icon inside the round button. */
+.g-view::before, .g-menu::before {
+  content: ""; width: 26px; height: 26px; background: currentColor;
+  -webkit-mask: var(--i-view) center / contain no-repeat; mask: var(--i-view) center / contain no-repeat;
+}
+.g-menu::before { -webkit-mask-image: var(--i-menu); mask-image: var(--i-menu); }
+/* Bumpers. */
+.g-lb, .g-rb { width: 66px; height: 40px; font-size: 22px; }
+.g-lb { border-radius: 20px 9px 9px 9px; }
+.g-rb { border-radius: 9px 20px 9px 9px; }
+/* Keyboard key and mouse. */
+.g-key { width: auto; min-width: 46px; height: 46px; padding: 0 13px; border-radius: 9px; font-size: 22px; }
+.g-mouse { width: 34px; height: 50px; border-radius: 17px 17px 15px 15px; }
+.g-mouse::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 50%; height: 44%;
+  background: currentColor; border-radius: 15px 0 0 0;
+}
