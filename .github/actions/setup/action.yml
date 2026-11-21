@@ -1,0 +1,35 @@
+name: Set up Orrery
+description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, and install just. Run it after actions/checkout.
+inputs:
+  templates:
+    description: Also install the Godot export templates.
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: List Git LFS objects
+      shell: bash
+      run: git lfs ls-files --long | cut -d ' ' -f 1 | sort > .lfs-ids
+
+    - name: Cache Git LFS objects
+      uses: actions/cache@v6
+      with:
+        path: .git/lfs
+        key: lfs-${{ hashFiles('.lfs-ids') }}
+
+    - name: Pull Git LFS objects
+      shell: bash
+      run: git lfs pull
+
+    - name: Read the Godot pin
+      id: pin
+      shell: bash
+      run: echo "godot=$(sed -n 's/^godot = "\(.*\)"/\1/p' mise.toml)" >> "$GITHUB_OUTPUT"
+
+    - uses: chickensoft-games/setup-godot@v2
+      with:
+        version: ${{ steps.pin.outputs.godot }}
+        use-dotnet: false
+        include-templates: ${{ inputs.templates }}
+
+    - uses: extractions/setup-just@v4

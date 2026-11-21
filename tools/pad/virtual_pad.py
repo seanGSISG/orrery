@@ -49,8 +49,9 @@ def make_pad() -> UInput:
             (e.ABS_HAT0Y, HAT),
         ],
     }
+    # evdev's hint allows only int codes, but its docs take (code, AbsInfo) for EV_ABS.
     return UInput(
-        caps,
+        caps,  # ty: ignore[invalid-argument-type]
         name="Microsoft X-Box 360 pad",
         vendor=0x045E,
         product=0x028E,

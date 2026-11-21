@@ -341,13 +341,13 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just build-levels [id]` | Builds level scripts into `.glb` files |
 | `just import` | `godot --headless --path game --import` |
 | `just lint` | `gdlint` (gdtoolkit), Ruff, ty, shellcheck, level lint |
-| `just test` | GUT unit tests, headless. Fails if zero tests ran |
+| `just test` | GUT unit tests, headless. Fails if zero tests ran or a test script does not load |
 | `just test-levels [id]` | Runs the route bot on each level, headless. Fails if the bot does not finish under par |
 | `just gallery [id]` | Renders every level's camera shots into `build/gallery/index.html` |
 | `just perf [id]` | Flies a fixed camera path through each level and checks GPU frame time |
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response |
 | `just export` | Builds Linux and Windows release exports into `build/` |
-| `just smoke-wine` | Starts the Windows export under Wine, headless, and checks that it boots |
+| `just smoke-wine` | Exports, starts the Windows export under Wine, headless, and checks its boot marker |
 | `just run [level]` | Plays the game |
 | `just ci` | Everything CI runs, locally |
 
@@ -365,8 +365,8 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 ### 5.3 CI (GitHub Actions)
 
 - **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels`, uploads the built files.
-- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with 4.7.2 and templates, downloads the built levels, runs import, GUT tests and the headless level tests.
-- **`export` job:** Linux and Windows release exports as artifacts.
+- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
+- **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
 ## 6. Dev environment

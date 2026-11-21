@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, "plan-*"]
+  push:
+    branches: [main, "plan-*"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: Import and GUT (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: just test
+
+  export:
+    name: Export Linux and Windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          templates: "true"
+      - run: just export
+      - name: Boot the Linux export
+        run: build/linux/orrery.x86_64 --headless -- --smoke | grep '^ORRERY boot ok'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orrery-linux
+          path: build/linux/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orrery-windows
+          path: build/windows/
+          if-no-files-found: error
