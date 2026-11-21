@@ -1,0 +1,102 @@
+> **Research snapshot, 2026-11-20.** `docs/plan.md` records the decisions. Where this report and the plan differ, the plan wins.
+> Plan choice: local ACE-Step 1.5 XL and Stable Audio 3 backing tracks, plus an agent-written MIDI melody and clockwork layer. Sean picks the final tracks.
+
+# Orrery soundtrack research (checked 2026-11-20)
+
+Legend: [P] = primary source read directly (license file, official terms, official docs, repo API). [S] = secondary (blog, news, vendor comparison). [U] = could not verify.
+
+## 0. Cross-cutting facts that change the plan
+
+- US Copyright Office, "Copyright and AI, Part 2: Copyrightability" [P, excerpt via search]: copyright does not extend to purely AI-generated material or material with insufficient human authorship. AI used as a tool, with real human authorship, is protectable. Consequence: raw text-to-music output may have NO copyright. You could not stop others from ripping and reusing it. Human-authored melody/arrangement/editing fixes this. (Other jurisdictions: not checked.)
+  https://www.copyright.gov/ai/ (Part 2 PDF; excerpt seen via search, full text not read)
+- Steam requires a "pre-generated AI content" disclosure for shipped AI music (Steamworks Content Survey) [S]. Valve judges it under the usual no-infringing-content rule. https://partner.steamgames.com/doc/gettingstarted/contentsurvey (URL cited by secondary sources; page not read by me).
+- No hosted or local license gives indemnity for self-hosted/indie use except Stability Enterprise (>$1M revenue orgs). So "do not copy any melody" is on us in every option. Mitigation: no artist/track names in prompts; listen-check; no audio-reference/cover inputs from MBG/MBU audio.
+
+## 1. Style brief: Marble Blast Gold (2003) and Ultra (2006)
+
+Facts I could confirm:
+- MBG: developed by GarageGames with Monster Studios. Soundtrack by Tim Clarke, who also scored Monster Studios' "Chain Reaction"; "Classic Vibe" is from that game. [S: Marble Blast Wiki] https://marbleblast.fandom.com/wiki/Marble_Blast_Gold
+- MBU (Xbox 360, Jan 25 2006): Wikipedia infobox lists composer Tim Clarke. [S] https://en.wikipedia.org/wiki/Marble_Blast_Ultra . Fandom says the MBU soundtrack is one song, "Tim Trance", by Tim Clarke. [S] https://marbleblast.fandom.com/wiki/Tim_Trance
+- MBG soundtrack is only four short loops: Classic Vibe (~0:41), Beach Party (~0:57), Groove Police (~1:09), Shell (main menu, ~0:29). [S] https://marbleblast.fandom.com/wiki/Soundtrack (list), lengths from https://smashcustommusic.net (search excerpt). khinsider rip lists 47 files, 5 MB total, mostly SFX. https://downloads.khinsider.com/game-soundtracks/album/marble-blast-gold-gamerip
+- Contemporary reviews call it "electronic music", "appropriate for the style of the game", repetitive, and the player can turn it off [S: AppleXnet/Technonova review 2004 http://simx.me/technonova/publications/review_marble_blast_gold_really_is_a_blast ]. GameSpot on MBU: "one track of electronic music" (disliked for lack of variety) [S, 2006-01-27] https://www.gamespot.com/reviews/marble-blast-ultra-review/1900-6143253/
+
+Could NOT verify [U]: BPM per track, instrumentation, key, exact genre labels beyond "electronic" and the title "Tim Trance" (implies trance). I did not download or analyse the audio (khinsider blocks bots; also unnecessary to copy). Sean should listen and measure BPM himself if he wants numbers.
+
+Working style brief derived from the above (our synthesis, not sourced): short, bright, loop-friendly electronic tracks (30-70 s loops originally), steady four-on-the-floor / trance-pop feel, clean synth leads and pads, simple singable hooks, cheerful and calm rather than tense. For Orrery, target (design choice): 14 tracks, 80-100 BPM boom-bap / 130-150 (half-time 65-75) trap grids, music-box/celesta/glockenspiel hooks, ticking clock-escapement hats/rim clicks as signature, warm bass, light pads, no vocals (or sparse chops authored by us), 1:30-2:30 loops with 4-bar-aligned loop points.
+
+## 2a. Local open-weight models (RTX 5090, 32 GB)
+
+Verified licenses are from the license files / model cards where noted.
+
+| Model | Weights license | Output rights | Max length | Vocals | Quality notes | ComfyUI |
+|---|---|---|---|---|---|---|
+| ACE-Step 1.5 (2B turbo/sft/base; XL 4B DiT) | MIT [P: HF card + GitHub API: MIT, 15k stars, last push 2026-11-08] | No output restrictions in license; card says trained on licensed + royalty-free/public-domain + synthetic MIDI-to-audio data (developer claim, not independently audited [U]) | 10 s to 10 min | Yes (50+ langs) and instrumental | Top open model for control (BPM 30-300, key, time sig, repaint, cover, extract, lego/complete tasks, LoRA training in ~1 h on 8 songs). Instrumental quality is hit-or-miss; BPM is "guidance not exact" [S: docs]; GitHub issue #1019 discusses weak instrumentals on SFT model. Sogni (a vendor) rates MiniMax Music 3 higher on mix quality and ACE-Step higher on control/creativity [S]. XL needs >=12 GB (offload) or >=20 GB. | Native core nodes. Local ComfyUI 0.43.0 already has TextEncodeAceStepAudio1.5, EmptyAceStep1.5LatentAudio, ReferenceTimbreAudio. Files: acestep_v1.5_turbo.safetensors, ace_1.5_vae.safetensors, qwen_0.6b/1.7b_ace15 [P: docs.comfy.org] |
+| Stable Audio 3 (Small-Music 433M, Medium 1.4B; Large API-only) May 2026 | Stability AI Community License; HF repo is gated; includes T5Gemma (Gemma Terms of Use, use restrictions s3.2) [P: HF card] | You own outputs; free commercial use under USD 1M annual revenue (org + affiliates); above that Enterprise license (adds indemnification) [P: stability.ai news 2026-05-20] | Small 120 s, Medium ~380 s (6:20) | Instrumental + SFX only, no vocals | Trained on 1,278,902 licensed/CC recordings (AudioSparx 806k files + Freesound CC) with published attribution (arXiv 2605.17991) [P]. Best provenance of any local model. Hip-hop/trap drum quality: [U], no independent review found. Prompts accept BPM in text. Inpainting + LoRA supported. About 8 GB VRAM for Medium [S: soundgen.ai]. | Docs workflow with Qwen reprompt. Needs stable_audio_3_medium(.safetensors), t5gemma_b_b_ul2.safetensors, qwen3.5_2b_bf16 text encoder [P: docs.comfy.org]. Local core has SA3 model code (comfy/ldm/audio/vae_sa3.py), so no custom node needed. |
+| MiniMax Music 3 (11B, Aug 2026) | MiniMax-Music3 Community License [P: read LICENSE on HF]: must prominently display "MiniMax-Music3" on the UI of a commercial product that uses the Software (s3.1); written authorization if yearly revenue from such products > USD 20M. One blog (mer.vin) claims CC BY-NC; the LICENSE file I read contradicts that. | Allowed, with the display clause. A game that ships only rendered audio: whether that triggers 3.1 is unclear [U]. | 5 min | Yes, lyric-first song model | Best mix quality among open models per Sogni and Reddit threads [S]; strongest in pop/orchestral. Fits <24 GB at BF16; 8 GB with layer streaming. Lacks BPM/key control and editing. | Native core nodes (local has nodes_minimax_music.py). Weights not present locally. |
+| HeartMuLa-oss-3B | Apache-2.0 [S: soundgen.ai/ComfyUI license table; heartlib repo API: Apache-2.0] | Permissive | ~4 min, 48 kHz | Yes | Benchmarked just under MiniMax Music 3 on song tasks [S]; ~26 GB listed, 8 GB quantized. Instrumental/beat quality [U]. | Third-party nodes only [U] |
+| YuE v1 / YuE2 | v1 Apache-2.0 (with credit) [S]; YuE2 weights CC BY-NC 4.0 plus individual-creator permission, companies need a commercial license [P: MODEL_LICENSE excerpt] | YuE2: not for a company product without license | ~ song length | Yes | Reported weaker for instrumentals ("struggle to make instrumentals") [S] | Community nodes |
+| DiffRhythm / DiffRhythm 2 | Repo Apache-2.0 [P: GitHub API, last push 2025-11-27]; weights license [U] | [U] | [U] | Yes | Older; ranked below ACE-Step 1.5 in a 2026 benchmark [S] | Community nodes |
+| SongBloom | tencent-ailab/SongBloom repo returned 404 via API; ComfyUI forks Apache-2.0 [U] | [U] | [U] | Yes | Lowest in the YuE2 team's benchmark table [S, interested party] | Community nodes |
+| MusicGen / AudioCraft | Code MIT; weights CC BY-NC 4.0 [S: boppy, matches known card] | NOT usable commercially | [U] | No | Dated | Custom nodes |
+| Stable Audio Open 1.0 | Stability Community License (<USD 1M) | As SA3 | 47 s | No | Superseded by SA3 | Core |
+| Magenta RealTime 2 | Weights CC BY 4.0, code Apache-2.0 [S] | OK with attribution | Streaming | No | Realtime jamming; real-time only on Apple Silicon [S] | No |
+
+Key sources: https://huggingface.co/ACE-Step/Ace-Step1.5 , https://github.com/ace-step/ACE-Step-1.5 , https://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1-5 , https://huggingface.co/stabilityai/stable-audio-3-medium , https://stability.ai/news-updates/meet-stable-audio-3-the-model-family-built-for-artistic-experimentation-with-open-weight-models , https://docs.comfy.org/tutorials/audio/stable-audio/stable-audio-3 , https://huggingface.co/MiniMaxAI/MiniMax-Music3 (LICENSE at /raw/main/LICENSE) , https://github.com/multimodal-art-projection/YuE/blob/main/MODEL_LICENSE , https://boppy.me/blog/best-open-source-ai-music-models (2026-07-29) , https://blog.sogni.ai/blogs/minimax-music3-vs-ace-step-15-xl (2026-08-14, vendor).
+
+Production caveat for all local models: none give sample-accurate loops or exact bar counts. Plan to cut loops in a DAW on the beat grid, or generate fixed-BPM stems and trim to N bars.
+
+## 2b. Hosted services (2026 terms)
+
+- Suno [P: https://suno.com/terms, revised 2026-08-10, effective 2026-09-03]. Pro/Premier subscribers are assigned all of Suno's rights in Output; Free/Basic: personal non-commercial only. Commercial use is allowed only for Outputs you obtained as a permitted Download within your tier's download allocation; recording/stream-ripping is prohibited; Suno may add fingerprint/watermark/metadata and you must not remove it. Pricing page (via search excerpt): Pro USD 10/mo (2,500 credits, 20 downloads/mo), Premier USD 30/mo (60 downloads/mo); a Platinum tier exists per help center [S]. Help center says all paid plans include commercial rights and that this survives cancelling for songs made while paid [P: help.suno.com/en/articles/14617153 + FAQ excerpt]. Risk: UMG and Sony have not settled; a second suit was filed 2026-09-18 alleging v6 still depends on unlicensed models [S: single pricing blog citing MBW/TNW; unverified]. Warner, BMG, Believe deals exist [S: MusicBusinessWorldwide 2026-09-09]. Verdict: legally allowed for a game on Pro+, but weakest on litigation risk and capped downloads.
+- Udio: downloads turned off 2025-10-29 after Universal deal; terms (rev. 2025-11-12) forbid downloading outputs and limit use to personal, non-commercial; Udio/licensors own output [S: daydream.live, veena.studio, Dovva; udio.com/terms page itself returned nothing to my fetch, so [U] on primary text]. Verdict: unusable for a shipped game.
+- ElevenLabs Music [P: https://elevenlabs.io/music-terms]. Licensed training (Merlin, Kobalt, Believe) [S]. You retain rights in Output (s2.2). Exhibit A: Free plan prohibited from downloads and attribution required; Starter/Creator/Pro/Scale/Business: all online and offline commercial use except film, TV, radio and "Studio Games". "Indie Game" (a game with < USD 500k lifetime revenue, published by an entity with < USD 1M game revenue last fiscal year) is NOT a Studio Game, so a small indie game is covered; if it outgrows that, you have 60 days to buy a plan that covers Studio Games (s4.7). Music streaming distribution allowed from Creator up. Monthly downloads: Starter 30 min, Creator 250, Pro 500. Lossless WAV / 192 kbps MP3 downloads only Pro and up. Do not use artist/song/label names in prompts (s2.1). Max 5 min per generation, min 3 s [S: elevenlabs.io]. Music v2.5 default since 2026-09-11 [S]. Eligibility: Starter-Pro "for individual use only"; Scale needs <10 employees, Business <50. Verdict: clearest and safest hosted terms for a game; cost and plan prices not verified [U].
+- Google Lyria 3 / 3 Pro / 3.5 [S/U]: via Gemini app, Gemini API, Vertex AI; all outputs carry SynthID (and C2PA on Vertex). Lyria 3 Gemini output was 30 s clips initially; Vertex lists Lyria 3 Pro/Clip previews. A third-party capture of Google's indemnified-services list (July 2026) shows Lyria absent, so no Google indemnity [S]. I did not find a first-party commercial-use statement for games [U]. Verdict: skip.
+- Stable Audio hosted: Stability ToS assigns its rights (if any) in outputs to the user [S]; commercial under USD 1M revenue same as local. Large model API-only. No reason to prefer over local SA3.
+- Soundverse/others not checked.
+
+## 2c. Music as code
+
+- Strudel (JS/TidalCycles port): AGPL-3.0 code; contributed example tracks separately licensed; "Export" tab renders to an audio file [P: https://strudel.cc/learn/faq]. Your own patterns are yours; bundled sample banks have mixed licenses [U], so use only your own or CC0 samples.
+- Sonic Pi: MIT-licensed; renders via Record button [S: sonic-pi.net, in-thread forum thread on commercial use 2020 - not read in full]. Built-in synths, so output is yours; built-in samples licenses [U].
+- SuperCollider: scriptable offline rendering (NRT). I did not verify details this session [U].
+- Python (mido/pretty_midi) + FluidSynth: GeneralUser GS 2.0.2 "free for your music, private or commercial"; FluidR3 GM is MIT (per one 2026 soundfont comparison) [S: simpleSF2-style review in search; license files themselves not read]. Quality: GM soundfonts sound like 2003-era MIDI. That actually matches the MBG/MBU era, but will not sound like modern hip-hop without good drum samples (CC0 drum one-shot packs, e.g. from Freesound CC0 or other CC0 packs - not vetted by me).
+- Realistic quality: fully controllable, loop-perfect, stem-perfect, and clearly human-authored (copyright-safe). Sounds "demo-grade" unless paired with strong CC0 samples + mixing. Best used for: the signature clockwork/music-box percussion layer, hook melodies, and exact stems for Godot layering.
+
+## 2d. Hiring a composer
+
+- GameSoundCon 2025 survey (via secondary article): freelancers quote per finished minute averaging USD 618 (indie), 998 (midcore), 1,871 (AAA) [S: https://composerscout.com/guides/how-game-music-and-voice-acting-is-priced and a 2026-10-20 article]. Other guides: USD 50-2,500/min, many indie USD 200-1,500/min; Berklee Online uses USD 1,000/min. Royalty-free library tracks: USD 100-600 each [S].
+- For ~14 tracks x ~2 min = ~28 min of finished music: roughly USD 5.6k (at 200/min) to 17k (at 618/min) to 28k (at 1,000/min). Loops/adaptive stems usually cost extra (not "a minute" of linear music). Ask for work-for-hire/buyout plus stems.
+- Non-AI composer is the only option with clean copyright, stems and no AI disclosure.
+
+## 3. Godot 4.7 music playback [P: official class docs, stable = 4.7.x]
+
+- Current stable: 4.7.2 (2026-08-18); 4.7 released 2026-06-18. https://github.com/godotengine/godot/releases
+- AudioStreamOggVorbis (https://docs.godotengine.org/en/stable/classes/class_audiostreamoggvorbis.html): properties `loop` (bool), `loop_offset` (seconds where playback restarts after the end), `bpm`, `beat_count`, `bar_beats` (default 4). With `loop` on, playback restarts at `loop_offset` when the end is reached, or at the end of the last beat per `beat_count`. Set bpm/beat_count/bar_beats in the .ogg import settings so interactive transitions know beats and bars.
+- AudioStreamInteractive: clips + transition table. `add_transition(from_clip, to_clip, from_time, to_time, fade_mode, fade_beats, use_filler_clip, filler_clip, hold_previous)`. from_time: IMMEDIATE / NEXT_BEAT / NEXT_BAR / END. to_time: SAME_POSITION / START / PREVIOUS_POSITION. fade_mode: DISABLED / IN / OUT / CROSS / AUTOMATIC. Clip auto-advance: DISABLED / ENABLED / RETURN_TO_HOLD. Use it for level-section or menu-to-level changes on a bar boundary.
+- AudioStreamSynchronized: plays several streams in lockstep; `stream_count`, `set_sync_stream`, `set_sync_stream_volume(index, volume_db)`. Use it for altitude/height layering: export N same-length, same-BPM stems and drive volume per stem from marble height or speed. Streams must be identical length and bar grid.
+- AudioStreamPlaylist: plays sub-streams in order; `fade_time` (default 0.3 s), `loop`, `shuffle`, `stream_count`. Good for a shuffled level playlist; not bar-synced.
+- Practical: author every track at a fixed BPM with an integer number of bars; export stems with identical length; render to OGG Vorbis (q5-q7); set bpm/beat_count; `loop_offset = 0` when the file loops whole. Nesting works (a Synchronized stream can be a clip in an Interactive stream) - [U] not tested here.
+
+## 4. Local ComfyUI (read-only check, /home/adminuser/comfy/ComfyUI, ComfyUI 0.43.0, git 6b904b5f 2026-11-03; GPU RTX 5090 32607 MiB)
+
+Custom nodes (audio-relevant): only ComfyUI-MMAudio (video-to-audio / SFX, not music). Others are image/video/utility: Auto-TensorRT-RIFE, cg-use-everywhere, comfy-pilot, ComfyUI-bleh, Conditioning-Rebalance, controlnet_aux, Custom-Scripts, DaSiWa-Nodes, DepthAnythingV2, Detail-Daemon, Easy-Use, essentials, Florence2, Frame-Interpolation, GGUF, H3-*, impact-pack/subpack, KJNodes, krea2-*, LayerStyle, LTXVideo, Lora-Manager, MiniMax-H3 variants, mxToolkit, PainterI2V/LongVideo, Pixaroma, Prompt-Manager, QwenVL-Mod, SickOllie, Spectrum, UltimateSDUpscale, VFI, VideoHelperSuite, WanMoeKSampler, WanVideoWrapper, WhiteRabbit, RES4LYF, rgthree, was-node-suite, and others.
+Audio/music models: NONE installed. Found only:
+- models/mmaudio: mmaudio_large_44k_nsfw_gold_8.5k_final_fp16, mmaudio_vae_44k_fp16, mmaudio_synchformer_fp16, apple_DFN5B-CLIP-ViT-H-14-384_fp16 (video-to-audio)
+- models/vae: ltx-2.5-audio-vae-bf16, minimax_h3_audio_vae_fp32 (belong to video models)
+- models/audio_encoders: empty
+No ACE-Step, Stable Audio, MiniMax Music or YuE weights present. Core ComfyUI in the install already contains code for ACE-Step 1.5 (comfy_extras/nodes_ace.py, comfy/ldm/ace/ace_step15.py), MiniMax Music 3 (comfy_extras/nodes_minimax_music.py) and Stable Audio 3 (comfy/ldm/audio/vae_sa3.py), so only weights + a workflow template are needed; no custom node install is required. I verified code presence, not that the nodes register without errors.
+
+## 5. Recommendation (ranked)
+
+1. Local ACE-Step 1.5 XL (MIT) + Stable Audio 3 Medium bake-off in the existing ComfyUI, then finish in a DAW. Cost USD 0 plus time. Use ACE-Step for groove/beat beds (BPM/key control, repaint, LoRA), SA3 for the "cleanest provenance" instrumental takes. Add a human-authored hook and the clockwork layer (option 3) for copyright and identity. Expect: good-to-decent beds; 1 in ~5-10 takes keepable; loop-trim needed. Verdict: commercial use OK (MIT; Community License under USD 1M). Disclose on Steam.
+2. ElevenLabs Music (hosted) as a fast fallback or for hero tracks: explicit game-use terms, indie-game carve-out, licensed training data. Need Pro for lossless WAV; Creator minimum for streaming distribution. Cost not verified. Quality: strong, vocals and instrumental, 5-min cap, no BPM control as fine as ACE-Step [U]. Cannot reference artists/songs in prompts.
+3. Music-as-code / MIDI hybrid (Strudel or Python+FluidSynth with own/CC0 samples) for the signature music-box/clockwork percussion, hooks, and exact Godot stems; or hire a composer (about USD 6k-17k for ~28 min at USD 200-618/min) for the same layer if budget allows. Highest originality and copyright clarity; AI audio only supplies texture.
+Not recommended: Udio (no downloads, non-commercial), Suno (allowed on Pro/Premier but download caps, watermark/fingerprint, UMG/Sony litigation), MusicGen (non-commercial weights), YuE2 (CC BY-NC), Lyria (no clear game terms).
+
+## Unverified / gaps
+- BPM, instrumentation and per-track genre of MBG/MBU tracks.
+- Whether SA3/ACE-Step produce convincing boom-bap/trap drums; no independent instrumental hip-hop comparison found except a lo-fi test in Sogni's (vendor) article.
+- ACE-Step and ElevenLabs training-data claims are vendor statements.
+- Suno/UMG/Sony second lawsuit (2026-09-18) from one secondary source.
+- Udio primary terms text, Lyria commercial terms, Strudel/Sonic Pi sample licenses, SuperCollider details, GeneralUser GS license file, SongBloom/DiffRhythm weights licenses, ElevenLabs prices.
+- Not a legal opinion; copyright outside the US not checked.
