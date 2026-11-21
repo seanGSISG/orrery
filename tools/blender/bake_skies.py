@@ -2,7 +2,7 @@
 
 Usage: `just bake-skies [name ...]` bakes dawn, noon and dusk (all when no name is given).
 `--look b` or `--look c` bakes the dawn of another look candidate (docs/design/visual-quality.md
-§10). `--scale 25` makes a quick preview.
+§10). `--scale 25` makes a quick preview in build/skies/, so it does not replace a game sky.
 
 Each sky is one equirectangular image, 4096x2048, scene-linear Radiance HDR, path-traced with
 Cycles on the GPU. The game's SkyPreset (game/skies/<name>.tres) shows it and adds the sun as a
@@ -33,6 +33,7 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "assets" / "textures"
 OUT = ROOT / "game" / "skies"
+PREVIEWS = ROOT / "build" / "skies"  # where a bake below full size goes
 WIDTH, HEIGHT = 4096, 2048
 SUN_AZIMUTH = 135.0  # degrees, counter-clockwise from +x seen from above: ahead of the start, on its left
 SUN_CAP = 16.0  # the brightest radiance a sky pixel keeps; the game's sun light replaces the rest
@@ -489,7 +490,9 @@ def main() -> None:
         default="a",
         help="the look candidate whose dawn to bake",
     )
-    parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument(
+        "--out", type=Path, help="default: game/skies, or build/skies below --scale 100"
+    )
     parser.add_argument("--samples", type=int, default=256)
     parser.add_argument(
         "--scale",
@@ -502,12 +505,13 @@ def main() -> None:
         sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     )
     skies: dict[str, Sky] = {"dawn": DAWNS[args.look], "noon": NOON, "dusk": DUSK}
-    args.out.mkdir(parents=True, exist_ok=True)
+    out: Path = args.out or (OUT if args.scale == 100 else PREVIEWS)
+    out.mkdir(parents=True, exist_ok=True)
     for name in args.names or skies:
         bake(
             name,
             skies[name],
-            args.out.resolve(),
+            out.resolve(),
             args.samples,
             args.scale,
             not args.cpu,

@@ -58,12 +58,13 @@ vec3 slab_random(vec2 cell) {
 }
 
 // Returns what one side shows at the point `at` on its plane, in metres: the albedo in rgb
-// and the roughness in a. `size` is the slab size along the two axes of `at`. `bump` gets
-// the slope of the normal map along +x and -y of `at`.
-vec4 side(vec2 at, vec2 size, out vec2 bump) {
+// and the roughness in a. `at_dx` and `at_dy` are the screen-space slopes of `at`. `size` is
+// the slab size along the two axes of `at`. `bump` gets the slope of the normal map along +x
+// and -y of `at`.
+vec4 side(vec2 at, vec2 at_dx, vec2 at_dy, vec2 size, out vec2 bump) {
 	vec2 uv = at / tile;
-	vec2 dx = dFdx(uv);
-	vec2 dy = dFdy(uv);
+	vec2 dx = at_dx / tile;
+	vec2 dy = at_dy / tile;
 	float shade = 1.0;
 	float joint = 0.0;
 	vec2 flip = vec2(1.0);
@@ -80,7 +81,7 @@ vec4 side(vec2 at, vec2 size, out vec2 bump) {
 		// The distance to the nearest slab edge in metres, against the size of a pixel, so
 		// that a far joint fades out and does not shimmer.
 		vec2 edge = (0.5 - abs(fract(slab) - 0.5)) * size;
-		float pixel = max(length(dFdx(at)), length(dFdy(at)));
+		float pixel = max(length(at_dx), length(at_dy));
 		float line = 1.0 - smoothstep(0.5 * (joint_width - pixel), 0.5 * (joint_width + pixel), min(edge.x, edge.y));
 		joint = line * clamp(joint_width / pixel, 0.0, 1.0);
 	}
@@ -104,18 +105,23 @@ void fragment() {
 	vec4 surface = vec4(0.0);
 	vec3 bent = normal;
 	vec2 bump;
+	// The screen-space slopes of the position, taken once before any branch: a slope taken
+	// inside a branch is not defined where two neighbour pixels take different branches.
+	vec3 p = piece_position;
+	vec3 px = dFdx(p);
+	vec3 py = dFdy(p);
 	// A side that the face does not look at costs no texture reads. In a piece's own space
 	// x is across, y is up and -z is along (the glTF axes of the kit's x, z and y).
 	if (weight.x > 0.001) {
-		surface += weight.x * side(vec2(-piece_position.z, -piece_position.y), vec2(slab_size.y, ENDLESS), bump);
+		surface += weight.x * side(vec2(-p.z, -p.y), vec2(-px.z, -px.y), vec2(-py.z, -py.y), vec2(slab_size.y, ENDLESS), bump);
 		bent += weight.x * vec3(0.0, bump.y, -bump.x);
 	}
 	if (weight.y > 0.001) {
-		surface += weight.y * side(vec2(piece_position.x, -piece_position.z), slab_size, bump);
+		surface += weight.y * side(vec2(p.x, -p.z), vec2(px.x, -px.z), vec2(py.x, -py.z), slab_size, bump);
 		bent += weight.y * vec3(bump.x, 0.0, bump.y);
 	}
 	if (weight.z > 0.001) {
-		surface += weight.z * side(vec2(piece_position.x, -piece_position.y), vec2(slab_size.x, ENDLESS), bump);
+		surface += weight.z * side(vec2(p.x, -p.y), vec2(px.x, -px.y), vec2(py.x, -py.y), vec2(slab_size.x, ENDLESS), bump);
 		bent += weight.z * vec3(bump.x, bump.y, 0.0);
 	}
 	ALBEDO = clamp(surface.rgb, vec3(ALBEDO_MIN), vec3(mix(ALBEDO_MAX_DIELECTRIC, ALBEDO_MAX_METAL, metallic)));

@@ -4,8 +4,8 @@ A piece starts at `at`, the centre of its front top edge, and runs `length` m fo
 turned by `yaw` degrees around z. To chain pieces, start the next piece where the last one ends.
 
 A piece is `material` (limestone) with an edge trim of `trim` (brass) along its two long edges.
-The trim is a second mesh, `<name>_trim`. It does not collide, so it does not change how the
-marble rolls. Give `trim=""` for an edge that touches another piece.
+The trim is a second mesh, `<name>_trim`, a child of the piece. It does not collide, so it does
+not change how the marble rolls. Give `trim=""` for an edge that touches another piece.
 """
 
 import math
@@ -97,8 +97,8 @@ def _slab(
         edge = _trim(
             f"{name}_trim", half, length, rise, surface_material("default", trim)
         )
-        edge.location = at
-        edge.rotation_euler = obj.rotation_euler
+        # A child of the piece: it follows when a level script moves or turns the piece.
+        edge.parent = obj
     return obj
 
 
