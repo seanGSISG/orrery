@@ -40,11 +40,14 @@ jobs:
           templates: "true"
       - run: just export
       - name: Boot the Linux export
+        timeout-minutes: 2
         run: build/linux/orrery.x86_64 --headless -- --smoke | grep '^ORRERY boot ok'
+      # Artifact zips drop the executable bit; a tarball keeps it.
+      - run: tar -czf build/orrery-linux.tar.gz -C build/linux .
       - uses: actions/upload-artifact@v7
         with:
           name: orrery-linux
-          path: build/linux/
+          path: build/orrery-linux.tar.gz
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
