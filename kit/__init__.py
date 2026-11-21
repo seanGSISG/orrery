@@ -8,7 +8,28 @@ export turns positions into Godot's y-up axes: Blender (x, y, z) is Godot (x, z,
 """
 
 from kit.markers import level, marker, shot
+from kit.masonry import arch, deck, dish, hoop, inlay, lathe, pillar, teeth, wall
+from kit.outlines import arc, box, rect
 from kit.pieces import ramp, track
 from kit.surfaces import surface
 
-__all__ = ["level", "marker", "ramp", "shot", "surface", "track"]
+__all__ = [
+    "arc",
+    "arch",
+    "box",
+    "deck",
+    "dish",
+    "hoop",
+    "inlay",
+    "lathe",
+    "level",
+    "marker",
+    "pillar",
+    "ramp",
+    "rect",
+    "shot",
+    "surface",
+    "teeth",
+    "track",
+    "wall",
+]

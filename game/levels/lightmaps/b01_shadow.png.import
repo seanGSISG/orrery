@@ -1,0 +1,29 @@
+[remap]
+
+importer="2d_array_texture"
+type="CompressedTexture2DArray"
+uid="uid://kl2fqllrhkjp"
+path.s3tc="res://.godot/imported/b01_shadow.png-c72fc7876559a2adcc8881bc9597cf07.s3tc.ctexarray"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+
+[deps]
+
+source_file="res://levels/lightmaps/b01_shadow.png"
+dest_files=["res://.godot/imported/b01_shadow.png-c72fc7876559a2adcc8881bc9597cf07.s3tc.ctexarray"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/channel_pack=1
+mipmaps/generate=false
+mipmaps/limit=-1
+slices/horizontal=1
+slices/vertical=4
