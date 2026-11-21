@@ -292,12 +292,11 @@ class ImageResult:
 
 
 def alpha_problem(path: Path) -> str:
-    """Returns why a transparent image is not one (no alpha, or no clear pixel), or ""."""
+    """Returns "" when an image has a fully clear pixel, else why not. It reads the decoded
+    alpha, so an indexed PNG with a transparency chunk counts too."""
     with Image.open(path) as image:
-        if "A" not in image.getbands():
-            return "the image has no alpha channel"
-        low, _ = image.getchannel("A").getextrema()
-    return "" if low == 0 else "the alpha channel has no transparent pixel"
+        low, _ = image.convert("RGBA").getchannel("A").getextrema()
+    return "" if low == 0 else "the image has no transparent pixel"
 
 
 def _save(

@@ -416,3 +416,9 @@ def test_a_task_is_counted_once_when_its_download_is_retried(
         task_file.write_text(json.dumps({"task_id": "task-1", "record": record}))
         cli.main(["model", "x.png", "-o", "lamp.glb"], settings)
     assert len((isolated / "spend.jsonl").read_text().splitlines()) == 1
+
+
+def test_a_nested_model_url_is_not_the_main_model() -> None:
+    nested = {"result": {"model_url": f"{CDN}/model.glb"}}
+    assert tripo.missing(nested, ("model_url",)) == ["model_url"]
+    assert tripo.missing(MODEL, ("model_url",)) == []

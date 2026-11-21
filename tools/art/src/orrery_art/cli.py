@@ -150,7 +150,17 @@ def cmd_set(args: argparse.Namespace, config: Config) -> None:
             emit(ok=True, images=[], note="every image was made before")
         return
     client = openai_client(config)
-    emit_results([run_live(client, job, config) for job in todo])
+    cap = args.max_usd if args.max_usd is not None else config.max_usd_per_run
+    results, spent_here = [], 0.0
+    for job in todo:
+        # A dearer image than estimated must not let the next one pass a limit.
+        next_usd = images.estimate_usd(job, config.image, batch=False)
+        check_spend(spent_here + next_usd, cap)
+        check_budget("openai", next_usd, config)
+        result = run_live(client, job, config)
+        spent_here += result.billed_usd if result.billed_usd is not None else next_usd
+        results.append(result)
+    emit_results(results)
 
 
 def made(job: images.ImageJob) -> bool:
@@ -223,7 +233,6 @@ def run_batch(
         )
         return
     state.results = images.collect(client, batch, jobs, config.image)
-    state.write(state_file)
     for job, result in zip(jobs, state.results, strict=True):
         # A returned image is billed even when it fails the alpha check.
         usd = result.billed_usd
@@ -231,6 +240,7 @@ def run_batch(
             usd = images.estimate_usd(job, config.image, batch=True)
         if usd is not None:
             record_spend("openai", usd, f"{state.batch_id}/{job.out}", result.out)
+    state.write(state_file)
     emit_results(state.results)
 
 
@@ -373,21 +383,22 @@ def run_task(
         print(f"Started task {task_id}", file=sys.stderr)
     data = client.wait(task_id, settings.poll_seconds, settings.timeout_minutes * 60)
     output = data.get("output") or {}
-    absent = tripo.missing(output, expects)
-    if absent:
-        raise tripo.TripoError(
-            f"task {task_id} succeeded but returned no {', '.join(absent)}"
-        )
     consumed = data.get("credits_consumed")
     billed = (
         None
         if consumed is None
         else round(float(consumed) * settings.usd_per_credit, 4)
     )
-    # Count the charge before the download, which can fail; the ledger keeps one per task.
+    # Count the charge before the output check and the download, which can fail; the
+    # ledger keeps one row per task.
     record_spend(
         "tripo", billed if billed is not None else record["estimated_usd"], task_id, out
     )
+    absent = tripo.missing(output, expects)
+    if absent:
+        raise tripo.TripoError(
+            f"task {task_id} succeeded but returned no {', '.join(absent)}"
+        )
     files = client.download(output, path)
     manifest.write(
         path,

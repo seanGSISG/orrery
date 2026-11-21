@@ -235,8 +235,11 @@ def _urls(output: Any, key: str = "") -> Iterator[tuple[str, str]]:
 
 
 def missing(output: dict[str, Any], expects: list[str] | tuple[str, ...]) -> list[str]:
-    """The expected output keys that hold no URL in a task output."""
-    found = {key for key, _ in _urls(output)}
+    """The expected output keys that hold no URL in a task output. `model_url` must be at
+    the top level, where `Tripo.download` takes the main model from."""
+    found = {key for key, _ in _urls(output) if key != "model_url"}
+    if isinstance(output.get("model_url"), str):
+        found |= {key for key, _ in _urls({"model_url": output["model_url"]})}
     return [key for key in expects if key not in found]
 
 

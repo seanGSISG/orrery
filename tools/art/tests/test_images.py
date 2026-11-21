@@ -222,7 +222,7 @@ def test_a_transparent_image_without_clear_pixels_fails(
     with pytest.raises(SystemExit):
         cli.main(argv, settings)
     result = json.loads(capsys.readouterr().out)
-    assert result["error"] == "the alpha channel has no transparent pixel"
+    assert result["error"] == "the image has no transparent pixel"
     assert (isolated / "images" / "decal.png").exists()
 
 
@@ -517,3 +517,14 @@ def test_an_output_inside_another_recipe_is_refused(
     jobs.write_text("".join(json.dumps(line) + "\n" for line in lines))
     with pytest.raises(ValueError, match="a file and its folder"):
         images.read_jobs(jobs, settings.image)
+
+
+def test_an_indexed_png_with_a_transparency_chunk_passes(tmp_path: Path) -> None:
+    path = tmp_path / "indexed.png"
+    image = Image.new("P", (4, 4), 1)
+    image.putpixel((0, 0), 0)
+    image.save(path, transparency=0)
+    assert images.alpha_problem(path) == ""
+    opaque = tmp_path / "opaque.png"
+    Image.new("RGB", (4, 4)).save(opaque)
+    assert images.alpha_problem(opaque) == "the image has no transparent pixel"
