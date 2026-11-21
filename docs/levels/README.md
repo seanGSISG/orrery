@@ -35,16 +35,18 @@ These come from the starting values in `docs/plan.md` §4.2: radius 0.2 m, gravi
 
 ## Object values
 
-The Coil Spring value is decided (2026-11-20). The plan does not give the other values: the briefs assume them, and the owner of each object must confirm them.
+These are the `@export` defaults in `game/objects/<type>/<type>.gd`. A marker can set any of them for one object. The code wins over this table.
 
-| Object | Value | Effect on the layouts |
+| Object | Default | Effect on the layouts |
 |---|---|---|
-| Coil Spring (decided) | Launches at 20 m/s upward. Apex 20² / (2 × 20) = 10 m. Air time 2.0 s. The pickup returns after 5 s | B3 ledges are 5 to 7 m high |
-| Bumper | Pushes at 15 m/s along the contact normal | Bumpers push across a floor. They do not lift the marble onto a ledge |
-| Steam Vent | Each vent has a `lift` setting: the height the marble reaches | The briefs give the lift of each vent |
-| Trapdoor | Opens 0.5 s after the first touch. Resets after 5 s | A 4 m trapdoor is safe at 8 m/s or more |
-| Crumbling Tiles | Fall 0.5 s after the first touch. Return after 5 s | Same rule as the trapdoor |
-| Moving platform | Path, period and stop times are settings | The briefs give them |
+| Coil Spring | `launch_speed` 20 m/s: a use raises the speed along up to 20 m/s (a marble that already rises faster keeps its speed). Apex 20² / (2 × 20) = 10 m. Air time 2.0 s. The pickup returns `respawn_delay` 5 s after it is taken, and at a restart. The pickup stays while the slot is full | B3 ledges are 5 to 7 m high |
+| Bumper | `speed` 15 m/s: raises the speed away from the drum axis to 15 m/s. The drum is `radius` 0.5 m and `height` 1.0 m | Bumpers push across a floor, also from the top face. They do not lift the marble onto a ledge |
+| Steam Vent | `lift` 8 m, column `radius` 1.0 m, `push` 60 m/s². The marble reaches `lift` m above the grate and hovers there while it stays in the column | The briefs set the `lift` of each vent |
+| Trapdoor | `delay` 0.5 s after the first touch, then a 0.3 s swing open. The door starts to shut `close_after` 5 s after it starts to open. Panel 4 × 4 × 0.5 m | A 4 m trapdoor is safe at 8 m/s or more |
+| Crumbling Tiles | Each tile breaks `delay` 0.5 s after its own first touch. A broken tile does not return by itself: a respawn or a restart brings the tiles back. Grid 4 × 4 m of 2 m `tile`, 0.5 m thick | Same rule as the trapdoor, for each tile. A tile that has gone does not come back until the next respawn |
+| Moving platform | `period` 8 s for one cycle with the stops included, `stop` 1 s at each point, `loop` false (there and back), `offset` 0 s. Deck 4 × 4 × 0.5 m | The briefs set the path, period and stop of each platform |
+| Pendulum | `period` 4 s, `swing` 60° to each side, `length` 4 m, bob `radius` 0.6 m, `offset` 0 s | The bob sweeps the track when the pivot is about `length` + `radius` above it |
+| Turning gear | `period` 8 s for one turn, `radius` 2.1 m to the tooth tips, `teeth` 12, `thickness` 0.5 m, `clockwise` false | |
 
 ## Time estimates
 
@@ -53,12 +55,14 @@ Each level script carries two routes: the first-run route and the expert route. 
 - **Par** = first-run route time × 1.5.
 - **Gold** = expert route time × 1.15. Gold needs the expert line.
 
+`just suggest-times <id>` prints both values from the bot's times. `just test-levels` checks that the first-run route finishes under par and the expert route under gold.
+
 Until the bot runs, each brief estimates a route time T like this:
 
 - T = route length ÷ cruise speed + 0.5 s for each sharp turn + the cost of each jump, wait and lift.
 - Cruise speed: 12 m/s on open floor, 10 m/s between jumps, 8 to 9 m/s on a climb, 7 m/s on a spiral ramp.
 - A jump onto a step costs 0.9 s in a stair and 0.4 s in a run.
-- A Steam Vent lifts 8 m in 1.6 s.
+- A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
 Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
