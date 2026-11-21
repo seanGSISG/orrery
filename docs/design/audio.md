@@ -15,8 +15,8 @@ Terms used in this file:
 | `game/audio/audio_buses.gd` | `AudioBuses`: the bus names and the volume accessors. |
 | `game/audio/music.gd` | The autoload `Music`: music groups, Ascent zones, menu sounds. It owns the `SfxPlayer`. |
 | `game/audio/sfx_player.gd` | `SfxPlayer`: plays the sounds of one `LevelRun`. |
-| `game/audio/sfx/` | The sounds, made by `tools/audio/sfx/synth_sfx.py`. They are small (about 220 KB in total), so git keeps them, not LFS. |
-| `game/audio/music/` | The music groups. It is empty until the real tracks are imported. |
+| `game/audio/sfx/` | The sounds, made by `tools/audio/sfx/synth_sfx.py` (`just build-sfx`). They are small (about 220 KB in total), so git keeps them, not LFS. |
+| `game/audio/music/` | The music groups. M1 has three tracks (#26, #67), made by `tools/audio/music/`: `title/wind_up.ogg` ("Wind-up"), `beginner/roll_call.ogg` ("Roll call") and `ascent/1_spiral_stair.ogg` ("Spiral stair"). The `.ogg` files of the music are in Git LFS (`game/audio/music/**/*.ogg`). The other groups have no track yet, so they play silence. Ascent zones 2 and 3 keep playing the last clip (zone 1) until `2_*.ogg` and `3_*.ogg` exist. |
 | `game/test/audio/loops/` | Two placeholder loops for the music tests (120 BPM, 4/4, 2 bars). |
 
 ## 2. Volumes
