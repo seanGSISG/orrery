@@ -3,10 +3,11 @@
 // objects and reads the frame behind it (docs/design/visual-quality.md §5):
 // - Where the core is behind the glass, it shows the core as it is, so the core stays crisp.
 // - Elsewhere it shows the world the way a solid glass ball does, upside down and small: it
-//   follows the view ray through the ball and reads the frame where that ray points, on the
-//   far side of the marble's outline.
-// The engine adds the reflections of the sky, the probes and the sun. The rim is darker and
-// cooler than the middle, so the marble shows on pale stone and on a bright sky.
+//   follows the view ray through the ball and reads the frame where that ray points, past
+//   the marble's own outline.
+// The engine adds the reflections of the sky, the probes and the sun. The rim is cooler than
+// the middle and ends in a thin dark line, so the marble shows on pale stone and on a bright
+// sky.
 shader_type spatial;
 
 uniform sampler2D frame : hint_screen_texture, repeat_disable, filter_linear_mipmap;

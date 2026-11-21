@@ -21,7 +21,7 @@ Every third-party asset, sample, font, add-on and AI model in Orrery. Each line 
 | Marble023, PBR texture, 2K | [ambientCG](https://ambientcg.com/a/Marble023) | CC0 1.0 | `assets/textures/stone/`; the stone marble (Marble B) |
 | Metal007, PBR texture, 2K | [ambientCG](https://ambientcg.com/a/Metal007) | CC0 1.0 | `assets/textures/metal/`; aged brass of look A |
 | Metal008, PBR texture, 2K | [ambientCG](https://ambientcg.com/a/Metal008) | CC0 1.0 | `assets/textures/metal/`; dark bronze of look C |
-| Metal048A, PBR texture, 2K | [ambientCG](https://ambientcg.com/a/Metal048A) | CC0 1.0 | `assets/textures/metal/`; gold inlays, satin brass of look B, the marble's brass core and gold lines |
+| Metal048A, PBR texture, 2K | [ambientCG](https://ambientcg.com/a/Metal048A) | CC0 1.0 | `assets/textures/metal/`; gold inlays, satin brass of look B and the marble's gold lines in the look-dev renders. In the game: the colour map is in the brass core of the marble (`tools/blender/marble_core.py` puts it into `game/core/marble/built/orrery_core.glb`) |
 | Syferfontein 6d Clear (Pure Sky), HDRI sky, 2K | [Poly Haven](https://polyhaven.com/a/syferfontein_6d_clear_puresky) | CC0 1.0 | `assets/textures/sky/`; dawn sky of look A |
 | Qwantani Dusk 2 (Pure Sky), HDRI sky, 2K | [Poly Haven](https://polyhaven.com/a/qwantani_dusk_2_puresky) | CC0 1.0 | `assets/textures/sky/`; dawn sky of look B |
 | Syferfontein 1d Clear (Pure Sky), HDRI sky, 2K | [Poly Haven](https://polyhaven.com/a/syferfontein_1d_clear_puresky) | CC0 1.0 | `assets/textures/sky/`; dawn sky of look C |

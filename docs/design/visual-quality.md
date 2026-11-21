@@ -140,12 +140,18 @@ Godot writes the lightmap as `.exr` and the shadowmask as `.png` (`scene/3d/ligh
 
 ## 5. The glass marble
 
-The glass marble (and the translucent ghost) gets reflection and refraction without ray tracing:
+The glass marble gets reflection and refraction without ray tracing. Its look is one skin scene, `game/core/marble/skins/glass_orrery.tscn` (marble A of the style board). `marble.tscn` puts the skin under `Ball`, the node that turns with the spin. A second skin is a second scene in `skins/`.
 
-- **Material:** `BaseMaterial3D` with `transparency = TRANSPARENCY_ALPHA`, `metallic = 0`, `metallic_specular = 0.5` (F0 about 0.04, the value for glass with an index of refraction near 1.5), `roughness` 0.02 to 0.05, and `refraction_enabled = true`.
-- **Refraction:** `refraction_enabled` distorts the screen texture behind the marble along its normal. Only opaque objects appear in the refraction. This is correct for the tiny orrery inside the glass marble: it is an opaque mesh inside the sphere, so the glass bends it like a lens. Start `refraction_scale` at 0.05 (the default). If the result does not look like a solid glass ball, write a small spatial shader that bends the view ray through the sphere and reads `hint_screen_texture`. Do this only if the gallery shows the need.
-- **Reflection:** the static probes on every preset, plus the marble probe on Ultra. Fresnel from the PBR model makes the rim brighter at grazing angles.
-- **Shadow:** `TRANSPARENCY_ALPHA` "disables shadow casting". Add a child sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Core:** the brass orrery is an opaque mesh. `tools/blender/marble_core.py` builds it, and `just build-marble` exports it to `game/core/marble/built/` (a build output, like the levels). Because it is opaque, it is in the screen texture and the depth texture, and it has motion vectors for FSR 2.2.
+- **Glass:** a sphere with the shader `skins/glass.gdshader`. The shader reads `hint_screen_texture` and `hint_depth_texture`, so the glass draws in the transparent pass.
+  - Where the depth texture holds a point inside the ball, the pixel shows the core. The shader shows the screen texture at the same pixel, so the core is not sampled again and stays crisp. The glass does not magnify the core. The mesh has the sizes that the eye sees through glass with an index of refraction of 1.65.
+  - Elsewhere the shader bends the view ray through a solid ball (index of refraction 1.65) and reads the screen texture where the ray points, outside the marble's own outline. The world shows upside down and small, as in a real glass ball. Only opaque objects appear in this picture.
+  - The picture goes to `EMISSION` with `ALBEDO` black, `ROUGHNESS` 0.05 and `SPECULAR` 0.61 (F0 0.06, the value for an index of refraction of 1.65). The engine adds the sky, the probes and the sun as reflections.
+  - Toward the outline, the glass has a cool tint. The outline itself is a thin dark line with no reflection. The tint and the line keep the marble visible on pale stone and on a bright sky.
+- **Reflection:** the sky and the static probes on every preset, plus the marble probe on Ultra when the presets have it. Until a level has probes, the brass core reflects only the sky on Low and Medium; SSR adds the floor on High and Ultra.
+- **Shadow:** the glass itself casts no shadow. The skin has a second sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The core casts no shadow and takes none (`game/core/marble/core_import.gd`), because it is inside the sphere. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Ghost:** the ghost marble shows the shapes of the same skin in one pale, see-through look (`game/core/ghost/ghost.gdshader`). It does not read the screen texture.
+- **Cost:** measured on the fixture at 1080p (RTX 5090, a shared GPU), the glass adds about 0.15 ms of GPU time on Low and Medium and less than 0.05 ms on High and Ultra. Most of it is the copy of the screen texture. A cheaper glass for Low needs a field in `GraphicsPreset`.
 - **Later:** #38 can add ray-traced reflections on Ultra. This design does not depend on it.
 
 ## 6. Textures, materials and texel density

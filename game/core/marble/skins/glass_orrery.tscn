@@ -13,11 +13,7 @@ height = 0.4
 radial_segments = 96
 rings = 48
 
-[sub_resource type="StandardMaterial3D" id="far_side"]
-cull_mode = 1
-
 [sub_resource type="SphereMesh" id="shadow"]
-material = SubResource("far_side")
 radius = 0.2
 height = 0.4
 radial_segments = 32
