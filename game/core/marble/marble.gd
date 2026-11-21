@@ -37,7 +37,9 @@ var up: Vector3 = Vector3.UP
 ## Reference for MarbleInput.camera_yaw; y is up. It turns by the shortest arc when up
 ## changes.
 var frame: Basis = Basis.IDENTITY
-## True when the last sub-step had a contact.
+## True when the last sub-step stood on a floor (floor_min_up): the ground that the marble
+## rolls on and jumps off. A wall or a ceiling is no ground. The next hit on a floor after a
+## sub-step off the ground is a landing.
 var on_ground: bool = false
 ## After step(): the first contact with each touched object.
 var touches: Array[Contact] = []
@@ -50,8 +52,6 @@ var ball_rotation: Quaternion:
 
 ## Gravity for the next sub-step, m/s².
 var _gravity: Vector3 = Vector3.ZERO
-## True when the last sub-step stood on a floor, so the next hit on a floor is no landing.
-var _standing: bool = false
 
 @onready var _ball: Node3D = $Ball
 
@@ -90,7 +90,6 @@ func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	velocity = new_velocity
 	spin = up.cross(new_velocity) / tuning.radius
 	on_ground = false
-	_standing = false
 	reset_physics_interpolation()
 
 
@@ -98,8 +97,7 @@ func teleport(at: Vector3, new_velocity: Vector3) -> void:
 func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 	# 1. Contacts.
 	var contacts: Array[Contact] = world.contacts(position)
-	var landing: bool = not _standing
-	on_ground = not contacts.is_empty()
+	var landing: bool = not on_ground
 	# 2. Hits, with the velocity from before this sub-step's gravity.
 	var hits: Array[Contact] = []
 	for contact: Contact in contacts:
@@ -122,7 +120,7 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 		if ground == null or rise > ground.normal.dot(up):
 			ground = contact
 			pressure = push
-	_standing = ground != null
+	on_ground = ground != null
 	# 5. Rolling and the jump on the ground, air control in the air.
 	if ground != null:
 		_roll(ground, pressure, h, input)
