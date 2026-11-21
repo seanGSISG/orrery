@@ -659,7 +659,7 @@ def windows(
     about `spacing` m apart, and a door in the middle of the lowest row when `door`."""
     count = max(1, int((face.length - 1.2) // spacing))
     step = face.length / count
-    for floor in range(max(1, int((top - bottom - 0.4) // storey))):
+    for floor in range(int((top - bottom) // storey) + 1):
         base = bottom + floor * storey
         for i in range(count):
             door_here = door and floor == 0 and i == count // 2

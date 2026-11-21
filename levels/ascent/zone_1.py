@@ -1450,6 +1450,7 @@ _cw_at = SHAFT_START - 180.0
 EXPERT[2] = [
     (shaft(-10.0), ""),
     (shaft(5.0), ""),
+    (shaft(47.5), ""),
     (shaft(90.0), ""),
     (shaft(160.0), ""),
 ]
