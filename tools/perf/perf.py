@@ -10,7 +10,7 @@ For each level it runs game/test/perf/perf_run.tscn once per run below, each in 
 level's shots and once around the marble, and reports the GPU time per frame
 (RenderingServer.viewport_get_measured_render_time_gpu: the GPU time of the game window's
 viewport, without the compositor) and the VRAM (Performance.RENDER_VIDEO_MEM_USED). The High
-run at 1080p also saves the `motion` pair into build/gallery/<id>/ for `just gallery`.
+run at 1080p also saves the `motion` pair into build/gallery/<id>/motion/ for `just gallery`.
 
 It fails when:
 - Medium at 1080p has a 99th percentile above MEDIUM_P99_MS, or uses more than MAX_VRAM_MB,
@@ -90,7 +90,7 @@ def measure(level: str, run: Run) -> Result:
     godot = os.environ.get("GODOT", "godot")
     args = ["--level", level, "--preset", run.preset, "--out", str(out)]
     if run.motion:
-        args += ["--motion", str(GALLERY / level)]
+        args += ["--motion", str(GALLERY / level / "motion")]
     command = [
         *("gamescope", "--backend", "headless", *size, "--"),
         *(
@@ -115,6 +115,8 @@ def measure(level: str, run: Run) -> Result:
         size = f"{report['width']}x{report['height']}"
         raise RuntimeError(f"{level} {run.name}: rendered at {size}")
     gpu = report["gpu_ms"]
+    if not all(gpu[key] > 0.0 for key in ("mean", "p50", "p99")):
+        raise RuntimeError(f"{level} {run.name}: no GPU time measured: {gpu}")
     return Result(
         run,
         report["adapter"],

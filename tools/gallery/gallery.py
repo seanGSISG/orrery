@@ -8,10 +8,10 @@ Usage: `just gallery [id ...]`. With no ids it renders every level script `level
 
 For each level it launches the debug game through the harness (tools/harness) in gamescope with
 no window, on the High graphics preset (docs/design/visual-quality.md §7). It saves every shot
-at 1920x1080 and the `start` shot again at 3840x2160 as build/gallery/<id>/<shot>.png. It reads
-each PNG for the exposure check (rubric check 6) and writes one page with a section per level:
-the shots, the `motion` pair from `just perf` when it exists, and the 8-check rubric from the
-doc as a checklist. It exits 1 when a frame is blank or a screenshot fails.
+at 1920x1080 as build/gallery/<id>/<shot>.png, and `start` again at 3840x2160 in <id>/4k/. It
+reads each PNG for the exposure check (rubric check 6) and writes one page with a section per
+level: the shots, the `motion` pair from `just perf` when it exists, and the 8-check rubric from
+the doc as a checklist. It exits 1 when a frame is blank or a screenshot fails.
 """
 
 import html
@@ -110,14 +110,18 @@ def exposure(path: Path) -> tuple[float, float]:
 def capture(
     level: str, size: tuple[int, int], shots: list[str], suffix: str = ""
 ) -> list[Shot]:
-    """Launches the level at size on the gallery preset and saves the shots."""
+    """Launches the level at size on the gallery preset and saves the shots into
+    build/gallery/<level>/ (<level>/4k/ for a suffix), named after the shot."""
     harness("launch", "--level", level, "--resolution", f"{size[0]}x{size[1]}")
     try:
         harness("set_setting", "orrery/graphics/preset", PRESET)
         harness("step", str(SETTLE_TICKS))
         saved: list[Shot] = []
         for name in shots:
-            path = OUT / level / f"{name}{suffix}.png"
+            path = OUT / level / suffix.removeprefix("-") / f"{name}.png"
+            # A frame shows the pose from before the last step (physics interpolation), so
+            # step once more: the frame then shows the settled pose.
+            harness("step", "1")
             result = harness("screenshot", "--shot", name, "--path", str(path))
             blank = isinstance(result, dict) and bool(result.get("blank"))
             black, white = exposure(path)
@@ -168,7 +172,7 @@ def shot_figure(shot: Shot) -> str:
 
 def section(level: str, shots: list[Shot], checks: list[tuple[str, str]]) -> str:
     """Returns the HTML section for one level: shots, motion pair and rubric checklist."""
-    motion = [OUT / level / f"motion-{i}.png" for i in (1, 2)]
+    motion = [OUT / level / "motion" / f"motion-{i}.png" for i in (1, 2)]
     if all(path.exists() for path in motion):
         pair = "".join(figure(path.stem, path) for path in motion)
     else:

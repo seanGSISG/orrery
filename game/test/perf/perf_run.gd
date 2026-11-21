@@ -3,7 +3,7 @@ extends Node
 ## the window's resolution. tools/perf/perf.py starts it in gamescope, once per preset:
 ##     godot --path game --resolution 1920x1080 res://test/perf/perf_run.tscn --
 ##         --level fixture --preset medium --out build/perf/fixture-medium-1080.json
-##         [--motion build/gallery/fixture]
+##         [--motion build/gallery/fixture/motion]
 ## It flies a camera along the level's shots, then once fast around the marble. It measures
 ## the GPU time of each frame with RenderingServer.viewport_get_measured_render_time_gpu and
 ## the peak VRAM with Performance.RENDER_VIDEO_MEM_USED. With --motion it then saves two orbit
