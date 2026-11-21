@@ -5,7 +5,7 @@ extends Object
 ## material (kit/surfaces.py: limestone, brass, gold) and LevelConverter gives those faces the
 ## material that find() returns. Every material uses res://materials/kit_surface.gdshader.
 ##
-## SET picks the material set, one of the three look candidates of the style board:
+## SET picks the material set: A, B or C of the style board.
 ## - "a": honey limestone and aged brass. Sean approved it on 2026-11-21.
 ## - "b": cream limestone and satin brass.
 ## - "c": weathered grey stone and dark bronze.

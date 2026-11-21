@@ -1,9 +1,9 @@
 """Bakes the tier skies into game/skies/<name>.hdr: the backdrop that the game shows.
 
 Usage: `just bake-skies [name ...]` bakes dawn, noon and dusk (all when no name is given).
-`--look b` or `--look c` bakes the dawn of another look candidate (docs/design/visual-quality.md
+`--set b` or `--set c` bakes the dawn of another material set (docs/design/visual-quality.md
 §10), and `--scale 25` makes a quick preview. Both go to build/skies/, so they do not replace a
-game sky: game/skies/dawn.tres holds the sun of the look in use. Give `--out` to bake to
+game sky: game/skies/dawn.tres holds the sun of the set in use. Give `--out` to bake to
 another folder.
 
 Each sky is one equirectangular image, 4096x2048, scene-linear Radiance HDR, path-traced with
@@ -35,7 +35,7 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "assets" / "textures"
 OUT = ROOT / "game" / "skies"
-PREVIEWS = ROOT / "build" / "skies"  # where a preview or the dawn of another look goes
+PREVIEWS = ROOT / "build" / "skies"  # where a preview or the dawn of another set goes
 WIDTH, HEIGHT = 4096, 2048
 SUN_AZIMUTH = 135.0  # degrees, counter-clockwise from +x seen from above: ahead of the start, on its left
 SUN_CAP = 16.0  # the brightest radiance a sky pixel keeps; the game's sun light replaces the rest
@@ -76,9 +76,9 @@ class PhysicalSky:
 
 Sky = HdriSky | PhysicalSky
 
-# The dawn of each look candidate (the style board, #5). LOOK is the look in use: keep it the
-# same as KitMaterials.SET (game/materials/kit_materials.gd).
-LOOK = "a"
+# The dawn of each material set (looks A, B and C of the style board, #5). SET is the set in use:
+# keep it the same as KitMaterials.SET (game/materials/kit_materials.gd).
+SET = "a"
 DAWNS: dict[str, HdriSky] = {
     "a": HdriSky(file="syferfontein_6d_clear_puresky", strength=0.8, sun_elevation=12.0, sun_color=(1.0, 0.68, 0.42), sun_strength=24.0),
     "b": HdriSky(file="qwantani_dusk_2_puresky", strength=0.9, sun_elevation=8.0, sun_color=(1.0, 0.6, 0.46), sun_strength=14.0),
@@ -489,15 +489,15 @@ def main() -> None:
         help="skies to bake (default: all)",
     )
     parser.add_argument(
-        "--look",
+        "--set",
         choices=sorted(DAWNS),
-        default=LOOK,
-        help="the look candidate whose dawn to bake",
+        default=SET,
+        help="the material set whose dawn to bake",
     )
     parser.add_argument(
         "--out",
         type=Path,
-        help="default: game/skies; build/skies for a preview or another look",
+        help="default: game/skies; build/skies for a preview or another set",
     )
     parser.add_argument("--samples", type=int, default=256)
     parser.add_argument(
@@ -510,8 +510,8 @@ def main() -> None:
     args = parser.parse_args(
         sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     )
-    skies: dict[str, Sky] = {"dawn": DAWNS[args.look], "noon": NOON, "dusk": DUSK}
-    game_sky = args.scale == 100 and args.look == LOOK
+    skies: dict[str, Sky] = {"dawn": DAWNS[args.set], "noon": NOON, "dusk": DUSK}
+    game_sky = args.scale == 100 and args.set == SET
     out: Path = args.out or (OUT if game_sky else PREVIEWS)
     out.mkdir(parents=True, exist_ok=True)
     for name in args.names or skies:
