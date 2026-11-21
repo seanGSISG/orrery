@@ -2,19 +2,12 @@
 
 [ext_resource type="Script" path="res://core/marble/marble.gd" id="1"]
 [ext_resource type="Resource" path="res://core/marble_tuning.tres" id="2"]
-[ext_resource type="Shader" path="res://core/marble/marble.gdshader" id="3"]
-
-[sub_resource type="ShaderMaterial" id="look"]
-shader = ExtResource("3")
-
-[sub_resource type="SphereMesh" id="ball"]
-material = SubResource("look")
-radius = 0.2
-height = 0.4
+[ext_resource type="PackedScene" path="res://core/marble/skins/glass_orrery.tscn" id="3"]
 
 [node name="Marble" type="Node3D"]
 script = ExtResource("1")
 tuning = ExtResource("2")
 
-[node name="Ball" type="MeshInstance3D" parent="."]
-mesh = SubResource("ball")
+[node name="Ball" type="Node3D" parent="."]
+
+[node name="Skin" parent="Ball" instance=ExtResource("3")]
