@@ -12,9 +12,9 @@ until the harness answers. The display decides where it renders:
 launch() records the running game in build/harness/session.json, so that every later CLI
 command and the MCP server reach the same game.
 
-Each game gets its own empty user:// in build/harness/user-<port>/ (XDG_DATA_HOME), so a
-harness session never reads or writes the player's saves, ghosts and settings, nor another
-session's. end() deletes it.
+Each launch gets its own empty user:// in a new build/harness/user-<port>-<random>/ folder
+(XDG_DATA_HOME), so a harness session never reads or writes the player's saves, ghosts and
+settings, nor another session's. Session.data names it, and end() deletes it.
 """
 
 import os
@@ -22,6 +22,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,12 +61,14 @@ _ENV_PREFIXES = ("VK_", "MESA_", "__GLX_", "__NV_", "DRI_")
 
 
 class Session(BaseModel):
-    """A running game: its harness port, process id, display and log file."""
+    """A running game: its harness port, process id, display, log file and user data
+    folder (empty in a session file from before the folder existed)."""
 
     port: int
     pid: int
     display: Display
     log: str
+    data: str = ""
 
     def connect(self) -> Harness:
         return Harness(self.port)
@@ -165,7 +168,8 @@ def end(session: Session) -> None:
     deadline = time.monotonic() + 5.0
     while time.monotonic() < deadline and _group_alive(session.pid):
         time.sleep(0.1)
-    shutil.rmtree(user_data(session.port), ignore_errors=True)
+    if session.data:
+        shutil.rmtree(session.data, ignore_errors=True)
 
 
 def _group_alive(group: int) -> bool:
@@ -177,11 +181,6 @@ def _group_alive(group: int) -> bool:
     except PermissionError:
         return True
     return True
-
-
-def user_data(port: int) -> Path:
-    """The XDG_DATA_HOME of the game on port. Godot puts its user:// in it."""
-    return RUNS / f"user-{port}"
 
 
 def command(
@@ -214,19 +213,24 @@ def command(
 def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
     port = _free_port()
     log = RUNS / f"game-{port}.log"
-    data = user_data(port)
-    shutil.rmtree(data, ignore_errors=True)
-    data.mkdir()
-    with log.open("wb") as out:
-        process = subprocess.Popen(
-            command(binary, display, port, options),
-            stdin=subprocess.DEVNULL,
-            stdout=out,
-            stderr=subprocess.STDOUT,
-            env=_game_env() | {"XDG_DATA_HOME": str(data)},
-            start_new_session=True,
-        )
-    session = Session(port=port, pid=process.pid, display=display, log=str(log))
+    # A new folder per launch: a reused port never shares or deletes another game's data.
+    data = tempfile.mkdtemp(prefix=f"user-{port}-", dir=RUNS)
+    try:
+        with log.open("wb") as out:
+            process = subprocess.Popen(
+                command(binary, display, port, options),
+                stdin=subprocess.DEVNULL,
+                stdout=out,
+                stderr=subprocess.STDOUT,
+                env=_game_env() | {"XDG_DATA_HOME": data},
+                start_new_session=True,
+            )
+    except OSError:
+        shutil.rmtree(data, ignore_errors=True)
+        raise
+    session = Session(
+        port=port, pid=process.pid, display=display, log=str(log), data=data
+    )
     deadline = time.monotonic() + options.timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:

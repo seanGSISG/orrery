@@ -143,13 +143,13 @@ def test_saves_go_to_the_session_user_data(
     session gets its own folder and leaves the first one's files, and end() deletes it."""
     harness.load_level("route_bot")
     assert harness.run_bot().finished
-    data = game.user_data(session.port)
+    data = Path(session.data)
     assert any(data.rglob("save.json"))
     assert any(data.rglob("route_bot.ghost"))
     other = game.start(game.LaunchOptions(display="none"))
-    assert game.user_data(other.port).is_dir()
+    assert Path(other.data).is_dir() and other.data != session.data
     game.end(other)
-    assert not game.user_data(other.port).exists()
+    assert not Path(other.data).exists()
     assert any(data.rglob("route_bot.ghost"))
 
 
