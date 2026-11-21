@@ -41,3 +41,7 @@ _Avoid_: map, level file
 **Marker**:
 A Blender empty that a level script places with `kit.marker(type, ...)`. Its custom property `orrery` holds the type and the settings. The importer puts an instance of `game/objects/<type>/<type>.tscn` in its place.
 _Avoid_: spawn point, placeholder
+
+**Route**:
+A `route` marker: the points and actions that the route bot (`game/harness/route_bot.gd`) plays a level along. A level script places a `first_run` route and an `expert` route; `just test-levels` checks them against par and gold.
+_Avoid_: path, track (a track is a level piece)

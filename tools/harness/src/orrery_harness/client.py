@@ -81,6 +81,19 @@ class _Logs(BaseModel):
     lines: list[LogLine]
 
 
+class BotResult(BaseModel):
+    """A route bot drive (game/harness/route_bot.gd): finished, the level clock in s and the
+    falls out of bounds. When the bot gave up: stuck_at (world position), waypoint (the index
+    of the point it headed for) and reason (stuck, fell, route_end or timeout)."""
+
+    finished: bool
+    time: float
+    falls: int
+    stuck_at: Vector3 | None = None
+    waypoint: int | None = None
+    reason: str | None = None
+
+
 class _Error(BaseModel):
     code: int
     message: str
@@ -200,6 +213,11 @@ class Harness:
 
     def logs(self, since: int = 0) -> list[LogLine]:
         return _Logs.model_validate(self.call("logs", since=since)).lines
+
+    def run_bot(self, route: str | None = None) -> BotResult:
+        """Restarts the level and lets the route bot play route (a kind, first_run by default,
+        or a route name) to the end at full speed, then pauses the run."""
+        return BotResult.model_validate(self.call("run_bot", route=route))
 
     def set_setting(self, key: str, value: object) -> object:
         """Sets an existing project setting and returns its new value."""

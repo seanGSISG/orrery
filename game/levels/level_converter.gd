@@ -20,6 +20,8 @@ extends RefCounted
 ## - Lint: a level has exactly one `level`, one `start` and one `finish` marker. A level outside
 ##   levels/test/ (tier `test`) also has the gallery shots `overview`, `start`, `finish` and
 ##   `egg` (docs/design/visual-quality.md §7).
+## - Route lint (#14): each `route` marker has the kind first_run or expert, a level has at most
+##   one route of each kind, and a level outside levels/test/ has a first_run route.
 ## - Light: a level without its own WorldEnvironment and DirectionalLight3D gets a stand-in
 ##   rig: one sun with shadows and a procedural sky with AgX tonemapping. The level's `sky`
 ##   picks dawn, noon or dusk; without one, the tier does (beginner dawn, intermediate noon,
@@ -97,6 +99,7 @@ func convert(scene: Node3D) -> Level:
 		for shot: String in GALLERY_SHOTS:
 			if shot not in shots:
 				_fail(scene, "needs the gallery shot `%s`" % shot)
+	_check_routes(markers, str(level_data.get("tier", "")))
 	for marker: Node3D in markers:
 		var data: Dictionary = _marker_data(marker)
 		var type: String = str(data.get("type", ""))
@@ -178,6 +181,23 @@ func _place(marker: Node3D, data: Dictionary) -> void:
 		object.add_child(point)
 		point.owner = _root
 	marker.free()
+
+
+## The route lint (#14) on the markers of a level of tier.
+func _check_routes(markers: Array[Node3D], tier: String) -> void:
+	var kinds: Array[StringName] = []
+	for marker: Node3D in markers:
+		var data: Dictionary = _marker_data(marker)
+		if str(data.get("type", "")) != "route":
+			continue
+		var kind: StringName = StringName(str(data.get("kind", "")))
+		if kind not in Route.KINDS:
+			_fail(marker, "a `route` needs the kind first_run or expert, got `%s`" % kind)
+		elif kind in kinds:
+			_fail(marker, "a second `%s` route" % kind)
+		kinds.append(kind)
+	if tier != "test" and &"first_run" not in kinds:
+		_fail(_root, "needs a `route` marker of kind first_run (objects/route/route.gd)")
 
 
 ## Puts a Camera3D with the marker's name and transform in the marker's place. It looks along

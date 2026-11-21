@@ -20,6 +20,33 @@ kit.marker("checkpoint", at=(0, 22, 2))
 kit.marker("egg", at=(10, 28, 2))
 kit.marker("finish", at=(0, 32, 2))
 
+# Route bot (#14). First run: every gem in order, a look round at the checkpoint and the egg on
+# the side floor. Expert: the gems only, on a smoother line.
+kit.marker(
+    "route",
+    at=(0, 2, 0),
+    points=[
+        (-2, 6, 0),
+        (2, 9, 0),
+        (0, 16, 1),
+        (0, 22, 2),
+        (10, 28, 2),
+        (2, 29, 2),
+        (-2, 26, 2),
+        (0, 32, 2),
+    ],
+    name="route_first_run",
+    kind="first_run",
+    actions="3 wait 0.5",
+)
+kit.marker(
+    "route",
+    at=(0, 2, 0),
+    points=[(-2, 6, 0), (2, 9, 0), (0, 16, 1), (-2, 26, 2), (2, 29, 2), (0, 32, 2)],
+    name="route_expert",
+    kind="expert",
+)
+
 kit.shot("overview", at=(14, -8, 12), rotation=(-32, 0, 35))
 kit.shot("gems", at=(0, -2, 1.5), rotation=(-4, 0, 0))
 kit.shot("egg", at=(10, 25.5, 2.8), rotation=(-12, 0, 0))
