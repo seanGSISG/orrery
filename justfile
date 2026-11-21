@@ -228,13 +228,13 @@ test-music *args:
 
 # --- Asset tools (tools/art/README.md) ---
 
-# GPT-Image art and Tripo models: `just art image|batch|model|check ...`. Paid calls need --yes;
-# --dry-run sends nothing. Keys come from the environment or the git-ignored .env
+# GPT-Image art and Tripo props: `just art image|set|views|edit-views|model|texture|balance|check`.
+# Paid calls need --yes; --dry-run sends nothing. Keys come from the environment or the git-ignored .env
 [positional-arguments]
 art *args:
     @uv run --quiet --project tools/art orrery-art "$@"
 
-# A textured GLB from an image (Tripo image-to-3D), into build/art/models/: same as `just art model`
+# A Tripo model (from an image, views or a views task) into build/art/models/: `just art model`
 [positional-arguments]
 model *args:
     @uv run --quiet --project tools/art orrery-art model "$@"

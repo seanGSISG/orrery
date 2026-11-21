@@ -8,30 +8,61 @@ openai = "openai-api-key"
 tripo = "tripo-api-key"
 
 [spend]
-# A batch, image or model run that is estimated above this cost stops. `--max-usd` sets
-# another cap for one run.
+# A run estimated above max_usd_per_run stops; `--max-usd` sets another cap for one run.
 max_usd_per_run = 5.0
+# The running total of each API (build/art/spend.jsonl) must stay under its budget.
+[spend.budget_usd]
+openai = 20.0
+tripo = 20.0
 
 [image]
-model = "gpt-image-2.6-sunburst"
+# Draft in Flare, make finals in Sunburst (docs/research/asset-prompting.md §1.2 rule 14).
+model = "flare"
 quality = "medium"
 size = "1024x1024"
-# Live (standard) rates in USD per 1M tokens, from developers.openai.com/api/docs/pricing
+# Live rates in USD per 1M tokens, from developers.openai.com/api/docs/pricing
 # (checked 2026-11-21). The Batch API bills half.
 text_in_usd_per_m = 5.0
+image_in_usd_per_m = 8.0
 image_out_usd_per_m = 30.0
+# A guess for the estimate: OpenAI gives no token formula for an input image.
+ref_image_tokens = 1500
+
+[image.models]
+flare = "gpt-image-2.6-flare"
+sunburst = "gpt-image-2.6-sunburst"
 
 [model]
 api = "https://openapi.tripo3d.ai/v3"
-version = "v3.1-20260211"
-# 1 credit = USD 0.01. Image to 3D and multiview to 3D cost 20-30 credits
-# (platform.tripo3d.ai/pricing, checked 2026-11-21); the estimate takes the top of that range,
-# plus the extra for detailed (HD) texture. Each task type has its credits here.
 usd_per_credit = 0.01
-detailed_texture_credits = 10
 poll_seconds = 5
 timeout_minutes = 30
+# Retries of a request that gets HTTP 429 (rate limit 1007, full concurrency pool 2000).
+retries = 6
+# The texture model for texture tasks and textured generation (delight works on it).
+texture_model = "v3.5-20260815"
 
+# The geometry model of each series (docs/research/asset-prompting.md §2.4).
+[model.series]
+p1 = "P1-20260311"
+p2 = "P2-20260801"
+h = "v3.1-20260211"
+
+# Credits per task, from platform.tripo3d.ai/pricing (2026-11-21), in
+# docs/research/asset-prompting.md §2.2. A geometry task is `<series>` without texture and
+# `<series>-textured` with it; detailed texture adds `detailed-texture` (the larger of
+# H +10 and P2 +20). edit-multiview is per edited view.
 [model.credits]
-image-to-model = 30
-multiview-to-model = 30
+p1 = 40
+p1-textured = 50
+p2 = 100
+p2-textured = 110
+h = 20
+h-textured = 30
+detailed-texture = 20
+image-to-multiview = 10
+edit-multiview = 5
+texture-fast = 10
+texture-standard = 10
+texture-detailed = 20
+texture-extreme = 30

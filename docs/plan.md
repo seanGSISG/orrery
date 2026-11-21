@@ -295,7 +295,7 @@ The level script is the source of truth. Blender and Godot files are build outpu
 
 Hero props that are impractical to script may be `.blend` files in `kit/` (Git LFS). Every level stays a script.
 
-**Generated art and props.** `tools/art/` makes 2D art with GPT-Image and decorative 3D props with Tripo (image to 3D), with a dry run, a spend cap and a manifest for each file. `just prop-cleanup` turns a generated model into `assets/props/<name>.glb` (Git LFS), and a level script places it with `kit.prop(name, at=..., rotation=..., collider="none"|"box"|"cylinder")`. A prop is decoration: only its optional box or cylinder collides, and the marble rolls only on kit pieces. See `tools/art/README.md`.
+**Generated art and props.** `tools/art/` makes 2D art with GPT-Image-2.6 (Flare drafts, Sunburst finals) and decorative 3D props with Tripo (concept image, views, P1 geometry, a separate de-lit texture), with a dry run, spend caps and budgets, and a recipe for each file. `just prop-cleanup` turns a generated model into `assets/props/<name>.glb` (Git LFS), and a level script places it with `kit.prop(name, at=..., rotation=..., collider="none"|"box"|"cylinder")`. A prop is decoration: only its optional box or cylinder collides, and the marble rolls only on kit pieces. See `tools/art/README.md` and `docs/research/asset-prompting.md`.
 
 ### 4.4 Game runtime
 
