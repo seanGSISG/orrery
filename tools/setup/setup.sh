@@ -139,6 +139,10 @@ bunx "@gltf-transform/cli@$GLTF_TRANSFORM_VERSION" --version >/dev/null
 ok "gltf-transform $GLTF_TRANSFORM_VERSION (bunx)"
 uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint --version >/dev/null
 ok "gdtoolkit $GDTOOLKIT_VERSION (uvx)"
+uvx "ruff@$RUFF_VERSION" --version >/dev/null
+ok "ruff $RUFF_VERSION (uvx)"
+uvx "ty@$TY_VERSION" --version >/dev/null
+ok "ty $TY_VERSION (uvx)"
 
 step "ComfyUI music models"
 if [[ ! -d "$COMFYUI_DIR/models" ]]; then

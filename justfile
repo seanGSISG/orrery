@@ -42,17 +42,37 @@ test: import
     count=$(grep -oE '^Tests +[0-9]+' "$log" | grep -oE '[0-9]+' || true)
     if (( ${count:-0} == 0 )); then echo "just test: zero tests ran" >&2; exit 1; fi
 
-# Lint GDScript (gdlint), Python (Ruff; ty outside Blender scripts) and shell scripts (shellcheck)
+# Lint GDScript (gdlint, and a Godot compile check), Python (Ruff; ty outside Blender
+# scripts) and shell scripts (shellcheck). Tool versions come from tools/setup/pins.env
 [script("bash")]
-lint:
+lint: import
     set -euo pipefail
     source tools/setup/pins.env
     files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
+    # Compile every game script, also the ones that no test loads. Load them from a running
+    # SceneTree, not with --check-only, so that references to autoloads resolve.
+    check=$(mktemp --suffix=.gd)
+    trap 'rm -f "$check"' EXIT
+    cat > "$check" <<'GDSCRIPT'
+    extends SceneTree
+
+    func _initialize() -> void:
+        for path: String in OS.get_cmdline_user_args():
+            load("res://" + path.trim_prefix("game/"))
+        quit()
+    GDSCRIPT
+    status=0
+    log=$("{{ godot }}" --headless --path game --script "$check" -- "${gd[@]}" 2>&1) || status=$?
+    if (( status != 0 )) || grep -q 'SCRIPT ERROR' <<<"$log"; then
+        echo "$log" >&2
+        echo "just lint: a game script does not compile" >&2
+        exit 1
+    fi
     mapfile -t py < <(files '*.py')
-    uvx ruff check "${py[@]}"
-    uvx ruff format --check "${py[@]}"
+    uvx "ruff@$RUFF_VERSION" check "${py[@]}"
+    uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
     # Blender scripts import bpy, which exists only inside Blender. Tool scripts declare
     # their dependencies inline (PEP 723); ty checks them with those dependencies.
     tools=() deps=()
@@ -61,7 +81,7 @@ lint:
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
-    uvx "${deps[@]}" ty check "${tools[@]}"
+    uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 

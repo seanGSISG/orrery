@@ -18,6 +18,15 @@ defaults:
     shell: bash
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: just lint
+
   test:
     name: Import and GUT (${{ matrix.os }})
     strategy:
@@ -54,3 +63,17 @@ jobs:
           name: orrery-windows
           path: build/windows/
           if-no-files-found: error
+
+  # Boots the Windows export that the export job uploads.
+  windows-boot:
+    name: Boot the Windows export
+    needs: export
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-windows
+          path: build/windows/
+      - name: Boot the Windows export
+        timeout-minutes: 2
+        run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'

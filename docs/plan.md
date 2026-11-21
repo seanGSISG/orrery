@@ -340,7 +340,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just setup` | Installs and checks every pinned tool (6.2). Safe to repeat |
 | `just build-levels [id]` | Builds level scripts into `.glb` files |
 | `just import` | `godot --headless --path game --import` |
-| `just lint` | `gdlint` (gdtoolkit), Ruff, ty, shellcheck, level lint |
+| `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff, ty, shellcheck, level lint. Tool versions come from `tools/setup/pins.env` |
 | `just test` | GUT unit tests, headless. Fails if zero tests ran or a test script does not load |
 | `just test-levels [id]` | Runs the route bot on each level, headless. Fails if the bot does not finish under par |
 | `just gallery [id]` | Renders every level's camera shots into `build/gallery/index.html` |
@@ -364,9 +364,11 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 ### 5.3 CI (GitHub Actions)
 
+- **`lint` job** (ubuntu): runs `just lint`.
 - **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels`, uploads the built files.
 - **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
 - **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
+- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless and checks its boot marker.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
 ## 6. Dev environment
