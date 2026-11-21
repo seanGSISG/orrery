@@ -4,8 +4,9 @@ extends RefCounted
 ## builds the Theme of the screens from it, and the drawn widgets (rings, icons, glass
 ## panels) read it directly. To change the look, change the values here.
 ##
-## It is the look that Sean picked from the mockups (#6): the orrery chart (direction C) for
-## the menus, and glass panels (direction B) with the chart's numerals and accent for the HUD.
+## It is the look that Sean picked from the mockups (docs/ui-mockups/README.md): the orrery
+## chart (direction C) for the menus, and glass panels (direction B) with the chart's numerals
+## and accent for the HUD.
 ##
 ## Sizes are design units: pixels in a 1920 × 1080 window. The window stretches them, and
 ## Godot draws text and lines again at the real size, so they stay sharp at 4K.

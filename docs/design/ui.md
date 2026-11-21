@@ -71,7 +71,7 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 
 ## 4. Look
 
-- `UiLook` (`game/ui/look/ui_look.gd`) holds every font, colour and size as a typed constant. It is the look that Sean picked from the mockups (#6): the orrery chart for the menus, glass panels with the chart's numerals and accent for the HUD.
+- `UiLook` (`game/ui/look/ui_look.gd`) holds every font, colour and size as a typed constant. It is the look that Sean picked from the mockups (`docs/ui-mockups/README.md`): the orrery chart (direction C) for the menus, and glass panels (direction B) with the chart's numerals and accent for the HUD.
 - `UiTheme.build()` makes the one `Theme` from `UiLook`. `Ui` sets it on its root control.
 - A screen styles a control only with a theme type: `label.theme_type_variation = &"Title"`. `ui_theme.gd` lists the types. A screen sets no font, colour or style box on a node. `UiTheme.label()`, `row()` and `column()` make the common controls.
 - Drawn widgets (`Dial`, `OrbitMap`, `Icons`, `GlassPanel`) read `UiLook` directly.

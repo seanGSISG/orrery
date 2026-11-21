@@ -1,0 +1,218 @@
+/* Direction C, Orrery chart: fine line-art like an astronomical chart. Thin rings and ticks,
+   no panels, one warm accent. Swap the palette in :root to restyle every screen. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=block");
+
+:root {
+  --font-name: "Instrument Serif", serif;
+  --font-data: "IBM Plex Mono", monospace;
+  --night: #060a14;
+  --ink: #f1ebdb;
+  --ink-2: color-mix(in srgb, var(--ink) 74%, transparent);
+  --ink-3: color-mix(in srgb, var(--ink) 48%, transparent);
+  --line: color-mix(in srgb, var(--ink) 90%, transparent);
+  --line-2: color-mix(in srgb, var(--ink) 42%, transparent);
+  --line-3: color-mix(in srgb, var(--ink) 20%, transparent);
+  --sol: #ff8f5e;
+  --gold: #f4d17e;
+  /* A dark halo round every line and letter keeps the chart readable on a bright sky. */
+  --halo: drop-shadow(0 0 1px color-mix(in srgb, var(--night) 90%, transparent)) drop-shadow(0 0 2.5px color-mix(in srgb, var(--night) 80%, transparent)) drop-shadow(0 0 10px color-mix(in srgb, var(--night) 50%, transparent));
+}
+
+.frame {
+  font-family: var(--font-data); color: var(--ink);
+  font-size: 26px; font-weight: 400; line-height: 1.15; font-variant-numeric: tabular-nums;
+}
+.name { font-family: var(--font-name); font-style: italic; letter-spacing: .005em; }
+.caps { text-transform: uppercase; letter-spacing: .16em; }
+
+/* Menus sit on the darkened backdrop under one more night wash. */
+.night { position: absolute; inset: 0; z-index: -1; background: radial-gradient(90% 90% at 50% 50%, color-mix(in srgb, var(--night) 50%, transparent), color-mix(in srgb, var(--night) 82%, transparent)); }
+.night.left { background: linear-gradient(90deg, color-mix(in srgb, var(--night) 88%, transparent), color-mix(in srgb, var(--night) 50%, transparent) 46%, color-mix(in srgb, var(--night) 62%, transparent)); }
+/* HUD groups have no panel: the halo alone separates them from the scene. */
+.pool { filter: var(--halo); }
+/* Where a HUD scale needs a ground, it is a crisp band of night, like the limb of an astrolabe. */
+.limb { fill: none; stroke: color-mix(in srgb, var(--night) 50%, transparent); }
+
+/* Line classes set colour only, so a stroke-width attribute on a shape still applies. */
+svg { display: block; overflow: visible; stroke-width: 2; }
+.ln { fill: none; stroke: var(--line); }
+.ln2 { fill: none; stroke: var(--line-2); }
+.ln3 { fill: none; stroke: var(--line-3); }
+.sol { fill: none; stroke: var(--sol); stroke-width: 4; }
+.sol-fill { fill: var(--sol); }
+.ink-fill { fill: var(--ink); }
+.gold-fill { fill: var(--gold); }
+.gold-ln { fill: none; stroke: var(--gold); }
+/* A body on the chart: hollow, and it hides the lines behind it. */
+.body { fill: var(--night); stroke: var(--line); stroke-width: 2; }
+/* The "now" mark is always a ring in the accent colour. */
+.now { fill: var(--night); stroke: var(--sol); stroke-width: 4; }
+.disc { fill: color-mix(in srgb, var(--night) 42%, transparent); }
+svg text { fill: var(--ink); font-family: var(--font-data); font-size: 22px; }
+svg text.mid { fill: var(--ink-2); }
+
+/* Focus: four corner brackets in the accent, a faint fill, and brighter ink. */
+.focus { position: relative; color: var(--ink); }
+.focus::before {
+  content: ""; position: absolute; inset: -6px -30px; pointer-events: none;
+  background:
+    linear-gradient(var(--sol), var(--sol)) left top / 26px 3px no-repeat, linear-gradient(var(--sol), var(--sol)) left top / 3px 26px no-repeat,
+    linear-gradient(var(--sol), var(--sol)) right top / 26px 3px no-repeat, linear-gradient(var(--sol), var(--sol)) right top / 3px 26px no-repeat,
+    linear-gradient(var(--sol), var(--sol)) left bottom / 26px 3px no-repeat, linear-gradient(var(--sol), var(--sol)) left bottom / 3px 26px no-repeat,
+    linear-gradient(var(--sol), var(--sol)) right bottom / 26px 3px no-repeat, linear-gradient(var(--sol), var(--sol)) right bottom / 3px 26px no-repeat,
+    color-mix(in srgb, var(--sol) 10%, transparent);
+}
+
+/* Button glyphs: thin rings. */
+.g { border: 2px solid var(--line); background: color-mix(in srgb, var(--night) 60%, transparent); color: var(--ink); font-family: var(--font-data); font-weight: 500; }
+.g-mouse::before { background: var(--ink); }
+
+.hints { display: flex; gap: 44px; font-size: 24px; color: var(--ink-2); }
+.hints span { display: inline-flex; align-items: center; gap: 14px; }
+.safe > .hints { position: absolute; left: 0; bottom: 0; }
+
+/* Line icons everywhere in this direction. */
+.i-gem { --i: var(--i-gem-line); }
+.i-egg { --i: var(--i-egg-line); }
+.i-egg.on { --i: var(--i-egg); }
+.i-lock { --i: var(--i-lock-line); }
+.i-star { --i: var(--i-star-line); }
+.i-star.on { --i: var(--i-star); }
+.i-check { --i: var(--i-check-line); }
+.i-flag { --i: var(--i-flag-line); }
+.i-spring { --i: var(--i-spring-line); }
+.i-gold { --i: var(--i-gold-line); }
+
+/* ---------- HUD ---------- */
+
+.gems { position: absolute; left: 0; top: 0; display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; column-gap: 12px; }
+.gems .i { font-size: 36px; align-self: center; }
+.gems b { font-size: 44px; font-weight: 500; }
+.gems span { font-size: 30px; color: var(--ink-2); margin-left: -10px; }
+/* One diamond per gem: filled when collected, hollow when not. */
+.pips { grid-column: 1 / -1; display: flex; gap: 14px; margin: 12px 0 0 6px; padding-top: 14px; border-top: 2px solid var(--line-2); }
+.pips i { width: 14px; height: 14px; transform: rotate(45deg); border: 2px solid var(--ink); }
+.pips i.on { background: var(--ink); }
+
+.arc { position: absolute; left: 50%; top: 0; width: 560px; margin-left: -280px; }
+.arc text { font-size: 24px; }
+.arc .readout { position: absolute; left: 0; right: 0; top: 66px; text-align: center; font-size: 30px; color: var(--ink-2); }
+.arc .readout b { font-size: 46px; font-weight: 500; color: var(--ink); }
+
+.toast { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); height: 50px; display: flex; align-items: center; gap: 16px; white-space: nowrap; font-size: 24px; }
+.toast::after, .toast > .rule { content: ""; width: 70px; height: 2px; background: var(--line); }
+.toast .i { font-size: 28px; }
+.toast .g { margin-right: -2px; }
+
+.slot { position: absolute; right: 0; bottom: 4px; width: 148px; height: 148px; display: grid; place-items: center; }
+.slot svg { position: absolute; inset: 0; }
+.slot .i { font-size: 62px; }
+.slot .g { position: absolute; left: -4px; bottom: -4px; }
+
+/* ---------- Ascent HUD ---------- */
+
+.stats { position: absolute; left: 0; top: 0; display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 20px; }
+.stats .caps { font-size: 24px; }
+.stats b { font-size: 48px; font-weight: 500; }
+.stats .time { grid-column: 1 / -1; margin-top: 10px; padding-top: 12px; border-top: 2px solid var(--line-2); font-size: 26px; }
+.climb { position: absolute; inset: 0; }
+.climb .now-text { font-size: 60px; font-weight: 500; }
+.climb .unit { font-size: 30px; fill: var(--ink-2); }
+.climb .best { font-size: 28px; font-weight: 500; fill: var(--gold); }
+
+/* ---------- Title ---------- */
+
+.logo { position: absolute; left: -6px; top: 118px; font-size: 230px; line-height: 1; }
+.menu { display: grid; gap: 22px; justify-items: start; }
+.menu li { display: flex; align-items: center; gap: 26px; height: 64px; font-family: var(--font-name); font-size: 54px; color: var(--ink-2); }
+.menu li.focus { color: var(--ink); }
+.title .menu { position: absolute; left: 30px; top: 452px; }
+.title .underline { position: absolute; left: 0; top: 372px; width: 640px; height: 14px; border-bottom: 2px solid var(--line); background: repeating-linear-gradient(90deg, var(--line-2) 0 2px, transparent 2px 20px) left bottom / calc(100% + 2px) 100% no-repeat; }
+.diagram { position: absolute; inset: 0; }
+
+/* ---------- Level select ---------- */
+
+.tiers { position: absolute; left: 0; top: 0; display: grid; gap: 10px; justify-items: start; }
+.tiers li { display: flex; align-items: center; gap: 14px; font-size: 24px; color: var(--ink-3); }
+.tiers li .i { font-size: 24px; }
+.tiers li.on { font-family: var(--font-name); font-style: italic; font-size: 60px; text-transform: none; letter-spacing: 0; color: var(--ink); gap: 20px; margin-bottom: 6px; }
+.totals { position: absolute; right: 0; top: 0; display: grid; gap: 14px; justify-items: end; font-size: 30px; }
+.totals span { display: inline-flex; align-items: center; gap: 14px; }
+.totals .i { font-size: 34px; color: var(--gold); }
+.orbits { position: absolute; inset: 0; }
+.orbits .node { fill: var(--night); stroke: var(--line); stroke-width: 2; }
+.orbits .node.new { stroke-dasharray: 5 5; }
+.orbits .locked circle { fill: var(--night); stroke: var(--line-2); stroke-width: 2; }
+.orbits .dots { fill: none; stroke: var(--line-2); stroke-width: 8; stroke-linecap: round; }
+.orbits .no { font-size: 24px; font-weight: 500; text-anchor: middle; dominant-baseline: central; }
+.orbits .ring-name { font-size: 22px; letter-spacing: .22em; fill: var(--ink-3); }
+.detail { position: absolute; left: 50%; top: 556px; transform: translate(-50%, -50%); width: 420px; display: grid; justify-items: center; text-align: center; }
+.detail .name { font-size: 66px; line-height: 1; }
+.detail .time { margin-top: 14px; font-size: 62px; font-weight: 500; }
+.detail .targets { margin-top: 10px; display: flex; gap: 26px; font-size: 24px; color: var(--ink-2); }
+.detail .targets span { display: inline-flex; align-items: center; gap: 8px; }
+.detail .marks { margin-top: 20px; display: flex; gap: 18px; font-size: 40px; color: var(--gold); }
+
+/* ---------- Pause ---------- */
+
+.ring { position: absolute; inset: 0; }
+.inside { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 520px; display: grid; justify-items: center; }
+.inside h1 { font-size: 84px; line-height: 1; }
+.inside .where { margin-top: 12px; font-size: 26px; color: var(--ink-2); }
+.inside .menu { margin-top: 34px; justify-items: center; gap: 14px; }
+.inside .menu li { font-size: 50px; }
+.inside .hints { margin-top: 40px; }
+
+/* ---------- Settings ---------- */
+
+.heading { position: absolute; left: 0; top: -14px; font-size: 84px; line-height: 1; }
+/* The tabs sit on one scale line; a triangle marks the open tab. */
+.scale { position: absolute; left: 0; right: 0; top: 118px; height: 76px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid var(--line); font-size: 24px; color: var(--ink-2); }
+.scale li { position: relative; height: 76px; padding: 0 6px; display: flex; align-items: flex-start; }
+.scale li.tab::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 2px; height: 16px; margin-left: -1px; background: var(--line); }
+.scale li.on { color: var(--ink); }
+.scale li.on::before { content: ""; position: absolute; left: 50%; bottom: 18px; margin-left: -11px; border: 11px solid transparent; border-top: 15px solid var(--sol); border-bottom: 0; }
+.scale .g { margin-top: -8px; }
+.rows { position: absolute; left: 0; right: 0; top: 236px; }
+.row { height: 108px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid var(--line-3); }
+.row > .name { font-size: 46px; font-style: normal; color: var(--ink-2); }
+.row.focus > .name { color: var(--ink); }
+.row.focus::before { inset: 4px 0; }
+.opts { display: flex; gap: 40px; font-size: 24px; color: var(--ink-2); }
+/* A choice is a ring; the chosen one has a filled centre. */
+.opts span { display: inline-flex; align-items: center; gap: 12px; }
+.opts span::before { content: ""; width: 22px; height: 22px; border: 2px solid var(--line-2); border-radius: 50%; }
+.opts span.on { color: var(--ink); }
+.opts span.on::before { border-color: var(--ink); background: radial-gradient(circle, var(--ink) 0 6px, transparent 7px); }
+.step { display: flex; align-items: center; gap: 28px; font-size: 32px; font-weight: 500; }
+.step i { width: 18px; height: 18px; border: solid var(--sol); border-width: 0 0 3px 3px; transform: rotate(45deg); }
+.step i:last-child { transform: rotate(225deg); }
+.ruler { display: flex; align-items: center; gap: 30px; }
+.ruler .line { position: relative; width: 420px; height: 26px; border-bottom: 2px solid var(--line); background: repeating-linear-gradient(90deg, var(--line-2) 0 2px, transparent 2px 30px) left bottom / calc(100% + 2px) 12px no-repeat; }
+.ruler .line i { position: absolute; bottom: 2px; margin-left: -11px; border: 11px solid transparent; border-top: 18px solid var(--ink); border-bottom: 0; }
+.ruler b { min-width: 60px; text-align: right; font-size: 32px; font-weight: 500; }
+/* A switch is a line between two rings; the filled ring is the state, and the word says it too. */
+.switch { display: flex; align-items: center; gap: 22px; font-size: 24px; color: var(--ink-3); }
+.switch i { position: relative; width: 84px; height: 24px; }
+.switch i::before { content: ""; position: absolute; left: 22px; right: 22px; top: 11px; height: 2px; background: var(--line-2); }
+.switch i::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 12px 12px, var(--ink-3) 0 7px, transparent 8px 9px, var(--ink-3) 10px 11.5px, transparent 12.5px), radial-gradient(circle at calc(100% - 12px) 12px, transparent 0 9px, var(--ink-3) 10px 11.5px, transparent 12.5px); }
+.switch.on { color: var(--ink); }
+.switch.on i::before { background: var(--ink); }
+.switch.on i::after { background: radial-gradient(circle at 12px 12px, transparent 0 9px, var(--ink) 10px 11.5px, transparent 12.5px), radial-gradient(circle at calc(100% - 12px) 12px, var(--ink) 0 7px, transparent 8px 9px, var(--ink) 10px 11.5px, transparent 12.5px); }
+
+/* ---------- Results ---------- */
+
+.inside.run { left: 600px; top: 520px; width: 480px; }
+.inside.run .name { font-size: 46px; color: var(--ink-2); }
+.inside.run .time { margin-top: 6px; font-size: 104px; font-weight: 500; line-height: 1; letter-spacing: -.02em; }
+.inside.run .medal { margin-top: 22px; display: flex; align-items: center; gap: 14px; font-size: 28px; color: var(--gold); }
+.inside.run .medal .i { font-size: 40px; }
+.ledger { position: absolute; right: 0; top: 190px; width: 640px; border-top: 2px solid var(--line); }
+.ledger li { height: 96px; padding: 0 8px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid var(--line-3); font-size: 30px; }
+.ledger li > .name { font-size: 44px; font-style: normal; color: var(--ink-2); }
+.ledger li b { display: inline-flex; align-items: center; gap: 14px; font-weight: 500; }
+.ledger li.record > .name { font-style: italic; color: var(--sol); }
+.ledger li.record b { color: var(--sol); }
+.ledger .i { font-size: 32px; }
+.actions { position: absolute; right: 0; bottom: 6px; width: 640px; display: flex; justify-content: space-between; padding: 0 36px 0 30px; }
+.actions span { display: inline-flex; align-items: center; gap: 16px; height: 64px; font-family: var(--font-name); font-size: 50px; color: var(--ink-2); }

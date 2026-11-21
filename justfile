@@ -49,7 +49,7 @@ feel: (build-levels "feel")
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py game/levels/level_converter.gd)
+    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)
@@ -108,13 +108,14 @@ lint: import
     tools=() deps=()
     for f in "${py[@]}"; do
         grep -qE '^(import|from) bpy' "$f" && continue
-        [[ $f == tools/harness/* ]] && continue
+        [[ $f == tools/harness/* || $f == tools/audio/music/* ]] && continue
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
     uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
-    # The harness is a uv project; ty checks it with its locked dependencies.
+    # The harness and the music pipeline are uv projects; ty checks each with its locked dependencies.
     uv run --quiet --project tools/harness --with "ty==$TY_VERSION" ty check tools/harness
+    uv run --quiet --project tools/audio/music --with "ty==$TY_VERSION" ty check tools/audio/music
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
@@ -150,10 +151,39 @@ harness *args:
 test-harness *args: import
     uv run --quiet --project tools/harness pytest tools/harness "$@"
 
+# --- Music pipeline (#26) ---
+
+# Run the music pipeline tests (needs ffmpeg for the loudness test)
+[positional-arguments]
+test-music *args:
+    uv run --quiet --project tools/audio/music pytest tools/audio/music "$@"
+
 # Build the Linux debug export (harness and test levels included) into build/linux-debug/
 export-debug: import
     mkdir -p build/linux-debug
     "{{ godot }}" --headless --path game --export-debug "Linux Debug" ../build/linux-debug/orrery.x86_64
+
+# --- Route bot (#14) ---
+
+# Run the route bot on built levels (all, or the given ids): first_run under par, expert under gold
+[positional-arguments]
+[script("bash")]
+test-levels *ids: fresh-levels import
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    # --quit-after stops a run whose test script did not load; it would wait forever.
+    status=0
+    "{{ godot }}" --headless --path game --quit-after 100 res://harness/route_bot_levels.tscn \
+        -- "$@" 2>&1 | tee "$log" || status=$?
+    if grep -q 'SCRIPT ERROR' "$log" || ! grep -q '^test-levels: ' "$log"; then
+        echo "just test-levels: the level test did not run to the end" >&2
+        exit 1
+    fi
+    exit "$status"
+
+# Print the par (first_run time × 1.5) and gold (expert time × 1.15) from route bot times
+suggest-times id: (test-levels "--suggest" id)
 
 # --- Controller (#18) ---
 
@@ -189,6 +219,44 @@ gallery *ids: fresh-levels import
 [positional-arguments]
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
+
+# --- Lightmaps (#24) ---
+
+# Bake the lightmaps of levels (all, or the given ids) on this GPU. Close every Godot editor on this project first
+[positional-arguments]
+[script("bash")]
+bake *ids: fresh-levels import
+    set -euo pipefail
+    if (( $# == 0 )); then mapfile -t ids < <(basename -s .py levels/*/*.py); set -- "${ids[@]}"; fi
+    out=game/levels/lightmaps
+    # The editor scans the project at start; the bake can import its files only into a known folder.
+    mkdir -p "$out"
+    scenes=()
+    for id in "$@"; do
+        glb="game/levels/built/$id.glb"
+        if [[ ! -f $glb ]]; then echo "just bake: $glb is missing" >&2; exit 1; fi
+        scenes+=("res://levels/built/$id.glb")
+    done
+    log=$(mktemp) settings=$(mktemp)
+    # The editor rewrites project.godot on exit and drops the settings that equal the defaults.
+    cp game/project.godot "$settings"
+    trap 'cp "$settings" game/project.godot; rm -f "$log" "$settings"' EXIT
+    # A bake needs a real GPU, so the editor runs in a hidden gamescope display. gamescope's exit
+    # code does not follow Godot's, so the plugin's summary line is the only success check.
+    timeout 3600 gamescope --backend headless -W 1280 -H 720 -- \
+        "{{ godot }}" --editor --path game -- --bake-lightmaps "${scenes[@]}" >"$log" 2>&1 || true
+    # The sidecar records the level each new bake belongs to; `just test` warns when they differ.
+    for id in "$@"; do
+        if grep -q "^BAKE ok res://levels/built/$id.glb " "$log"; then
+            sha256sum "game/levels/built/$id.glb" | cut -d' ' -f1 >"$out/$id.sha256"
+        fi
+    done
+    if ! grep -qx "BAKE done: $# of $# baked" "$log"; then
+        grep -E '^(BAKE|ERROR|SCRIPT ERROR)' "$log" >&2 || true
+        echo "just bake: not every level baked" >&2
+        exit 1
+    fi
+    grep -E '^BAKE' "$log"
 
 # --- HUD and menus (#22) ---
 
