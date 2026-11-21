@@ -117,7 +117,7 @@ def _parser() -> tuple[argparse.ArgumentParser, dict[str, Command]]:
         ),
         "save a rendered frame",
     )
-    shot.add_argument("--path", help="PNG path (default: in the game's user:// folder)")
+    shot.add_argument("--path", help="PNG path (default: in build/harness/user/, emptied at the next launch)")
     shot.add_argument("--shot", help="the level's Camera3D to render from")
     add("logs", lambda g, a: g.logs(a.since), "print engine log lines").add_argument(
         "--since", type=int, default=0

@@ -249,3 +249,10 @@ bake *ids: fresh-levels import
         exit 1
     fi
     grep -E '^BAKE' "$log"
+
+# --- Audio (#25) ---
+
+# Synthesise the sound effects (game/audio/sfx/) and the test music loops, and check them. `--montage PATH` also joins the sounds into one OGG
+[positional-arguments]
+build-sfx *args:
+    uv run --script tools/audio/sfx/synth_sfx.py "$@"

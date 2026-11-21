@@ -203,7 +203,7 @@ class Harness:
         self.call("set_time_scale", scale=scale)
 
     def teleport(self, position: Vector3, velocity: Vector3 | None = None) -> None:
-        """Puts the marble at position; the state shows it after the next tick."""
+        """Puts the marble at position with velocity; the state shows it at once."""
         self.call("teleport", position=position, velocity=velocity)
 
     def screenshot(self, path: str | None = None, shot: str | None = None) -> Shot:

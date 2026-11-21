@@ -119,9 +119,6 @@ def capture(
         saved: list[Shot] = []
         for name in shots:
             path = OUT / level / suffix.removeprefix("-") / f"{name}.png"
-            # A frame shows the pose from before the last step (physics interpolation), so
-            # step once more: the frame then shows the settled pose.
-            harness("step", "1")
             result = harness("screenshot", "--shot", name, "--path", str(path))
             blank = isinstance(result, dict) and bool(result.get("blank"))
             black, white = exposure(path)

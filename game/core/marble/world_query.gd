@@ -2,7 +2,8 @@ class_name WorldQuery
 extends RefCounted
 ## The only code that asks Jolt about the level. It is read-only, and it works outside
 ## physics frames, so a run can step many ticks in one frame. LevelRun makes one and gives
-## it to Marble.step(). Positions are world positions.
+## it to Marble.step(); the camera and the blob shadow make their own. Positions are world
+## positions.
 
 ## Physics layer masks; project.godot names layer 1 `solid` and layer 2 `trigger`.
 const SOLID_MASK: int = 1
@@ -74,6 +75,15 @@ func sweep(center: Vector3, motion: Vector3) -> float:
 	return _space.cast_motion(_query)[0]
 
 
+## Returns the first Solid face that the line from `from` to `to` meets from the front, as
+## intersect_ray() gives it (position, normal, collider and more); empty when none. Back faces
+## do not count, so a ray that starts inside a Solid meets only the faces it sees.
+func ray(from: Vector3, to: Vector3) -> Dictionary:
+	_ray.from = from
+	_ray.to = to
+	return _space.intersect_ray(_ray)
+
+
 ## Returns the objects whose triggers overlap the sphere at center.
 func overlaps(center: Vector3) -> Array[LevelObject]:
 	_set_query(center, 0.0, Vector3.ZERO, TRIGGER_MASK, true)
@@ -143,9 +153,7 @@ func _stays_down(point: Vector3, plane: Contact) -> bool:
 		return true
 	along = along.normalized()
 	var spot: Vector3 = point + along * _margin
-	_ray.from = spot + plane.normal * _margin
-	_ray.to = spot - plane.normal * _margin
-	var hit: Dictionary = _space.intersect_ray(_ray)
+	var hit: Dictionary = ray(spot + plane.normal * _margin, spot - plane.normal * _margin)
 	if hit.is_empty():
 		return false
 	var at: Vector3 = hit["position"]

@@ -11,6 +11,9 @@ until the harness answers. The display decides where it renders:
 
 launch() records the running game in build/harness/session.json, so that every later CLI
 command and the MCP server reach the same game.
+
+Each game gets an empty user:// in build/harness/user/ (XDG_DATA_HOME), so a harness session
+never reads or writes the player's saves, ghosts and settings. The next start() empties it.
 """
 
 import os
@@ -35,6 +38,8 @@ ROOT = next(
 GAME = ROOT / "game"
 RUNS = ROOT / "build/harness"
 SESSION = RUNS / "session.json"
+# XDG_DATA_HOME of the game: Godot puts user:// in it.
+USER_DATA = RUNS / "user"
 
 # The game gets only these variables from the caller's environment, plus the GPU driver
 # variables that start with a prefix below.
@@ -46,7 +51,6 @@ _ENV_KEYS = {
     "LC_ALL",
     "XDG_RUNTIME_DIR",
     "XDG_CONFIG_HOME",
-    "XDG_DATA_HOME",
     "XDG_CACHE_HOME",
     "DISPLAY",
     "WAYLAND_DISPLAY",
@@ -108,9 +112,11 @@ def launch(options: LaunchOptions) -> Session:
 
 
 def start(options: LaunchOptions) -> Session:
-    """Starts a game and waits until its harness answers, without recording it. Stop it
-    with end()."""
+    """Starts a game on an empty USER_DATA and waits until its harness answers, without
+    recording it. Stop it with end(). A game that still runs loses its user:// files."""
     RUNS.mkdir(parents=True, exist_ok=True)
+    shutil.rmtree(USER_DATA, ignore_errors=True)
+    USER_DATA.mkdir()
     binary = godot()
     if not (GAME / ".godot").exists():
         subprocess.run(
@@ -210,11 +216,12 @@ def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
 
 
 def _game_env() -> dict[str, str]:
-    return {
+    env = {
         key: value
         for key, value in os.environ.items()
         if value and (key in _ENV_KEYS or key.startswith(_ENV_PREFIXES))
     }
+    return env | {"XDG_DATA_HOME": str(USER_DATA)}
 
 
 def _free_port() -> int:
