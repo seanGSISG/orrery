@@ -107,8 +107,11 @@ static func save(settings: Array[TuningSetting]) -> PackedStringArray:
 		if out == null:
 			problems.append("cannot write %s (%s)" % [path, error_string(FileAccess.get_open_error())])
 			continue
-		out.store_string(source)
+		var written: bool = out.store_string(source)
 		out.close()
+		if not written:
+			problems.append("cannot write %s; restore it with git" % path)
+			continue
 		for setting: TuningSetting in done:
 			setting.saved = setting.value()
 	return problems

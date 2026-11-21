@@ -48,6 +48,8 @@ var _picked: int = 0
 var _held: int = 0
 var _held_for: float = 0.0
 var _grid: GridContainer = GridContainer.new()
+## Scrolls the grid when the window is too short for every row.
+var _scroll: ScrollContainer = ScrollContainer.new()
 var _names: Array[Label] = []
 var _values: Array[Label] = []
 var _speed: Label = Label.new()
@@ -67,7 +69,9 @@ func _ready() -> void:
 	column.add_child(_speed)
 	_grid.columns = 2
 	_grid.add_theme_constant_override(&"h_separation", 24)
-	column.add_child(_grid)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.add_child(_grid)
+	column.add_child(_scroll)
 	column.add_child(_status)
 	_status.text = HELP
 
@@ -82,6 +86,7 @@ func open() -> void:
 
 ## Opens or closes the panel.
 func toggle() -> void:
+	_held = 0
 	if visible:
 		visible = false
 	else:
@@ -117,12 +122,15 @@ func _input(event: InputEvent) -> void:
 	elif command == &"toggle":
 		toggle()
 	elif command == &"up" or command == &"down":
+		_held = 0
 		_picked = wrapi(_picked + (1 if command == &"down" else -1), 0, settings.size())
 		_refresh()
 	elif command == &"left" or command == &"right":
-		_held = 1 if command == &"right" else -1
+		var direction: int = 1 if command == &"right" else -1
+		# A held bool does not repeat, so it does not flip on and off.
+		_held = 0 if settings[_picked].value() is bool else direction
 		_held_for = 0.0
-		change(_picked, _held)
+		change(_picked, direction)
 	elif command == &"save":
 		save()
 
@@ -227,8 +235,13 @@ func _label(text: String) -> Label:
 	return label
 
 
-## Shows each value, marks unsaved ones with *, and colours the picked row.
+## Shows each value, marks unsaved ones with *, colours the picked row, fits the rows to
+## the window height and scrolls the picked row into view.
 func _refresh() -> void:
+	var room: float = get_viewport().get_visible_rect().size.y - 160.0
+	_scroll.custom_minimum_size.y = minf(_grid.get_combined_minimum_size().y, room)
+	if not _names.is_empty():
+		_scroll.ensure_control_visible.call_deferred(_names[_picked])
 	for i: int in settings.size():
 		var setting: TuningSetting = settings[i]
 		_values[i].text = setting.text() + (" *" if setting.changed() else "")
