@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1088" role="img" aria-labelledby="ascentz1title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2078" role="img" aria-labelledby="ascentz1title">
 <title id="ascentz1title">Ascent 1 Clockmaker's Square: side elevation with top-down inset</title>
 <style>
 .m-bg{fill:#0f1218}
@@ -60,114 +60,152 @@
 <g id="ascentz1rest"><rect x="-10" y="-10" width="20" height="20" rx="4" fill="#0f1218" stroke="#3ee07f" stroke-width="2.5"/><path d="M-5 0H5" stroke="#3ee07f" stroke-width="3" stroke-linecap="round"/></g>
 <g id="ascentz1gate"><path d="M-12 14V-6A12 12 0 0 1 12-6V14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M-5 14V-4M5 14V-4M0 14V-8" stroke="#fff" stroke-width="2"/></g>
 </defs>
-<rect class="m-bg" width="720" height="1088"/>
+<rect class="m-bg" width="720" height="2078"/>
 <text class="m-t m-h" x="30" y="44">Ascent 1 Clockmaker's Square</text>
 <text class="m-t m-s m-end" x="690" y="44">side view, height in m</text>
 <g transform="translate(0,70)">
 <!-- side view from the south. 10 px = 1 m. x east; y = -10 x height in m -->
-<g transform="translate(76,600)">
-<path class="m-grid" d="M0 0H624M0-100H624M0-200H624M0-300H624M0-400H624M0-500H624"/>
-<path class="m-axis" d="M-12 0V-545M-20 0H-12M-20-100H-12M-20-200H-12M-20-300H-12M-20-400H-12M-20-500H-12"/>
-<text class="m-t m-s m-end" x="-24" y="6">0</text><text class="m-t m-s m-end" x="-24" y="-94">10</text><text class="m-t m-s m-end" x="-24" y="-194">20</text><text class="m-t m-s m-end" x="-24" y="-294">30</text><text class="m-t m-s m-end" x="-24" y="-394">40</text><text class="m-t m-s m-end" x="-24" y="-494">50</text>
-<!-- buildings (backdrop) -->
-<path class="m-sil" d="M0 0V-100L20-140H30L100-100V0z"/>
-<rect class="m-sil" x="70" y="-40" width="70" height="40"/>
+<g transform="translate(76,1590)">
+<path class="m-grid" d="M0 0H624M0-100H624M0-200H624M0-300H624M0-400H624M0-500H624M0-600H624M0-700H624M0-800H624M0-900H624M0-1000H624M0-1100H624M0-1200H624M0-1300H624M0-1400H624M0-1500H624"/>
+<path class="m-axis" d="M-12 0V-1545M-20 0H-12M-20-200H-12M-20-400H-12M-20-600H-12M-20-800H-12M-20-1000H-12M-20-1200H-12M-20-1400H-12M-20-1500H-12"/>
+<text class="m-t m-s m-end" x="-24" y="6">0</text><text class="m-t m-s m-end" x="-24" y="-194">20</text><text class="m-t m-s m-end" x="-24" y="-394">40</text><text class="m-t m-s m-end" x="-24" y="-594">60</text><text class="m-t m-s m-end" x="-24" y="-794">80</text><text class="m-t m-s m-end" x="-24" y="-994">100</text><text class="m-t m-s m-end" x="-24" y="-1194">120</text><text class="m-t m-s m-end" x="-24" y="-1394">140</text><text class="m-t m-s m-end" x="-24" y="-1494">150</text>
+<!-- buildings (backdrop): guildhall, bakery, workshop, clock tower 12 m wide, intact to +130 m, east wall to +150 m -->
+<path class="m-sil" d="M0 0V-100L20-140H30L95-100V0z"/>
+<rect class="m-sil" x="60" y="-40" width="70" height="40"/>
 <rect class="m-sil" x="455" y="-90" width="80" height="90"/>
-<path class="m-sil" d="M270 0V-535L280-520L286-528L292-505H330L338-522L344-512L350-530V0z"/>
+<path class="m-sil" d="M250 0V-1318L262-1306L270-1300H350V-1500H370V0z"/>
 <!-- the square, 0 m -->
 <path class="m-walk" d="M0 0H624"/>
-<!-- route A, west: stalls +1 +2 +3, bakery roof +4, guildhall roof +10 to +14 -->
-<rect class="m-solid" x="215" y="-10" width="30" height="10"/><rect class="m-solid" x="180" y="-20" width="30" height="20"/><rect class="m-solid" x="145" y="-30" width="30" height="30"/>
-<path class="m-walk" d="M215-10H245M180-20H210M145-30H175M70-40H140M100-100L30-140H2"/>
-<!-- egg room inside the guildhall, entered down the dry chimney -->
-<rect class="m-under" x="8" y="-30" width="48" height="27"/>
-<path class="m-fall" d="M24-138V-36"/>
-<!-- hoist +19.5 to +27 (period 12 s) and crane beam +21 to +27 -->
-<path class="m-mpp" d="M60-195L232-270"/><rect class="m-mp" x="46" y="-199" width="30" height="8" rx="2"/>
-<path class="m-beam" d="M30-212L240-272" style="stroke-width:5"/>
-<!-- tower: west scaffold +26, belfry floor +26, east ledge +14, lower ramps -->
-<path class="m-walk" d="M236-260H270M272-260H348M350-140H372M350-140L275-180L345-220L275-260"/>
-<!-- route B, east: crates +1 +2, balcony +3, gear 1, workshop roof +9, gear 2, plank bridge +14 -->
+<!-- SECTION 1, town, 0 to +26. West: stalls +1 +2 +3, bakery roof +4, guildhall roof +10 to +14 -->
+<rect class="m-solid" x="205" y="-10" width="30" height="10"/><rect class="m-solid" x="170" y="-20" width="30" height="20"/><rect class="m-solid" x="135" y="-30" width="30" height="30"/>
+<path class="m-walk" d="M205-10H235M170-20H200M135-30H165M60-40H130M95-100L30-140H2"/>
+<rect class="m-under" x="8" y="-30" width="48" height="27"/><path class="m-fall" d="M24-138V-36"/>
+<!-- hoist +19.5 to +27 (period 12 s), crane beam +21 to +27, west scaffold, gallery floor +26 -->
+<path class="m-mpp" d="M55-195L215-270"/><rect class="m-mp" x="40" y="-199" width="30" height="8" rx="2"/>
+<path class="m-beam" d="M30-212L228-272" style="stroke-width:5"/>
+<path class="m-walk" d="M220-260H250M252-260H368"/>
+<!-- East: crates +1 +2, balcony +3, gear, workshop roof +9, gear, planks +14, three ramps in the tower base -->
 <rect class="m-solid" x="385" y="-10" width="30" height="10"/><rect class="m-solid" x="420" y="-20" width="30" height="20"/>
-<path class="m-walk" d="M385-10H415M420-20H450M455-30H528M455-90H535"/>
+<path class="m-walk" d="M385-10H415M420-20H450M455-30H528M455-90H535M368-140L258-180L362-220L258-260"/>
 <circle class="m-gear" cx="566" cy="-62" r="31"/><circle class="m-gear" cx="424" cy="-122" r="27"/>
-<rect class="m-crum" x="374" y="-144" width="22" height="8"/>
-<!-- upper tower, inside: spiral ramp (side view), two pendulums, counterweight +31 to +47 (period 8 s) -->
-<path class="m-walk" d="M275-260L345-310L275-360L345-410L275-460L330-500M272-500H348"/>
-<path class="m-pend" d="M310-385L296-338"/><circle class="m-bob" cx="295" cy="-334" r="7"/><path class="m-pendarc" d="M286-336Q310-322 334-336"/>
-<path class="m-pend" d="M310-485L324-438"/><circle class="m-bob" cx="325" cy="-434" r="7"/><path class="m-pendarc" d="M286-436Q310-422 334-436"/>
+<rect class="m-crum" x="372" y="-144" width="24" height="8"/>
+<!-- SECTION 2, weight shaft, +26 to +50. Inside: spiral ramp, two pendulums, counterweight +31 to +47 (period 8 s) -->
+<path class="m-walk" d="M258-260L362-310L258-360L362-410L258-460L340-500M252-500H368"/>
+<path class="m-pend" d="M310-385L296-338"/><circle class="m-bob" cx="295" cy="-334" r="7"/>
+<path class="m-pend" d="M310-485L324-438"/><circle class="m-bob" cx="325" cy="-434" r="7"/>
 <path class="m-mpp" d="M310-314V-470"/><rect class="m-mp" x="298" y="-318" width="24" height="8" rx="2"/>
-<!-- upper tower, outside: scaffold stairs, two vents, bumpers -->
-<path class="m-walk" d="M352-270H378M382-280H404M408-290H430M434-300H456M362-370H432M364-400H384M388-390H408M412-380H432M356-470H420M352-490H372M376-480H396"/>
+<!-- Outside east: scaffold steps, vent, deck +37, steps, vent, deck +47, steps -->
+<path class="m-walk" d="M372-270H396M400-280H422M426-290H448M452-300H474M380-370H450M430-380H450M406-390H426M382-400H402M374-470H438M394-480H414M372-490H390"/>
+<!-- SECTION 3, gear room, +50 to +80. Inside: three flat gears, two lift gears (one turn in 16 s), two ramps -->
+<rect class="m-gear" x="330" y="-510" width="36" height="7" style="stroke-width:4"/><rect class="m-gear" x="290" y="-520" width="36" height="7" style="stroke-width:4"/><rect class="m-gear" x="258" y="-530" width="28" height="7" style="stroke-width:4"/>
+<circle class="m-gear" cx="300" cy="-580" r="36"/><circle class="m-gear" cx="312" cy="-672" r="36"/>
+<path class="m-walk" d="M342-620H368M252-712H274M256-712L364-756L256-800M252-800H368"/>
+<!-- Outside west: balcony +50, three vents and ledges +58 +66 +74, five steps, balcony +80 -->
+<path class="m-walk" d="M222-500H250M170-580H218M184-660H240M180-740H226M152-750H174M124-760H146M152-770H174M180-780H202M208-790H230M224-800H250"/>
+<!-- SECTION 4, clock floor, +80 to +110. Inside: three bell weights, 10 m each (period 12 s), two ledges -->
+<path class="m-mpp" d="M277-804V-900M343-904V-1000M277-1004V-1100"/>
+<rect class="m-mp" x="262" y="-808" width="30" height="8" rx="2"/><rect class="m-mp" x="328" y="-908" width="30" height="8" rx="2"/><rect class="m-mp" x="262" y="-1008" width="30" height="8" rx="2"/>
+<path class="m-walk" d="M296-900H324M296-1000H324M296-1100H368"/>
+<!-- Outside east: balcony +80, loose slope to +86, vent, ledge +94, loose slope to +99, vent, ledge +107, two steps -->
+<path class="m-walk" d="M372-800H398M500-860H566M470-940H530M372-990H400M376-1070H436M408-1080H430M376-1090H398"/>
+<path class="m-walk" d="M400-800L500-860M470-940L382-990" style="stroke:#d7dbe8;stroke-dasharray:6 5"/>
+<!-- SECTION 5, belfry and crown, +110 to +150. Inside: spiral ramp round the great bell, bell floor +130 -->
+<path class="m-walk" d="M362-1100L258-1150L362-1200L258-1250L362-1300M252-1300H368"/>
+<path class="m-pend" d="M310-1296L286-1182"/><circle class="m-bob" cx="284" cy="-1172" r="14"/><path class="m-pendarc" d="M262-1168Q310-1146 358-1168"/>
+<!-- Outside west: second hoist +110 to +130 (period 16 s) -->
+<path class="m-walk" d="M222-1100H250M222-1300H250"/><path class="m-mpp" d="M205-1104V-1296"/><rect class="m-mp" x="190" y="-1108" width="30" height="8" rx="2"/>
+<!-- Crown: five stair fragments, vent, fragment +143, bell cradle lift +143 to +150 (period 12 s), crown +150 -->
+<path class="m-walk" d="M330-1310H356M296-1320H322M262-1330H288M228-1340H254M194-1350H220M150-1350H190M170-1430H232M280-1500H368"/>
+<path class="m-mpp" d="M251-1434V-1500"/><rect class="m-mp" x="236" y="-1438" width="30" height="8" rx="2"/>
+<!-- rafters: two narrow beams, +130 to +139 to +150 -->
+<path class="m-beam" d="M368-1300L560-1390L372-1496" style="stroke-width:5"/>
 <!-- fall lines -->
-<path class="m-fall" d="M124-48L150-6"/><path class="m-fall" d="M316-392L326-266"/><path class="m-fall" d="M470-296L500-96"/>
-<!-- routes -->
-<path class="m-case" d="M300-6H250L230-16L195-26L160-36L92-46V-104L24-146L12-200L60-204L226-276L262-266H275"/>
-<path class="m-r1" d="M300-6H250L230-16L195-26L160-36L92-46"/>
-<path class="m-r1" d="M86-52V-104L28-146L14-198"/>
-<path class="m-r1" d="M60-206L226-278L264-266"/>
-<path class="m-r1" d="M280-268L340-312L282-358L340-406L282-456L322-492"/>
-<path class="m-r2" d="M22-204L32-222L238-282L262-272"/>
-<path class="m-r2" d="M290-282L338-316L314-322V-464L296-470L326-494"/>
+<path class="m-fall" d="M124-48L150-6"/><path class="m-fall" d="M316-392L326-266"/><path class="m-fall" d="M472-296L500-96"/><path class="m-fall" d="M160-650L70-150"/><path class="m-fall" d="M580-850L446-478"/><path class="m-fall" d="M300-1210L318-1106"/><path class="m-fall" d="M546-1376L520-948"/>
+<!-- first-run route -->
+<path class="m-r1" d="M300-6H240L220-16L185-26L150-36L108-46"/>
+<path class="m-r1" d="M104-52L98-106L28-146L14-198"/>
+<path class="m-r1" d="M55-206L212-280L262-266"/>
+<path class="m-r1" d="M264-268L356-314L264-360L356-410L264-456L334-494"/>
+<path class="m-r1" d="M318-506L348-516L308-526L272-536Q246-590 300-624L354-626Q368-700 312-718L262-718L358-760L262-800"/>
+<path class="m-r1" d="M277-812V-896"/><path class="m-r1" d="M300-906H330L343-912V-996"/><path class="m-r1" d="M324-1006H296L277-1012V-1096"/>
+<path class="m-r1" d="M300-1106H356L264-1152L356-1200L264-1248L352-1296"/>
+<path class="m-r1" d="M343-1316L309-1326L275-1336L241-1346L207-1356H178L172-1432"/>
+<path class="m-r1" d="M190-1436H232L251-1444V-1494"/>
+<!-- expert route -->
+<path class="m-r2" d="M22-204L32-222L226-282L262-272"/>
+<path class="m-r2" d="M274-282L352-320L314-324V-464L300-470L330-492"/>
+<path class="m-r2" d="M256-508H232L224-584L182-594L186-664L230-672L226-744L163-756L135-766L163-776L191-786L219-796L240-806"/>
+<path class="m-r2" d="M300-812H384L398-808L498-868L536-872L526-946L468-948L386-996L392-1076L419-1086L387-1096L366-1106"/>
+<path class="m-r2" d="M372-1306L556-1396L378-1500"/>
 <!-- objects -->
 <use href="#ascentz1start" x="318" y="-22"/>
-<use href="#ascentz1vent" x="80" y="-56"/><use href="#ascentz1vent" x="10" y="-156"/><use href="#ascentz1vent" x="446" y="-316"/><use href="#ascentz1vent" x="372" y="-416"/>
-<use href="#ascentz1bump" x="436" y="-384"/><use href="#ascentz1bump" x="424" y="-484"/>
+<use href="#ascentz1vent" x="104" y="-56"/><use href="#ascentz1vent" x="10" y="-156"/><use href="#ascentz1vent" x="464" y="-316"/><use href="#ascentz1vent" x="390" y="-416"/>
+<use href="#ascentz1vent" x="226" y="-516"/><use href="#ascentz1vent" x="176" y="-596"/><use href="#ascentz1vent" x="234" y="-676"/>
+<use href="#ascentz1vent" x="540" y="-876"/><use href="#ascentz1vent" x="386" y="-1006"/><use href="#ascentz1vent" x="166" y="-1366"/>
+<use href="#ascentz1bump" x="456" y="-384"/><use href="#ascentz1bump" x="444" y="-484"/><use href="#ascentz1bump" x="576" y="-872"/>
 <use href="#ascentz1egg" x="34" y="-18"/>
-<use href="#ascentz1rest" x="124" y="-56"/><use href="#ascentz1rest" x="500" y="-106"/><use href="#ascentz1rest" x="328" y="-246"/><use href="#ascentz1rest" x="398" y="-354"/><use href="#ascentz1rest" x="340" y="-516"/>
+<use href="#ascentz1rest" x="124" y="-56"/><use href="#ascentz1rest" x="500" y="-106"/><use href="#ascentz1rest" x="352" y="-246"/><use href="#ascentz1rest" x="352" y="-486"/><use href="#ascentz1rest" x="352" y="-786"/><use href="#ascentz1rest" x="352" y="-1086"/><use href="#ascentz1rest" x="300" y="-1286"/><use href="#ascentz1rest" x="336" y="-1516"/>
 <!-- labels -->
-<text class="m-t m-s" x="150" y="-70">Bakery +4</text>
-<text class="m-t m-s" x="112" y="-120">Guildhall +14</text>
-<text class="m-t m-s" x="100" y="-236">hoist</text><text class="m-t m-s" x="96" y="-272">crane beam</text>
+<text class="m-t m-s" x="150" y="-70">Bakery +4</text><text class="m-t m-s" x="112" y="-120">Guildhall +14</text>
+<text class="m-t m-s" x="96" y="-236">hoist</text><text class="m-t m-s" x="60" y="-272">crane beam</text>
 <text class="m-t m-s" x="544" y="-134">Workshop</text><text class="m-t m-s" x="544" y="-110">+9</text>
-<text class="m-t m-s" x="380" y="-160">planks +14</text>
-<text class="m-t m-s" x="380" y="-232">Belfry floor +26</text>
-<text class="m-t m-s" x="464" y="-330">outside way</text>
-<text class="m-t m-s" x="440" y="-500">Rim +50, to zone 2</text>
-<text class="m-t m-s" x="322" y="20">Square 0</text><path class="m-axis" d="M524 14H624M524 6V22M624 6V22"/><text class="m-t m-s m-end" x="516" y="38">10 m</text>
-<text class="m-t" x="160" y="20">A</text><text class="m-t" x="440" y="20">B</text>
+<text class="m-t m-s" x="484" y="-250">Gallery +26</text>
+<text class="m-t m-s" x="484" y="-510">Gear room +50</text>
+<text class="m-t m-s" x="414" y="-660">lift gears</text>
+<text class="m-t m-s" x="60" y="-620">vents</text>
+<text class="m-t m-s" x="414" y="-760">Clock floor +80</text>
+<text class="m-t m-s" x="96" y="-1058">bell weights</text>
+<text class="m-t m-s" x="452" y="-1090">Belfry +110</text>
+<text class="m-t m-s" x="110" y="-1200">hoist</text><text class="m-t m-s" x="388" y="-1190">great bell</text>
+<text class="m-t m-s" x="384" y="-1262">Bell floor +130</text>
+<text class="m-t m-s" x="478" y="-1420">rafters</text>
+<text class="m-t m-s" x="388" y="-1512">Crown +150, to zone 2</text>
+<text class="m-t m-s" x="322" y="20">Square 0</text><text class="m-t" x="160" y="20">A</text><text class="m-t" x="440" y="20">B</text>
+<path class="m-axis" d="M524 14H624M524 6V22M624 6V22"/><text class="m-t m-s m-end" x="516" y="38">10 m</text>
 <!-- top-down inset of the square, 3.5 px = 1 m, north up -->
-<g transform="translate(0,-530)">
+<g transform="translate(0,-1040)">
 <rect class="m-box" x="-2" y="-2" width="222" height="176"/>
 <rect class="e0 m-edge" x="49" y="49" width="119" height="112"/>
 <rect class="m-solid" x="0" y="21" width="38" height="70"/><rect class="m-solid" x="14" y="98" width="35" height="42"/>
 <rect class="m-solid" x="168" y="63" width="42" height="63"/>
-<rect class="m-solid" x="94" y="14" width="28" height="28" style="stroke:#e9c46a;stroke-width:2.5"/>
+<rect class="m-solid" x="87" y="4" width="42" height="42" style="stroke:#e9c46a;stroke-width:2.5"/>
 <rect class="m-solid" x="56" y="116" width="10" height="10"/><rect class="m-solid" x="70" y="116" width="10" height="10"/><rect class="m-solid" x="84" y="116" width="10" height="10"/>
 <circle cx="108" cy="104" r="10" fill="none" stroke="#7dd3fc" stroke-width="2.5"/>
 <circle cx="108" cy="58" r="6" fill="#0f1218" stroke="#fff" stroke-width="2.5"/>
 <path class="m-r1" d="M104 62L92 108L56 122L34 112L22 84" style="stroke-width:3"/>
 <path class="m-r1" d="M114 62L150 104L176 100" style="stroke-width:3;stroke-dasharray:2 6"/>
-<text class="m-t m-s" x="128" y="34">Tower</text><text class="m-t m-s" x="60" y="150">A</text><text class="m-t m-s" x="146" y="132">B</text><text class="m-t m-s" x="4" y="166">plan, 62 m wide</text>
+<text class="m-t m-s" x="134" y="30">Tower</text><text class="m-t m-s" x="60" y="150">A</text><text class="m-t m-s" x="146" y="132">B</text><text class="m-t m-s" x="4" y="166">plan, 62 m wide</text>
 </g>
 </g>
 </g>
-<path d="M20 720H700" stroke="#2d3a4f" stroke-width="2"/>
-<g transform="translate(52,747)"><use href="#ascentz1start"/></g>
-<text class="m-t" x="86" y="754">Start pad</text>
-<g transform="translate(397,747)"><use href="#ascentz1egg"/></g>
-<text class="m-t" x="431" y="754">Clockwork Egg</text>
-<g transform="translate(52,791)"><use href="#ascentz1rest"/></g>
-<text class="m-t" x="86" y="798">Rest ledge</text>
-<g transform="translate(397,791)"><path class="m-r1" d="M-20 0H16"/></g>
-<text class="m-t" x="431" y="798">First-run route</text>
-<g transform="translate(52,835)"><path class="m-r2" d="M-20 0H16"/></g>
-<text class="m-t" x="86" y="842">Expert route</text>
-<g transform="translate(397,835)"><path class="m-fall" d="M-14-12L10 10"/></g>
-<text class="m-t" x="431" y="842">Where a fall lands</text>
-<g transform="translate(52,879)"><path class="m-walk" d="M-18 0H18"/></g>
-<text class="m-t" x="86" y="886">Surface you can roll on</text>
-<g transform="translate(397,879)"><use href="#ascentz1vent"/></g>
-<text class="m-t" x="431" y="886">Steam Vent</text>
-<g transform="translate(52,923)"><use href="#ascentz1bump"/></g>
-<text class="m-t" x="86" y="930">Bumper</text>
-<g transform="translate(397,923)"><path class="m-pend" d="M-14-12L6 8"/><circle class="m-bob" cx="8" cy="10" r="6"/></g>
-<text class="m-t" x="431" y="930">Pendulum</text>
-<g transform="translate(52,967)"><path class="m-mpp" d="M-22 0H22"/><rect class="m-mp" x="-12" y="-8" width="24" height="16" rx="2"/></g>
-<text class="m-t" x="86" y="974">Moving platform, path</text>
-<g transform="translate(397,967)"><circle class="m-gear" r="10"/></g>
-<text class="m-t" x="431" y="974">Turning gear</text>
-<g transform="translate(52,1011)"><rect class="m-crum" x="-13" y="-13" width="26" height="26"/><path class="m-crack" d="M-9-6L-1 0L-6 8M2-10L6-2"/></g>
-<text class="m-t" x="86" y="1018">Crumbling Tiles</text>
-<text class="m-t m-s" x="30" y="1066">Symbols are larger than life. Grid and scale: 10 m.</text>
+<path d="M20 1710H700" stroke="#2d3a4f" stroke-width="2"/>
+<g transform="translate(52,1737)"><use href="#ascentz1start"/></g>
+<text class="m-t" x="86" y="1744">Start pad</text>
+<g transform="translate(397,1737)"><use href="#ascentz1egg"/></g>
+<text class="m-t" x="431" y="1744">Clockwork Egg</text>
+<g transform="translate(52,1781)"><use href="#ascentz1rest"/></g>
+<text class="m-t" x="86" y="1788">Rest ledge</text>
+<g transform="translate(397,1781)"><path class="m-r1" d="M-20 0H16"/></g>
+<text class="m-t" x="431" y="1788">First-run route</text>
+<g transform="translate(52,1825)"><path class="m-r2" d="M-20 0H16"/></g>
+<text class="m-t" x="86" y="1832">Expert route</text>
+<g transform="translate(397,1825)"><path class="m-fall" d="M-14-12L10 10"/></g>
+<text class="m-t" x="431" y="1832">Where a fall lands</text>
+<g transform="translate(52,1869)"><path class="m-walk" d="M-18 0H18"/></g>
+<text class="m-t" x="86" y="1876">Surface you can roll on</text>
+<g transform="translate(397,1869)"><use href="#ascentz1vent"/></g>
+<text class="m-t" x="431" y="1876">Steam Vent</text>
+<g transform="translate(52,1913)"><use href="#ascentz1bump"/></g>
+<text class="m-t" x="86" y="1920">Bumper</text>
+<g transform="translate(397,1913)"><path class="m-pend" d="M-14-12L6 8"/><circle class="m-bob" cx="8" cy="10" r="6"/></g>
+<text class="m-t" x="431" y="1920">Pendulum</text>
+<g transform="translate(52,1957)"><path class="m-mpp" d="M-22 0H22"/><rect class="m-mp" x="-12" y="-8" width="24" height="16" rx="2"/></g>
+<text class="m-t" x="86" y="1964">Moving platform, path</text>
+<g transform="translate(397,1957)"><circle class="m-gear" r="10"/></g>
+<text class="m-t" x="431" y="1964">Turning gear</text>
+<g transform="translate(52,2001)"><rect class="m-crum" x="-13" y="-13" width="26" height="26"/><path class="m-crack" d="M-9-6L-1 0L-6 8M2-10L6-2"/></g>
+<text class="m-t" x="86" y="2008">Crumbling Tiles</text>
+<g transform="translate(397,2001)"><path class="m-beam" d="M-16 6L16-6"/></g>
+<text class="m-t" x="431" y="2008">Narrow beam</text>
+<text class="m-t m-s" x="30" y="2056">Symbols are larger than life. Grid and scale: 10 m.</text>
 </svg>

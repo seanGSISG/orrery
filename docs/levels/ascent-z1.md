@@ -1,44 +1,36 @@
 # Ascent 1: Clockmaker's Square
 
-Map: `ascent-z1.svg`. Ticket: #31. Shared numbers and assumptions: `README.md`. Heights: 0 to 50 m.
+Map: `ascent-z1.svg`. Ticket: #31. Shared numbers and rules: `README.md`. Heights: 0 to 150 m.
 
 ## Intent
 
-The climb starts in a town square on Earth at dawn. The zone teaches how Ascent works: there are several ways up, a fall costs height and not the run, and flat roofs are places to rest. The mechanics in focus are 1 m step jumps, Steam Vents and one moving platform. The square is open ground. The player can walk round it and look at both routes before the first jump.
+The climb starts in a town square on Earth at dawn and goes up the full height of the clock tower. The zone teaches how Ascent works: there are several ways up, a fall costs height and not the run, and floors are places to rest. The square is open ground. The player can walk round it and look at both routes before the first jump. The tower has five floors, and every floor is a full rest ledge with a way up inside the tower and a way up outside it.
 
 ## Layout
 
-The square is 34 × 32 m. The clock tower stands on its north side. Its top is broken off at 50 m.
+The square is 34 × 32 m. The clock tower is 12 m wide. It is whole to +130 m and broken above that.
 
-**Route A, market side (west)**
+| Section | Heights | First way | Second way | Ends at |
+|---|---|---|---|---|
+| 1. Town | 0 to +26 m | **Market side (west):** three stall roofs, bakery roof (+4), chimney vent, guildhall roof (30° slope to +14), ridge vent, builder's hoist (period 12 s) | **Workshop side (east):** two crates, balcony (+3), waterwheel gear to the workshop roof (+9), second gear, loose planks, three ramps in the tower base | Gallery, +26 m |
+| 2. Weight shaft | +26 to +50 m | **Inside:** spiral ramp, five half-turns of 17 m at 16°, two pendulums | **Outside east:** scaffold steps, vent, deck (+37), steps, vent, deck (+47), two bumpers | Gear room, +50 m |
+| 3. Gear room | +50 to +80 m | **Inside:** three flat gears, two lift gears 7.2 m across (one turn in 16 s), two ramps | **Outside west:** three vents with ledges at +58, +66 and +74 m, five steps | Clock floor, +80 m |
+| 4. Clock floor | +80 to +110 m | **Inside:** three bell weights, each a 3 m platform that rises 10 m (period 12 s), with a ledge between them | **Outside east:** loose-slate slope (31°), vent, ledge (+94), loose-slate slope, vent, ledge (+107), two steps, one bumper | Belfry, +110 m |
+| 5. Belfry and crown | +110 to +150 m | **Inside:** spiral ramp round the great bell to the bell floor (+130). Then five stair fragments, a vent, and the bell cradle, a lift from +143 to +150 m (period 12 s) | **Outside west:** a second hoist from +110 to +130 m (period 16 s). No hazard | Crown, +150 m |
 
-1. Three stall roofs at +1, +2 and +3 m.
-2. Bakery roof, +4 m, 7 m wide. Rest ledge.
-3. Chimney vent, lift to +10.5 m, onto the guildhall roof.
-4. Guildhall roof: a 30° slope from +10 to the ridge at +14 m. Rest ledge.
-5. Chimney vent on the ridge, lift to +21.5 m.
-6. Builder's hoist: a 3 m platform from +19.5 to +27 m along an 18.6 m path. Period 12 s.
-7. West scaffold, then the belfry floor at +26 m.
-
-**Route B, workshop side (east)**
-
-1. Two crates at +1 and +2 m, then the workshop balcony at +3 m.
-2. Waterwheel gear, 6.2 m across. The marble rides a paddle up to the workshop roof at +9 m. Rest ledge.
-3. A second gear lifts the marble to +14 m.
-4. Loose planks (Crumbling Tiles), 2 m, to the east ledge of the tower at +14 m.
-5. Three ramps inside the tower base, +14 to the belfry floor at +26 m.
-
-**Belfry floor, +26 m.** A full floor across the tower. Rest ledge. Both routes meet here.
-
-**Inside way up.** A spiral ramp round the inner wall: five half-turns of 16 m at 17°, from +26 to the rim at +50 m. Two pendulums cross it at +33 and +43 m. The clock's counterweight is a 2.4 m platform that moves in the middle of the shaft between +31 and +47 m, period 8 s.
-
-**Outside way up.** East scaffold: four 1 m steps to +30 m, a vent with lift to +37.5 m, a deck at +37 m (rest ledge), three steps to +40 m, a vent with lift to +47.5 m, a deck at +47 m and two steps to the rim. One bumper at the open end of each deck.
+Also in the weight shaft: the clock's counterweight, a 2.4 m platform that moves in the middle of the shaft between +31 and +47 m, period 8 s. Also above the bell floor: two rafters, narrow beams 0.8 m wide and 21 m long at 25° and 29°, from the bell floor out over the east side and back to the crown.
 
 ## Routes
 
-**First run (white).** Route A, then the inside way. It has the widest landings and the shortest falls.
+**First run (white).** Market side and the hoist. Then the inside of the tower all the way: spiral ramp, lift gears, bell weights, the ramp round the great bell, the stair fragments and the bell cradle. Every fall inside the tower ends on the floor below.
 
-**Expert (dashed).** Route A to the guildhall ridge. From the top of the ridge vent, steer onto the low end of the crane beam (0.8 m wide, 22 m long, 16°) and roll up it to the scaffold. This skips the hoist and its wait. Inside, climb the first half-turn of the ramp, jump the 2 m gap onto the counterweight at the bottom of its travel and ride it to +47 m. This skips three half-turns and both pendulums.
+**Expert (dashed).**
+
+1. From the top of the ridge vent, steer onto the low end of the crane beam (0.8 m wide, 21 m long, 16°). This skips the hoist.
+2. In the weight shaft, climb one half-turn, jump the 2 m gap onto the counterweight and ride it to +47 m.
+3. Leave the gear room by the west door and weave through the three vents without a landing.
+4. Leave the clock floor by the east door and take both loose slopes at full speed.
+5. From the bell floor, take the two rafters to the crown.
 
 ## Gems
 
@@ -50,7 +42,7 @@ The guildhall ridge has two chimneys. One steams: it is the vent. The other is d
 
 ## Hazards and objects
 
-4 Steam Vents, 2 pendulums, 2 bumpers, 2 turning gears, 2 moving platforms (hoist, counterweight), 1 strip of Crumbling Tiles, 1 egg. No carried power-ups.
+10 Steam Vents, 3 pendulums (two in the shaft, the great bell), 3 bumpers, 7 turning gears (2 in the town, 3 flat, 2 lift gears), 7 moving platforms (2 hoists, counterweight, 3 bell weights, bell cradle), 3 strips of Crumbling Tiles (planks, two slate slopes), 3 narrow beams, 1 egg. No carried power-ups.
 
 ## Falls and rest ledges
 
@@ -58,27 +50,33 @@ The guildhall ridge has two chimneys. One steams: it is the vent. The other is d
 |---|---|---|
 | Stalls, bakery or guildhall roof | The square | 1 to 14 m |
 | Hoist or crane beam | Bakery roof or the square | 15 to 27 m |
-| Spiral ramp, pushed by a pendulum | Belfry floor | 7 to 17 m |
-| Outside scaffold | Workshop roof (+9 m) or the square | 18 to 47 m |
+| Inside the tower, any section | The floor below | 5 to 30 m |
+| East scaffold | Workshop roof (+9 m) or the square | 18 to 47 m |
+| West vents of the gear room | Guildhall roof (+14 m) | 36 to 66 m |
+| East slopes of the clock floor | Scaffold deck (+47 m) | 33 to 60 m |
+| Rafters | East ledge at +94 m | 36 to 45 m |
+| Stair fragments of the crown | Bell floor (+130 m). West of the tower wall: the gear-room ledges or the guildhall roof | 1 to 121 m |
 
-Rest ledges: bakery roof, guildhall ridge, workshop roof, belfry floor, scaffold deck at +37 m, rim. No checkpoints. With Assist, one checkpoint on the start pad.
+The inside way is always the safe way. The outside way is always faster and always costs more to miss. Rest ledges: bakery roof, guildhall ridge, workshop roof, and the five floors of the tower. No checkpoints. With Assist, one checkpoint on the start pad.
 
 ## Time targets
 
-| Part of the first run | Arithmetic | Time |
-|---|---|---|
-| Square, three stall jumps, bakery roof | 8 m ÷ 8 + 3 × 0.8 + 1 | 4.4 s |
-| Vent, roof slope, ridge, vent | 1.5 + 1.3 + 1 + 1.5 | 5.3 s |
-| Hoist: average wait and ride | 6 + 6 | 12 s |
-| Scaffold to the belfry floor | | 0.5 s |
-| Spiral ramp with two pendulums | 80 m ÷ 9 + 2 × 1 | 10.9 s |
-| **Clean climb** | | **33 s** |
+Ascent has no par time. The level script carries the first-run route and the expert route, and the bot times both.
 
-Expert: 4.4 + 5.3 + beam 2.4 + 0.5 + ramp 1.8 + wait 2 + ride 4 + ramp 1.8 = about 22 s.
+| Section | First run | Arithmetic | Expert | Arithmetic |
+|---|---|---|---|---|
+| 1. Town | 22.2 s | stalls 4.4 + vents and roof 5.3 + hoist wait 6 and ride 6 + 0.5 | 12.6 s | 4.4 + 5.3 + beam 2.4 + 0.5 |
+| 2. Weight shaft | 14.1 s | 85 m ÷ 7 + 2 pendulums × 1 | 10.8 s | 17 m ÷ 7 + wait 2 + ride 4 + 17 m ÷ 7 |
+| 3. Gear room | 22.9 s | gears 3.7 + two rides of 8 + ledge 0.5 + ramps 23 m ÷ 8.5 | 10.3 s | three lifts 4.8 + five steps 4.5 + 1 |
+| 4. Clock floor | 26.9 s | 3 × (wait 3.5 + ride 5) + 1.4 | 11.3 s | slopes 22 m ÷ 8 + two lifts 3.2 + ledges 2.5 + steps 1.8 + 1 |
+| 5. Belfry and crown | 29.6 s | ramp 68 m ÷ 7 + bell 2 + steps 4.5 + vent 1.6 + cradle wait 5 and ride 5 + 1.8 | 16.2 s | ramp 9.7 + bell 1 + rafters 43 m ÷ 8.5 + 0.5 |
+| Four floor crossings | 6 s | 4 × 1.5 | 6 s | 4 × 1.5 |
+| **Zone** | **122 s** | | **67 s** | |
 
 ## Why it is fun
 
-- The player picks a side of the square, and can change sides at the belfry floor.
-- The first fall is short and lands in the square, next to the other route.
-- The hoist is slow and safe. The crane beam above it is in plain view and tempts the player on every climb.
-- The tower gives a choice of risk: inside, a pendulum costs one floor; outside, a miss costs the whole tower.
+- The player picks a side of the square, and picks again on every floor of the tower.
+- The first falls are short and land in the square, next to the other route.
+- Each floor has its own machine: pendulums, lift gears, bell weights, the great bell. The tower never repeats a section.
+- Every outside way is in plain view from the floor door. It tempts the player on every climb.
+- The bell cradle is slow on purpose. It lifts the player out of the broken tower with the floating pieces of zone 2 in view.

@@ -1,42 +1,36 @@
 # Ascent 2: The Broken Tower
 
-Map: `ascent-z2.svg`. Ticket: #32. Shared numbers and assumptions: `README.md`. Heights: 50 to 100 m. The zone starts on the tower rim, where zone 1 ends.
+Map: `ascent-z2.svg`. Ticket: #32. Shared numbers and rules: `README.md`. Heights: 150 to 300 m. The zone starts on the crown of the tower, where zone 1 ends.
 
 ## Intent
 
-The top of the clock tower has broken into pieces that float in the air. The player climbs through the clock's own parts. The mechanics in focus are moving surfaces: turning gears, sweeping hands, a swinging bell and Steam Vents in a chain. The giant clock face is a wide tilted floor under the west half of the zone. It catches most falls.
+The top of the clock tower has broken into pieces that float in the air. The player climbs through the clock's own parts: its face, its gears, its mainspring, its bells and at last its spire. The mechanics in focus are moving surfaces and Steam Vents in chains. Two wide floors catch falls: the tilted clock face at the bottom and the Dial ring in the middle.
 
 ## Layout
 
-**Route A, face side (west)**
+| Part | Heights | West way | East way | Ends at |
+|---|---|---|---|---|
+| 1. Face and gears | +150 to +173 m | **Face:** three stair fragments. The clock face, a disc 21 m across, tilted 16° (+154 to +160). Two hands turn on the hub (one turn in 20 s) and push. A vent at the high rim, then five numeral stones | **Gears:** three flat gears at +151, +152, +153. A lift gear 7.6 m across (one turn in 16 s) to a walkway at +163 with a pendulum. A weight lift to +173 (period 6 s) | Bell ledge, +173 m, 16 m wide |
+| 2. Mainspring | +173 to +200 m | **Vent chain:** three vents with fragments at +181, +189 and +198, one step | **Mainspring ramp:** a coiled ramp, 5.5 half-turns of 14 m at 20°. A bell swings past its inner side | Barrel lid, +200 m, 13 m wide |
+| 3. Shards and rod | +200 to +235 m | **Stair shards:** six steps, a lift from +206 to +214 (period 10 s), six steps, a vent, six steps | **Pendulum rod:** the fallen pendulum is a ramp 17.5 m long at 24° to its bob disc (+207). Then three vents with ledges at +215, +223 and +231, three steps | Dial ring, +235 m |
+| 4. Bells and slabs | +235 to +270 m | **Vent chain:** four vents with ledges at +243, +251, +259 and +269. The last vent is the strongest (lift 10.5 m) | **Roof slabs:** four tilted slabs, 11.7 m each at 20°, with two swinging bells. A weight lift from +251 to +270 (period 16 s) | Roof slab, +270 m, 26 m wide |
+| 5. The spire | +270 to +300 m | **Lightning rod:** a vent, a loose-slate slope (34°), a vent, then the fallen lightning rod, a narrow beam 0.8 m wide and 20.6 m long at 23° | **Spire ramp:** a ramp round the outside of the spire, four half-turns, 70 m. A vent to the balcony | Cap, +300 m |
 
-1. Three stair fragments at +51, +52 and +53 m.
-2. Clock face: a disc 21 m across, tilted 16°, from +54 m at its low rim to +60 m at its high rim. An open slope with no fixed line. Two clock hands turn on the hub (one turn in 20 s) and push the marble down the slope.
-3. Steam Vent at the high rim, lift to +68.5 m.
-4. Five numeral stones, 2.6 m wide, 1 m steps, +68 to +72 m. They hang over the face.
-5. Bell ledge at +73 m, 16 m wide. Rest ledge.
-
-**Route B, gear side (east)**
-
-1. Three flat gears, 5.6 to 7 m across, at +51, +52 and +53 m. They turn in opposite directions.
-2. Lift gear: an upright gear 7.6 m across, one turn in 16 s. The marble steps onto a tooth at +54 m and rides it to +63 m.
-3. Walkway at +63 m, 9.5 m long, with one pendulum.
-4. Weight lift: a 3.4 m platform from +63 to +73 m, period 6 s. It stops next to the Bell ledge.
-
-**Bell ledge to the spire cap**
-
-- **Vent chain (west):** a vent on the ledge (lift to +81.5 m), a fragment at +81 m, a vent (lift to +89.5 m), a fragment at +89 m, a vent (lift to +98.5 m), a fragment at +98 m, one step, the cap. Fast. Each landing is 5 to 7 m wide.
-- **Mainspring ramp (east):** a coiled ramp, 5.5 half-turns of 14 m at 20°, from +73 to +100 m. Safe and long. The bell swings past its inner side at +84 to +86 m.
-
-**Spire cap, +100 m.** The roof of the tower, upright in the air, with a balcony 10 m wide. Rest ledge. Zone 3 starts here.
+**Dial ring, +235 m.** The brass rim of a second dial, flat in the air: a ring 50 m across and 4 m wide. The west way and the east way arrive on opposite sides, and the two ways of part 4 start on opposite sides. A player who changes sides rolls 78 m round half the ring. It is the widest open roll in the zone.
 
 ## Routes
 
-**First run (white).** Route B, then the Mainspring ramp. Every surface is wide, and the player learns to wait for a moving part.
+**First run (white).** Gears, Mainspring ramp, stair shards, half the Dial ring, roof slabs, spire ramp. Every surface is wide, and the player learns to wait for a moving part.
 
-**Expert (dashed).** Route A in a straight line up the face between the hands, then the vent chain without a landing. The player enters the first vent with about 3.5 m/s of drift to the west, so that each lift ends over the next vent. This skips three landings and three run-ups.
+**Expert (dashed).**
 
-A second expert trick is on Route B: jump from tooth to tooth up the rising side of the lift gear. The teeth are 1.2 m apart. This halves the 8 s ride.
+1. Straight up the clock face between the hands.
+2. The vent chain without a landing: enter the first vent with about 3.5 m/s of drift, so that each lift ends over the next vent.
+3. The pendulum rod and its three vents.
+4. Half the Dial ring at full speed, then the chain of four vents.
+5. The loose slope and the lightning rod.
+
+A second trick is on the lift gear: jump from tooth to tooth up the rising side. The teeth are 1.2 m apart. This halves the 8 s ride.
 
 ## Gems
 
@@ -48,37 +42,42 @@ The hub of the clock face has a hole where the axle was. The hands hide it as th
 
 ## Hazards and objects
 
-4 Steam Vents, 2 pendulums (walkway, bell), 4 turning gears and the 2 clock hands (turning arms), 1 moving platform (weight lift), 1 egg. No carried power-ups.
+15 Steam Vents (plus 1 in the egg chamber), 4 pendulums (walkway, mainspring bell, two slab bells), 4 turning gears and the 2 clock hands (turning arms), 3 moving platforms, 1 strip of Crumbling Tiles (slate slope), 1 narrow beam (lightning rod), 1 egg. No carried power-ups.
 
 ## Falls and rest ledges
 
 | Fall from | Lands on | Height lost |
 |---|---|---|
 | Numeral stones | Clock face | 10 to 16 m |
-| Vent chain fragments | Bell ledge or the clock face | 8 to 40 m |
+| First vent chain | Bell ledge or the clock face | 8 to 40 m |
 | Mainspring ramp, pushed by the bell | Bell ledge | 5 to 27 m |
-| Clock face, pushed by a hand | Low rim of the face, or the tower rim | 0 to 10 m |
-| Flat gears or the lift gear | Zone 1: workshop roof or the square | 42 to 54 m |
+| Flat gears or the lift gear | Zone 1: the east side of the tower, down to the workshop roof | 40 to 150 m |
+| Stair shards | First vent chain or the Bell ledge | 10 to 60 m |
+| Pendulum rod and its vents | Bob disc, or the Mainspring ramp | 8 to 50 m |
+| Roof slabs or the second vent chain | Dial ring | 5 to 35 m |
+| Spire ramp or the lightning rod | Roof slab, or the Dial ring | 5 to 65 m |
 
-Route B is safe to stand on and costly to fall from. Route A is the reverse. Rest ledges: tower rim, Bell ledge, spire cap. No checkpoints. With Assist, one checkpoint on the tower rim.
+The gear way is safe to stand on and costly to fall from. This is by design: the fall to zone 1 is the first big fall of Ascent. Rest ledges: crown, Bell ledge, Barrel lid, Dial ring, Roof slab, cap. No checkpoints. With Assist, one checkpoint on the crown.
 
 ## Time targets
 
-| Part of the first run | Arithmetic | Time |
-|---|---|---|
-| Three flat gears | 3 jumps × 0.9 + 20 m ÷ 10 | 4.7 s |
-| Lift gear, half a turn | 16 ÷ 2 | 8 s |
-| Walkway and pendulum | 9.5 m ÷ 10 + 1.5 | 2.5 s |
-| Weight lift: average wait and ride | 3 + 3 | 6 s |
-| Bell ledge | | 1 s |
-| Mainspring ramp and the bell | 77 m ÷ 8.5 + 2 × 1 | 11.1 s |
-| **Clean climb** | | **33 s** |
+Ascent has no par time. The level script carries the first-run route and the expert route, and the bot times both.
 
-Expert: stairs 2.7 + face 3.4 + vent 1.6 + stones 4.5 + ledge 0.5 + three lifts 4.8 + fragment, step and cap 2 = about 20 s.
+| Part | First run | Arithmetic | Expert | Arithmetic |
+|---|---|---|---|---|
+| 1. Face and gears | 21.2 s | gears 4.7 + lift gear 8 + walkway 2.5 + weight lift wait 3 and ride 3 | 12.7 s | stairs 2.7 + face 3.4 + vent 1.6 + stones 4.5 + 0.5 |
+| 2. Mainspring | 13 s | 77 m ÷ 7 + bell 2 | 6.8 s | three lifts 4.8 + fragment, step 2 |
+| 3. Shards and rod | 28.8 s | 18 steps × 0.9 + lift wait 5 and ride 4 + vent 1.6 + 2 | 10.9 s | rod 17.5 m ÷ 8.5 + bob 0.8 + three lifts 4.8 + three steps 2.7 + 0.5 |
+| Dial ring | 6.5 s | 78 m ÷ 12 | 6.5 s | 78 m ÷ 12 |
+| 4. Bells and slabs | 23.5 s | slabs 47 m ÷ 8.5 + bells 2 + lift wait 8 and ride 7 + 1 | 8.9 s | four lifts 6.4 + 2.5 |
+| 5. The spire | 14.6 s | ramp 70 m ÷ 7 + 1 + vent 1.6 + 2 | 9.9 s | two lifts 3.2 + slope 1.4 + ledges 2.4 + rod 20.6 m ÷ 8 + 0.3 |
+| Three ledge crossings | 4.5 s | 3 × 1.5 | 3.5 s | |
+| **Zone** | **112 s** | | **59 s** | |
 
 ## Why it is fun
 
 - The clock face is a big open slope with moving hands. No two crossings are the same.
 - Every part of the zone moves on a clock, so a skilled player can learn the timing and never wait.
-- The two sides trade risk in opposite ways, so the safe choice depends on the player.
-- The vent chain is three launches in a row. A clean chain feels like flight.
+- The Dial ring is a long fast roll in the middle of a climb, with the whole zone in view.
+- The vent chains are three and four launches in a row. A clean chain feels like flight.
+- The last move of the expert route is a narrow rod to the top of the spire.
