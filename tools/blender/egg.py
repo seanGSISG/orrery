@@ -35,7 +35,8 @@ WAIST = 0.3
 SHELL = 0.25
 LID = 0.35
 WALL = 0.006  # thickness of the two halves
-HINGE = Vector((0.0, RADIUS, WAIST))
+# The axis of the hinge barrel: behind the widest ring. The lid turns about it.
+HINGE = Vector((0.0, RADIUS + 0.012, WAIST))
 GEAR_AT = Vector((0.0, 0.0, 0.2))
 UP = Vector((0.0, 0.0, 1.0))
 SEGMENTS = 48  # steps around the egg
@@ -460,8 +461,8 @@ def build_shell() -> Part:
     # The hinge: two knuckles of the barrel across the back. The lid has the middle one.
     for sign in (-1.0, 1.0):
         part.rod(
-            HINGE + Vector((0.015 * sign, 0.012, 0.0)),
-            HINGE + Vector((0.045 * sign, 0.012, 0.0)),
+            HINGE + Vector((0.015 * sign, 0.0, 0.0)),
+            HINGE + Vector((0.045 * sign, 0.0, 0.0)),
             0.011,
         )
     return part
@@ -473,7 +474,7 @@ def build_lid() -> Part:
     half(part, lower=False)
     moulding(part, WAIST + 0.009, 0.012, 0.005)
     part.rod(
-        HINGE + Vector((-0.013, 0.012, 0.0)), HINGE + Vector((0.013, 0.012, 0.0)), 0.011
+        HINGE + Vector((-0.013, 0.0, 0.0)), HINGE + Vector((0.013, 0.0, 0.0)), 0.011
     )
     for i in range(60):
         lon = 2 * math.pi * i / 60

@@ -51,4 +51,5 @@ omni_range = 1.2
 [node name="Beam" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
 cast_shadow = 0
+extra_cull_margin = 0.5
 mesh = SubResource("beam")

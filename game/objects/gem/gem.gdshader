@@ -98,7 +98,9 @@ void fragment() {
 	for (int i = 0; i < facet_count; i++) {
 		vec3 other = facets[i].xyz;
 		float turn = dot(other, facet);
-		if (turn < 0.9999) {
+		// A facet with the same or the opposite normal makes no edge on this facet, and its
+		// gap would be a division by zero.
+		if (abs(turn) < 0.9999) {
 			float gap = (facets[i].w - dot(local_position, other)) / sqrt(1.0 - turn * turn);
 			edge = min(edge, gap);
 			if (dot(other, look) > 0.0) {
@@ -173,7 +175,8 @@ void fragment() {
 	tint *= mix(WINDOW, 1.0, smoothstep(-0.5, 0.5, back));
 	tint = mix(tint, pow(hue, vec3(0.9)), plain);
 	tint = min(tint * lightness, vec3(1.0));
-	fire_tint = tint;
+	// The glint of the path inside goes with the picture of the inside: none on the far gem.
+	fire_tint = tint * (1.0 - plain);
 	// The outside of the glass mirrors more at a flat angle.
 	float f0 = pow((IOR - 1.0) / (IOR + 1.0), 2.0);
 	float shine = f0 + (1.0 - f0) * pow(1.0 - clamp(dot(facet_view, VIEW), 0.0, 1.0), 5.0);

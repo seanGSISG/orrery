@@ -355,7 +355,7 @@ One scene, `game/objects/gem/gem.tscn`, and four cuts. `GemCut` holds each cut a
 - A long path through the glass gives a deep colour and a short path a pale one. The gem is dark where the camera looks straight through it and bright where it sends light back.
 - `light()` adds two glints for each light: a coloured one where the path inside leaves toward the light, and a white one where a facet mirrors the light.
 - A pale line marks each edge of the cut and each place where the path inside changes. That line hides the step between two pictures inside one facet, which no anti-aliasing mode smooths. A thin bright rim, at least 1.2 pixels wide, marks the outline.
-- A far gem changes look: from 6 mm per pixel the picture of the inside fades, and from 2 cm per pixel the gem shows plain facets, glows about four times more, and the sides that face the camera glint as the gem turns. Each gem starts at its own turn angle, so the gems of a level do not glint together.
+- A far gem changes look: from 6 mm per pixel the picture of the inside fades, and from 2 cm per pixel the gem shows plain facets, glows about four times more, has no coloured glint from the path inside, and the sides that face the camera glint as the gem turns. Each gem starts at its own turn angle, so the gems of a level do not glint together.
 
 **Round the gem.** The gem casts no shadow. An `OmniLight3D` 0.22 m above the marker (energy 0.25, range 1.2 m, no shadows, not baked) marks its place on the floor. The beam is 3.2 m tall and starts at the top of the jewel: `game/objects/gem/beam.gdshader`, additive, at least 0.2 % of the height of the view wide, so that it shows from far away. The finish uses the same shader with its old settings.
 
@@ -388,3 +388,4 @@ GPU time is the median of three runs of the `just perf` scene. "Before" is one s
 - The colourblind palette was not tested with a simulation of colour vision or with a player.
 - The lightmaps of `core_loop` and `fixture` were baked with the old gem light, whose bounce light was baked. They were not baked again. The `.sha256` check does not see a change to an object scene.
 - The finish beam was compared in one view on one GPU: the old and the new beam shader give the same picture there.
+- Every frame here comes from one GPU and one driver. Two expressions that GLSL leaves undefined (a `smoothstep` with equal edges in the beam, a division by zero for opposite facets in the gem) drew correctly on it. They were found by reading and by review, and they are corrected; a frame did not show them.
