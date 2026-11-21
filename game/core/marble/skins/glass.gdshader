@@ -62,8 +62,9 @@ void fragment() {
 		seen = textureLod(frame, SCREEN_UV, 0.0).rgb;
 	}
 
-	// Glass reflects more and passes less toward the outline. The outline itself is a thin
-	// dark line with no reflection, so a bright sky behind the marble does not hide it.
+	// Glass reflects more and passes less toward the outline. At the outline the reflection
+	// goes away too: the thin line that stays is dark, so a bright sky behind the marble does
+	// not hide it.
 	float f0 = pow((ior - 1.0) / (ior + 1.0), 2.0);
 	float mirror = f0 + (1.0 - f0) * pow(1.0 - facing, 5.0);
 	float edge = sqrt(1.0 - facing * facing);
@@ -72,5 +73,5 @@ void fragment() {
 	ROUGHNESS = roughness;
 	// The engine's F0 is 0.16 × SPECULAR².
 	SPECULAR = sqrt(f0 / 0.16) * (1.0 - line);
-	EMISSION = seen * mix(tint, rim_tint, pow(edge, rim_power)) * (1.0 - mirror * (1.0 - line)) * EXPOSURE;
+	EMISSION = seen * mix(tint, rim_tint, pow(edge, rim_power)) * (1.0 - mirror) * EXPOSURE;
 }
