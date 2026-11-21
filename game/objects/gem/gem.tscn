@@ -8,15 +8,18 @@ radius = 0.4
 
 [sub_resource type="ShaderMaterial" id="beam_look"]
 shader = ExtResource("2")
-shader_parameter/height = 30.0
-shader_parameter/strength = 0.2
+shader_parameter/height = 3.2
+shader_parameter/strength = 0.3
+shader_parameter/fade = 1.6
+shader_parameter/min_width = 0.002
+shader_parameter/soft_start = 0.04
 
 [sub_resource type="CylinderMesh" id="beam"]
 material = SubResource("beam_look")
-top_radius = 0.06
-bottom_radius = 0.06
-height = 30.0
-radial_segments = 8
+top_radius = 0.05
+bottom_radius = 0.065
+height = 3.2
+radial_segments = 16
 rings = 1
 cap_top = false
 cap_bottom = false
@@ -35,14 +38,17 @@ monitorable = false
 shape = SubResource("area")
 
 [node name="Jewel" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+cast_shadow = 0
 
 [node name="Glow" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
-light_energy = 0.35
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
+light_energy = 0.25
+light_specular = 0.2
+light_bake_mode = 0
 omni_range = 1.2
 
 [node name="Beam" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
 cast_shadow = 0
 mesh = SubResource("beam")
