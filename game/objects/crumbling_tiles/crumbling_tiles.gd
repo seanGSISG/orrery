@@ -67,6 +67,10 @@ var _now: float = 0.0
 
 ## Builds one Solid with a box shape, a stone mesh and a brass tray for each tile of the grid.
 func _ready() -> void:
+	# In the editor, build the tiles only inside a level, for the lightmap bake. In the
+	# object's own scene they would be saved with it, and built twice at run time.
+	if Engine.is_editor_hint() and get_tree().edited_scene_root == self:
+		return
 	if delay < 0.0 or tile <= 0.0:
 		push_error("crumbling_tiles %s: needs delay >= 0 and tile > 0" % name)
 		delay = maxf(delay, 0.0)
