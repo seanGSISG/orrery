@@ -1,0 +1,35 @@
+# Orrery
+
+An original 3D marble platformer in Godot. These terms name the parts of the game runtime; `docs/design/core-runtime.md` has the full design.
+
+## Language
+
+**Tick**:
+One physics step of the game, 1/120 s. One `LevelRun.step()` call advances one tick.
+_Avoid_: frame (a frame is one rendered image)
+
+**Sub-step**:
+One part of a tick in the marble solver. The marble moves at most half its radius in one sub-step.
+
+**MarbleInput**:
+The value that the marble reads each tick: move direction, jump, use, camera yaw and pitch. The player, the route bot and the harness all make it.
+_Avoid_: controls, input state
+
+**InputSource**:
+One producer of `MarbleInput`, for example the player's keyboard. The `InputHub` autoload holds the one active source.
+
+**LevelRun**:
+The node that plays one level and owns its time: the marble, the objects, the rules and the `GameState`.
+_Avoid_: session, game
+
+**GameState**:
+The one observable snapshot of the game. Tests and the harness read it; nothing else is the test boundary.
+_Avoid_: status, telemetry
+
+**Solid**:
+A collider that the marble can touch: level geometry or the solid part of an object. A mover moves it from code with `Solid.move()`.
+_Avoid_: collider, body
+
+**LevelObject**:
+An object that a level marker places, such as a gem or a moving platform. It is a scene whose root script extends `LevelObject`, and the run calls its hooks.
+_Avoid_: entity, prop
