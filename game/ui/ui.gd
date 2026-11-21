@@ -55,6 +55,7 @@ func _ready() -> void:
 	if Game.run == null and Game.screen == &"play":
 		Game.screen = &"title"
 	Game.screen_changed.connect(_show)
+	Game.child_entered_tree.connect(_on_game_child)
 	get_viewport().gui_focus_changed.connect(_on_focus_changed)
 	_show(Game.screen)
 
@@ -73,9 +74,6 @@ func _process(_delta: float) -> void:
 		# The harness or a bot restarted the run.
 		Game.screen = &"play"
 	elif Game.screen == &"play":
-		# Each frame, because the harness can load a level with no change of screen.
-		_best_before = Save.level(run.level.id).best_time
-		level_select.last_level = run.level.id
 		hud.show_state(run.state, run.level)
 		hud.visible = get_viewport().get_camera_3d() is FollowCamera
 
@@ -106,8 +104,7 @@ func _show(screen: StringName) -> void:
 		results.catalog = level_select.catalog
 		results.previous_best = _best_before
 	if screen == &"play" and run != null:
-		_best_before = Save.level(run.level.id).best_time
-		level_select.last_level = run.level.id
+		_begin_attempt(run)
 		hud.show_state(run.state, run.level)
 	_take_mouse(screen != &"play")
 	hud.visible = screen == &"play" and run != null
@@ -121,6 +118,21 @@ func _show(screen: StringName) -> void:
 	_quiet = false
 	# Deferred, so that a level that loads in this frame (`--level`) never makes a backdrop.
 	_sync_backdrop.call_deferred()
+
+
+## Keeps what the results and the level select need of the attempt that starts on run: the
+## best time of its level before the attempt, and the level. _show() calls it for a retry.
+func _begin_attempt(run: LevelRun) -> void:
+	_best_before = Save.level(run.level.id).best_time
+	level_select.last_level = run.level.id
+
+
+## Begins the attempt of a run when Game adds it, before its first tick. The harness can load
+## and finish a level in one frame, with no change of screen in between.
+func _on_game_child(node: Node) -> void:
+	var run: LevelRun = node as LevelRun
+	if run != null:
+		_begin_attempt(run)
 
 
 ## Adds the Backdrop while there is no run, and frees it when there is one.

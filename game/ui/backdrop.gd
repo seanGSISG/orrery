@@ -2,8 +2,8 @@ class_name Backdrop
 extends Node3D
 ## The live scene behind the menus while no level runs: one built level, with a camera that
 ## turns slowly round it. Ui adds it for the title, the level select and the settings, and
-## frees it when a level loads. Nothing steps the level, so its objects stand still. With no
-## scene for LEVEL, the menus show on the plain clear colour.
+## frees it when a level loads. Nothing steps the level, so its objects stand still, and its
+## colliders are off. With no scene for LEVEL, the menus show on the plain clear colour.
 
 ## The level to show.
 const LEVEL: StringName = &"core_loop"
@@ -28,6 +28,9 @@ func _ready() -> void:
 	if scene == null:
 		return
 	var level: Node3D = scene.instantiate() as Node3D
+	# A disabled node keeps its colliders out of the physics space, so the marble of a level
+	# that loads while the backdrop still exists cannot touch them.
+	level.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child(level)
 	var bounds: AABB = AABB()
 	for node: Node in level.find_children("*", "VisualInstance3D", true, false):

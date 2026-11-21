@@ -10,6 +10,16 @@ func test_starts_on_title() -> void:
 	assert_eq(reported, "title", "the harness gets the same screen")
 
 
+## The level behind the menus has no colliders in the physics space, so the marble of a
+## level that loads cannot touch them.
+func test_backdrop_has_no_colliders() -> void:
+	await wait_process_frames(2)
+	var bodies: Array[Node] = ui.find_children("*", "StaticBody3D", true, false)
+	assert_gt(bodies.size(), 0, "the backdrop shows a level")
+	for body: StaticBody3D in bodies:
+		assert_false(PhysicsServer3D.body_get_space(body.get_rid()).is_valid(), body.name)
+
+
 ## A on Play opens the level select; B goes back to the title.
 func test_pad_opens_level_select_and_goes_back() -> void:
 	tap_button(JOY_BUTTON_A)

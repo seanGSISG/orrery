@@ -33,7 +33,8 @@ var _egg_icon: Icon = Icon.new(&"check", UiLook.INK, 18.0)
 var _egg: Label = UiTheme.label("", &"DataStrong")
 var _gold: Label = UiTheme.label("", &"DataStrong")
 var _par: Label = UiTheme.label("", &"DataStrong")
-var _targets: Array[Control] = []
+var _gold_line: Control
+var _par_line: Control
 var _next: MenuItem = MenuItem.new("RESULTS_NEXT", &"ui_accept", true)
 var _retry: MenuItem = MenuItem.new("RESULTS_RETRY", &"restart")
 var _levels: MenuItem = MenuItem.new("RESULTS_LEVELS", &"ui_cancel")
@@ -94,8 +95,8 @@ func open() -> void:
 	_egg.text = "RESULTS_EGG_FOUND" if egg else "RESULTS_EGG_MISSING"
 	_gold.text = TimeText.full(level.gold)
 	_par.text = TimeText.full(level.par)
-	for line: Control in _targets:
-		line.visible = level.par > 0.0
+	_gold_line.visible = level.gold > 0.0
+	_par_line.visible = level.par > 0.0
 	_next_id = catalog.next(level.id) if catalog != null else &""
 	# This run can be the one that unlocks the next level, before its save lands.
 	var unlocked: bool = _next_id != &"" and (Save.is_unlocked(_next_id) or state.medal != &"none")
@@ -146,8 +147,8 @@ func _build_table() -> Control:
 	_add_line(table, _record_name, _record)
 	_add_line(table, UiTheme.label("RESULTS_GEMS", &"Row"), _gems)
 	_add_line(table, UiTheme.label("RESULTS_EGG", &"Row"), egg)
-	_targets.append(_add_line(table, UiTheme.label("RESULTS_GOLD", &"Row"), _gold))
-	_targets.append(_add_line(table, UiTheme.label("RESULTS_PAR", &"Row"), _par))
+	_gold_line = _add_line(table, UiTheme.label("RESULTS_GOLD", &"Row"), _gold)
+	_par_line = _add_line(table, UiTheme.label("RESULTS_PAR", &"Row"), _par)
 	return table
 
 

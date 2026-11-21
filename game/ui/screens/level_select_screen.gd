@@ -27,6 +27,8 @@ var _time: Label = UiTheme.label("", &"BestTime")
 var _targets: HBoxContainer = UiTheme.row(24)
 var _gold: Label = UiTheme.label("")
 var _par: Label = UiTheme.label("")
+var _gold_target: Control = _target(&"star", _gold)
+var _par_target: Control = _target(&"check", _par)
 var _marks: HBoxContainer = UiTheme.row(24)
 var _medal_icon: Icon = Icon.new(&"", UiLook.GOLD, 40.0)
 var _egg_icon: Icon = Icon.new(&"", UiLook.GOLD, 40.0)
@@ -136,7 +138,9 @@ func _show_level(id: StringName) -> void:
 	_time.visible = open_level
 	_gold.text = TimeText.full(info.gold)
 	_par.text = TimeText.full(info.par)
-	_targets.visible = open_level and info.par > 0.0
+	_gold_target.visible = info.gold > 0.0
+	_par_target.visible = info.par > 0.0
+	_targets.visible = open_level and (info.gold > 0.0 or info.par > 0.0)
 	_medal_icon.icon = &"star" if record.medal == &"gold" else &"check"
 	_medal_icon.color = UiLook.GOLD if record.medal == &"gold" else UiLook.INK
 	_medal_icon.visible = record.qualified()
@@ -166,8 +170,8 @@ func _build_dial() -> void:
 	column.offset_top += OrbitMap.OFFSET.y
 	column.offset_bottom += OrbitMap.OFFSET.y
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_targets.add_child(_target(&"star", _gold))
-	_targets.add_child(_target(&"check", _par))
+	_targets.add_child(_gold_target)
+	_targets.add_child(_par_target)
 	_marks.add_child(_medal_icon)
 	_marks.add_child(_egg_icon)
 	_status_text.uppercase = true
@@ -181,7 +185,7 @@ func _build_dial() -> void:
 
 
 ## Returns one target time of the dial: an icon and the time.
-func _target(icon: StringName, time: Label) -> Control:
+static func _target(icon: StringName, time: Label) -> Control:
 	var target: HBoxContainer = UiTheme.row(8)
 	target.add_child(Icon.new(icon, UiLook.INK_2, 20.0))
 	target.add_child(time)

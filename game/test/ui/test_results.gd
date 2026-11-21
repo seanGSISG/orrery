@@ -37,6 +37,16 @@ func test_slower_finish_is_no_record() -> void:
 	assert_false(ui.results.new_record)
 
 
+## A level that loads over another level, with no change of screen, compares with its own
+## best time, also when it finishes before the next frame (as a harness run can).
+func test_record_is_of_the_level_that_finished() -> void:
+	Save.finish(&"rules", 0.001, &"gold", null)
+	start_level(&"flat")
+	finish_run(start_level(&"rules"))
+	await wait_process_frames(2)
+	assert_false(ui.results.new_record)
+
+
 ## A on Next plays the level after this one.
 func test_pad_plays_next_level() -> void:
 	finish_run(start_level(&"rules"))

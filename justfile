@@ -269,8 +269,9 @@ ui-shots: fresh-levels import
     trap 'rm -f "$log"' EXIT
     for size in "1920 1080" "3840 2160"; do
         read -r width height <<<"$size"
+        # --quit-after stops a run whose script failed before its end; it would wait forever.
         gamescope --backend headless -W "$width" -H "$height" -- "{{ godot }}" \
-            --audio-driver Dummy --path game --resolution "${width}x${height}" \
+            --audio-driver Dummy --path game --resolution "${width}x${height}" --quit-after 3000 \
             res://test/ui/ui_shots.tscn -- --out "$PWD/build/ui/$height" >"$log" 2>&1 || true
         # gamescope's exit code does not follow Godot's, so the script's last line is the check.
         if ! grep -qx 'ui-shots: done' "$log"; then
