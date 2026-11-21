@@ -21,7 +21,7 @@ Terms used in this file:
 
 ## 2. Volumes
 
-`AudioBuses.volume(bus) -> float` and `AudioBuses.set_volume(bus, value)` read and write the volume of a bus as a linear value 0..1. 0 is silent. Use the constants `AudioBuses.MASTER`, `MUSIC`, `SFX` and `UI`. The settings menu (#23) binds its sliders to these calls. The `Save` autoload (#21) is not on `plan-1` yet, so the volumes are not stored. When #21 merges, `Save` stores the four values and calls `set_volume` at start.
+`Settings` (#21) stores the four volumes as linear values 0..1: `master_volume`, `music_volume`, `sfx_volume` and `ui_volume`. 0 is silent. At start, `Music` calls `AudioBuses.apply(Save.settings)`, which sets every bus. The settings menu (#23) reads `AudioBuses.volume(bus) -> float` and writes `AudioBuses.set_volume(bus, value, Save.settings)`, which sets the bus and the settings var. Then it calls `Save.write()` to keep the change. Use the constants `AudioBuses.MASTER`, `MUSIC`, `SFX` and `UI`.
 
 ## 3. Music
 

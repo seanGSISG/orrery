@@ -109,12 +109,18 @@ func test_music_plays_on_the_music_bus() -> void:
 	await _silence()
 
 
-func test_buses_send_to_master_and_keep_volumes() -> void:
+func test_buses_send_to_master_and_volumes_go_through_settings() -> void:
 	for bus: StringName in [AudioBuses.MUSIC, AudioBuses.SFX, AudioBuses.UI]:
 		var index: int = AudioServer.get_bus_index(bus)
 		assert_gt(index, 0, "%s exists" % bus)
 		assert_eq(AudioServer.get_bus_send(index), AudioBuses.MASTER)
-	AudioBuses.set_volume(AudioBuses.SFX, 0.5)
+	var settings: Settings = Settings.new()
+	AudioBuses.set_volume(AudioBuses.SFX, 0.5, settings)
 	assert_almost_eq(AudioBuses.volume(AudioBuses.SFX), 0.5, 0.001)
-	AudioBuses.set_volume(AudioBuses.SFX, 3.0)
+	assert_almost_eq(settings.sfx_volume, 0.5, 0.001, "the settings keep the volume")
+	AudioBuses.set_volume(AudioBuses.SFX, 3.0, settings)
 	assert_almost_eq(AudioBuses.volume(AudioBuses.SFX), 1.0, 0.001, "clamped to 1")
+	settings.music_volume = 0.25
+	AudioBuses.apply(settings)
+	assert_almost_eq(AudioBuses.volume(AudioBuses.MUSIC), 0.25, 0.001, "apply sets each bus")
+	AudioBuses.apply(Settings.new())

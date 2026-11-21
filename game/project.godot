@@ -15,6 +15,8 @@ buses/default_bus_layout="res://audio/default_bus_layout.tres"
 
 InputHub="*res://core/input/input_hub.gd"
 Game="*res://core/game.gd"
+Save="*res://core/save/save.gd"
+Graphics="*res://settings/graphics.gd"
 Music="*res://audio/music.gd"
 
 [debug]
@@ -110,6 +112,10 @@ look_down={
 
 3d_physics/layer_1="solid"
 3d_physics/layer_2="trigger"
+
+[orrery]
+
+graphics/preset="medium"
 
 [physics]
 
