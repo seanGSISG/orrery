@@ -93,21 +93,45 @@ func test_time_of_day_follows_the_height() -> void:
 	assert_gt(ascent.sky.elevation, dawn)
 
 
-## The light is the sky preset of dawn at the climb start and of noon at the top of zone 3,
-## and a blend of the two between them.
-func test_light_goes_from_dawn_to_noon() -> void:
+## The light is the ground dawn at the climb start and noon at the top of zone 3, and a blend
+## of the two between them.
+func test_light_goes_from_the_ground_dawn_to_noon() -> void:
 	var sky: AscentSky = AscentSky.new()
 	autofree(sky)
 	var sun: DirectionalLight3D = sky.get_node(^"sun") as DirectionalLight3D
-	assert_almost_eq(sky.elevation, AscentSky.DAWN.sun_elevation, 0.001)
-	assert_almost_eq(sun.light_energy, AscentSky.DAWN.sun_energy, 0.001)
+	assert_almost_eq(sky.elevation, AscentSky.GROUND_DAWN.sun_elevation, 0.001)
+	assert_almost_eq(sun.light_energy, AscentSky.GROUND_DAWN.sun_energy, 0.001)
 	sky.show_height(AscentSky.NOON_HEIGHT - 0.5)
 	sky.show_height(AscentSky.NOON_HEIGHT)
 	assert_almost_eq(sky.elevation, AscentSky.NOON.sun_elevation, 0.001, "a short last step")
 	assert_almost_eq(sun.light_energy, AscentSky.NOON.sun_energy, 0.001)
 	sky.show_height(AscentSky.NOON_HEIGHT * 0.5)
-	var between: float = (AscentSky.DAWN.sun_elevation + AscentSky.NOON.sun_elevation) * 0.5
+	var between: float = (AscentSky.GROUND_DAWN.sun_elevation + AscentSky.NOON.sun_elevation) * 0.5
 	assert_almost_eq(sky.elevation, between, 0.001)
+
+
+## Between two stops the sky shows the panoramas of those two presets, blended by the share of
+## the way from the lower stop. The stops rise from the climb start.
+func test_sky_blends_the_two_stops_round_the_height() -> void:
+	var heights: Array[float] = []
+	for height: float in AscentSky.STOPS:
+		heights.append(height)
+	assert_eq(heights[0], 0.0, "the first stop is the climb start")
+	for i: int in range(1, heights.size()):
+		assert_gt(heights[i], heights[i - 1], "the stops rise")
+	var sky: AscentSky = AscentSky.new()
+	autofree(sky)
+	var world: WorldEnvironment = sky.get_node(^"sky") as WorldEnvironment
+	var material: ShaderMaterial = world.environment.sky.sky_material as ShaderMaterial
+	var low: float = heights[0]
+	var high: float = heights[1]
+	sky.show_height(lerpf(low, high, 0.3))
+	var blend: float = material.get_shader_parameter(&"blend")
+	var from: Texture2D = material.get_shader_parameter(&"from_panorama")
+	var to: Texture2D = material.get_shader_parameter(&"to_panorama")
+	assert_almost_eq(blend, 0.3, 0.001)
+	assert_eq(from, AscentSky.STOPS[low].panorama)
+	assert_eq(to, AscentSky.STOPS[high].panorama)
 
 
 ## The climb has no checkpoint: a marble that leaves the world comes back at the climb start.

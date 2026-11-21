@@ -16,7 +16,7 @@ Every Easter egg and secret in Orrery. Add a row when you add a secret, and chan
 
 | Zone | Place | How a player finds it |
 |---|---|---|
-| Ascent 1 Clockmaker's Square | The hearth room of the guildhall, at ground level | The guildhall ridge (+14 m) has two chimneys. One steams and is a Steam Vent. The other is dry: the player drops into it and falls 13 m to the egg. A door leads back to the square |
+| Ascent 1 Clockmaker's Square | The hall of the guildhall, in front of its hearth, at ground level | The guildhall roof (+14 m) has two chimneys: one beside the steaming ridge vent on the north terrace, and a dry one at the south end of the ridge walk. The player hops into the dry chimney and falls 15 m down its flue to the hearth and the egg. A door in the hall's east wall leads back to the square |
 | Ascent 2 The Broken Tower | The movement chamber under the hub of the tilted clock face (+154 m) | The hub has a hole where the axle was. The two clock hands hide it as they pass. The player drops into the hole. A vent in the chamber lifts the marble back onto the face |
 | Ascent 3 Sky Harbour, egg 1 | A cargo crate that hangs under the Tender airship (+297.8 m, below the zone start) | The player sees the crate from the spire ramp at the top of zone 2 and from the loose planks, and drops from the planks onto it. A vent on the crate lifts the marble back to the gondola deck |
 | Ascent 3 Sky Harbour, egg 2 | The tip of the Flagship's tail fin (+483 m) | At the top of the Flagship, the mast and the gate are in the middle. The player turns away from them, goes to the east end of the top and climbs three steps of 1.2 to 1.3 m to the fin tip |

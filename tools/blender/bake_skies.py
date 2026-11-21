@@ -1,6 +1,7 @@
 """Bakes the tier skies into game/skies/<name>.hdr: the backdrop that the game shows.
 
-Usage: `just bake-skies [name ...]` bakes dawn, noon and dusk (all when no name is given).
+Usage: `just bake-skies [name ...]` bakes dawn, ground_dawn, noon and dusk (all when no name is
+given).
 `--set b` or `--set c` bakes the dawn of another material set (docs/design/visual-quality.md
 §10), and `--scale 25` makes a quick preview. Both go to build/skies/, so they do not replace a
 game sky: game/skies/dawn.tres holds the sun of the set in use. Give `--out` to bake to
@@ -11,6 +12,8 @@ Cycles on the GPU. The game's SkyPreset (game/skies/<name>.tres) shows it and ad
 DirectionalLight3D, so the image holds no full-strength sun: the sun disc is cut down to SUN_CAP.
 
 - dawn (Beginner): a photographed Earth sky (Poly Haven, CC0) over a sea of clouds. No planets.
+- ground_dawn (the Ascent climb start): the same photograph with its own far horizon, over far
+  land that the world shader draws. It is the sky of a town on the ground. No planets.
 - noon (Intermediate): Blender's physical sky seen from 16 km, with a cloud layer far below.
 - dusk (Advanced): the same sky model from 80 km: the curve of the Earth, faint stars and one
   pale planet (NASA's Cassini map of Jupiter, public domain) low in the haze.
@@ -38,6 +41,7 @@ OUT = ROOT / "game" / "skies"
 PREVIEWS = ROOT / "build" / "skies"  # where a preview or the dawn of another set goes
 WIDTH, HEIGHT = 4096, 2048
 SUN_AZIMUTH = 135.0  # degrees, counter-clockwise from +x seen from above: ahead of the start, on its left
+HAZE_CAP = 2.0  # the brightest radiance of the haze of the ground dawn
 SUN_CAP = 16.0  # the brightest radiance a sky pixel keeps; the game's sun light replaces the rest
 EARTH_RADIUS = 6371.0  # km
 
@@ -74,7 +78,30 @@ class PhysicalSky:
     airglow: Color = (0.0, 0.0, 0.0)
 
 
-Sky = HdriSky | PhysicalSky
+@dataclass(frozen=True, kw_only=True)
+class GroundSky:
+    """A photographed sky and its far horizon, over far land that the world shader draws.
+
+    The photograph has the ground, but its near ground (rocks and grass a few metres from the
+    photo camera) would show as giant rocks below a player high on a tower. So the photograph
+    ends a little below the horizon, and below it the shader draws land on a plane `height` m
+    below the camera, lit by the sun lamp and the sky, in a haze that takes the colour of the
+    photograph's far land. The plane is lower than the climb, so the fields look small enough
+    from every height of zones 1 to 3; a panorama has no parallax that shows the difference.
+    """
+
+    file: str  # Poly Haven asset id under assets/textures/sky: the version with the ground
+    strength: float
+    sun_elevation: float  # degrees; the light of the land
+    sun_color: Color
+    sun_strength: float  # W/m2
+    height: float  # m from the camera down to the land
+    # Degrees below the horizon: the photograph fades out from the first to the second.
+    seam: tuple[float, float]
+    visibility: float  # m; the haze hides 63 % of the land at this distance
+
+
+Sky = HdriSky | PhysicalSky | GroundSky
 
 # The dawn of each material set (looks A, B and C of the style board, #5). SET is the set in use:
 # keep it the same as KitMaterials.SET (game/materials/kit_materials.gd).
@@ -84,6 +111,20 @@ DAWNS: dict[str, HdriSky] = {
     "b": HdriSky(file="qwantani_dusk_2_puresky", strength=0.9, sun_elevation=8.0, sun_color=(1.0, 0.6, 0.46), sun_strength=14.0),
     "c": HdriSky(file="syferfontein_1d_clear_puresky", strength=1.6, sun_elevation=4.5, sun_color=(1.0, 0.56, 0.3), sun_strength=18.0),
 }  # fmt: skip
+# The land of the ground dawn, as in the photograph's far land: dry grass with bushes, and some
+# fields. Linear albedos. Each field cell takes a colour from FIELDS, by its share of the cells.
+GRASS: Color = (0.16, 0.13, 0.075)
+LOW_GRASS: Color = (0.09, 0.085, 0.05)  # greener grass in the low, damp places
+BUSHES: Color = (0.05, 0.06, 0.03)  # bushes, trees and woods
+FIELDS: tuple[tuple[Color, float], ...] = (
+    ((0.075, 0.095, 0.045), 0.35),  # green crop
+    ((0.055, 0.075, 0.038), 0.15),  # dark green crop
+    ((0.2, 0.17, 0.1), 0.25),  # stubble
+    ((0.11, 0.09, 0.065), 0.25),  # ploughed earth
+)
+FIELD_SIZE = 140.0  # m across a field
+FIELD_SHARE = 0.3  # of the cells in a farmed area
+GROUND_DAWN = GroundSky(file="syferfontein_6d_clear", strength=DAWNS["a"].strength, sun_elevation=DAWNS["a"].sun_elevation, sun_color=DAWNS["a"].sun_color, sun_strength=DAWNS["a"].sun_strength, height=250.0, seam=(0.7, 1.8), visibility=6000.0)  # fmt: skip
 NOON = PhysicalSky(altitude=16000.0, sun_elevation=58.0, strength=0.2, cloud_drop=7.0, cloud_color=(5.6, 5.6, 5.7), sun_disc=True)  # fmt: skip
 DUSK = PhysicalSky(altitude=80000.0, sun_elevation=-5.5, strength=0.6, cloud_drop=70.0, cloud_color=(0.035, 0.05, 0.085), stars=4.0, planet=1.45, airglow=(0.0025, 0.0035, 0.006))  # fmt: skip
 
@@ -182,6 +223,153 @@ def build_hdri(sky: HdriSky) -> float:
     add_sun(direction(azimuth, sky.sun_elevation), sky.sun_color, sky.sun_strength)
     add_cloud_sea()
     return azimuth
+
+
+def build_ground(sky: GroundSky) -> float:
+    """Builds the photographed sky with its far horizon, and the far fields below it. Returns the
+    azimuth of the sun.
+
+    Each view ray below the horizon meets the plane of the land at `reach` m. The land is dry
+    grass with bushes and a few woods, and in the farmed areas some Voronoi cells are fields with
+    a colour from FIELDS. The sun lamp and the sky light it, and gentle slopes face the sun more
+    or less. A haze with the colour of the photograph's far land (horizon()) hides it with
+    distance, so it meets the photograph with no seam.
+    """
+    tree = new_world()
+    image = bpy.data.images.load(str(SOURCES / "sky" / f"{sky.file}_2k.hdr"))
+    pixels = image_pixels(image)
+    view = node(tree, "ShaderNodeTexCoord").outputs["Generated"]
+    split = node(tree, "ShaderNodeSeparateXYZ", Vector=view)
+
+    def photo(towards: bpy.types.NodeSocket) -> bpy.types.NodeSocket:
+        """Returns the photograph in a direction, capped and scaled as the sky of the dawn."""
+        picture = node(tree, "ShaderNodeTexEnvironment", image=image, Vector=towards)
+        scaled = node(
+            tree, "ShaderNodeVectorMath", operation="SCALE", Scale=sky.strength
+        )
+        tree.links.new(
+            capped(tree, picture.outputs["Color"], SUN_CAP), scaled.inputs[0]
+        )
+        return scaled.outputs["Vector"]
+
+    # The haze: the colour of the photograph's far land in each direction along the horizon.
+    haze = node(
+        tree, "ShaderNodeTexEnvironment", image=horizon(pixels, sky), Vector=view
+    )
+
+    # Where the view ray meets the fields, m. The cells are longer from north to south.
+    sink = math_node(
+        tree,
+        "MAXIMUM",
+        math_node(tree, "MULTIPLY", split.outputs["Z"], -1.0),
+        1e-4,
+    )
+    reach = math_node(tree, "DIVIDE", sky.height, sink)
+    hit = node(tree, "ShaderNodeVectorMath", operation="SCALE", Scale=reach)
+    tree.links.new(view, hit.inputs[0])
+    ground = node(tree, "ShaderNodeVectorMath", operation="MULTIPLY")
+    tree.links.new(hit.outputs["Vector"], ground.inputs[0])
+    ground.inputs[1].default_value = (1.0, 0.6, 0.0)
+    place = ground.outputs["Vector"]
+
+    def noise(
+        scale: float, low: float, high: float, detail: float = 2.0
+    ) -> bpy.types.NodeSocket:
+        """Returns 2D noise on the fields, 0 below `low` and 1 above `high`, smooth between."""
+        field = node(tree, "ShaderNodeTexNoise", noise_dimensions="2D", Vector=place, Scale=scale, Detail=detail, Roughness=0.55)  # fmt: skip
+        return node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=field.outputs["Factor"], From_Min=low, From_Max=high).outputs["Result"]  # fmt: skip
+
+    # The grass: greener in low places, and soft patches at 300 m, 40 m and 8 m.
+    damp = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=noise(1.0 / 400.0, 0.5, 0.7, 4.0), A=(*GRASS, 1.0), B=(*LOW_GRASS, 1.0))  # fmt: skip
+    patches = math_node(tree, "ADD", math_node(tree, "ADD", noise(1.0 / 300.0, 0.0, 1.0, 3.0), noise(1.0 / 40.0, 0.0, 1.0, 3.0)), noise(1.0 / 8.0, 0.0, 1.0, 2.0))  # fmt: skip
+    tone = node(tree, "ShaderNodeMapRange", Value=patches, From_Max=3.0, To_Min=0.55, To_Max=1.25)  # fmt: skip
+    grass = node(tree, "ShaderNodeVectorMath", operation="SCALE", Scale=tone.outputs["Result"])  # fmt: skip
+    tree.links.new(damp.outputs["Result"], grass.inputs[0])
+
+    # Fields: some cells of the farmed areas, each one colour with a faint grain.
+    cells = node(tree, "ShaderNodeTexVoronoi", voronoi_dimensions="2D", feature="F1", Vector=place, Scale=1.0 / FIELD_SIZE)  # fmt: skip
+    pick = node(tree, "ShaderNodeSeparateColor", Color=cells.outputs["Color"])
+    ramp = tree.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.interpolation = "CONSTANT"
+    start = 0.0
+    for index, (albedo, share) in enumerate(FIELDS):
+        element = (
+            ramp.color_ramp.elements[0]
+            if index == 0
+            else ramp.color_ramp.elements.new(start)
+        )
+        element.position = start
+        element.color = (*albedo, 1.0)
+        start += share
+    ramp.color_ramp.elements.remove(ramp.color_ramp.elements[-1])
+    tree.links.new(pick.outputs["Green"], ramp.inputs[0])
+    grain = node(tree, "ShaderNodeMapRange", Value=noise(1.0 / 20.0, 0.0, 1.0, 3.0), To_Min=0.85, To_Max=1.12)  # fmt: skip
+    crop = node(tree, "ShaderNodeVectorMath", operation="SCALE", Scale=grain.outputs["Result"])  # fmt: skip
+    tree.links.new(ramp.outputs[0], crop.inputs[0])
+    farmed = noise(1.0 / 1500.0, 0.45, 0.5, 2.0)
+    field = math_node(tree, "MULTIPLY", math_node(tree, "LESS_THAN", pick.outputs["Red"], FIELD_SHARE), farmed)  # fmt: skip
+    land_cover = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=field, A=grass.outputs["Vector"], B=crop.outputs["Vector"])  # fmt: skip
+
+    # Bushes and lone trees in the grass, more in some places, and a few woods.
+    spots = node(tree, "ShaderNodeTexVoronoi", voronoi_dimensions="2D", feature="F1", Vector=place, Scale=1.0 / 14.0)  # fmt: skip
+    crown = node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=spots.outputs["Distance"], From_Min=0.07, From_Max=0.14, To_Min=1.0, To_Max=0.0)  # fmt: skip
+    chosen = node(tree, "ShaderNodeSeparateColor", Color=spots.outputs["Color"])
+    often = node(tree, "ShaderNodeMapRange", Value=noise(1.0 / 250.0, 0.0, 1.0, 2.0), To_Min=0.95, To_Max=0.55)  # fmt: skip
+    bush = math_node(tree, "MULTIPLY", crown.outputs["Result"], math_node(tree, "GREATER_THAN", chosen.outputs["Red"], often.outputs["Result"]))  # fmt: skip
+    wild = math_node(tree, "SUBTRACT", 1.0, field)
+    trees = math_node(tree, "MAXIMUM", math_node(tree, "MULTIPLY", bush, wild), noise(1.0 / 600.0, 0.66, 0.69, 5.0))  # fmt: skip
+    albedo = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=trees, A=land_cover.outputs["Result"], B=(*BUSHES, 1.0))  # fmt: skip
+
+    # The light on level ground: the sun lamp and the sky. Gentle slopes face it more or less.
+    sun = np.array(sky.sun_color) * sky.sun_strength * math.sin(math.radians(sky.sun_elevation))  # fmt: skip
+    light = (sun + sky_irradiance(pixels, sky.strength)) / math.pi
+    lit = node(tree, "ShaderNodeVectorMath", operation="MULTIPLY")
+    tree.links.new(albedo.outputs["Result"], lit.inputs[0])
+    lit.inputs[1].default_value = tuple(float(c) for c in light)
+    slope = node(tree, "ShaderNodeMapRange", Value=noise(1.0 / 600.0, 0.0, 1.0, 3.0), To_Min=0.75, To_Max=1.25)  # fmt: skip
+    fields = node(tree, "ShaderNodeVectorMath", operation="SCALE", Scale=slope.outputs["Result"])  # fmt: skip
+    tree.links.new(lit.outputs["Vector"], fields.inputs[0])
+
+    # The haze hides the fields with distance; below the seam the land replaces the photograph.
+    clear = math_node(tree, "POWER", math.e, math_node(tree, "DIVIDE", reach, -sky.visibility))  # fmt: skip
+    land = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=clear, A=haze.outputs["Color"], B=fields.outputs["Vector"])  # fmt: skip
+    seam = node(tree, "ShaderNodeMapRange", interpolation_type="SMOOTHSTEP", Value=split.outputs["Z"], From_Min=math.sin(math.radians(-sky.seam[0])), From_Max=math.sin(math.radians(-sky.seam[1])))  # fmt: skip
+    whole = node(tree, "ShaderNodeMix", data_type="RGBA", Factor=seam.outputs["Result"], A=photo(view), B=land.outputs["Result"])  # fmt: skip
+    finish_world(tree, whole.outputs["Result"])
+    u, _ = image_sun(pixels)
+    return (0.5 - u) * 360.0  # Cycles maps a direction to u = 0.5 - atan2(y, x) / 2pi
+
+
+def horizon(pixels: np.ndarray, sky: GroundSky) -> bpy.types.Image:
+    """Returns the colour of the haze in each direction along the horizon, as an image two rows
+    high: the photograph between the seam and twice its depth, cut down to HAZE_CAP, scaled by
+    the strength and smoothed over 10 degrees on each side, so that the land below shows no
+    stripes from the far hills, the trees and the glare round the sun."""
+    rows, columns = pixels.shape[:2]
+    elevation = ((np.arange(rows) + 0.5) / rows - 0.5) * 180.0
+    band = (elevation <= -sky.seam[0]) & (elevation >= -2.0 * sky.seam[0])
+    colour = np.minimum(pixels[band, :, :3] * sky.strength, HAZE_CAP).mean(axis=0)
+    spread = columns * 10.0 / 360.0
+    offsets = np.arange(-3 * int(spread), 3 * int(spread) + 1)
+    kernel = np.exp(-0.5 * (offsets / (spread / 2.0)) ** 2)
+    kernel /= kernel.sum()
+    smooth = sum(np.roll(colour, int(k), axis=0) * w for k, w in zip(offsets, kernel))
+    rgba = np.concatenate([smooth, np.ones((columns, 1))], axis=1).astype(np.float32)
+    image = bpy.data.images.new("haze", width=columns, height=2, float_buffer=True)
+    image.pixels.foreach_set(np.tile(rgba, (2, 1)).ravel())
+    return image
+
+
+def sky_irradiance(pixels: np.ndarray, strength: float) -> np.ndarray:
+    """Returns the light (W/m2 per channel) that the upper half of an equirectangular image,
+    rows from the bottom, gives to level ground, capped at SUN_CAP and scaled by strength."""
+    rows, columns = pixels.shape[:2]
+    elevation = ((np.arange(rows) + 0.5) / rows - 0.5) * math.pi
+    step = (math.pi / rows) * (2.0 * math.pi / columns)
+    weight = np.sin(elevation) * np.cos(elevation) * step
+    up = elevation > 0.0
+    radiance = np.minimum(pixels[up, :, :3], SUN_CAP) * strength
+    return (radiance * weight[up, None, None]).sum(axis=(0, 1))
 
 
 def add_sun(to_sun: Vector, color: Color, strength: float) -> None:
@@ -468,7 +656,12 @@ def bake(
 ) -> None:
     """Builds one sky in an empty file, renders it and prints where its sun is."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    azimuth = build_hdri(sky) if isinstance(sky, HdriSky) else build_physical(sky)
+    if isinstance(sky, HdriSky):
+        azimuth = build_hdri(sky)
+    elif isinstance(sky, GroundSky):
+        azimuth = build_ground(sky)
+    else:
+        azimuth = build_physical(sky)
     add_camera(azimuth)
     configure_render(samples, scale, use_gpu)
     path = out / f"{name}.hdr"
@@ -485,7 +678,7 @@ def main() -> None:
     parser.add_argument(
         "names",
         nargs="*",
-        choices=["dawn", "noon", "dusk", []],
+        choices=["dawn", "ground_dawn", "noon", "dusk", []],
         help="skies to bake (default: all)",
     )
     parser.add_argument(
@@ -510,7 +703,12 @@ def main() -> None:
     args = parser.parse_args(
         sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     )
-    skies: dict[str, Sky] = {"dawn": DAWNS[args.set], "noon": NOON, "dusk": DUSK}
+    skies: dict[str, Sky] = {
+        "dawn": DAWNS[args.set],
+        "ground_dawn": GROUND_DAWN,
+        "noon": NOON,
+        "dusk": DUSK,
+    }
     game_sky = args.scale == 100 and args.set == SET
     out: Path = args.out or (OUT if game_sky else PREVIEWS)
     out.mkdir(parents=True, exist_ok=True)

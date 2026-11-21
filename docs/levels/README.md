@@ -65,18 +65,18 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-B1 and B2 are built, so their rows have the bot's times; the other rows are estimates. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+B1, B2 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
 | B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
 | B2 (route bot, 2026-11-21) | 32.8 s | 24.2 s | 49.3 s | 27.9 s |
 | B3 | 49 s | 23 s | 74 s | 26 s |
-| Ascent 1 (0 to 150 m) | 122 s | 67 s | | |
+| Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
 | Ascent 3 (300 to 500 m) | 152 s | 73 s | | |
 
-## Rules from the built levels
+## Rules from B1 and B2
 
 B1 and B2 (`b01.md` and `b02.md`, "As built") found these rules. They hold for every level.
 
@@ -91,3 +91,14 @@ B1 and B2 (`b01.md` and `b02.md`, "As built") found these rules. They hold for e
 - **A checkpoint pad catches a marble within 0.95 m of its middle.** Put it in a passage 2.3 to 3 m wide, or put one pad on each line that players take.
 - **Loose tiles and slow turns.** A tile breaks 0.5 s after its first touch, so a marble must cross a tile of `tile` m in less than that: about (`tile` + 0.5) ÷ 0.5 m/s. The route bot slows to 3.5 m/s in a sharp turn, so a turn on loose tiles needs tiles of 1 m.
 - **The route bot reaches a point within 0.45 m.** After a sharp turn it swings up to 0.8 m off its line. Give a gem on a trapdoor a straight run-up of 2 m or more, or a `wait 0` stop before it, so that the bot does not turn back onto the open door. Put a jump through a floating gem on a straight line.
+
+## Rules from Ascent 1
+
+Ascent 1 (`ascent-z1.md`, "As built") found these rules for tall levels and for the route bot.
+
+- **A Steam Vent throws the marble the way it enters.** Put the landing ahead of the vent, 2.5 to 3 m past the column at 3 m/s, and give the player room to line up before the vent. In the air the bot only steers and brakes, so a route enters each vent toward its landing.
+- **The bot cannot climb a steep slope on a short leg.** Its push is in proportion to the speed that it wants, and near a point it wants little. On a slope over 25°, give it one long leg from the foot to the top.
+- **A jump point is about 0.9 m before the next edge.** Steps of 1 m are 2.3 m deep with gaps of 0.3 m, and the jump legs have a speed of 2.5 to 3 m/s.
+- **Two pieces that the marble rolls across meet flush.** A step of 0.12 m stopped the marble at the end of a beam. Moving decks stop flush with their floors, and the gap beside a moving deck is 0.2 m or less.
+- **A route has at most 100 points** (`kit.marker`). On a spiral ramp 2 m wide, points 72° apart at 4.75 m from the middle keep each leg clear of the inner kerb.
+- **A lift gear needs a casing.** `town.lift()` carries the marble from the bottom of the gear to its top and lets it off sideways.
