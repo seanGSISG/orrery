@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://core/level/level.gd" id="1"]
+[ext_resource type="Script" path="res://core/level/solid.gd" id="2"]
+[ext_resource type="PackedScene" path="res://objects/start/start.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://objects/finish/finish.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://objects/route/route.tscn" id="5"]
+[ext_resource type="Shader" path="res://test/levels/grid.gdshader" id="6"]
+
+[sub_resource type="BoxShape3D" id="slab"]
+size = Vector3(4, 1, 12)
+
+[sub_resource type="ShaderMaterial" id="grid"]
+shader = ExtResource("6")
+
+[sub_resource type="BoxMesh" id="slab_mesh"]
+material = SubResource("grid")
+size = Vector3(4, 1, 12)
+
+[node name="RouteBot" type="Node3D"]
+script = ExtResource("1")
+id = &"route_bot"
+title = "Route bot"
+tier = &"test"
+par = 4.5
+gold = 2.5
+
+[node name="Near" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -4)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Near"]
+shape = SubResource("slab")
+
+[node name="Mesh" type="MeshInstance3D" parent="Near"]
+mesh = SubResource("slab_mesh")
+
+[node name="Far" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -19)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Far"]
+shape = SubResource("slab")
+
+[node name="Mesh" type="MeshInstance3D" parent="Far"]
+mesh = SubResource("slab_mesh")
+
+[node name="Start" parent="." instance=ExtResource("3")]
+
+[node name="Finish" parent="." instance=ExtResource("4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+
+[node name="FirstRun" parent="." instance=ExtResource("5")]
+kind = &"first_run"
+actions = "0 jump; 1 speed 8"
+
+[node name="P00" type="Marker3D" parent="FirstRun"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+
+[node name="P01" type="Marker3D" parent="FirstRun"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+
+[node name="Expert" parent="." instance=ExtResource("5")]
+kind = &"expert"
+actions = "0 jump"
+
+[node name="P00" type="Marker3D" parent="Expert"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+
+[node name="P01" type="Marker3D" parent="Expert"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)

@@ -10,6 +10,8 @@ func test_to_dict_has_plain_values_for_every_field() -> void:
 	var out: Dictionary = state.to_dict()
 	var position: Array = out["position"]
 	assert_eq(position, [1.0, 2.0, 3.0])
+	var frame: Array = out["frame"]
+	assert_eq(frame, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
 	var level_type: int = typeof(out["level"])
 	assert_eq(level_type, TYPE_STRING)
-	assert_eq(out.size(), 18)
+	assert_eq(out.size(), 19)
