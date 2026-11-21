@@ -47,13 +47,14 @@ func test_finish_opens_only_with_every_gem() -> void:
 	visit(GEM_EAST)
 	visit(FINISH)
 	assert_eq(run.state.status, &"finished")
-	run.step(MarbleInput.new())
 	assert_eq(heard.count(&"finish.open"), 1)
-	assert_eq(heard.count(&"finish.reach"), 1)
+	assert_eq(heard.count(&"finish.reach"), 1, "in the tick that finishes the run")
+	run.step(MarbleInput.new())
+	assert_eq(heard.count(&"finish.reach"), 1, "once")
 
 
 ## The last gem and the finish in one tick finish the run in that tick, whatever the order
-## of their hooks.
+## of their hooks. The finish sounds its reach, and no open chime after it.
 func test_last_gem_on_the_finish_finishes_at_once() -> void:
 	var gem: Gem = GEM.instantiate() as Gem
 	gem.position = FINISH + Vector3(0.6, 0, 0)
@@ -63,8 +64,9 @@ func test_last_gem_on_the_finish_finishes_at_once() -> void:
 	visit(FINISH + Vector3(0.3, 0, 0))
 	assert_eq(run.state.gems_collected, 3)
 	assert_eq(run.state.status, &"finished")
+	assert_eq(heard.count(&"finish.reach"), 1)
 	run.step(MarbleInput.new())
-	assert_lt(heard.find(&"finish.open"), heard.find(&"finish.reach"))
+	assert_false(heard.has(&"finish.open"))
 
 
 ## The clock counts the tick that finishes the run.

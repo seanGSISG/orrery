@@ -297,7 +297,7 @@ func reset() -> void                # (changed in #50: no `restart` parameter) g
 func after_step() -> void           # the clock, the finish, out of bounds and the respawn
 func collect_gem() -> bool          # (changed in #50: returns true when the gem counts) false unless status is playing
 func reach_checkpoint(reached: LevelObject) -> bool   # (changed in #50) true when it becomes the last checkpoint
-func reach_finish() -> void         # the finish calls it each tick that the marble is on it
+func reach_finish(finish: LevelObject) -> void  # the finish calls it each tick that the marble is on it
 func find_egg() -> bool             # (changed in #50) true when the egg counts as found
 
 # core/powerups/power_up.gd (#17): what the slot holds; one subclass per power-up type
@@ -384,7 +384,7 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 | Trapdoor (`Trapdoor`) | `delay` 0.5 s, `close_after` 5 s, 4 × 4 × 0.5 m | `on_touch`: start the drop on the first touch; `advance`: hinge pose, emit `trapdoor.open`; the door shuts again `close_after` s after it starts to open; `reset` shuts it |
 | Crumbling Tiles (`CrumblingTiles`) | `delay` 0.5 s, `tile` 2 m, 4 × 4 × 0.5 m | `on_touch`: start the timer of each touched tile, emit `tile.crack`; `advance`: after `delay` set that tile's `collision_layer = 0`, emit `tile.fall`; any `reset` brings the tiles back (changed in #55: a tile does not return by itself) |
 | Gem, checkpoint, egg | `cut` for the gem | `on_overlap`: `run.rules.collect_gem()`, `reach_checkpoint(self)` and `find_egg()`. The object reacts only when the call returns true |
-| Finish (`Finish`) | none | `on_overlap`: `run.rules.reach_finish()` each tick; `advance`: opens when all gems are collected, emits `finish.open` and `finish.reach` |
+| Finish (`Finish`) | none | `on_overlap`: `run.rules.reach_finish(self)` each tick; `advance`: opens when all gems are collected, emits `finish.open` unless the run has finished. Rules emits the finish's `finish.reach` in the tick that finishes the run |
 | Coil Spring (`CoilSpring`) | `launch_speed` 20 m/s, `respawn_delay` 5 s | `on_overlap`: `run.slot.take(CoilSpringPowerUp.new(launch_speed))`; hide the pickup for `respawn_delay` s only if `take()` returns true; emit `coil_spring.pickup` (changed in #54) |
 | Start (`StartPad`), Route (`Route`) | `kind`, `actions` for the route | None. The run reads the start pad (`LevelRun.start`). The route bot reads the route (`docs/plan.md` §4.6) |
 
