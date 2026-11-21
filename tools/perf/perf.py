@@ -95,6 +95,9 @@ def measure(level: str, run: Run) -> Result:
         *("gamescope", "--backend", "headless", *size, "--"),
         *(
             godot,
+            # Silent: automated runs play no sound on the speakers.
+            "--audio-driver",
+            "Dummy",
             "--path",
             str(ROOT / "game"),
             "--resolution",

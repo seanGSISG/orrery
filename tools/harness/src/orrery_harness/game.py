@@ -11,6 +11,10 @@ until the harness answers. The display decides where it renders:
 
 launch() records the running game in build/harness/session.json, so that every later CLI
 command and the MCP server reach the same game.
+
+Each launch gets its own empty user:// in a new build/harness/user-<port>-<random>/ folder
+(XDG_DATA_HOME), so a harness session never reads or writes the player's saves, ghosts and
+settings, nor another session's. Session.data names it, and end() deletes it.
 """
 
 import os
@@ -18,6 +22,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,7 +51,6 @@ _ENV_KEYS = {
     "LC_ALL",
     "XDG_RUNTIME_DIR",
     "XDG_CONFIG_HOME",
-    "XDG_DATA_HOME",
     "XDG_CACHE_HOME",
     "DISPLAY",
     "WAYLAND_DISPLAY",
@@ -57,12 +61,14 @@ _ENV_PREFIXES = ("VK_", "MESA_", "__GLX_", "__NV_", "DRI_")
 
 
 class Session(BaseModel):
-    """A running game: its harness port, process id, display and log file."""
+    """A running game: its harness port, process id, display, log file and user data
+    folder (empty in a session file from before the folder existed)."""
 
     port: int
     pid: int
     display: Display
     log: str
+    data: str = ""
 
     def connect(self) -> Harness:
         return Harness(self.port)
@@ -147,57 +153,88 @@ def stop() -> None:
 
 
 def end(session: Session) -> None:
-    """Quits the game, and kills it when it does not quit within 10 s. A game that no longer
-    runs gets no quit, because another game may have its port now."""
-    if not running(session):
-        return
+    """Quits the game, kills it when it does not quit within 10 s, and deletes its user
+    data. A game that no longer runs gets no quit, because another game may have its port
+    now."""
+    if running(session):
+        try:
+            with session.connect() as game:
+                game.quit()
+        except OSError:
+            pass
+        if not _wait_exit(session, 10.0):
+            _kill(session)
+    # Godot can still write its log after gamescope exits, so wait for the whole group.
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline and _group_alive(session.pid):
+        time.sleep(0.1)
+    if session.data:
+        shutil.rmtree(session.data, ignore_errors=True)
+
+
+def _group_alive(group: int) -> bool:
+    """True while a process of the process group still runs."""
     try:
-        with session.connect() as game:
-            game.quit()
-    except OSError:
-        pass
-    if not _wait_exit(session, 10.0):
-        _kill(session)
+        os.killpg(group, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
-def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
-    port = _free_port()
+def command(
+    binary: str, display: Display, port: int, options: LaunchOptions
+) -> list[str]:
+    """The command line that starts the game on display with the harness on port. The game
+    is always silent (the Dummy audio driver), so test runs play no sound on the speakers."""
     width, height = options.resolution
+    game = [binary, "--audio-driver", "Dummy", "--path", str(GAME)]
     args = ["--", f"--harness-port={port}"]
     if options.level:
         args += ["--level", options.level]
     size = ["--resolution", f"{width}x{height}"]
-    command = {
-        "headless": [
-            *(
-                "gamescope",
-                "--backend",
-                "headless",
-                "-W",
-                str(width),
-                "-H",
-                str(height),
-                "--",
-            ),
-            *(binary, "--path", str(GAME), *size, *args),
-        ],
-        "window": [binary, "--path", str(GAME), *size, *args],
-        "none": [binary, "--headless", "--path", str(GAME), *args],
+    gamescope = [
+        "gamescope",
+        "--backend",
+        "headless",
+        "-W",
+        str(width),
+        "-H",
+        str(height),
+    ]
+    return {
+        "headless": [*gamescope, "--", *game, *size, *args],
+        "window": [*game, *size, *args],
+        "none": [*game, "--headless", *args],
     }[display]
+
+
+def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
+    port = _free_port()
     log = RUNS / f"game-{port}.log"
-    with log.open("wb") as out:
-        process = subprocess.Popen(
-            command,
-            stdin=subprocess.DEVNULL,
-            stdout=out,
-            stderr=subprocess.STDOUT,
-            env=_game_env(),
-            start_new_session=True,
-        )
-    session = Session(port=port, pid=process.pid, display=display, log=str(log))
+    # A new folder per launch: a reused port never shares or deletes another game's data.
+    data = tempfile.mkdtemp(prefix=f"user-{port}-", dir=RUNS)
+    try:
+        with log.open("wb") as out:
+            process = subprocess.Popen(
+                command(binary, display, port, options),
+                stdin=subprocess.DEVNULL,
+                stdout=out,
+                stderr=subprocess.STDOUT,
+                env=_game_env() | {"XDG_DATA_HOME": data},
+                start_new_session=True,
+            )
+    except OSError:
+        shutil.rmtree(data, ignore_errors=True)
+        raise
+    session = Session(
+        port=port, pid=process.pid, display=display, log=str(log), data=data
+    )
     deadline = time.monotonic() + options.timeout
     while time.monotonic() < deadline:
         if process.poll() is not None:
+            shutil.rmtree(data, ignore_errors=True)
             raise LaunchError(f"the game exited with {process.returncode}; see {log}")
         try:
             with session.connect() as game:
@@ -205,7 +242,7 @@ def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
             return session
         except OSError:
             time.sleep(0.2)
-    _kill(session)
+    end(session)
     raise LaunchError(f"no harness answer in {options.timeout:.0f} s; see {log}")
 
 

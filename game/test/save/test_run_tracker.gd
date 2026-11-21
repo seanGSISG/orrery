@@ -29,12 +29,11 @@ func after_each() -> void:
 		DirAccess.remove_absolute(folder)
 
 
-## The egg saves before any finish, also on a restart right after the marble finds it.
+## The egg saves on the tick that the marble finds it, before any finish or restart.
 func test_egg_saves_when_found() -> void:
 	run.step(rolling(Vector2(0, 1)))
 	visit(EGG)
 	assert_true(run.state.egg_found)
-	run.restart()
 	var loaded: SaveGame = _save()
 	loaded.read()
 	assert_true(loaded.level(&"rules").egg)
@@ -52,18 +51,18 @@ func test_next_attempt_races_the_ghost() -> void:
 	visit(FINISH)
 	assert_eq(run.state.status, &"finished")
 	var time: float = run.state.timer
-	# A restart on the finish tick still saves the finish.
-	run.restart()
+	# The finish saves on its tick, before any restart.
 	var loaded: SaveGame = _save()
 	loaded.read()
 	assert_eq(loaded.level(&"rules").best_time, time)
 	assert_eq(loaded.level(&"rules").medal, &"gold")
 	assert_almost_eq(loaded.ghost(&"rules").duration, time, 0.0001)
-	assert_not_null(tracker.ghost_marble)
-	assert_almost_eq(tracker.ghost_marble.position, path[0], Vector3.ONE * 0.001)
+	run.restart()
+	# The ghost marble races the new best from the first tick of the next attempt. The last
+	# sample of the roll, at 1 s, is the teleport to the first gem, so stop before the blend
+	# to it.
 	run.step(rolling(Vector2(1, 0)))
-	# The clock starts in tick 1, so the ghost marble follows from tick 2 on. The last sample
-	# of the roll, at 1 s, is the teleport to the first gem, so stop before the blend to it.
+	assert_not_null(tracker.ghost_marble)
 	for tick: int in range(2, path.size() - 4):
 		run.step(rolling(Vector2(1, 0)))
 		assert_almost_eq(tracker.ghost_marble.position, path[tick], Vector3.ONE * 0.01)
