@@ -1,7 +1,9 @@
-"""GPT-Image jobs: the request body, the cost estimate, and the live and Batch API runs.
+"""GPT-Image jobs: the request, the cost estimate, live calls and the optional Batch API.
 
-The live call (`generate`) and each Batch line send the same JSON body to
-`/v1/images/generations`, so a dry run prints exactly what a paid run sends.
+Live calls are the default (docs/research/asset-prompting.md §1.1: the sources disagree on
+Batch for GPT-Image-2.6). A job with reference images goes to `/v1/images/edits` (multipart,
+up to 16 images; give each one a numbered role in the prompt); one without goes to
+`/v1/images/generations`. A dry run prints the same fields that a paid run sends.
 """
 
 import base64
@@ -11,19 +13,45 @@ import math
 import sys
 import time
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import openai
+from openai import omit
 from openai.types import ImagesResponse
 from openai.types.images_response import Usage
+from PIL import Image
 
 from orrery_art import manifest
 from orrery_art.config import ImageSettings, out_path
 
-ENDPOINT = "/v1/images/generations"
-FORMATS = {".png": "png", ".webp": "webp", ".jpg": "jpeg", ".jpeg": "jpeg"}
+GENERATIONS = "/v1/images/generations"
+EDITS = "/v1/images/edits"
+Quality = Literal["low", "medium", "high", "xhigh", "max"]
+Complexity = Literal["low", "medium", "high"]
+Format = Literal["png", "webp", "jpeg"]
+QUALITIES: dict[str, Quality] = {
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "xhigh",
+    "max": "max",
+}
+COMPLEXITIES: dict[str, Complexity] = {"low": "low", "medium": "medium", "high": "high"}
+FORMATS: dict[str, Format] = {
+    ".png": "png",
+    ".webp": "webp",
+    ".jpg": "jpeg",
+    ".jpeg": "jpeg",
+}
+REF_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
+MAX_REFS = 16
 # The official token calculator (developers.openai.com/api/docs/guides/image-generation,
 # GptImageTokenCalculator, checked 2026-11-21): a tile grid per quality on the long edge, and
 # for GPT-Image-2.6 a factor on top. 1024x1024 medium on 2.6 gives 1449 output tokens.
@@ -36,34 +64,53 @@ BATCH_DONE = {"completed", "failed", "expired", "cancelled"}
 @dataclass(frozen=True)
 class ImageJob:
     """One image. out: the path under build/art/images/; its extension picks the format.
-    size: WIDTHxHEIGHT. transparent: a real alpha background (.png or .webp only)."""
+    model: the model id. size: WIDTHxHEIGHT. transparent: a real alpha background (.png or
+    .webp). complexity: low, medium or high planning, None for the model default. refs:
+    reference images, which make it an edit."""
 
     prompt: str
     out: str
+    model: str
     size: str
     quality: str
     transparent: bool = False
+    complexity: str | None = None
+    refs: tuple[str, ...] = field(default=())
 
     def __post_init__(self) -> None:
         if not self.prompt.strip():
             raise ValueError(f"{self.out}: the prompt is empty")
         out_path("images", self.out)
-        fmt = FORMATS.get(Path(self.out).suffix.lower())
-        if fmt is None:
+        if Path(self.out).suffix.lower() not in FORMATS:
             raise ValueError(f"{self.out}: use one of {', '.join(FORMATS)}")
-        if self.quality not in GRID:
-            raise ValueError(f"{self.out}: quality must be one of {', '.join(GRID)}")
-        if self.transparent and fmt == "jpeg":
+        if self.quality not in QUALITIES:
+            raise ValueError(
+                f"{self.out}: quality must be one of {', '.join(QUALITIES)}"
+            )
+        if self.complexity is not None and self.complexity not in COMPLEXITIES:
+            raise ValueError(
+                f"{self.out}: complexity must be one of {', '.join(COMPLEXITIES)}"
+            )
+        if self.transparent and self.format == "jpeg":
             raise ValueError(f"{self.out}: a transparent image needs .png or .webp")
+        if len(self.refs) > MAX_REFS:
+            raise ValueError(f"{self.out}: at most {MAX_REFS} reference images")
+        for ref in self.refs:
+            if Path(ref).suffix.lower() not in REF_TYPES or not Path(ref).is_file():
+                raise ValueError(f"{self.out}: no .png, .jpg or .webp reference {ref}")
         parse_size(self.size)
 
     @property
-    def format(self) -> str:
+    def format(self) -> Format:
         return FORMATS[Path(self.out).suffix.lower()]
 
     @property
     def path(self) -> Path:
         return out_path("images", self.out)
+
+    @property
+    def endpoint(self) -> str:
+        return EDITS if self.refs else GENERATIONS
 
 
 def parse_size(size: str) -> tuple[int, int]:
@@ -90,44 +137,77 @@ def parse_size(size: str) -> tuple[int, int]:
     return width, height
 
 
-def job_from_line(line: dict[str, Any], defaults: ImageSettings) -> ImageJob:
-    """Makes a job from one JSONL object: `prompt` and `out`, and optionally `size`, `quality`
-    and `transparent`. Raises ValueError on an unknown key."""
-    unknown = set(line) - {"prompt", "out", "size", "quality", "transparent"}
+def model_id(settings: ImageSettings, name: str | None) -> str:
+    """Returns the model id for a name in config.toml (flare, sunburst), or the default."""
+    key = name or settings.model
+    if key not in settings.models:
+        raise ValueError(f"model must be one of {', '.join(settings.models)}")
+    return settings.models[key]
+
+
+def job_from_line(line: dict[str, Any], settings: ImageSettings) -> ImageJob:
+    """Makes a job from one JSONL object: `prompt` and `out` (strings), and optionally
+    `model` (flare, sunburst), `size`, `quality`, `complexity`, `transparent` (a JSON
+    boolean) and `refs` (a list of image paths). Raises TypeError on a wrong type and
+    ValueError on an unknown key, so that a typo never becomes a paid prompt."""
+    known = {
+        "prompt",
+        "out",
+        "model",
+        "size",
+        "quality",
+        "complexity",
+        "transparent",
+        "refs",
+    }
+    unknown = set(line) - known
     if unknown:
         raise ValueError(f"unknown keys {', '.join(sorted(unknown))}")
+    for key in ("prompt", "out", "model", "size", "quality", "complexity"):
+        if key in line and not isinstance(line[key], str):
+            raise TypeError(f"{key} must be a string")
+    if not isinstance(line.get("transparent", False), bool):
+        raise TypeError("transparent must be true or false")
+    refs = line.get("refs", [])
+    if not isinstance(refs, list) or not all(isinstance(r, str) for r in refs):
+        raise TypeError("refs must be a list of paths")
     return ImageJob(
-        prompt=str(line["prompt"]),
-        out=str(line["out"]),
-        size=str(line.get("size", defaults.size)),
-        quality=str(line.get("quality", defaults.quality)),
-        transparent=bool(line.get("transparent", False)),
+        prompt=line["prompt"],
+        out=line["out"],
+        model=model_id(settings, line.get("model")),
+        size=line.get("size", settings.size),
+        quality=line.get("quality", settings.quality),
+        transparent=line.get("transparent", False),
+        complexity=line.get("complexity"),
+        refs=tuple(refs),
     )
 
 
-def read_jobs(path: Path, defaults: ImageSettings) -> list[ImageJob]:
-    """Reads a JSONL file of jobs. Raises ValueError that names each bad line."""
-    jobs: list[ImageJob] = []
-    problems: list[str] = []
+def read_jobs(path: Path, settings: ImageSettings) -> list[ImageJob]:
+    """Reads a JSONL file of jobs. Raises ValueError that names each bad line, and each
+    pair of jobs whose outputs collide (the same path, or one inside the other)."""
     try:
         lines = path.read_text().splitlines()
     except OSError as error:
         raise ValueError(
             f"{path}: cannot read the jobs file ({error.strerror})"
         ) from None
+    jobs: list[ImageJob] = []
+    problems: list[str] = []
     for number, text in enumerate(lines, 1):
         if not text.strip():
             continue
         try:
-            jobs.append(job_from_line(json.loads(text), defaults))
+            jobs.append(job_from_line(json.loads(text), settings))
         except (ValueError, KeyError, TypeError, AttributeError) as error:
             problems.append(f"line {number}: {error}")
-    paths = [job.path for job in jobs]
-    problems += [
-        f"two jobs write {job.out}"
-        for i, job in enumerate(jobs)
-        if job.path in paths[:i]
-    ]
+    seen: set[Path] = set()
+    for job in jobs:
+        if job.path in seen:
+            problems.append(f"two jobs write {job.out}")
+        elif seen & set(job.path.parents) or any(job.path in p.parents for p in seen):
+            problems.append(f"{job.out} and another output are a file and its folder")
+        seen.add(job.path)
     if problems:
         raise ValueError(f"{path}: " + "; ".join(problems))
     if not jobs:
@@ -150,13 +230,16 @@ def output_tokens(width: int, height: int, quality: str, model: str) -> int:
 
 
 def estimate_usd(job: ImageJob, settings: ImageSettings, batch: bool) -> float:
-    """The estimated cost of a job: its output tokens, and about one token for each four
-    characters of the prompt. The Batch API bills half."""
+    """The estimated cost of a job: its output tokens, about one token for each four
+    characters of the prompt, and ref_image_tokens for each reference (a guess: OpenAI
+    gives no formula for input images). The Batch API bills half."""
     width, height = parse_size(job.size)
-    out_tokens = output_tokens(width, height, job.quality, settings.model)
-    in_tokens = math.ceil(len(job.prompt) / 4)
+    out_tokens = output_tokens(width, height, job.quality, job.model)
+    text_tokens = math.ceil(len(job.prompt) / 4)
+    image_tokens = len(job.refs) * settings.ref_image_tokens
     usd = (
-        in_tokens * settings.text_in_usd_per_m
+        text_tokens * settings.text_in_usd_per_m
+        + image_tokens * settings.image_in_usd_per_m
         + out_tokens * settings.image_out_usd_per_m
     ) / 1e6
     return usd / 2 if batch else usd
@@ -168,17 +251,20 @@ def billed_usd(
     """The cost from the token usage that the API returns, or None without usage."""
     if usage is None:
         return None
+    images_in = usage.input_tokens_details.image_tokens
+    text_in = usage.input_tokens - images_in
     usd = (
-        usage.input_tokens * settings.text_in_usd_per_m
+        text_in * settings.text_in_usd_per_m
+        + images_in * settings.image_in_usd_per_m
         + usage.output_tokens * settings.image_out_usd_per_m
     ) / 1e6
     return round(usd / 2 if batch else usd, 4)
 
 
-def request_body(job: ImageJob, model: str) -> dict[str, str]:
-    """The JSON body of the Images API request for a job."""
-    body = {
-        "model": model,
+def request_body(job: ImageJob) -> dict[str, Any]:
+    """The fields of the request for a job. An edit sends the `image` files as multipart."""
+    body: dict[str, Any] = {
+        "model": job.model,
         "prompt": job.prompt,
         "size": job.size,
         "quality": job.quality,
@@ -186,6 +272,10 @@ def request_body(job: ImageJob, model: str) -> dict[str, str]:
     }
     if job.transparent:
         body["background"] = "transparent"
+    if job.complexity:
+        body["complexity"] = job.complexity
+    if job.refs:
+        body["image"] = list(job.refs)
     return body
 
 
@@ -197,6 +287,15 @@ class ImageResult:
     error: str = ""
 
 
+def alpha_problem(path: Path) -> str:
+    """Returns why a transparent image is not one (no alpha, or no clear pixel), or ""."""
+    with Image.open(path) as image:
+        if "A" not in image.getbands():
+            return "the image has no alpha channel"
+        low, _ = image.getchannel("A").getextrema()
+    return "" if low == 0 else "the alpha channel has no transparent pixel"
+
+
 def _save(
     job: ImageJob,
     response: ImagesResponse,
@@ -204,55 +303,77 @@ def _save(
     batch: bool,
     request_id: str,
 ) -> ImageResult:
-    """Writes the image of a response and its manifest."""
+    """Writes the image of a response unedited, its manifest, and checks its alpha."""
     data = response.data[0].b64_json if response.data else None
     if not data:
         return ImageResult(job.out, False, error="the response holds no image")
     job.path.parent.mkdir(parents=True, exist_ok=True)
     job.path.write_bytes(base64.b64decode(data))
     billed = billed_usd(response.usage, settings, batch)
+    usage = response.usage.model_dump() if response.usage else None
     manifest.write(
         job.path,
         manifest.Manifest(
-            service="OpenAI Images API",
-            model=settings.model,
+            service=f"OpenAI Images API {job.endpoint}",
+            model=job.model,
             mode="batch" if batch else "live",
             prompt=job.prompt,
-            settings={
-                "size": job.size,
-                "quality": job.quality,
-                "transparent": job.transparent,
-            },
+            settings={**request_body(job), "usage": usage},
             estimated_usd=round(estimate_usd(job, settings, batch), 4),
             billed_usd=billed,
             request_id=request_id,
         ),
     )
-    return ImageResult(job.out, True, billed)
+    problem = alpha_problem(job.path) if job.transparent else ""
+    return ImageResult(job.out, not problem, billed, problem)
 
 
 def generate(
     client: openai.OpenAI, job: ImageJob, settings: ImageSettings
 ) -> ImageResult:
     """Makes one image now, at the live price."""
-    response = client.post(
-        ENDPOINT.removeprefix("/v1"),
-        body=request_body(job, settings.model),
-        cast_to=ImagesResponse,
+    background: Literal["transparent", "auto"] = (
+        "transparent" if job.transparent else "auto"
     )
+    complexity = COMPLEXITIES[job.complexity] if job.complexity else omit
+    if job.refs:
+        files = [
+            (Path(r).name, Path(r).read_bytes(), REF_TYPES[Path(r).suffix.lower()])
+            for r in job.refs
+        ]
+        response = client.images.edit(
+            image=files,
+            model=job.model,
+            prompt=job.prompt,
+            size=job.size,
+            quality=QUALITIES[job.quality],
+            output_format=job.format,
+            background=background,
+            complexity=complexity,
+        )
+    else:
+        response = client.images.generate(
+            model=job.model,
+            prompt=job.prompt,
+            size=job.size,
+            quality=QUALITIES[job.quality],
+            output_format=job.format,
+            background=background,
+            complexity=complexity,
+        )
     return _save(job, response, settings, batch=False, request_id="")
 
 
-def jobs_hash(jobs: list[ImageJob], model: str) -> str:
-    """A short hash of the jobs and the model, which ties a batch state file to its jobs."""
-    text = json.dumps([model, *(asdict(job) for job in jobs)], sort_keys=True)
+def jobs_hash(jobs: list[ImageJob]) -> str:
+    """A short hash of the jobs, which ties a batch state file to its jobs."""
+    text = json.dumps([asdict(job) for job in jobs], sort_keys=True)
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
 @dataclass
 class BatchState:
-    """The batch state file (see state_path). A rerun with the same
-    jobs resumes the batch instead of paying for a new one."""
+    """The batch state file (see state_path). A rerun with the same jobs resumes the batch
+    instead of paying for a new one."""
 
     jobs_hash: str
     batch_id: str
@@ -288,16 +409,18 @@ def state_path(jobs_file: Path) -> Path:
     return out_path("batches", f"{source.stem}-{digest}.json")
 
 
-def submit(client: openai.OpenAI, jobs: list[ImageJob], settings: ImageSettings) -> str:
+def submit(client: openai.OpenAI, jobs: list[ImageJob]) -> str:
     """Uploads the jobs as a Batch input file, starts the batch and returns its id. The
-    custom_id of each line is the job index."""
+    custom_id of each line is the job index. Edits (jobs with refs) cannot go in a batch."""
+    if any(job.refs for job in jobs):
+        raise ValueError("a batch takes no reference images; run the set live")
     lines = [
         json.dumps(
             {
                 "custom_id": str(i),
                 "method": "POST",
-                "url": ENDPOINT,
-                "body": request_body(job, settings.model),
+                "url": GENERATIONS,
+                "body": request_body(job),
             }
         )
         for i, job in enumerate(jobs)
@@ -307,7 +430,7 @@ def submit(client: openai.OpenAI, jobs: list[ImageJob], settings: ImageSettings)
         purpose="batch",
     )
     batch = client.batches.create(
-        input_file_id=upload.id, endpoint=ENDPOINT, completion_window="24h"
+        input_file_id=upload.id, endpoint=GENERATIONS, completion_window="24h"
     )
     return batch.id
 
