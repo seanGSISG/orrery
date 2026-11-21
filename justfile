@@ -149,8 +149,9 @@ test-pad: import
     pad=$!
     trap 'pkill -P "$pad" || true; kill "$pad" 2>/dev/null || true; rm -f "$log" "$padlog"' EXIT
     ORRERY_VIRTUAL_PAD=1 "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd \
-        -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log"
-    if ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
+        -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log" || status=$?
+    # A failed Godot run falls through to here, so the pad log explains it before cleanup.
+    if (( ${status:-0} != 0 )) || ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then
         cat "$padlog" >&2
         echo "just test-pad: the virtual pad test did not pass" >&2
         exit 1
