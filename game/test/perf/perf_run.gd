@@ -81,7 +81,13 @@ func _run() -> void:
 		"stand_in_sky": stand_in,
 	}
 	DirAccess.make_dir_recursive_absolute(out.get_base_dir())
-	FileAccess.open(out, FileAccess.WRITE).store_string(JSON.stringify(report, "  "))
+	var file: FileAccess = FileAccess.open(out, FileAccess.WRITE)
+	if file == null:
+		printerr("perf_run: cannot write %s" % out)
+		get_tree().quit(1)
+		return
+	file.store_string(JSON.stringify(report, "  "))
+	file.close()
 	get_tree().quit()
 
 
