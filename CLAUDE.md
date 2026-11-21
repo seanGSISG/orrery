@@ -22,6 +22,7 @@ An original 3D marble platformer for Linux and Windows, built with Godot 4.7.2 a
 ## Seeing the game and the scene
 
 - The `orrery` MCP server launches the game in `gamescope` with no window. It gives you game state, input, frame stepping, screenshots and the route bot.
+- `just ui-shots` saves each HUD and menu screen at 1080p and 4K in `build/ui/`. `docs/design/ui.md` tells how the screens, the look and the text are built.
 - The `blender` MCP server runs code in a live Blender, takes viewport screenshots and searches the Blender 5.2 API docs. Search the docs before you use an unfamiliar `bpy` call. Its search matches whole words, so query `export_scene gltf`, not `export_scene.gltf`.
 - Live Blender tools need a running Blender: start `just blender-agent` in the background (hidden, in gamescope), or ask Sean to run `just blender` for a window. The bridge listens on `localhost:9876`. The `_for_cli` tools and the doc search work without it.
 
@@ -31,6 +32,7 @@ An original 3D marble platformer for Linux and Windows, built with Godot 4.7.2 a
 - Godot and Jolt don't promise identical results from identical inputs. Assert with tolerances, and compare physics values only within one OS. Ghosts record transforms for this reason.
 - Run the pinned official Blender (`blender-5.2`). The Arch `blender` package uses a different Python.
 - GUT reports success when zero tests run, and it skips a test script that does not parse. Keep both checks in `just test`.
+- The pause screen pauses the scene tree, and GUT cannot wait in a paused tree. Do not `await` in a test while the game is paused.
 - With `unsafe_call_argument` an error, a Variant argument to a GUT assert (for example from `ProjectSettings.get_setting`) is a parse error. Put the value in a typed variable first.
 
 ## Workflow

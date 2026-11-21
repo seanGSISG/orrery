@@ -189,3 +189,16 @@ gallery *ids: fresh-levels import
 [positional-arguments]
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
+
+# --- HUD and menus (#22) ---
+
+# Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope)
+[script("bash")]
+ui-shots: fresh-levels import
+    set -euo pipefail
+    for size in "1920 1080" "3840 2160"; do
+        read -r width height <<<"$size"
+        gamescope --backend headless -W "$width" -H "$height" -- "{{ godot }}" --path game \
+            --resolution "${width}x${height}" res://test/ui/ui_shots.tscn -- \
+            --out "$PWD/build/ui/$height"
+    done

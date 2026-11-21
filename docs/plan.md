@@ -349,6 +349,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just test-levels [id]` | Runs the route bot on each level, headless. Fails if the bot does not finish under par |
 | `just gallery [id]` | Renders every level's camera shots into `build/gallery/index.html` |
 | `just perf [id]` | Flies a fixed camera path through each level and checks GPU frame time |
+| `just ui-shots` | Saves a screenshot of each HUD and menu screen at 1080p and 4K into `build/ui/` |
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response |
 | `just export` | Builds Linux and Windows release exports into `build/` |
 | `just smoke-wine` | Exports, starts the Windows export under Wine, headless, and checks its boot marker |
