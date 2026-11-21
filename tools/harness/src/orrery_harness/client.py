@@ -25,6 +25,7 @@ NO_RUN = -32000
 NOT_FOUND = -32001
 NOT_AVAILABLE = -32002
 NO_FRAME = -32003
+NOT_SAVED = -32004
 INVALID_REQUEST = -32600
 INVALID_PARAMS = -32602
 METHOD_NOT_FOUND = -32601
@@ -220,5 +221,5 @@ class Harness:
         return BotResult.model_validate(self.call("run_bot", route=route))
 
     def set_setting(self, key: str, value: object) -> object:
-        """Sets an existing project setting and returns its new value."""
+        """Sets a player setting or an existing project setting; returns its new value."""
         return self.call("set_setting", key=key, value=value)["value"]

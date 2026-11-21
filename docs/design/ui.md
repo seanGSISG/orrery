@@ -15,6 +15,7 @@ Terms used in this file:
 | `game/ui/ui.gd` | `Ui`, a `CanvasLayer` in `main.tscn`. It shows the screen that `Game.screen` names, and holds the HUD and every `Screen`. |
 | `game/ui/screens/` | `Screen` (the base) and one script per menu: title, level select, settings, pause, results. |
 | `game/ui/hud/hud.gd` | `Hud`: the gems, the timer and the power-up slot of a level. |
+| `game/ui/settings/` | The parts of the settings screen: `SettingsTabs`, `SettingRow`, `OptionRow`, `BindRow`, `ValueMark`. |
 | `game/ui/widgets/` | The parts of the screens: `MenuItem`, `LevelNode`, `Dial`, `OrbitMap`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`. |
 | `game/ui/draw/` | `Chart` (rings, arcs, tick marks) and `Icons`: shapes drawn in code, so they stay sharp at any size. |
 | `game/ui/look/` | `UiLook` (the look), `UiTheme` (builds the `Theme`), the focus style and the two shaders. |
@@ -32,7 +33,7 @@ Terms used in this file:
 |---|---|---|
 | `title` | Play, Ascent, Settings, Quit | `level_select`, `settings` |
 | `level_select` | The levels of one tier on a ring; `tab_prev` and `tab_next` change the tier | `play` (through `Game.load_level`), `title` |
-| `settings` | A frame for #23 | The screen that opened it |
+| `settings` | Five tabs: graphics, display, audio, controls, accessibility | The screen that opened it |
 | `play` | The level and the HUD | `pause` (the `pause` action), `results` (the run finishes) |
 | `pause` | Resume, Restart, Settings, Levels | `play`, `settings`, `level_select` |
 | `results` | Time, medal, record, gems, egg; Next, Retry, Levels | `play`, `level_select` |
@@ -53,9 +54,13 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 3. Set `Game.screen` to that name to show it. If the screen lies over a run and the run must not pause, add the name to the last rule in `Game._apply_screen`.
 4. Add its text keys to `en.po`.
 
-### Fill the settings screen (#23)
+### Settings screen (#23)
 
-`SettingsScreen.content` is an empty `VBoxContainer` between the title and the Back item. Add the controls there, and give the first one the focus in `open()`. `return_to` is the screen that opened the settings; `Ui` sets it. The actions `tab_prev` and `tab_next` (LB and RB, Q and E) are free for the tabs. After a rebind, set `InputGlyph.action` again so that the glyph draws the new button.
+- `SettingsScreen` builds the rows of one tab at a time from `Save.settings`. `tab_prev` and `tab_next` (LB and RB, Q and E) change the tab, and `settings_defaults` (Y or Backspace) puts the settings of the tab back to their defaults.
+- An `OptionRow` holds one value of a list: a choice, a stepper, a scale or a switch (the four looks of the C chart mockup). `ui_left` and `ui_right` step the value; `ui_accept` goes round a choice or a switch.
+- A `BindRow` binds one gameplay action (`Bindings.ACTIONS`). A or Enter makes it wait; the next key, mouse button, pad button or stick push becomes the button of its device. B or Esc stops the wait, so those buttons cannot be bound. The menu actions stay fixed.
+- Each change goes through `Save.change_settings({key: value})`: it sets the var, calls `Settings.apply()` and writes the file. The harness `set_setting` uses it too.
+- **Add a setting:** add a var with its default to `Settings`, put it into the game in `Settings.apply()`, add a row in the tab's `_build_*()` function, and add its text keys to `en.po`.
 
 ### Start Ascent (#27)
 

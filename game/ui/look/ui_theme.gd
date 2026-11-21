@@ -4,7 +4,7 @@ extends RefCounted
 ## every control below gets it. A screen styles a control only by naming one of the theme
 ## types below in `theme_type_variation`; it sets no font, colour or style on the node.
 ##
-## Text (Label): Logo, Title, Heading, Subtitle, LevelName, Row, RowAccent, MenuText,
+## Text (Label): Logo, Title, Heading, Subtitle, LevelName, Row, RowFocus, RowAccent, MenuText,
 ## MenuTextFocus, MenuTextOff, Data (the default Label), DataStrong, DataAccent, Caps,
 ## CapsStrong, CapsGold, BestTime, BestTimeNone, BigTime, HudTarget, HudTargetGold, GlyphText.
 ## Panels (PanelContainer): GlyphPad, GlyphKey (button glyphs), GlassPanel (its margins).
@@ -30,6 +30,7 @@ static func build() -> Theme:
 	_text(theme, &"Subtitle", UiLook.TITLE_FONT, UiLook.ROW_SIZE, UiLook.INK_2)
 	_text(theme, &"LevelName", UiLook.TITLE_FONT, UiLook.LEVEL_NAME_SIZE, UiLook.INK)
 	_text(theme, &"Row", UiLook.NAME_FONT, UiLook.ROW_SIZE, UiLook.INK_2)
+	_text(theme, &"RowFocus", UiLook.NAME_FONT, UiLook.ROW_SIZE, UiLook.INK)
 	_text(theme, &"RowAccent", UiLook.TITLE_FONT, UiLook.ROW_SIZE, UiLook.ACCENT)
 	_text(theme, &"MenuText", UiLook.NAME_FONT, UiLook.MENU_SIZE, UiLook.INK_2)
 	_text(theme, &"MenuTextFocus", UiLook.NAME_FONT, UiLook.MENU_SIZE, UiLook.INK)
