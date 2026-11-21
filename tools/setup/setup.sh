@@ -100,6 +100,25 @@ ln -sfn "$bdir/blender" "$BIN/blender-$BLENDER_SERIES"
 "$BIN/blender-$BLENDER_SERIES" --version 2>/dev/null | grep -q "^Blender $BLENDER_VERSION" || die "blender-$BLENDER_SERIES does not report $BLENDER_VERSION"
 ok "blender-$BLENDER_SERIES -> $bdir"
 
+step "Blender MCP (official Blender Lab)"
+mdir="$HOME/.local/share/orrery/blender_mcp"
+[[ -d "$mdir/.git" ]] || git clone -q "$BLENDER_MCP_REPO" "$mdir"
+# Reinstall when the pin changed, the checkout moved, or the add-on is not enabled.
+addon_on=$("$BIN/blender-$BLENDER_SERIES" -b -noaudio --python-expr \
+  "import addon_utils; print('ADDON', all(addon_utils.check('bl_ext.user_default.mcp')))" 2>/dev/null | grep -c '^ADDON True' || true)
+if [[ "$(cat "$mdir/.orrery-installed" 2>/dev/null)" != "$BLENDER_MCP_COMMIT" \
+  || "$(git -C "$mdir" rev-parse HEAD)" != "$BLENDER_MCP_COMMIT" || "$addon_on" != 1 ]]; then
+  git -C "$mdir" fetch -q origin
+  git -C "$mdir" checkout -q "$BLENDER_MCP_COMMIT"
+  zdir=$(mktemp -d)
+  "$BIN/blender-$BLENDER_SERIES" --command extension build --source-dir "$mdir/addon/blender_mcp_addon" --output-dir "$zdir" >/dev/null
+  "$BIN/blender-$BLENDER_SERIES" --command extension install-file -r user_default --enable "$zdir"/*.zip >/dev/null
+  rm -rf "$zdir"
+  (cd "$mdir/mcp" && uv sync -q)
+  echo "$BLENDER_MCP_COMMIT" >"$mdir/.orrery-installed"
+fi
+ok "blender_mcp ${BLENDER_MCP_COMMIT:0:7}, add-on enabled in Blender $BLENDER_SERIES"
+
 step "glTF tools"
 vdir="$OPT/gltf_validator-$GLTF_VALIDATOR_VERSION"
 if [[ ! -x "$vdir/gltf_validator" ]]; then
