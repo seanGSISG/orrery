@@ -133,12 +133,21 @@ Each object and power-up is introduced in a level that focuses on it, before any
 
 ### 2.11 Art direction
 
-- **Sky clockwork:** floating stone and brass architecture above a sea of clouds, warm golden-hour light, glass and gold details, realistic PBR materials.
-- Each tier shifts the time of day: Beginner at dawn, Intermediate at noon, Advanced at dusk.
+- **Sky clockwork:** stone and brass clockwork architecture in a warm golden-hour light, with glass and gold details and realistic PBR materials.
+- **Sky by height** (Sean, 2026-11-20). The sky of a tier shows how high its levels are:
+  - Beginner: dawn. The levels stand on the Earth. The clockwork theme lives in the architecture. No planets.
+  - Intermediate: noon, in the high sky about 16 km up. No planet.
+  - Advanced: dusk at the edge of space, about 80 km up. Faint stars and one restrained planet.
+  - Ascent: zones 1 to 3 are on the Earth only. Time of day follows height (2.9).
+- **Style board** (Sean, 2026-11-21; ticket #5; `docs/style/README.md`):
+  - Material and light set A: honey limestone, aged brass, golden dawn.
+  - Marble A is the default: clear glass with a turning brass orrery core. Marble B (blue stone, gold inlay) becomes an unlockable skin later.
+  - Gems are 0.5 m wide and float 0.3 m above the floor. Each colour has its own cut. A faint beam shows each gem across the level.
+- **HUD and menus** (Sean, 2026-11-21; ticket #6; `docs/ui-mockups/README.md`): direction B (glass and light) for the in-level HUD and the Ascent HUD; direction C (orrery chart) for the title, level select, pause, settings and results screens. The HUD takes the coral accent and the numerals of C.
 - The marble always casts a crisp blob shadow straight down, so the player can judge jumps.
-- Geometry comes from Blender scripts (`bpy` and geometry nodes). Textures and skies come from CC0 libraries (Poly Haven, ambientCG), at 2K at most. 2D art (logo, UI icons, menu art) comes from the local ComfyUI.
+- Geometry comes from Blender scripts (`bpy` and geometry nodes). Textures and skies come from CC0 libraries (Poly Haven, ambientCG). Textures are 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6). 2D art (logo, UI icons, menu art) comes from the local ComfyUI.
 - No paid AI 3D generators.
-- **Look review:** before any final art, Sean approves a style board (ComfyUI concept images of the world, the M1 Ascent zones and the marble, plus 3 Blender test renders of a piece of track in final materials and lighting). The HUD and each menu get 3 distinct static mockups for Sean to pick from.
+- **Look review:** before any final art, Sean approves a style board (ComfyUI concept images of the world, the M1 Ascent zones and the marble, plus 3 Blender test renders of a piece of track in final materials and lighting). The HUD and each menu get 3 distinct static mockups for Sean to pick from. Both are done (2026-11-21): see above, `docs/style/README.md` and `docs/ui-mockups/README.md`.
 
 ### 2.12 Audio and music
 
@@ -148,7 +157,8 @@ Each object and power-up is introduced in a level that focuses on it, before any
 - **Track list:** 16 tracks: title theme, 3 Beginner, 3 Intermediate, 3 Advanced, 2 Planetarium, 3 Ascent (they change by zone, on bar lines), 1 credits song. Stingers: level complete, gold time, new record, egg found, big fall.
 - **Vocals:** gameplay music is instrumental with short vocal chops. One full vocal theme song plays on the title screen and in the credits.
 - **Rules:** no melody copied from any song. Prompts never name an artist or a song.
-- **Production:** see 4.10. Sean picks every final track.
+- **Production:** see 4.9. Sean picks every final track.
+- **Picked so far** (M1): the title theme "Wind-up", the Beginner track "Roll call" and the first Ascent track "Spiral stair". Each is an ACE-Step 1.5 XL instrumental bed with our own hook and clockwork layer on top (`docs/research/music.md`; the pipeline and its README are in `tools/audio/music/`, ticket #26, PR #67).
 - **Sound effects:** synthesised (sfxr-style) and layered with CC0 samples. Agents check them; Sean does not need to review them.
 
 ### 2.13 Settings and defaults
@@ -158,7 +168,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 - Accessibility: gem and hazard colours that colourblind players can tell apart, plus shape cues; camera shake and motion blur toggles; a reduced-flashing setting.
 - Saves and settings live in Godot's `user://` folder (standard per OS).
 - Display: windowed, borderless or fullscreen; any resolution; ultrawide; frame-rate cap or uncapped; V-Sync toggle; high-refresh monitors.
-- Graphics presets Low, Medium, High, Ultra (4.9).
+- Graphics presets Low, Medium, High, Ultra (4.7).
 - Steam Deck: no special work in v1.
 
 ## 3. Tech stack
@@ -199,20 +209,24 @@ orrery/
 │   ├── research/          research snapshots
 │   ├── agents/            issue tracker, labels, domain-doc rules
 │   ├── levels/            one design brief per level
-│   ├── style/             approved style board and UI mockup choices
+│   ├── style/             approved style board
+│   ├── ui-mockups/        approved HUD and menu mockups
+│   ├── design/            runtime, audio and visual quality designs
 │   ├── secrets.md         every Easter egg and secret
 │   └── licenses.md        source and license of every third-party asset and model
 ├── game/                  the Godot project
 │   ├── project.godot
-│   ├── addons/gut/
-│   ├── core/              marble solver, camera, input, gravity fields, save data
-│   ├── objects/           one folder per object or power-up (scene + script + test)
+│   ├── addons/            gut, lightmap_baker (the bake plugin, 4.7)
+│   ├── core/              marble solver, camera, input, gravity fields, save data, ghosts
+│   ├── objects/           one folder per object or power-up (scene + script)
 │   ├── modes/             campaign, ascent, planetarium
 │   ├── ui/                menus and HUD
-│   ├── audio/             buses, music players
+│   ├── audio/             buses, music players, sound effects
+│   ├── debug/             feel-review course support and the live tuning overlay
+│   ├── settings/          graphics presets
 │   ├── harness/           automation interface and route bot (left out of release exports)
 │   ├── levels/built/      built .glb files (generated, ignored by git)
-│   └── test/              GUT tests
+│   └── test/              GUT tests; object tests in test/objects/<type>/
 ├── levels/                level scripts, the source of truth
 │   ├── beginner/  intermediate/  advanced/  secret/
 │   ├── ascent/            zone_1.py … zone_8.py
@@ -223,11 +237,16 @@ orrery/
 │   ├── blender/           build_level.py, look-dev renders
 │   ├── harness/           uv project: harness MCP server + CLI
 │   ├── audio/             sfx synth, music pipeline, review page
+│   ├── gallery/           screenshot gallery
+│   ├── perf/              GPU frame-time check
+│   ├── setup/             install and first-run checks
 │   └── pad/               virtual Xbox controller for tests
 └── scripts/               one-off scripts
 ```
 
 Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`.
+
+Object tests live in `game/test/objects/<type>/`, not beside the object: the release exports leave out only `test/*`, and GUT scans only `res://test/`. The runtime design is in `docs/design/core-runtime.md`.
 
 ### 4.2 Marble physics
 
@@ -235,7 +254,7 @@ Every serious marble game writes its own marble physics (`docs/research/gameplay
 
 - **State:** position, linear velocity, angular velocity, radius, mass, current gravity vector, held power-up effects.
 - **Tick:** Godot physics runs at 120 Hz. Each tick splits into sub-steps so that the marble moves at most half its radius per sub-step.
-- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh; moving objects are `AnimatableBody3D`, and the solver reads their velocity at the contact point. The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
+- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh. Every collider is a `Solid` (a `StaticBody3D`). A moving object moves its `Solid` from code each tick with `Solid.move()`, which sets the physics transform at once and records the surface velocity; the solver reads that velocity at the contact point. Movers are not `AnimatableBody3D`: its transform reaches shape queries only at the next physics frame, and `LevelRun.step()` runs ticks outside physics frames (`docs/design/core-runtime.md` §1 and §2). The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
 - **Motion model:**
   - Input sets a target angular velocity around the axis perpendicular to the move direction and the surface normal. Spin approaches the target at the angular acceleration limit; with no input, braking pulls spin toward zero.
   - Friction at the contact couples spin and linear velocity: static friction, then kinetic friction when the contact slips. Each surface type scales the friction.
@@ -268,43 +287,55 @@ The level script is the source of truth. Blender and Godot files are build outpu
 1. **Kit:** `kit/` is a Python library for Blender. It builds track pieces, props and materials, and it places *markers*: Blender empties with a custom property `orrery` (a small dictionary such as `{"type": "gem"}`).
 2. **Level script:** `levels/<tier>/<id>.py` calls the kit. It sets level data on the root (id, name, tier, par, gold, music track, sky preset) and places markers:
    - Gameplay objects: `gem`, `start`, `finish`, `checkpoint`, `egg`, each power-up, each hazard, with its settings (for example a platform's path and period).
-   - `route`: ordered waypoints for the route bot, with actions (`jump`, `use`, `wait_until`).
+   - `route`: ordered waypoints for the route bot, with actions (`jump`, `use`, `wait`, `wait_until`, `speed`), in the kind `first_run` or `expert` (4.6).
    - `shot`: named camera views for the screenshot gallery (at least `overview`, `start`, `finish`, `egg`).
 3. **Build:** `just build-levels` runs `blender -b --factory-startup --python-exit-code 1 --python tools/blender/build_level.py -- <script> <out.glb>` for each level, in parallel. The export keeps custom properties (`export_extras=True`). Collision meshes use Godot's import name hints (`-col`, `-colonly`, `-convcolonly`); surface type comes from a material custom property.
 4. **Import:** a Godot post-import script reads the extras from each node's `extras` metadata and swaps every marker for the matching scene from `game/objects/`. Godot generates the lightmap UVs itself on import, so Blender does not author them.
-5. **Checks:** `gltf-validator` on each `.glb`; a level lint that requires one start, one finish, at least one route, the required shots, an egg, and gems that the route reaches.
+5. **Checks:** `gltf-validator` on each `.glb`. A level lint in the importer (`game/levels/level_converter.gd`) requires exactly one `level`, one `start` and one `finish` marker, the four gallery shots (`overview`, `start`, `finish`, `egg`), and a `first_run` route (at most one route of each kind). Levels in `levels/test/` skip the shots and the route. The route bot fails a route that does not reach every gem (4.6). No check for the egg exists yet.
 
 Hero props that are impractical to script may be `.blend` files in `kit/` (Git LFS). Every level stays a script.
 
 ### 4.4 Game runtime
 
-- **Autoloads:** `Game` (mode and level flow), `Save` (progress, best times, ghosts, settings), `InputHub` (one input source at a time: player, route bot or harness), `Music`.
+- **Autoloads:** `Game` (mode and level flow), `Save` (progress, best times, ghosts, settings), `InputHub` (one input source at a time: player, route bot or harness), `Graphics` (the graphics preset), `Music`.
 - **Input sources:** the marble reads a small `MarbleInput` value each tick (move vector, jump, use, camera yaw and pitch). The player, the route bot and the harness all produce it, so tests drive the exact path the player uses.
 - **Objects:** each object is one scene with one typed script and its own GUT test.
-- **Ghosts:** the marble's position and rotation, recorded 30 times a second. They play back the same on any PC because they do not re-simulate.
+- **Ghosts:** the marble's position and rotation, recorded 30 times a second of level clock by the `RunTracker` that `Save` adds to each run. `RunTracker` follows the signal `LevelRun.stepped`, which `step()` emits at the end of every tick (`docs/design/core-runtime.md` §4). They play back the same on any PC because they do not re-simulate.
 
 ### 4.5 The harness (automation interface)
 
 - Debug builds only. It lives in `game/harness/`, starts only with the `--harness-port=<port>` user argument, binds to `127.0.0.1` only, and the release export presets leave the folder out.
 - Protocol: newline-delimited JSON-RPC 2.0 over TCP.
-- Commands:
+- Commands (`game/harness/harness.gd`):
   - `ping`, `quit`
-  - `load_level {id}` and `load_mode {mode, zone?}`
-  - `state`: marble position, velocity, spin, on-ground, gems collected and total, timer, held power-up, last checkpoint, height (Ascent), level status, input device
-  - `input {move, jump, use, camera, frames}`
-  - `step {frames}`, `pause`, `resume`, `set_time_scale {scale}`
+  - `load_level {id}`. `load_mode {mode, zone?}` is a stub: it returns the error `NOT_AVAILABLE` until the menus (#22) and Ascent (#27) exist.
+  - `state`: the `GameState` as JSON (`docs/design/core-runtime.md` §6): marble position, velocity, spin, up, on-ground, gems collected and total, timer, medal, held power-up, last checkpoint, egg found, height (Ascent), level status, input device
+  - `input {move, jump, use, camera, frames}`: `camera` is `[yaw, pitch]`; with no `frames` the input holds until the next `input`
+  - `step {frames}`: runs the ticks (120 per second) at once, at most 36000 per request, and pauses. `pause`, `resume`, `set_time_scale {scale}` (ticks per physics frame, 0 to 64)
   - `teleport {position, velocity?}`
-  - `screenshot {path, shot?}`: saves the real rendered frame, optionally from a named camera shot
-  - `run_bot {route?}`: runs the route bot to the end and returns `{finished, time, falls, stuck_at?}`
+  - `screenshot {path?, shot?}`: saves the real rendered frame, optionally from a named camera shot. It returns `{path, width, height, blank, adapter}`. It fails with `NO_FRAME` under `godot --headless`, which renders nothing. The gallery takes its shots without a warm-up step.
+  - `run_bot {route?}`: restarts the level, plays a route to the end at full speed, pauses, and returns `{finished, time, falls}` (plus `{stuck_at, waypoint, reason}` when the bot gave up). `route` is `first_run` (default), `expert` or a route node name.
   - `logs {since}`, `set_setting {key, value}`
-- **Harness MCP** (`tools/harness/`): Python server that launches the game and wraps the socket. Tools: `game_launch {level?, mode?, display: headless|window, resolution}`, `game_state`, `game_input`, `game_step`, `game_screenshot` (returns the image), `game_run_bot`, `game_logs`, `game_quit`. The same package also has a CLI (`uv run orrery-harness …`) for `just` tasks and CI, so there is one implementation.
-- Launch: `gamescope --backend headless -W 1920 -H 1080 -- godot --path game -- --harness-port=<port>`. Fallback: a small window on the KDE desktop.
+- **Harness MCP** (`tools/harness/`): Python server that launches the game and wraps the socket. Tools: `game_launch {level = "flat", display = headless|window|none, width = 1920, height = 1080}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot?}` (returns the image), `game_run_bot {route?}`, `game_logs {since}`, `game_quit`. `display` is `headless` (gamescope, no window; falls back to `window`), `window` (a desktop window) or `none` (`godot --headless`: no frames, no screenshots; CI uses it). `game_launch` has no `mode` parameter yet. The same package has a CLI (`uv run orrery-harness …`, or `just harness …`) with one subcommand for every harness command, so there is one implementation. `teleport`, `pause`, `resume`, `set_time_scale`, `load_level` and `set_setting` are in the CLI only. See `tools/harness/README.md`.
+- **Session isolation:** each launch gets its own empty `user://` folder, `build/harness/user-<port>-<random>/` (set through `XDG_DATA_HOME`). The folder is deleted when the session ends, so a harness session never reads or writes the player's saves and ghosts. Every automated launch (harness, gallery, perf, bake) is silent (`--audio-driver Dummy`). `just run` and `just feel` keep the sound.
+- Launch (`display = headless`): `gamescope --backend headless -W <width> -H <height> -- godot --path game --resolution <width>x<height> -- --harness-port=<port> [--level <id>]`. Fallback: a window on the KDE desktop.
 
 ### 4.6 The route bot
 
-- Reads the level's `route` markers and steers the marble with the same `MarbleInput` as a player: it aims at the next waypoint from the marble's current position and speed, and it does each waypoint's action (jump, use power-up, wait until a platform arrives).
+Built in #14 (`game/harness/route_bot.gd`, `game/objects/route/route.gd`).
+
+- Reads the level's `route` markers and steers the marble with the same `MarbleInput` as a player: it aims at the next waypoint from the marble's current position and speed, and it does each waypoint's action.
 - Because it steers from the current state, small physics differences between runs or between Linux and Windows do not break it. Level tests do not need exact physics repeats.
-- **Par and gold:** start as the bot's time × 1.5 (par) and × 1.15 (gold). A person tunes them after playing.
+- **Route markers:** a level script places one `route` marker of kind `first_run` (the line of a player on a first run) and one of kind `expert` (the fastest line). `kit.marker("route", at=…, name=…, kind="first_run", points=[…], actions="…")`. The `points` are positions on the floor, in order. Put a point on each gem and on the finish pad.
+- **Action syntax:** `actions` is a text of entries `<point> <action> [values]`, separated by `;`. `<point>` is the 0-based index in `points`.
+  - `jump`: jump at the point. `use`: use the held power-up at the point.
+  - `wait <s>`: stop and wait s seconds.
+  - `wait_until <object> <from> <to>`: stop and wait until the cycle time of the named mover is in [from, to).
+  - `speed <m/s>`: the top speed on the way to the point.
+  - At one point the bot first waits, then uses, then jumps.
+- **Result:** `{finished, time, falls}`. The bot gives up with `reason` `stuck`, `fell` (3 falls), `route_end` (the last point is reached but the run did not finish: a gem is missing) or `timeout` (300 s of run time).
+- **`just test-levels [id]`:** runs both routes of each built level, headless, in-process (so it runs on Windows too). The `first_run` route must finish under par and the `expert` route under gold, with no fall. With no ids it tests every built level and fails when none has a route.
+- **`just suggest-times <id>`:** prints the times from the bot's run: par = `first_run` time × 1.5 and gold = `expert` time × 1.15, rounded up to 0.1 s. A person tunes them after playing.
 - From M3, a search program tries many input sequences per level to find unintended shortcuts. Agents fix the shortcuts or keep them as intended skips.
 
 ### 4.7 Rendering and performance
@@ -312,14 +343,20 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - Renderer: Forward+ (Vulkan).
 - Campaign levels: baked `LightmapGI`, reflection probes, volumetric fog, SSR and SSAO on High and above, a dynamic sun shadow for moving objects.
 - Ascent and Planetarium: dynamic sky and sun (time of day follows height in Ascent), SDFGI on Ultra only.
+- **Lightmap bake** (#24): the importer gives every level one `LightmapGI` with the bake settings of `docs/design/visual-quality.md` §4. `just bake <id>` bakes it on the GPU in a hidden gamescope display and writes `game/levels/lightmaps/<id>.lmbake` (Git LFS). Godot 4.7.2 does not expose `LightmapGI.bake()` to scripts, so the add-on `game/addons/lightmap_baker/` calls the bound `_bake` method of the built-in `LightmapGIEditorPlugin`. That is an internal call; see the risk in 9.
 - Presets: **Low** (no GI or fog, lower shadow resolution), **Medium**, **High**, **Ultra** (4K-ready, SDFGI, full volumetrics).
 - **Targets:** 1080p at 60 fps on a GTX 1660 / RX 5600-class GPU at Medium. Agents can't test that GPU directly, so the performance check fails when GPU frame time at Medium on the RTX 5090 goes over a budget (start at 3 ms; calibrate in M1 against a known-good scene). High-refresh monitors work.
+- **Measured (#20, RTX 5090, idle GPU, `just perf fixture` with the stand-in light rig):** GPU mean/p99 ms Low 0.10/0.13, Medium 0.21/0.24, High 0.56/0.61, Ultra 0.84/0.96 at 1080p; High 1440p 0.82/0.90; Ultra 4K 2.7/3.3. VRAM Medium 222 MB, Ultra 4K 1.7 GB. The fixture is too small to calibrate the 3 ms budget, so it stays until the first real level (M1).
+- **Visual quality bar:** `docs/design/visual-quality.md` turns "crisp and photorealistic" into checks. It holds the preset table, the anti-aliasing choice, the lightmap bake settings, the glass-marble approach, the texture policy (2K default with a short list of 4K exceptions, which replaces the 2K cap in 2.11 and 9), the material rules, the gallery review rubric and what `just perf` measures per preset. Every art and rendering ticket meets it.
 
 ### 4.8 Audio implementation
 
-- Music files: OGG Vorbis with loop points, BPM and beat counts set in the import settings.
-- `AudioStreamPlaylist` shuffles a tier's tracks. `AudioStreamInteractive` changes Ascent tracks by zone group on bar lines and handles title and menu transitions.
-- Buses: Master, Music, SFX, UI, each with a volume setting.
+Built in #25. `docs/design/audio.md` is the design: the buses, the volume settings, the music groups, the zone changes, the sound table and how to add a track.
+
+- Music files: OGG Vorbis with loop points, BPM and beat counts set in the import settings. The music `.ogg` files are in Git LFS (`game/audio/music/**/*.ogg`); the small sound effects are not.
+- The autoload `Music` plays one *group* of tracks (a folder `game/audio/music/<group>/`). A normal group is an `AudioStreamPlaylist` (shuffled, looped, 2 s fade between tracks). The group `ascent` is one `AudioStreamInteractive`: `Music.set_zone(zone)` changes the clip on the next bar line. The level's `music` field picks the group, then the tier, and the title and menus play `title`.
+- Buses: Master (with a hard limiter), Music, SFX, UI, each with a volume setting in `Save.settings`.
+- Sound effects: `SfxPlayer` plays one sound per `LevelRun.feedback` kind. The sounds come from `tools/audio/sfx/synth_sfx.py`.
 
 ### 4.9 Music production pipeline
 
@@ -335,26 +372,39 @@ US copyright protects only the human-written parts of a track, which is why the 
 
 ### 5.1 Commands
 
+`just --list` is the source of truth. CI runs these tasks too.
+
 | Command | What it does |
 |---|---|
 | `just setup` | Installs and checks every pinned tool (6.2). Safe to repeat |
-| `just build-levels [id]` | Builds level scripts into `.glb` files |
+| `just check-env` | Runs the first-run checks (6.3) only |
+| `just blender` / `just blender-agent` | Opens Blender 5.2 with the MCP bridge on `localhost:9876`: in a window, or hidden in gamescope |
 | `just import` | `godot --headless --path game --import` |
-| `just lint` | `gdlint` (gdtoolkit), Ruff, ty, shellcheck, level lint |
-| `just test` | GUT unit tests, headless. Fails if zero tests ran |
-| `just test-levels [id]` | Runs the route bot on each level, headless. Fails if the bot does not finish under par |
-| `just gallery [id]` | Renders every level's camera shots into `build/gallery/index.html` |
-| `just perf [id]` | Flies a fixed camera path through each level and checks GPU frame time |
-| `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response |
+| `just build-levels [id…]` | Builds level scripts into `game/levels/built/*.glb` and checks that they import |
+| `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff (check and format), ty, shellcheck. Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
+| `just test` | GUT unit tests, headless. Fails if a test fails, a test script does not load, or zero tests ran. It runs with an empty `user://` that it deletes, so tests never touch the player's save (#73) |
+| `just test-levels [id…]` | Runs the route bot on each built level, headless (4.6). Fails if `first_run` is not under par or `expert` not under gold. Like `just test`, it uses an empty `user://` (#73) |
+| `just suggest-times <id>` | Prints par and gold from the route bot's times (4.6) |
+| `just harness …` | Drives a debug build through the harness CLI (4.5) |
+| `just test-harness [-m gpu]` | Harness contract tests on a headless debug build. `-m gpu` adds the GPU screenshot test |
+| `just gallery [id…]` | Renders every level's camera shots on High into `build/gallery/index.html` |
+| `just perf [id…]` | Flies a fixed camera path through each level per graphics preset and checks GPU frame time and VRAM |
+| `just bake [id…]` | Bakes the lightmaps of levels on this GPU (4.7). Close every Godot editor on the project first |
+| `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response (local only) |
+| `just ui-shots` | Saves a screenshot of each HUD and menu screen at 1080p and 4K into `build/ui/` |
+| `just build-sfx [--montage PATH]` | Synthesises the sound effects and the test music loops, and checks them. `--montage` also joins the sounds into one OGG |
+| `just feel` | Builds the feel-review course and plays it in a window with the tuning overlay (`docs/feel-review.md`) |
+| `just run [level]` | Plays a level in a window (default: `flat`) |
 | `just export` | Builds Linux and Windows release exports into `build/` |
-| `just smoke-wine` | Starts the Windows export under Wine, headless, and checks that it boots |
-| `just run [level]` | Plays the game |
-| `just ci` | Everything CI runs, locally |
+| `just export-debug` | Builds the Linux debug export (harness and test levels included) |
+| `just smoke-wine` | Exports, starts the Windows export under Wine, headless, and checks its boot marker |
+
+There is no `just ci` task. CI runs the tasks in 5.3 as separate jobs.
 
 ### 5.2 Test layers
 
 1. **Unit tests (GUT):** the marble solver (rolling, friction, bounce, slide, gravity fields), every object and power-up, scoring, progression, saves.
-2. **Level tests:** every level builds, imports, passes the level lint, and the route bot finishes it under par. The bot needs physics, not rendering, so this runs headless on Linux and Windows.
+2. **Level tests:** every level builds, imports, passes the level lint, and the route bot finishes both routes: `first_run` under par and `expert` under gold. The bot needs physics, not rendering, so this runs headless on Linux and Windows.
 3. **Screenshot gallery:** each level's named shots, rendered on the GPU in `gamescope`. Agents review the gallery with vision; Sean reviews it at each milestone. No pixel-exact image comparisons, because lighting noise and anti-aliasing make them fail at random.
 4. **Performance check:** GPU frame time along a fixed camera path, against the budget in 4.7.
 5. **Controller test:** `tools/pad/` creates a virtual Xbox controller through `/dev/uinput` (the same kernel path as a real controller). The test checks that Godot sees it, that A makes the marble jump and that the stick rolls it.
@@ -364,9 +414,12 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 ### 5.3 CI (GitHub Actions)
 
+- **`lint` job** (ubuntu): runs `just lint`.
 - **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels`, uploads the built files.
-- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with 4.7.2 and templates, downloads the built levels, runs import, GUT tests and the headless level tests.
-- **`export` job:** Linux and Windows release exports as artifacts.
+- **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
+- **`harness` job** (ubuntu): `just test-harness`, the harness contract tests on a headless debug build.
+- **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
+- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless and checks its boot marker.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
 ## 6. Dev environment
@@ -382,12 +435,14 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 1. **System packages:** `sudo pacman -S --needed mise git-lfs`, then `git lfs install`.
 2. **Godot:** `mise use godot@4.7.2` (writes `mise.toml`), then confirm `mise which godot` runs 4.7.2. Export templates: download `Godot_v4.7.2-stable_export_templates.tpz` from the GitHub release, check it against `SHA512-SUMS.txt`, unzip its `templates/` into `~/.local/share/godot/export_templates/4.7.2.stable/`.
-3. **Blender 5.2.4 LTS:** download the official Linux tarball from `download.blender.org`, check its SHA-256, extract to `~/.local/opt/blender-5.2.4/`, link `~/.local/bin/blender-5.2`. `just setup` first tries `mise` (HTTP backend) and falls back to this script.
-4. **Blender Lab MCP:** clone `https://projects.blender.org/lab/blender_mcp.git` at a pinned commit into `~/.local/share/orrery/blender_mcp/`, install its add-on into Blender 5.2.4 from the command line, and register it in `.mcp.json`.
+3. **Blender 5.2.4 LTS:** download the official Linux tarball from an official Blender mirror (`download.blender.org` refuses scripted downloads), check it against the SHA-256 pinned in `tools/setup/pins.env`, extract to `~/.local/opt/blender-5.2.4/`, link `~/.local/bin/blender-5.2`.
+4. **Blender Lab MCP:** clone `https://projects.blender.org/lab/blender_mcp.git` at the commit pinned in `pins.env` into `~/.local/share/orrery/blender_mcp/`, build its add-on and install it into Blender 5.2.4 with `blender --command extension`, and `uv sync` its server. The add-on starts its bridge (`localhost:9876`) by itself when Blender runs with `--online-mode`: `just blender` (a window) or `just blender-agent` (hidden, in gamescope).
 5. **Godot add-ons:** vendor GUT 9.7.1 into `game/addons/gut/`.
 6. **Python tools:** `uv sync` in `tools/harness/` (MCP SDK, `evdev` for the virtual controller). `gdtoolkit` runs through `uvx`.
 7. **glTF tools:** Khronos `glTF-Validator` release binary into `~/.local/bin/`; `@gltf-transform/cli` through `bunx`.
-8. **Music models:** download ACE-Step 1.5 XL and Stable Audio 3 Medium (plus its T5Gemma and Qwen text encoders) into the local ComfyUI with `hf download`, following the docs.comfy.org tutorials. Stable Audio 3 needs the license click from the wizard first.
+8. **Music models:** `tools/setup/comfy-models.txt` lists the ComfyUI files for ACE-Step 1.5 XL and Stable Audio 3 Medium (with its T5Gemma and Qwen text encoders). `hf download` puts them in the Hugging Face cache and setup links them into ComfyUI's models folder. Stable Audio 3 files wait until Sean accepts its license in the wizard.
+
+Pins: Godot in `mise.toml`; everything else in `tools/setup/pins.env`. `just check-env` reruns the first-run checks (6.3) alone.
 
 `.mcp.json` (project scope):
 
@@ -396,7 +451,8 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
   "mcpServers": {
     "blender": {
       "command": "uv",
-      "args": ["--directory", "${HOME}/.local/share/orrery/blender_mcp/mcp", "run", "blender-mcp"]
+      "args": ["--directory", "${HOME}/.local/share/orrery/blender_mcp/mcp", "run", "--quiet", "blender-mcp"],
+      "env": { "BLENDER_PATH": "${HOME}/.local/bin/blender-5.2" }
     },
     "orrery": {
       "command": "uv",
@@ -414,7 +470,7 @@ Each check has a fallback, so a failure changes the plan, not the schedule.
 |---|---|---|
 | `mise` installs Godot 4.7.2 | `godot --version` prints 4.7.2.stable | Official zip pinned by the setup script |
 | Blender EEVEE renders with no display | A cube renders to a non-black PNG under `blender -b` with `DISPLAY` and `WAYLAND_DISPLAY` unset | `xvfb-run`, or a window on the desktop |
-| Blender Lab MCP | Runs code and returns a viewport screenshot | `ahujasid/mcp-for-blender` with telemetry off |
+| Blender Lab MCP | Runs code, returns a window screenshot and finds a `bpy` call in the API docs | `ahujasid/mcp-for-blender` with telemetry off |
 | `gamescope --backend headless` | Godot renders a non-blank screenshot through it on the RTX 5090 | A small window on the KDE desktop |
 | Virtual Xbox controller | Godot lists it as a joypad and reads A | Test through the harness input path only |
 | Windows export under Wine | Boots headless and exits cleanly | CI Windows runner only |
@@ -424,6 +480,7 @@ Each check has a fallback, so a failure changes the plan, not the schedule.
 ## 7. Workflow
 
 - **Specs and branches:** each spec is one GitHub issue with one spec branch. M0 and M1 share the first spec and the branch `plan-1`; M2, M3 and M4 each get their own spec (`plan-2`, `plan-3`, `plan-4`) when they start. Each task is a ticket PR into its spec branch, reviewed by Argus. A spec branch merges into `main` as a spec PR, reviewed by Argus and Devin through the babysit flow.
+- **Merges into `main`** (Sean, 2026-11-20): a spec branch merges into `main` at checkpoints only. There are two: M0, after the Argus and Devin gate and with no playtest; and the end of M1, after Sean's playtest sign-off.
 - **Tracking:** GitHub Issues on `seanGSISG/orrery` (`docs/agents/issue-tracker.md`). `waypoint track` creates the project's card on Sean's Board in M0.
 - **Phase 1 (core, M0–M1):** one agent works in order: tools, Godot project, marble physics, harness, level pipeline, controller support, menus and HUD, then the M1 levels and Ascent zones 1–3.
 - **Phase 2 (content, M2 on):** parallel agents run as Orca workers, each in its own git worktree. File ownership:
@@ -453,7 +510,10 @@ Each check has a fallback, so a failure changes the plan, not the schedule.
 | 60 levels become filler | A brief per level; each level must have a clear intent; gallery and play reviews per milestone |
 | `gamescope` headless fails on NVIDIA | Windowed fallback on the KDE desktop |
 | AI music quality is low | Many candidates per track; Sean picks; the option to hire a composer for the title theme stays open |
-| Git LFS quota on GitHub | Textures at 2K or less; cache LFS objects in CI |
+| Git LFS quota on GitHub | Textures at 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6); cache LFS objects in CI |
+| The lightmap bake calls Godot's internal `LightmapGIEditorPlugin._bake` through the `lightmap_baker` add-on (#24). Godot does not promise that this stays | Recheck the bake on every Godot upgrade (run `just bake` on a level and read its `BAKE done` line). The add-on's header says the same |
+| Windows save rename atomicity is untested. `SaveGame` writes `save.json.tmp` and renames it over `save.json`; on Windows a crash between the two steps may leave only the `.tmp` file | `read()` falls back to the `.tmp` file. Check the rename on a real Windows PC at the M1 playtest |
+| The ray-tracing spike (#38) uses Godot 4.7's experimental `RenderingDevice` ray-tracing API, which may change | Ultra-only option, built after M1 as a prototype. Keep, change or drop after the write-up; every other preset renders as before |
 | Name conflict with existing "Orrery" games | `orrery` stays the codename; the store title is chosen before any public release |
 
 ## 10. Things only Sean does

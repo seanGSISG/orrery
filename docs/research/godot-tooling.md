@@ -40,6 +40,8 @@ gdscript/warnings/unsafe_property_access=2
 ```
 Defaults: untyped_declaration=0, inferred_declaration=0, unsafe_*=0 (unsafe_void_return=1). Also `debug/gdscript/warnings/exclude_addons` exists (default true, UNVERIFIED value) so addons do not trip errors. Sources: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/warning_system.html ; `class_projectsettings.rst`. Check: `godot --headless --path . --check-only --script res://x.gd` (flag exists in CLI docs) or `--import`; I did not run it.
 
+> **Correction, 2026-11-20:** Godot 4.7.2 has no `exclude_addons` setting. The real setting is `debug/gdscript/warnings/directory_rules`; `game/project.godot` sets `"res://addons": 0` there so addon scripts raise no warnings.
+
 ## 2. Godot MCP servers (gh api, 2026-11-20)
 
 | Repo | Stars | Last push | License | Runs/inputs/screenshots | Notes |

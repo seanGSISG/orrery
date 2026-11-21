@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1282" role="img" aria-labelledby="b03title" aria-describedby="b03desc">
+<title id="b03title">B3 Spring Court: top-down plan</title>
+<desc id="b03desc">The brief b03.md in docs/levels describes the routes, the landmarks and every object on this map in text.</desc>
+<style>
+.m-bg{fill:#0f1218}
+.m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
+.m-h{font-size:27px;font-weight:700}
+.m-s{font-size:18px;fill:#ffe9a8}
+.m-n{font:700 17px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#0f1218;text-anchor:middle}
+.m-mid{text-anchor:middle}
+.m-end{text-anchor:end}
+.m-grid{stroke:#ffffff;stroke-opacity:.07;stroke-width:1;fill:none}
+.m-axis{stroke:#8f9bb0;stroke-width:2;fill:none}
+.m-edge{stroke:#8fa0ba;stroke-opacity:.55;stroke-width:1.5}
+.e-2{fill:#1b3152}
+.e0{fill:#27466a}
+.e2{fill:#2a7183}
+.e4{fill:#4c8a62}
+.e6{fill:#9a8d3c}
+.e8{fill:#c98f2b}
+.m-dish{fill:#1f3a5a;stroke:#d8a737;stroke-width:2;stroke-dasharray:3 5}
+.m-inlay{fill:none;stroke:#d8a737;stroke-width:2;stroke-opacity:.7}
+.m-chev{fill:none;stroke:#f4efe4;stroke-opacity:.6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.m-wall{stroke:#aab4c4;stroke-width:5;stroke-linecap:round;fill:none}
+.m-pillar{fill:#0b0d12;stroke:#8f9bb0;stroke-width:2}
+.m-beam{stroke:#e9c46a;stroke-width:11;stroke-linecap:round;fill:none}
+.m-under{fill:#172a44;fill-opacity:.55;stroke:#ffe9a8;stroke-width:2;stroke-dasharray:6 5}
+.m-trap{fill:#6d4a1e;stroke:#ffb347;stroke-width:2.5}
+.m-trapx{stroke:#ffb347;stroke-width:2.5;fill:none}
+.m-crum{fill:#3b3f52;stroke:#d7dbe8;stroke-width:2.5;stroke-dasharray:5 5}
+.m-crack{stroke:#d7dbe8;stroke-width:2;fill:none}
+.m-mp{fill:#8b5cf6;stroke:#efe7ff;stroke-width:2.5}
+.m-mpp{stroke:#c4b5fd;stroke-width:3;stroke-dasharray:3 7;stroke-linecap:round;fill:none}
+.m-gear{fill:#5b6478;stroke:#e9c46a;stroke-width:7;stroke-dasharray:7 6}
+.m-pend{stroke:#fb7185;stroke-width:4;stroke-linecap:round;fill:none}
+.m-pendarc{stroke:#fb7185;stroke-width:2.5;stroke-dasharray:4 5;fill:none}
+.m-bob{fill:#fb7185;stroke:#fff;stroke-width:2}
+.m-case{fill:none;stroke:#0f1218;stroke-width:9;stroke-opacity:.6;stroke-linejoin:round;stroke-linecap:round}
+.m-r1{fill:none;stroke:#ffffff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#b03a1)}
+.m-r2{fill:none;stroke:#ff5cf4;stroke-width:4;stroke-dasharray:11 8;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#b03a2)}
+.m-sil{fill:#1a2230;stroke:#2d3a4f;stroke-width:1.5}
+.m-solid{fill:#33415a;stroke:#2d3a4f;stroke-width:1.5}
+.m-walk{fill:none;stroke:#e9c46a;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.m-ship{fill:#4a3550;stroke:#7a5b83;stroke-width:1.5}
+.m-zone{stroke:#8f9bb0;stroke-width:2;stroke-dasharray:10 8;fill:none}
+.m-fall{fill:none;stroke:#8f9bb0;stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round;marker-end:url(#b03a3)}
+.m-box{fill:#141925;stroke:#2d3a4f;stroke-width:2}
+</style>
+<defs>
+<marker id="b03a1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffffff"/></marker>
+<marker id="b03a2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff5cf4"/></marker>
+<marker id="b03a3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8f9bb0"/></marker>
+<g id="b03gem"><path d="M0-12L10 0L0 12L-10 0z" fill="#ff3b5f" stroke="#fff" stroke-width="2.5"/></g>
+<g id="b03egg"><circle r="19" fill="none" stroke="#ffd84a" stroke-width="2.5" stroke-dasharray="4 4"/><ellipse rx="9" ry="12" fill="#ffd84a" stroke="#0f1218" stroke-width="2"/><path d="M-8-2H8" stroke="#0f1218" stroke-width="2"/></g>
+<g id="b03start"><circle r="15" fill="#0f1218" stroke="#fff" stroke-width="3.5"/><text class="m-n" y="6" style="fill:#fff">S</text></g>
+<g id="b03finish"><circle r="15" fill="#fff" stroke="#0f1218" stroke-width="2.5"/><text class="m-n" y="6">F</text></g>
+<g id="b03cp"><path d="M-6 13V-14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M-5-14L13-7L-5 0z" fill="#3ee07f" stroke="#fff" stroke-width="2"/></g>
+<g id="b03bump"><circle r="11" fill="#ff8a3d" stroke="#fff" stroke-width="2.5"/><circle r="4" fill="#0f1218"/></g>
+<g id="b03vent"><circle r="11" fill="#0f1218" stroke="#7dd3fc" stroke-width="3"/><path d="M-5 2L0-4L5 2M-5 7L0 1L5 7" fill="none" stroke="#7dd3fc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="b03spring"><circle r="12" fill="#b6f03c" stroke="#0f1218" stroke-width="2"/><path d="M-6 6L6 3L-6-1L6-4L-2-8" fill="none" stroke="#0f1218" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="b03rest"><rect x="-10" y="-10" width="20" height="20" rx="4" fill="#0f1218" stroke="#3ee07f" stroke-width="2.5"/><path d="M-5 0H5" stroke="#3ee07f" stroke-width="3" stroke-linecap="round"/></g>
+<g id="b03gate"><path d="M-12 14V-6A12 12 0 0 1 12-6V14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M-5 14V-4M5 14V-4M0 14V-8" stroke="#fff" stroke-width="2"/></g>
+</defs>
+<rect class="m-bg" width="720" height="1282"/>
+<text class="m-t m-h" x="30" y="44">B3 Spring Court</text>
+<text class="m-t m-s m-end" x="690" y="44">plan, north up</text>
+<g transform="translate(0,70)">
+<g transform="translate(60,-20)">
+<path class="m-grid" d="M0 50V800M100 50V800M200 50V800M300 50V800M400 50V800M500 50V800M600 50V800M0 100H600M0 200H600M0 300H600M0 400H600M0 500H600M0 600H600M0 700H600M0 800H600"/>
+<!-- 10 px = 1 m. x east, y south -->
+<!-- start court 0 m and the Step +5 m -->
+<rect class="e0 m-edge" x="200" y="700" width="200" height="80"/>
+<rect class="e4 m-edge" x="150" y="620" width="300" height="80"/>
+<!-- bumper court 0 m, walled west and east -->
+<rect class="e0 m-edge" x="80" y="330" width="440" height="290"/>
+<path class="m-wall" d="M80 332V618M520 332V618"/>
+<!-- balconies +6 m -->
+<rect class="e6 m-edge" x="40" y="230" width="130" height="100"/>
+<rect class="e6 m-edge" x="430" y="230" width="130" height="100"/>
+<!-- tower deck +7 m -->
+<rect class="e6 m-edge" x="250" y="150" width="100" height="100" style="fill:#c2ad4a"/>
+<!-- egg ledge +3 m -->
+<rect class="e2 m-edge" x="255" y="58" width="90" height="42"/>
+<!-- gear stair, tops +1 to +6 m -->
+<circle class="m-gear" cx="480" cy="592" r="21"/><circle class="m-gear" cx="494" cy="544" r="21"/><circle class="m-gear" cx="480" cy="496" r="21"/><circle class="m-gear" cx="494" cy="448" r="21"/><circle class="m-gear" cx="480" cy="400" r="21"/><circle class="m-gear" cx="490" cy="354" r="21"/>
+<!-- carriage loop +6 m: stops W, N, E, S; two carriages -->
+<path class="m-mpp" d="M192 270L300 128L408 270H192"/>
+<rect class="m-mp" x="172" y="250" width="40" height="40" rx="3"/>
+<rect class="m-mp" x="388" y="250" width="40" height="40" rx="3"/>
+<circle cx="300" cy="128" r="6" fill="#c4b5fd"/><circle cx="300" cy="272" r="6" fill="#c4b5fd"/>
+<!-- routes -->
+<path class="m-case" d="M300 734V628M300 612V566L396 474L306 404L208 468L154 372"/>
+<path class="m-r1" d="M300 734V628"/>
+<path class="m-r1" d="M300 612V566L396 474L306 404L208 468"/>
+<path class="m-r1" d="M200 462L156 374"/>
+<path class="m-r1" d="M190 478L112 316L96 288"/>
+<path class="m-r1" d="M104 268L186 266L296 122L404 262L500 276"/>
+<path class="m-r1" d="M500 292L412 284L308 280V214"/>
+<path class="m-r2" d="M312 734V628"/>
+<path class="m-r2" d="M312 612V574L408 478L318 412L216 474L160 366L112 296"/>
+<path class="m-r2" d="M110 300L402 384"/>
+<path class="m-r2" d="M412 378L498 292"/>
+<path class="m-r2" d="M508 268L472 256L352 206L314 200"/>
+<!-- objects -->
+<use href="#b03start" x="300" y="756"/><use href="#b03finish" x="300" y="196"/>
+<use href="#b03spring" x="300" y="714"/><use href="#b03spring" x="204" y="472"/><use href="#b03spring" x="410" y="386"/><use href="#b03spring" x="466" y="252"/><use href="#b03spring" x="324" y="80"/>
+<use href="#b03bump" x="300" y="482"/><use href="#b03bump" x="244" y="528"/><use href="#b03bump" x="356" y="528"/><use href="#b03bump" x="236" y="398"/><use href="#b03bump" x="368" y="412"/><use href="#b03bump" x="140" y="560"/><use href="#b03bump" x="420" y="590"/>
+<use href="#b03gem" x="300" y="656"/>
+<use href="#b03gem" x="300" y="562"/><use href="#b03gem" x="400" y="470"/><use href="#b03gem" x="302" y="400"/>
+<use href="#b03gem" x="152" y="366"/>
+<use href="#b03gem" x="90" y="280"/><use href="#b03gem" x="512" y="282"/>
+<use href="#b03egg" x="282" y="80"/><use href="#b03cp" x="250" y="662"/><use href="#b03cp" x="64" y="252"/><use href="#b03cp" x="540" y="310"/>
+<!-- labels and spot heights -->
+<text class="m-t" x="408" y="748">Start court</text><text class="m-t m-s" x="408" y="772">0</text>
+<text class="m-t" x="160" y="648">The Step</text><text class="m-t m-s" x="160" y="672">+5</text>
+<text class="m-t" x="92" y="606">Bumper court</text><text class="m-t m-s" x="92" y="358">0</text>
+<text class="m-t m-s" x="168" y="352">sky gem +8.5</text>
+<text class="m-t" x="-50" y="220">West balcony</text><text class="m-t m-s" x="48" y="322">+6</text>
+<text class="m-t m-end" x="650" y="220">East balcony</text><text class="m-t m-s m-end" x="554" y="322">+6</text>
+<text class="m-t m-mid" x="300" y="178">Tower +7</text>
+<text class="m-t m-s" x="352" y="76">ledge +3</text>
+<text class="m-t m-s" x="352" y="132">N dock</text><text class="m-t m-s" x="318" y="312">S dock</text>
+<text class="m-t m-s" x="528" y="598">+1</text><text class="m-t m-s" x="528" y="362">+6</text><text class="m-t m-s" x="528" y="480">gears</text>
+<text class="m-t m-s" x="-50" y="800">Carriages stop 2 s at W, N, E and S. Loop 21 s.</text>
+<!-- scale bar and north -->
+<path class="m-axis" d="M0 830H100M0 822V838M100 822V838"/><text class="m-t m-s" x="112" y="837">10 m</text>
+<path d="M570 110L580 70L590 110L580 102z" fill="#f4efe4"/><text class="m-t m-s m-mid" x="580" y="134">N</text>
+</g>
+</g>
+<path d="M20 910H700" stroke="#2d3a4f" stroke-width="2"/>
+<text class="m-t" x="30" y="944">Height</text>
+<rect class="e-2 m-edge" x="112" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="152" y="944">below 0</text>
+<rect class="e0 m-edge" x="243" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="283" y="944">0</text>
+<rect class="e2 m-edge" x="308" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="348" y="944">+2</text>
+<rect class="e4 m-edge" x="384" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="424" y="944">+4</text>
+<rect class="e6 m-edge" x="460" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="500" y="944">+6</text>
+<rect class="e8 m-edge" x="536" y="922" width="34" height="28"/>
+<text class="m-t m-s" x="576" y="944">+8 m</text>
+<g transform="translate(52,985)"><use href="#b03start"/></g>
+<text class="m-t" x="86" y="992">Start pad</text>
+<g transform="translate(397,985)"><use href="#b03finish"/></g>
+<text class="m-t" x="431" y="992">Finish pad</text>
+<g transform="translate(52,1029)"><use href="#b03gem"/></g>
+<text class="m-t" x="86" y="1036">Gem</text>
+<g transform="translate(397,1029)"><use href="#b03egg"/></g>
+<text class="m-t" x="431" y="1036">Clockwork Egg</text>
+<g transform="translate(52,1073)"><use href="#b03cp"/></g>
+<text class="m-t" x="86" y="1080">Checkpoint</text>
+<g transform="translate(397,1073)"><path class="m-r1" d="M-20 0H16"/></g>
+<text class="m-t" x="431" y="1080">First-run route</text>
+<g transform="translate(52,1117)"><path class="m-r2" d="M-20 0H16"/></g>
+<text class="m-t" x="86" y="1124">Expert route</text>
+<g transform="translate(397,1117)"><use href="#b03spring"/></g>
+<text class="m-t" x="431" y="1124">Coil Spring</text>
+<g transform="translate(52,1161)"><use href="#b03bump"/></g>
+<text class="m-t" x="86" y="1168">Bumper</text>
+<g transform="translate(397,1161)"><path class="m-mpp" d="M-22 0H22"/><rect class="m-mp" x="-12" y="-8" width="24" height="16" rx="2"/></g>
+<text class="m-t" x="431" y="1168">Moving platform, path</text>
+<g transform="translate(52,1205)"><circle class="m-gear" r="10"/></g>
+<text class="m-t" x="86" y="1212">Turning gear</text>
+<g transform="translate(397,1205)"><path class="m-wall" d="M-16 0H16"/></g>
+<text class="m-t" x="431" y="1212">Wall</text>
+<text class="m-t m-s" x="30" y="1260">Symbols are larger than life. Grid and scale: 10 m.</text>
+</svg>

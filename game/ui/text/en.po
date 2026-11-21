@@ -1,0 +1,125 @@
+# English text of the HUD and the menus. The game shows no text that is not a msgid here,
+# except level names and button names. To add a language, copy this file to <locale>.po,
+# translate each msgstr, and add the file to internationalization/locale/translations in
+# project.godot.
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "GAME_NAME"
+msgstr "Orrery"
+
+msgid "TITLE_PLAY"
+msgstr "Play"
+
+msgid "TITLE_ASCENT"
+msgstr "Ascent"
+
+msgid "TITLE_SETTINGS"
+msgstr "Settings"
+
+msgid "TITLE_QUIT"
+msgstr "Quit"
+
+msgid "TIER_BEGINNER"
+msgstr "Beginner"
+
+msgid "TIER_INTERMEDIATE"
+msgstr "Intermediate"
+
+msgid "TIER_ADVANCED"
+msgstr "Advanced"
+
+# The tier of test levels; debug builds only.
+msgid "TIER_TEST"
+msgstr "Test levels"
+
+# The name of a level that has no name yet; %d is its number in the tier.
+msgid "LEVEL_NUMBER"
+msgstr "Level %d"
+
+msgid "LEVELS_LOCKED"
+msgstr "Locked"
+
+msgid "LEVELS_UNBUILT"
+msgstr "Coming soon"
+
+# A best time before the first finish.
+msgid "TIME_NONE"
+msgstr "-:--.--"
+
+msgid "HINT_PLAY"
+msgstr "Play"
+
+msgid "HINT_BACK"
+msgstr "Back"
+
+msgid "HINT_SELECT"
+msgstr "Select"
+
+msgid "PAUSE_TITLE"
+msgstr "Paused"
+
+msgid "PAUSE_RESUME"
+msgstr "Resume"
+
+msgid "PAUSE_RESTART"
+msgstr "Restart"
+
+msgid "PAUSE_SETTINGS"
+msgstr "Settings"
+
+msgid "PAUSE_LEVELS"
+msgstr "Levels"
+
+msgid "RESULTS_NEW_RECORD"
+msgstr "New record"
+
+msgid "RESULTS_BEST"
+msgstr "Best"
+
+msgid "RESULTS_GEMS"
+msgstr "Gems"
+
+msgid "RESULTS_EGG"
+msgstr "Egg"
+
+msgid "RESULTS_EGG_FOUND"
+msgstr "Found"
+
+msgid "RESULTS_EGG_MISSING"
+msgstr "Not found"
+
+msgid "RESULTS_GOLD"
+msgstr "Gold"
+
+msgid "RESULTS_PAR"
+msgstr "Par"
+
+msgid "RESULTS_NEXT"
+msgstr "Next"
+
+msgid "RESULTS_RETRY"
+msgstr "Retry"
+
+msgid "RESULTS_LEVELS"
+msgstr "Levels"
+
+msgid "MEDAL_GOLD"
+msgstr "Gold"
+
+msgid "MEDAL_QUALIFIED"
+msgstr "Qualified"
+
+# The run finished over the par time.
+msgid "MEDAL_NONE"
+msgstr "Over par"
+
+msgid "SETTINGS_TITLE"
+msgstr "Settings"
+
+msgid "SETTINGS_BACK"
+msgstr "Back"

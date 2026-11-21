@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" id="keys">
+<head>
+<meta charset="utf-8">
+<title>C · In-level HUD</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop noon or-build"></div>
+<div class="safe">
+  <div class="gems pool">
+    <i class="i i-gem"></i><b>3</b><span>/5</span>
+    <span class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+  </div>
+  <!-- The arc is the par time, 0 to 1:10, one tick per 5 s. The ring is now, the star is gold, the check is par. -->
+  <div class="arc">
+    <svg viewBox="0 0 560 150" width="560" height="150">
+      <defs>
+        <path id="star" d="M0-9l2.23 5.93 6.33.29-4.95 3.95 1.68 6.11-5.29-3.48-5.29 3.48 1.68-6.11-4.95-3.95 6.33-.29z"/>
+        <path id="check" d="M-7 0l5 5 9-10"/>
+        <clipPath id="span"><path d="M280 844 51.6-26.5 280-124 508.4-26.5z"/></clipPath>
+      </defs>
+      <circle class="limb" cx="280" cy="844" r="762" pathLength="868.97" stroke-width="76" stroke-dasharray="70 900" transform="rotate(-104.5 280 844)"/>
+      <g class="pool">
+      <g transform="rotate(-104.5 280 844)">
+        <circle class="ln2" cx="280" cy="844" r="724" pathLength="868.97" stroke-dasharray="70 900"/>
+        <circle class="ln" cx="280" cy="844" r="800" pathLength="868.97" stroke-dasharray="70 900"/>
+        <circle class="ln" cx="280" cy="844" r="800" pathLength="868.97" stroke-width="6" stroke-dasharray="42.37 900"/>
+      </g>
+      <g clip-path="url(#span)"><g transform="rotate(-104.5 280 844)">
+        <circle class="ln2" cx="280" cy="844" r="794" pathLength="868.97" stroke-width="12" stroke-dasharray=".35 4.65" stroke-dashoffset=".175"/>
+        <circle class="ln" cx="280" cy="844" r="790" pathLength="868.97" stroke-width="20" stroke-dasharray=".45 9.55" stroke-dashoffset=".225"/>
+      </g></g>
+      <path class="ln2" d="M280 44v76" transform="rotate(-14.5 280 844)"/>
+      <path class="ln2" d="M280 44v76" transform="rotate(14.5 280 844)"/>
+      <g transform="rotate(5.386 280 844)">
+        <path class="gold-ln" d="M280 35v31"/>
+        <g transform="translate(280 21) rotate(-5.386)"><use href="#star" class="gold-fill"/></g>
+        <text x="264" y="29" text-anchor="end" style="fill:var(--gold)">0:48</text>
+      </g>
+      <g transform="rotate(14.5 280 844)">
+        <path class="ln" d="M280 35v9"/>
+        <g transform="translate(280 22) rotate(-14.5)"><use href="#check" class="ln"/></g>
+        <text x="264" y="29" text-anchor="end">1:10</text>
+      </g>
+      <circle class="now" cx="280" cy="44" r="8" transform="rotate(3.053 280 844)"/>
+      </g>
+    </svg>
+    <p class="readout pool"><b>0:42</b>.37</p>
+  </div>
+  <div class="toast pool caps pad-only"><i class="rule"></i><i class="i i-flag"></i>Checkpoint</div>
+  <div class="toast pool caps keys-only"><i class="rule"></i><i class="g g-key">Space</i>Jump</div>
+  <div class="slot pool">
+    <svg viewBox="0 0 148 148" width="148" height="148">
+      <circle class="disc" cx="74" cy="74" r="72"/>
+      <circle class="ln" cx="74" cy="74" r="56"/>
+      <circle class="ln2" cx="74" cy="74" r="65" pathLength="360" stroke-width="8" stroke-dasharray="1 14" stroke-dashoffset=".5"/>
+    </svg>
+    <i class="i i-spring"></i><i class="g pad-only">X</i><i class="g g-mouse keys-only"></i>
+  </div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, "plan-*"]
+  push:
+    branches: [main, "plan-*"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      # `just lint` imports the project, with its LFS lightmaps and music.
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      - uses: ./.github/actions/setup
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: just lint
+
+  # Builds every level script with Blender and checks the import; the test jobs get the files.
+  levels:
+    name: Build levels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: Read the Blender and glTF-Validator pins
+        id: pins
+        run: |
+          source tools/setup/pins.env
+          echo "key=blender-$BLENDER_VERSION-gltf-validator-$GLTF_VALIDATOR_VERSION" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.local/opt
+          key: ${{ steps.pins.outputs.key }}
+      - run: tools/blender/install-ci.sh
+      - run: just build-levels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
+          if-no-files-found: error
+
+  test:
+    name: Import, GUT and level tests (${{ matrix.os }})
+    needs: levels
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # The baked lightmaps (game/levels/lightmaps/) and the music are in Git LFS.
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
+      - run: just test
+      - run: just test-levels
+
+  # The harness contract tests against a headless debug build; the GPU screenshot test runs locally.
+  harness:
+    name: Harness contract tests
+    runs-on: ubuntu-latest
+    steps:
+      # The game imports and plays the LFS music.
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      - uses: ./.github/actions/setup
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: just test-harness
+
+  export:
+    name: Export Linux and Windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      - uses: ./.github/actions/setup
+        with:
+          templates: "true"
+      - run: just export
+      - name: Boot the Linux export
+        timeout-minutes: 2
+        run: build/linux/orrery.x86_64 --headless -- --smoke | grep '^ORRERY boot ok'
+      # Artifact zips drop the executable bit; a tarball keeps it.
+      - run: tar -czf build/orrery-linux.tar.gz -C build/linux .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orrery-linux
+          path: build/orrery-linux.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: orrery-windows
+          path: build/windows/
+          if-no-files-found: error
+
+  # Boots the Windows export that the export job uploads.
+  windows-boot:
+    name: Boot the Windows export
+    needs: export
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-windows
+          path: build/windows/
+      - name: Boot the Windows export
+        timeout-minutes: 2
+        run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'

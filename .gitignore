@@ -1,0 +1,12 @@
+# Build outputs
+build/
+game/.godot/
+game/levels/built/
+*.blend1
+
+# Python
+__pycache__/
+.venv/
+
+# Local secrets
+.env

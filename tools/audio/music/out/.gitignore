@@ -1,0 +1,3 @@
+# Takes, renders and candidates are large build outputs. Never commit them.
+*
+!.gitignore
