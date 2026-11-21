@@ -1,5 +1,6 @@
 """The committed settings (tools/art/config.toml), the output folder and the spend guard."""
 
+import math
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -67,8 +68,13 @@ class SpendError(Exception):
 
 
 def check_spend(estimate_usd: float, cap_usd: float) -> None:
-    """Raises SpendError when the estimate is above the cap."""
-    if estimate_usd > cap_usd:
+    """Raises SpendError when the estimate is above the cap, or the cap is not a finite
+    amount of zero or more (`--max-usd nan` must not open the gate)."""
+    if not 0 <= cap_usd < math.inf:
+        raise SpendError(
+            f"the cap must be a finite amount of USD 0 or more, not {cap_usd}"
+        )
+    if not estimate_usd <= cap_usd:
         raise SpendError(
             f"the estimate USD {estimate_usd:.2f} is above the cap of USD {cap_usd:.2f}. "
             f"Run fewer jobs, or raise the cap for this run with --max-usd {estimate_usd:.2f}"

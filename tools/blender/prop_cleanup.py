@@ -43,6 +43,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--triangles", type=int, default=DEFAULT_TRIANGLES)
     parser.add_argument("--material", choices=MATERIALS)
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1 :])
+    if not args.source.is_file():
+        parser.error(f"no such model: {args.source}")
     if args.height <= 0 or args.triangles < 12:
         parser.error("--height must be positive and --triangles at least 12")
     return args
@@ -58,10 +60,16 @@ def joined_mesh(name: str) -> bpy.types.Object:
     parts = [obj for obj in bpy.data.objects if obj.type == "MESH"]
     if not parts:
         raise RuntimeError("prop_cleanup: the model has no mesh")
-    for obj in parts:
+    # Read every world matrix first: clearing a parent changes its children's.
+    worlds = [obj.matrix_world.copy() for obj in parts]
+    for obj, world in zip(parts, worlds, strict=True):
         obj.data = obj.data.copy()
-        obj.data.transform(obj.matrix_world)
+        obj.data.transform(world)
         obj.data.update()
+        obj.parent = None
+        obj.matrix_world = Matrix.Identity(4)
+    # The join places each part by its transform, which is now the identity.
+    bpy.context.view_layer.update()
     target = parts[0]
     with bpy.context.temp_override(
         active_object=target,
@@ -72,8 +80,6 @@ def joined_mesh(name: str) -> bpy.types.Object:
     for obj in list(bpy.data.objects):
         if obj != target:
             bpy.data.objects.remove(obj)
-    target.parent = None
-    target.matrix_world = Matrix.Identity(4)
     target.name = name
     target.data.name = name
     return target

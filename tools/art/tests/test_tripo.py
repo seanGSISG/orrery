@@ -127,11 +127,56 @@ def test_a_rerun_resumes_the_task_instead_of_paying_again(
     seen = mock_tripo(monkeypatch, ["success"])
     task_file = isolated / "models" / "lamp.glb.task.json"
     task_file.parent.mkdir(parents=True)
-    task_file.write_text(json.dumps({"task_id": "task-1"}))
-    cli.main(["model", str(image), "-o", "lamp.glb"], settings)
+    record = {
+        "service": "Tripo API /generation/image-to-model",
+        "model": "v3.1-20260211",
+        "prompt": "first.png",
+        "settings": {"texture_quality": "standard"},
+        "estimated_usd": 0.3,
+        "seed": 3,
+    }
+    task_file.write_text(json.dumps({"task_id": "task-1", "record": record}))
+    cli.main(["model", str(image), "-o", "lamp.glb", "--seed", "9"], settings)
     paths = [r.url.path for r in seen]
     assert paths == ["/v3/tasks/task-1", "/out/model.glb", "/out/preview.webp"]
     assert "Resuming task task-1" in capsys.readouterr().err
+    # The manifest names the inputs of the task that ran, not of the rerun.
+    written = json.loads((isolated / "models" / "lamp.glb.json").read_text())
+    assert (written["prompt"], written["seed"]) == ("first.png", 3)
+
+
+def test_a_dry_run_ignores_a_started_task(
+    monkeypatch: pytest.MonkeyPatch,
+    image: Path,
+    settings: Config,
+    isolated: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    seen = mock_tripo(monkeypatch, ["success"])
+    task_file = isolated / "models" / "lamp.glb.task.json"
+    task_file.parent.mkdir(parents=True)
+    task_file.write_text(json.dumps({"task_id": "task-1", "record": {}}))
+    cli.main(["model", str(image), "-o", "lamp.glb", "--dry-run"], settings)
+    assert seen == [] and json.loads(capsys.readouterr().out)["dry_run"]
+
+
+def test_a_task_without_a_model_keeps_its_task_file(
+    monkeypatch: pytest.MonkeyPatch,
+    image: Path,
+    settings: Config,
+    isolated: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    mock_tripo(monkeypatch, ["success"])
+
+    def no_model(self: tripo.Tripo, task_id: str) -> dict[str, object]:
+        return {"status": "success", "output": {}}
+
+    monkeypatch.setattr(tripo.Tripo, "task", no_model)
+    with pytest.raises(SystemExit):
+        cli.main(["model", str(image), "-o", "lamp.glb", "--yes"], settings)
+    assert "no model_url" in json.loads(capsys.readouterr().out)["error"]
+    assert (isolated / "models" / "lamp.glb.task.json").exists()
 
 
 def test_a_failed_task_reports_the_reason(

@@ -19,12 +19,15 @@ pytestmark = pytest.mark.skipif(
     shutil.which(BLENDER) is None, reason=f"needs {BLENDER}"
 )
 
-# A stretched UV sphere (960 triangles) away from the origin, as a generated model might be.
+# Two parts away from the origin, as a generated model might be: a stretched UV sphere (960
+# triangles, z -0.5 to 2.5) and a 1 m cube on top of it (z 3.5 to 4.5). Both are 1 m wide, so
+# a clean 2 m prop is 0.4 m wide (give or take what the decimation moves).
 PRIMITIVE = """
 import sys, bpy
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=0.5, location=(3, 2, 1))
 bpy.context.object.scale = (1, 1, 3)
+bpy.ops.mesh.primitive_cube_add(size=1, location=(3, 2, 4))
 bpy.ops.export_scene.gltf(filepath=sys.argv[-1], export_format="GLB")
 """
 
@@ -92,8 +95,11 @@ def test_prop_cleanup_scales_centres_decimates_and_sets_the_kit_material(
     assert low[1] == pytest.approx(0, abs=1e-4) and high[1] == pytest.approx(
         2, abs=1e-3
     )
-    assert low[0] == pytest.approx(-high[0], abs=1e-3) and low[2] == pytest.approx(
-        -high[2], abs=1e-3
+    assert low[0] == pytest.approx(-0.2, abs=0.01) and high[0] == pytest.approx(
+        0.2, abs=0.01
+    )
+    assert low[2] == pytest.approx(-0.2, abs=0.01) and high[2] == pytest.approx(
+        0.2, abs=0.01
     )
     assert gltf["accessors"][primitive["indices"]]["count"] // 3 <= 200
     assert gltf["materials"][primitive["material"]]["extras"] == {

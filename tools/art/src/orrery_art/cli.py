@@ -18,6 +18,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+import httpx2
 import openai
 
 from orrery_art import images, manifest, tripo
@@ -51,10 +52,10 @@ def gate(
             requests=requests,
             estimated_usd=estimate,
             cap_usd=cap,
-            within_cap=estimate <= cap,
+            within_cap=estimate_usd <= cap,
         )
         return False
-    check_spend(estimate, cap)
+    check_spend(estimate_usd, cap)
     print(f"Estimated cost: USD {estimate:.4f} (cap USD {cap:.2f})", file=sys.stderr)
     if not args.yes:
         print(
@@ -95,7 +96,8 @@ def cmd_batch(args: argparse.Namespace, config: Config) -> None:
     jobs = images.read_jobs(jobs_file, config.image)
     digest = images.jobs_hash(jobs, config.image.model)
     state_file = images.state_path(jobs_file)
-    state = images.BatchState.read(state_file)
+    # A dry run ignores the saved state, so it never talks to the API.
+    state = None if args.dry_run else images.BatchState.read(state_file)
     if state is not None and state.jobs_hash == digest and state.results is not None:
         print(
             f"Already collected; delete {state_file} to make the set again",
@@ -191,12 +193,16 @@ def run_task(
 ) -> None:
     """Runs any Tripo task through the paid-call gate, waits for it, downloads its results
     and writes the manifest of the main one. A task file beside the output records a
-    started task, so a rerun waits for it instead of paying again."""
+    started task and its inputs, so a rerun waits for that task (and labels it with its own
+    inputs) instead of paying again. A dry run ignores the task file."""
     settings = config.model
     usd = task.credits * settings.usd_per_credit
     task_file = task.path.with_name(task.path.name + ".task.json")
-    if task_file.exists():
-        task_id = json.loads(task_file.read_text())["task_id"]
+    # The manifest fields that the inputs set; the task file keeps them for a rerun.
+    record: dict[str, Any]
+    if task_file.exists() and not args.dry_run:
+        started = json.loads(task_file.read_text())
+        task_id, record = started["task_id"], started["record"]
         print(
             f"Resuming task {task_id}; delete {task_file} to start a new one",
             file=sys.stderr,
@@ -207,38 +213,39 @@ def run_task(
         if not gate(args, config, usd, [request]):
             return
         task_id = ""
+        record = {
+            "service": f"Tripo API {task.endpoint}",
+            "model": settings.version,
+            "prompt": prompt,
+            "settings": {
+                k: v
+                for k, v in task.shown().items()
+                if isinstance(v, str | int | float | bool)
+            },
+            "estimated_usd": round(usd, 4),
+            "seed": args.seed,
+        }
     client = tripo.connect(settings, api_key("TRIPO_API_KEY", config.keys.tripo))
     if not task_id:
         task_id = client.start(task)
         task_file.parent.mkdir(parents=True, exist_ok=True)
-        task_file.write_text(
-            json.dumps({"task_id": task_id, "endpoint": task.endpoint}) + "\n"
-        )
+        started = {"task_id": task_id, "endpoint": task.endpoint, "record": record}
+        task_file.write_text(json.dumps(started) + "\n")
         print(f"Started task {task_id}", file=sys.stderr)
     data = client.wait(task_id, settings.poll_seconds, settings.timeout_minutes * 60)
-    files = client.download(data.get("output") or {}, task.path)
+    output = data.get("output") or {}
+    if "model_url" not in output:
+        raise tripo.TripoError(f"task {task_id} succeeded but returned no model_url")
+    files = client.download(output, task.path)
     consumed = data.get("credits_consumed")
     billed = (
         None
         if consumed is None
         else round(float(consumed) * settings.usd_per_credit, 4)
     )
-    shown = {
-        k: v for k, v in task.shown().items() if isinstance(v, str | int | float | bool)
-    }
     manifest.write(
         task.path,
-        manifest.Manifest(
-            service=f"Tripo API {task.endpoint}",
-            model=settings.version,
-            mode="task",
-            prompt=prompt,
-            settings=shown,
-            estimated_usd=round(usd, 4),
-            billed_usd=billed,
-            request_id=task_id,
-            seed=args.seed,
-        ),
+        manifest.Manifest(**record, mode="task", billed_usd=billed, request_id=task_id),
     )
     task_file.unlink()
     emit(ok=True, files=[str(f) for f in files], task_id=task_id, billed_usd=billed)
@@ -347,6 +354,7 @@ def main(argv: list[str] | None = None, config: Config | None = None) -> None:
         MissingKeyError,
         tripo.TripoError,
         openai.APIError,
+        httpx2.HTTPError,
     ) as error:
         emit(ok=False, error=str(error))
         sys.exit(1)

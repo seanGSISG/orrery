@@ -116,9 +116,11 @@ def read_jobs(path: Path, defaults: ImageSettings) -> list[ImageJob]:
             jobs.append(job_from_line(json.loads(text), defaults))
         except (ValueError, KeyError, TypeError, AttributeError) as error:
             problems.append(f"line {number}: {error}")
-    outs = [job.out for job in jobs]
+    paths = [job.path for job in jobs]
     problems += [
-        f"two jobs write {out}" for out in sorted(set(outs)) if outs.count(out) > 1
+        f"two jobs write {job.out}"
+        for i, job in enumerate(jobs)
+        if job.path in paths[:i]
     ]
     if problems:
         raise ValueError(f"{path}: " + "; ".join(problems))

@@ -99,7 +99,7 @@ def test_read_jobs_names_each_bad_line(tmp_path: Path, settings: Config) -> None
     jobs = tmp_path / "jobs.jsonl"
     lines = [
         {"prompt": "a", "out": "a.png"},
-        {"prompt": "b", "out": "a.png"},
+        {"prompt": "b", "out": "./a.png"},
         {"prompt": "c", "out": "../escape.png"},
         {"prompt": "d", "out": "d.png", "colour": "red"},
         {"out": "e.png"},
@@ -109,7 +109,7 @@ def test_read_jobs_names_each_bad_line(tmp_path: Path, settings: Config) -> None
     with pytest.raises(ValueError) as error:
         images.read_jobs(jobs, settings.image)
     message = str(error.value)
-    for part in ["line 3", "line 4", "line 5", "line 6", "two jobs write a.png"]:
+    for part in ["line 3", "line 4", "line 5", "line 6", "two jobs write ./a.png"]:
         assert part in message
 
 
@@ -204,6 +204,36 @@ def test_the_spend_guard_refuses_a_run_above_the_cap(
         cli.main(["batch", str(jobs), "--yes", "--max-usd", "0.05"], settings)
     assert exit_info.value.code == 1
     assert "above the cap of USD 0.05" in json.loads(capsys.readouterr().out)["error"]
+
+
+@pytest.mark.parametrize("cap", ["nan", "-1", "inf"])
+def test_the_spend_guard_refuses_a_cap_that_is_not_a_finite_amount(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: Config,
+    capsys: pytest.CaptureFixture[str],
+    cap: str,
+) -> None:
+    mock_openai(monkeypatch, refuse)
+    with pytest.raises(SystemExit):
+        cli.main(
+            ["image", "--prompt", "a", "-o", "a.png", "--yes", "--max-usd", cap],
+            settings,
+        )
+    assert "finite" in json.loads(capsys.readouterr().out)["error"]
+
+
+def test_a_batch_dry_run_ignores_saved_state(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    settings: Config,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    mock_openai(monkeypatch, refuse)
+    jobs = tmp_path / "set.jsonl"
+    jobs.write_text(json.dumps({"prompt": "icon", "out": "icon.png"}) + "\n")
+    images.BatchState("other-hash", "batch-9").write(images.state_path(jobs))
+    result = run(["batch", str(jobs), "--dry-run"], settings, capsys)
+    assert result["dry_run"] and len(result["requests"]) == 1
 
 
 def test_the_default_cap_comes_from_the_config(settings: Config) -> None:

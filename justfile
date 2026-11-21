@@ -227,22 +227,29 @@ model *args:
 [script("bash")]
 prop-cleanup source name *args:
     set -euo pipefail
+    # Read the arguments as data from $1 and $2: just interpolation would paste them into the script.
+    source=$1 name=$2
     shift 2
+    if [[ ! $name =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just prop-cleanup: the name must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
+    staged="$tmp/$name.glb" dest="assets/props/$name.glb"
     if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
-        --python tools/blender/prop_cleanup.py -- "{{ source }}" "$tmp/{{ name }}.glb" "$@" >"$tmp/log" 2>&1; then
+        --python tools/blender/prop_cleanup.py -- "$source" "$staged" "$@" >"$tmp/log" 2>&1; then
         cat "$tmp/log" >&2
         echo "just prop-cleanup: Blender failed" >&2
         exit 1
     fi
     grep '^prop-cleanup:' "$tmp/log"
-    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/{{ name }}.glb"
+    "${GLTF_VALIDATOR:-gltf_validator}" "$staged"
     mkdir -p assets/props
-    mv "$tmp/{{ name }}.glb" "assets/props/{{ name }}.glb"
+    mv "$staged" "$dest"
     # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
-    if [[ -f "{{ source }}.json" ]]; then cp "{{ source }}.json" "assets/props/{{ name }}.glb.json"; fi
-    echo "assets/props/{{ name }}.glb"
+    if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
+    echo "$dest"
 
 # Run the asset tool tests: mocked APIs, no paid call. The prop tests need blender-5.2
 [positional-arguments]
