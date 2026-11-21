@@ -1,0 +1,223 @@
+/* Direction B, Glass and light: frosted glass panels, light type, thin brass accents.
+   Swap the palette in :root to restyle every screen of this direction. */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=block");
+
+:root {
+  --font: "Outfit", system-ui, sans-serif;
+  --night: #0a101e;
+  --ink: #ffffff;
+  --ink-2: color-mix(in srgb, var(--ink) 76%, transparent);
+  --ink-3: color-mix(in srgb, var(--ink) 54%, transparent);
+  --glass: color-mix(in srgb, var(--night) 54%, transparent);
+  --glass-deep: color-mix(in srgb, var(--night) 68%, transparent);
+  --glass-edge: color-mix(in srgb, var(--ink) 24%, transparent);
+  --glass-lift: color-mix(in srgb, var(--ink) 12%, transparent);
+  --glass-filter: blur(32px) saturate(1.7) brightness(.7);
+  --brass: #e9c988;
+  --gold: #ffd97f;
+  --good: #8fe8c8;
+  --focus: #ffffff;
+  --on-focus: #0b111c;
+  --shadow: 0 22px 60px rgb(0 0 0 / .32);
+}
+
+.frame {
+  font-family: var(--font); color: var(--ink);
+  font-size: 26px; font-weight: 400; line-height: 1.15; font-variant-numeric: tabular-nums;
+}
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  border: 1px solid var(--glass-edge); border-radius: 34px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 20%, transparent), var(--shadow);
+}
+/* A soft dark wash on one side keeps bare text readable over the backdrop. */
+.wash { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, color-mix(in srgb, var(--night) 78%, transparent), color-mix(in srgb, var(--night) 35%, transparent) 45%, transparent 70%); }
+
+/* Button glyphs: clear glass discs; on a focused control they turn solid. */
+.g { background: color-mix(in srgb, var(--ink) 14%, transparent); border: 1.5px solid color-mix(in srgb, var(--ink) 78%, transparent); color: var(--ink); font-weight: 500; }
+.focus .g { background: var(--on-focus); border-color: var(--on-focus); color: var(--ink); }
+.g-key { font-weight: 500; }
+.g-mouse { background: color-mix(in srgb, var(--ink) 10%, transparent); border-width: 2px; }
+
+.hints { position: absolute; left: 0; bottom: 0; display: flex; gap: 44px; font-size: 26px; color: var(--ink-2); }
+.hints span { display: inline-flex; align-items: center; gap: 14px; }
+
+/* ---------- HUD ---------- */
+
+.gems { position: absolute; left: 0; top: 0; height: 70px; padding: 0 30px 0 24px; display: flex; align-items: center; gap: 12px; }
+.gems .i { font-size: 34px; color: var(--brass); }
+.gems b { font-size: 42px; font-weight: 500; }
+.gems span { font-size: 30px; font-weight: 300; color: var(--ink-2); margin-left: -4px; }
+
+.timer {
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  width: 430px; padding: 10px 36px 24px;
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline; row-gap: 6px;
+}
+.timer .readout b { font-size: 56px; font-weight: 300; letter-spacing: -.5px; }
+.timer .readout span { font-size: 36px; font-weight: 300; color: var(--ink-2); }
+.timer .target { display: flex; align-items: center; gap: 8px; font-size: 28px; color: var(--gold); }
+.timer .target .i { font-size: 24px; }
+.timer .bar { grid-column: 1 / -1; position: relative; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 30%, transparent); }
+.timer .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--ink); }
+/* Gold is a diamond on the line; par is the bar at its end. */
+.timer .bar .gold { position: absolute; top: 50%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; transform: rotate(45deg); border-radius: 2px; background: var(--gold); }
+.timer .bar .par { position: absolute; right: -2px; top: 50%; width: 4px; height: 20px; margin-top: -10px; border-radius: 2px; background: var(--ink); }
+
+.toast {
+  position: absolute; left: 50%; top: 132px; transform: translateX(-50%);
+  height: 60px; padding: 0 30px 0 24px; border-radius: 30px;
+  display: flex; align-items: center; gap: 14px; font-size: 26px; white-space: nowrap;
+}
+.toast .i { font-size: 24px; color: var(--good); }
+.toast .g { margin-left: -14px; }
+
+.slot { position: absolute; right: 0; bottom: 30px; width: 118px; height: 118px; display: grid; place-items: center; }
+.slot .i { font-size: 64px; }
+.slot .g { position: absolute; left: 50%; bottom: -24px; margin-left: -22px; background: var(--ink); border-color: var(--ink); color: var(--on-focus); box-shadow: 0 6px 18px rgb(0 0 0 / .35); }
+.slot .g-mouse { margin-left: -17px; bottom: -30px; background: var(--on-focus); border-color: var(--ink); color: var(--ink); }
+
+/* ---------- Ascent HUD ---------- */
+
+.stats { position: absolute; left: 0; top: 0; display: flex; gap: 14px; }
+.stats > div { height: 70px; padding: 0 28px; display: flex; align-items: center; gap: 14px; }
+.stats span { font-size: 26px; color: var(--ink-2); }
+.stats b { font-size: 42px; font-weight: 500; }
+.stats .time { font-size: 28px; font-weight: 300; color: var(--ink-2); }
+
+.rail { position: absolute; right: 0; top: 40px; bottom: 40px; width: 300px; }
+.rail .track { position: absolute; right: 10px; top: 0; bottom: 0; width: 8px; border-radius: 4px; background: color-mix(in srgb, var(--night) 50%, transparent); border: 1px solid color-mix(in srgb, var(--ink) 50%, transparent); box-shadow: 0 0 14px rgb(0 0 0 / .3); }
+.rail .climbed { position: absolute; right: 10px; bottom: 0; width: 8px; border-radius: 4px; background: var(--ink); }
+.rail .zone { position: absolute; right: 2px; width: 24px; height: 3px; margin-bottom: -1.5px; border-radius: 2px; background: var(--ink); box-shadow: 0 0 0 1px color-mix(in srgb, var(--night) 35%, transparent); }
+.rail .top { position: absolute; right: 1px; top: -13px; width: 26px; height: 26px; border: 3px solid var(--brass); border-radius: 50%; background: color-mix(in srgb, var(--night) 70%, transparent); }
+.rail .best { position: absolute; right: 38px; transform: translateY(50%); height: 50px; padding: 0 20px 0 16px; display: flex; align-items: center; gap: 10px; border-radius: 25px; font-size: 28px; font-weight: 500; }
+.rail .best::after { content: ""; position: absolute; right: -36px; top: 50%; width: 24px; height: 4px; margin-top: -2px; background: var(--brass); border-radius: 2px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--night) 40%, transparent); }
+.rail .best .i { font-size: 26px; color: var(--brass); }
+.rail .now { position: absolute; right: 38px; transform: translateY(50%); height: 76px; padding: 0 26px; display: flex; align-items: baseline; gap: 8px; border-radius: 38px; line-height: 76px; }
+.rail .now b { font-size: 50px; font-weight: 400; }
+.rail .now span { font-size: 28px; color: var(--ink-2); }
+.rail .now::after { content: ""; position: absolute; right: -34px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 6px color-mix(in srgb, var(--ink) 25%, transparent), 0 2px 10px rgb(0 0 0 / .4); }
+
+/* ---------- Title ---------- */
+
+.logo { position: absolute; left: 0; top: 150px; font-size: 190px; font-weight: 200; letter-spacing: -3px; line-height: 1; }
+/* A thin brass orbit round the O, with one planet on it. */
+.logo .orbit { position: absolute; left: -7px; top: 16px; width: 164px; height: 164px; border: 2px solid var(--brass); border-radius: 50%; }
+.logo .orbit::after { content: ""; position: absolute; right: 14px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 18px var(--brass); }
+
+.menu { display: grid; gap: 8px; }
+.menu li { height: 88px; padding: 0 22px 0 40px; display: flex; align-items: center; justify-content: space-between; gap: 30px; border-radius: 44px; font-size: 44px; font-weight: 300; }
+.menu li.focus { background: var(--focus); color: var(--on-focus); font-weight: 500; box-shadow: 0 0 0 7px color-mix(in srgb, var(--ink) 22%, transparent), var(--shadow); }
+.title .menu { position: absolute; left: -40px; top: 478px; width: 480px; }
+
+/* ---------- Level select ---------- */
+
+.tiers { position: absolute; left: 0; top: 0; height: 76px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border-radius: 38px; }
+.tiers > b, .tiers > span { height: 56px; padding: 0 28px; display: flex; align-items: center; gap: 10px; border-radius: 28px; font-size: 28px; }
+.tiers > b { background: var(--focus); color: var(--on-focus); font-weight: 500; }
+.tiers > span { color: var(--ink-3); }
+.tiers .g { margin: 0 8px; }
+.totals { position: absolute; right: 0; top: 0; height: 76px; display: flex; align-items: center; gap: 36px; font-size: 30px; }
+.totals span { display: inline-flex; align-items: center; gap: 12px; }
+.totals .i { font-size: 34px; }
+.totals .i-gold { color: var(--gold); }
+.totals .i-egg { color: var(--brass); }
+
+.cards { position: absolute; left: 50%; top: 168px; height: 560px; transform: translateX(-50%); display: flex; align-items: center; gap: 28px; }
+.card { flex: none; width: 320px; height: 452px; overflow: hidden; display: flex; flex-direction: column; }
+.card .thumb { height: 196px; background: center / cover no-repeat; }
+.card .body { flex: 1; padding: 20px 28px 24px; display: flex; flex-direction: column; }
+.card .no { font-size: 24px; color: var(--ink-3); }
+.card .name { font-size: 32px; font-weight: 500; margin-top: 2px; }
+.card .time { font-size: 44px; font-weight: 300; margin-top: auto; }
+.card .marks { display: flex; gap: 14px; font-size: 36px; margin-top: 12px; }
+.card .i-gold { color: var(--gold); }
+.card .i-egg { color: var(--brass); }
+.card .off, .card .i-medal-none { color: var(--ink-3); }
+.card.new .time { color: var(--ink-3); }
+.card.locked { background: var(--glass-deep); align-items: center; justify-content: center; gap: 22px; color: var(--ink-3); }
+.card.locked .i { font-size: 72px; }
+.card.locked .no { font-size: 30px; }
+.card.focus { width: 380px; height: 548px; border: 3px solid var(--ink); box-shadow: 0 0 0 8px color-mix(in srgb, var(--ink) 20%, transparent), 0 30px 80px rgb(0 0 0 / .45); background: var(--glass-deep); }
+.card.focus .thumb { height: 236px; }
+.card.focus .name { font-size: 38px; }
+.card.focus .time { font-size: 56px; }
+.card .targets { display: flex; gap: 24px; margin-top: 6px; font-size: 24px; color: var(--ink-2); }
+.card .targets span { display: inline-flex; align-items: center; gap: 8px; }
+
+.dots { position: absolute; left: 50%; top: 776px; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; height: 28px; }
+.dots li { width: 12px; height: 12px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 28%, transparent); }
+.dots li.done { background: var(--ink); }
+.dots li.gold { width: 22px; height: 22px; border-radius: 0; background: var(--gold); -webkit-mask: var(--i-star) center / contain no-repeat; mask: var(--i-star) center / contain no-repeat; }
+.dots li.new { background: none; border: 2.5px solid var(--ink); }
+.dots li.here { outline: 2.5px solid var(--ink); outline-offset: 7px; border-radius: 50%; }
+
+/* ---------- Pause ---------- */
+
+.sheet { position: absolute; left: 0; top: 0; bottom: 0; width: 560px; padding: 44px 40px; display: flex; flex-direction: column; border-radius: 44px; background: var(--glass-deep); }
+.sheet .where { padding: 0 20px; font-size: 28px; color: var(--ink-2); }
+.sheet .clock { padding: 0 20px; margin-top: 6px; display: flex; align-items: baseline; gap: 20px; }
+.sheet .clock b { font-size: 68px; font-weight: 300; }
+.sheet .clock span { display: inline-flex; align-items: center; gap: 8px; font-size: 28px; color: var(--gold); }
+.sheet .menu { margin: auto 0; }
+.sheet .menu li { padding-left: 34px; }
+.sheet .menu li .g { opacity: .9; }
+.sheet .hints { position: static; padding: 0 20px; }
+
+/* ---------- Settings ---------- */
+
+.panel { position: absolute; inset: 0; display: grid; grid-template-columns: 420px 1fr; overflow: hidden; border-radius: 44px; background: var(--glass-deep); }
+.panel nav { padding: 44px 30px; border-right: 1px solid var(--glass-edge); background: color-mix(in srgb, var(--ink) 4%, transparent); display: flex; flex-direction: column; }
+.panel h1 { padding: 0 24px; font-size: 44px; font-weight: 300; }
+.panel .tabs { margin-top: 44px; display: grid; gap: 6px; }
+.panel .tabs li { height: 72px; padding: 0 24px; display: flex; align-items: center; border-radius: 36px; font-size: 30px; color: var(--ink-2); }
+.panel .tabs li.on { position: relative; background: var(--glass-lift); color: var(--ink); font-weight: 500; }
+.panel .tabs li.on::before { content: ""; position: absolute; left: -12px; top: 20px; bottom: 20px; width: 4px; border-radius: 2px; background: var(--brass); }
+.panel .bumpers { margin-top: auto; padding: 0 24px; display: flex; align-items: center; gap: 12px; font-size: 26px; color: var(--ink-2); }
+.rows { padding: 44px 48px; display: flex; flex-direction: column; gap: 10px; }
+.row { height: 104px; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; border-radius: 30px; font-size: 32px; }
+.row.focus { background: var(--glass-lift); box-shadow: 0 0 0 3px var(--ink), 0 0 0 10px color-mix(in srgb, var(--ink) 16%, transparent); }
+.rows .hints { position: static; margin-top: auto; padding: 0 30px; }
+
+.seg { display: flex; padding: 6px; border-radius: 34px; background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.seg span { height: 56px; padding: 0 28px; display: flex; align-items: center; gap: 10px; border-radius: 28px; font-size: 28px; color: var(--ink-2); }
+.seg span.on { background: var(--ink); color: var(--on-focus); font-weight: 500; }
+.seg span.on .i { font-size: 22px; }
+.step { display: flex; align-items: center; gap: 26px; font-size: 34px; font-weight: 500; }
+.step i { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--on-focus); font-size: 34px; line-height: 1; padding-bottom: 4px; }
+.slide { display: flex; align-items: center; gap: 28px; }
+.slide .line { position: relative; width: 420px; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.slide .line i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--ink); }
+.slide .line i::after { content: ""; position: absolute; right: -16px; top: 50%; width: 32px; height: 32px; margin-top: -16px; border-radius: 50%; background: var(--ink); box-shadow: 0 4px 14px rgb(0 0 0 / .4); }
+.slide b { min-width: 76px; text-align: right; font-size: 34px; font-weight: 500; }
+/* A switch says its state three ways: the word, the knob position and the fill. */
+.switch { display: flex; align-items: center; gap: 22px; font-size: 30px; color: var(--ink-2); }
+.switch i { position: relative; width: 92px; height: 52px; border-radius: 26px; background: color-mix(in srgb, var(--ink) 16%, transparent); border: 2px solid color-mix(in srgb, var(--ink) 50%, transparent); }
+.switch i::after { content: ""; position: absolute; left: 5px; top: 5px; width: 38px; height: 38px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 70%, transparent); }
+.switch.on { color: var(--ink); }
+.switch.on i { background: var(--brass); border-color: var(--brass); }
+.switch.on i::after { left: 45px; background: var(--on-focus); }
+
+/* ---------- Results ---------- */
+
+.result { position: absolute; left: 0; top: 96px; }
+.result .where { font-size: 34px; color: var(--ink-2); }
+.result .time { margin: 4px 0 0 -10px; font-size: 248px; font-weight: 200; letter-spacing: -6px; line-height: 1.05; }
+.result .time span { font-size: 150px; color: var(--ink-2); letter-spacing: -3px; }
+.pills { display: flex; gap: 18px; margin-top: 20px; }
+.pills span { height: 72px; padding: 0 32px 0 26px; display: inline-flex; align-items: center; gap: 14px; border-radius: 36px; font-size: 32px; font-weight: 500; }
+.pills .medal { background: var(--gold); color: var(--on-focus); }
+.pills .medal .i { font-size: 34px; }
+.pills .record { border: 2px solid var(--ink); }
+.pills .record b { font-weight: 300; color: var(--ink-2); }
+.tally { position: absolute; right: 0; top: 150px; width: 620px; padding: 22px 40px; }
+.tally li { height: 92px; display: flex; align-items: center; justify-content: space-between; font-size: 32px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 16%, transparent); }
+.tally li:last-child { border-bottom: 0; }
+.tally span { display: inline-flex; align-items: center; gap: 16px; color: var(--ink-2); }
+.tally span .i { font-size: 36px; color: var(--brass); }
+.tally b { display: inline-flex; align-items: center; gap: 14px; font-weight: 500; }
+.tally b .i { font-size: 26px; color: var(--good); }
+.actions { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 18px; }
+.actions span { height: 88px; padding: 0 40px 0 24px; display: inline-flex; align-items: center; gap: 18px; border-radius: 44px; font-size: 38px; font-weight: 300; }
+.actions .focus { padding-right: 48px; background: var(--ink); color: var(--on-focus); font-weight: 500; box-shadow: 0 0 0 7px color-mix(in srgb, var(--ink) 22%, transparent), var(--shadow); }
