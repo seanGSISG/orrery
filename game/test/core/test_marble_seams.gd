@@ -28,6 +28,32 @@ class Crossing:
 	var airborne: int = 0
 
 
+## A floor object for the touch test: a 4 m wide, 2 m long box Solid from z = 0 to -2, with
+## its top flush at TOP. It keeps the marble centre's z at its first touch.
+class Pad:
+	extends LevelObject
+
+	## Marble centre z at the first touch; INF before it.
+	var first_touch: float = INF
+
+	## Builds the box Solid, owned by the pad so that its contacts name the pad.
+	func _init() -> void:
+		var box: BoxShape3D = BoxShape3D.new()
+		box.size = Vector3(4, 0.5, 2)
+		var shape: CollisionShape3D = CollisionShape3D.new()
+		shape.shape = box
+		var solid: Solid = Solid.new()
+		solid.add_child(shape)
+		solid.position = Vector3(0, TOP - box.size.y / 2.0, -box.size.z / 2.0)
+		add_child(solid)
+		solid.owner = self
+
+	## Keeps the marble centre's z at the first touch.
+	func on_touch(run: LevelRun, _contact: Contact) -> void:
+		if first_touch == INF:
+			first_touch = run.marble.position.z
+
+
 ## A marble that rolls at 5, 10 or 15 m/s across the seams between flush Solids crosses the
 ## course on the floor and gets no vertical speed: trimesh to box, box to box and box to
 ## trimesh, also along the seam between the tile columns, over the tile corners.
@@ -52,8 +78,8 @@ func test_step_between_solids_is_felt() -> void:
 
 
 ## A marble at 15 m/s that rolls onto a 10° ramp Solid, flush with the floor, moves as far as
-## its speed carries it. The foot of a ramp rises, so it is no flush seam, and the sweep must
-## not stop the move there. Each start puts the sub-steps at a new place.
+## its speed carries it and climbs the ramp. The foot of a ramp rises, so it is no flush seam,
+## and the sweep must not stop the move there. Each start puts the sub-steps at a new place.
 func test_rolls_onto_a_flush_ramp_without_a_stall() -> void:
 	var pieces: Array[Node3D] = _floor(6.0, 0.0, 0.0, true)
 	pieces.append(_ramp(deg_to_rad(10.0)))
@@ -72,6 +98,21 @@ func test_rolls_onto_a_flush_ramp_without_a_stall() -> void:
 			var carried: float = (speed + run.state.velocity.length()) * 0.5 / rate
 			lost += carried - (run.state.position - before).length()
 		assert_lt(lost, 0.01, "travel lost from z = %.3f" % at)
+		var rise: float = run.state.position.y - TOP - TUNING.radius
+		assert_gt(rise, 0.2, "height gained on the ramp from z = %.3f" % at)
+
+
+## A flush object still gets its touch through its joined edge contact: the marble touches a
+## pad flush with the floor while its centre is still over the floor, inside the contact
+## margin of the pad's edge at z = 0.
+func test_flush_object_gets_its_touch_at_the_seam() -> void:
+	var pad: Pad = Pad.new()
+	var pieces: Array[Node3D] = _floor(6.0, 0.0, 0.0, true)
+	pieces.append(pad)
+	start_run(FLAT, pieces)
+	run.marble.teleport(Vector3(0.5, TOP + TUNING.radius, 0.5), Vector3(0, 0, -1))
+	hold(rolling(Vector2(0, 1.0 / TUNING.max_roll_speed)), 1.0)
+	assert_gt(pad.first_touch, 0.03, "first touch with the centre before the seam")
 
 
 ## Rolls the marble along -Z at x from START with the input that keeps speed, until it passes
