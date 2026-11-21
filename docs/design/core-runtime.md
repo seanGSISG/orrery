@@ -36,9 +36,9 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 | F2 | A separated contact needs `margin`. With a 0.005 m gap, margin 0.02 finds the contact and margin 0 finds nothing. | VERIFIED |
 | F3 | `get_rest_info` gives only one contact, the deepest: `point`, `normal`, `rid`, `collider_id`, `shape`, `linear_velocity`. For an `AnimatableBody3D` moved in physics frames, `linear_velocity` is the point velocity: platform 3 m/s → 2.99995; gear 1 rad/s at r = 1.5 m → 1.49999 m/s. In a corner it gives only the wall. | VERIFIED |
 | F4 | `intersect_shape` gives colliders only (`rid`, `collider`, `collider_id`, `shape`). It can repeat a body: one trimesh at a corner gave 2 entries. With `collide_with_areas` it finds an `Area3D`, also when `monitoring` and `monitorable` are false. | VERIFIED |
-| F5 | `cast_motion` returns `[safe, unsafe]` fractions and does not tunnel. A 30 m drop stops at y = 0.2026 (radius 0.2, floor at 0). One 500 m sweep stops at a thin one-sided floor at y = −9.7987 (expected −9.8). | VERIFIED |
+| F5 | `cast_motion` returns `[safe, unsafe]` fractions and does not tunnel. A 30 m drop stops at y = 0.2026 (radius 0.2, floor at 0). One 500 m sweep stops at a thin one-sided floor at y = −9.7987 (expected −9.8). It ignores a shape that the sphere already overlaps, also when the motion goes deeper (y = 0.199, 1 mm down: safe 1). From exact contact (gap 0), the smallest motion into the surface gives safe 0; a motion along the surface gives safe 1. So the response leaves a 0.1 mm gap (#7). | VERIFIED |
 | F6 | Back faces do not collide in any sphere query. The front of triangle (a, b, c) faces along `(c - a).cross(b - a)`. A sweep from below passes through a one-sided floor. | VERIFIED |
-| F7 | With the default `queries/use_enhanced_internal_edge_removal=false`, a sphere 3 cm from an internal edge also gets the neighbour triangle's edge point, with a normal tilted by 0.15 to 0.20. A test marble at 15 m/s drifted sideways at 0.89 m/s after 5 s. With `true`, the extra contacts go away and the drift is 0.0008 m/s. Concave corners, outer ledge edges and wall tops still give contacts. The cost goes from 4.2 to 6.0 µs per tick. A home-made coplanar filter only halved the drift (0.46 m/s). | VERIFIED |
+| F7 | With the default `queries/use_enhanced_internal_edge_removal=false`, a sphere 3 cm from an internal edge also gets the neighbour triangle's edge point, with a normal tilted by 0.15 to 0.20. A test marble at 15 m/s drifted sideways at 0.89 m/s after 5 s. With `true`, the extra contacts go away from 4 mm on and the drift is 0.0008 m/s. Closer than about 2 mm, `true` still gives the edge point, with a normal tilted by about d/r (0.007 at 2 mm); the merge rule in §3 keeps the face contact (#7). Concave corners, outer ledge edges and wall tops still give contacts. The cost goes from 4.2 to 6.0 µs per tick. A home-made coplanar filter only halved the drift (0.46 m/s). | VERIFIED |
 | F8 | Cost per call against a 4000-triangle trimesh: `collide_shape` 1.5 µs, `get_rest_info` 1.8 µs, `intersect_shape` 2.1 µs, `cast_motion` 2.6 µs. | VERIFIED |
 
 **When queries work**
@@ -92,7 +92,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 - Each sub-step does these steps:
   1. Apply gravity from the field with the highest priority, or else the tuning gravity (straight down).
   2. Find contacts.
-  3. Respond to them, relative to `contact.velocity`.
+  3. Respond to them, relative to `contact.velocity`. The response leaves the marble 0.1 mm (`Marble.SKIN`) above each surface, because a sweep from exact contact stops at once (F5).
   4. Apply rolling, air control and jump.
   5. Sweep the move with `cast_motion`.
   6. Collect the overlapped triggers.
@@ -102,7 +102,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 - Call `intersect_shape` on the solid layer with margin `contact_margin` (0.01) and at most 32 results, then keep the unique `Solid`s. Use 32, because one body can fill several entries (F4).
 - For each Solid, call `collide_shape` (at most 16 pairs) with the other Solids in `exclude`. Use the second point of each pair.
 - `normal = (centre - point).normalized()`. `depth = radius - distance`. The depth is negative when the contact is inside the margin.
-- Merge contacts whose normals almost agree (`dot > 0.9998`), and keep the largest depth. This removes the duplicates from F1.
+- Merge contacts whose normals almost agree (`dot > 0.9998`), and keep the deeper contact with its point and normal. This removes the duplicates from F1 and the edge points close to an internal edge (F7).
 - Sweep with `cast_motion` and margin 0.
 - Find overlaps with `intersect_shape` on the trigger layer, areas only, then use `collider.owner as LevelObject`.
 - Physics layers: layer 1 is `solid` (mask value 1) and layer 2 is `trigger` (mask value 2). Name them in `project.godot`.
@@ -179,7 +179,7 @@ var touches: Array[Contact]          # after step(): the first contact for each 
 var overlaps: Array[LevelObject]     # after step(): objects whose triggers overlapped in any sub-step
 func step(dt: float, input: MarbleInput, world: WorldQuery) -> void   # reads only its arguments and own fields
 func add_velocity(delta_v: Vector3) -> void
-func teleport(at: Vector3, new_velocity: Vector3) -> void
+func teleport(at: Vector3, new_velocity: Vector3) -> void   # spin becomes the spin that rolls at new_velocity on a floor normal to up
 
 # core/marble/world_query.gd: the only code that calls Jolt; read-only
 class_name WorldQuery
@@ -366,8 +366,8 @@ game/
 └── test/
     ├── support/run_test.gd    #7
     ├── levels/flat.tscn       #7; every other test level has one owner, its creator
-    ├── core/                  test_marble_roll #7, test_marble_physics #10, test_camera #11
-    ├── level/                 test_level_import #8, test_rules #13
+    ├── core/                  test_marble_roll and test_player_source #7, test_marble_physics #10, test_camera #11
+    ├── level/                 test_game_state #7, test_level_import #8, test_rules #13
     ├── objects/<type>/        the owner of objects/<type>/
     └── harness/               #9
 ```
