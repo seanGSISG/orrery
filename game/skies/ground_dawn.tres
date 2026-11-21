@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkyPreset" format=3]
+
+[ext_resource type="Script" path="res://skies/sky_preset.gd" id="1"]
+[ext_resource type="Texture2D" path="res://skies/ground_dawn.hdr" id="2"]
+
+[resource]
+script = ExtResource("1")
+panorama = ExtResource("2")
+sky_energy = 0.297
+sun_elevation = 12.0
+sun_azimuth = 135.0
+sun_color = Color(1, 0.84, 0.68, 1)
+sun_energy = 2.27
+fog_density = 0.001

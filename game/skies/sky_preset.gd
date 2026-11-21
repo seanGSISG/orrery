@@ -2,7 +2,8 @@
 class_name SkyPreset
 extends Resource
 ## One sky and the light that goes with it. The three tier skies are res://skies/dawn.tres
-## (Beginner), noon.tres (Intermediate) and dusk.tres (Advanced). LevelConverter gives a level
+## (Beginner), noon.tres (Intermediate) and dusk.tres (Advanced); ground_dawn.tres is the dawn on
+## the ground where the Ascent climb starts (AscentSky.STOPS). LevelConverter gives a level
 ## the preset that its `sky` names, or else the preset of its tier, as the nodes that
 ## environment() and sun() return.
 ##

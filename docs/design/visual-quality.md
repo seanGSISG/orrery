@@ -312,6 +312,7 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Preset | Backdrop | Sun elevation | Sun colour (sRGB) | Sun energy | Sky energy | Fill | Haze (1/m) |
 |---|---|---|---|---|---|---|---|
 | `dawn` | A photographed dawn sky over a sea of clouds. No planets | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
+| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
 | `noon` | The sky from 16 km: deep blue, clouds far below. No planets | 58° | (1, 0.99, 0.96) | 1.35 | 0.177 | none | 0.0005 |
 | `dusk` | The sky from 80 km: the curve of the Earth, faint stars, one pale planet | 7° | (1, 0.77, 0.58) | 4.39 | 1.15 | half of the ambient light is a cool blue | 0.0003 |
 
@@ -319,7 +320,11 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 - The energies hold the exposure of the style-board render (dawn −1.75 stops, noon −2.5, dusk +0.2), so `tonemap_exposure` stays 1.0 and a glowing object looks the same under every sky. A sun of S W/m² in the style-board script is `sun_energy` = S / π × 2^stops.
 - A backdrop is one 4096×2048 panorama. It has no parallax, so it reads as far away. Its sun disc is cut down to a radiance of 16, because the `DirectionalLight3D` is the sun.
 - The dusk sky is almost black, so the dusk preset mixes a cool blue colour into the ambient light. This is not a fill light: it comes from all directions and it is in the lightmap bake. The dusk panorama also has a faint airglow, so that space is not pure black.
-- `just bake-skies [dawn|noon|dusk]` renders the panoramas again with Blender Cycles (about 5 minutes for dawn, seconds for the others). `tools/blender/bake_skies.py` holds every number of the backdrops.
+- The ground dawn (#31) is the dawn of a town on the ground. Its sky is the same photograph as the dawn (Poly Haven `syferfontein_6d_clear`, strength 0.8), and so are its light and its energies. Its lower half is not a cloud sea:
+  - Down to 0.7° below the horizon it is the photograph, with the photograph's far hills and plains. From 0.7° to 1.8° below the horizon it fades into far land, so the photograph's near rocks and grass do not show. From a tower they would look like giant rocks.
+  - The bake draws the far land in the world shader: the view ray meets a plane 250 m below the camera. The land is dry grass with bushes and a few woods, and some fields in the farmed areas (`GRASS`, `BUSHES`, `FIELDS`). The sun lamp (24 W/m², 12°) and the sky light it. A haze with the colour of the photograph's far land, smoothed along the horizon, hides it with distance (visibility 6 km), so it meets the photograph with no seam.
+  - The plane is lower than the climb. A panorama has no parallax, so the land shows its scale only by the size of its fields, and those look right from every height of zones 1 to 3.
+- `just bake-skies [dawn|ground_dawn|noon|dusk]` renders the panoramas again with Blender Cycles (about 5 minutes for dawn, seconds for the others). `tools/blender/bake_skies.py` holds every number of the backdrops.
 - The importer writes the sky and the sun into the level. After a change of a preset, `just test`, `just gallery` and `just bake` build the levels again by themselves.
 
 ### Measured (RTX 5090, 2026-11-21)
