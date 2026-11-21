@@ -16,20 +16,20 @@ from orrery_music.brief import Track
 from orrery_music.comfy import ComfyError, comfy_version, run_take, workflow
 
 
-def generate(track: Track, out: Path, ace_takes: int, sa3_takes: int) -> list[Path]:
-    """Render the track's missing takes one at a time and return every take file."""
-    files: list[Path] = []
+def generate(track: Track, out: Path, ace_takes: int, sa3_takes: int) -> list[str]:
+    """Render the track's missing takes one at a time; return the ids of the takes that failed."""
+    failed: list[str] = []
     for take_id, req in track.requests(ace_takes, sa3_takes):
         flac = out / "takes" / track.id / f"{take_id}.flac"
         record = flac.with_suffix(".json")
         if flac.exists() and record.exists():
-            files.append(flac)
             continue
         start = time.monotonic()
         try:
             run_take(req, flac)
         except ComfyError as err:
             print(f"{take_id}: ComfyUI failed: {err}")
+            failed.append(take_id)
             continue
         record.write_text(
             json.dumps(
@@ -45,5 +45,4 @@ def generate(track: Track, out: Path, ace_takes: int, sa3_takes: int) -> list[Pa
             )
         )
         print(f"{take_id}: {time.monotonic() - start:.0f} s")
-        files.append(flac)
-    return files
+    return failed

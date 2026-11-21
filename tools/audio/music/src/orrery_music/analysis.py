@@ -280,7 +280,7 @@ def loop_candidates(
     med = float(np.median(bm.level_db))
     found: list[LoopCut] = []
     for bars in allowed_bars:
-        for s in range(2, n - bars - 2):
+        for s in range(2, n - bars - 1):
             e = s + bars
             if (
                 bm.level_db[s : e + 2].min() < med - 12

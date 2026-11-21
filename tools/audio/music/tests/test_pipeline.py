@@ -69,6 +69,20 @@ def test_grid_and_downbeat_on_a_drum_loop() -> None:
     )
 
 
+def test_loop_candidates_take_the_last_start_with_two_bars_after() -> None:
+    bars = 36
+    rng = np.random.default_rng(2)
+    bm = an.BarMap(
+        downbeat=0.0,
+        bar_s=2.0,
+        mel=rng.standard_normal((bars, 8)),
+        chroma=rng.random((bars, 12)),
+        level_db=np.zeros(bars),
+    )
+    cuts = an.loop_candidates(bm, (32,))
+    assert [c.start_bar for c in cuts] == [2], "bars 2-33 loop, bars 34 and 35 follow"
+
+
 def test_baked_loop_wraps_without_a_jump() -> None:
     t = np.arange(10 * SR) / SR
     tone = (0.5 * np.sin(2 * np.pi * 110.3 * t)).astype(np.float32)
