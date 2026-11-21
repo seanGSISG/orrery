@@ -1,24 +1,26 @@
-"""The manifest: one `<output>.json` next to each generated file. It records how the file was
-made, so that docs/licenses.md and the Steam AI-content disclosure can cite it."""
+"""The manifest (the recipe): one `<output>.json` next to each generated file. It records how
+the file was made (service, model, prompt or inputs, every request field, seed, task or
+batch id, cost, date), so that the asset can be made again and docs/licenses.md and the
+Steam AI-content disclosure can cite it."""
 
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
-
-Setting = str | int | float | bool
+from typing import Any
 
 
 @dataclass(frozen=True)
 class Manifest:
-    """service: the API (OpenAI Images, Tripo). mode: live, batch or task. prompt: the text
-    prompt, or the source image of a model. request_id: the batch or task id."""
+    """service: the API and endpoint. mode: live, batch or task. prompt: the text prompt, or
+    the inputs of a Tripo task. settings: the request fields. request_id: the batch or task
+    id."""
 
     service: str
     model: str
     mode: str
     prompt: str
-    settings: dict[str, Setting]
+    settings: dict[str, Any]
     estimated_usd: float
     billed_usd: float | None
     request_id: str = ""

@@ -65,6 +65,9 @@ def joined_mesh(name: str) -> bpy.types.Object:
     for obj, world in zip(parts, worlds, strict=True):
         obj.data = obj.data.copy()
         obj.data.transform(world)
+        # A mirrored node (negative scale) turns its faces inside out once it is baked.
+        if world.determinant() < 0:
+            obj.data.flip_normals()
         obj.data.update()
         obj.parent = None
         obj.matrix_world = Matrix.Identity(4)
