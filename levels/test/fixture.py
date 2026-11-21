@@ -35,3 +35,4 @@ for kind, actions in (
         kind=kind,
         actions=actions,
     )
+# CI probe: throwaway, do not merge
