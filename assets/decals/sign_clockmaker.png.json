@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for a hanging shop sign in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A sign board of dark oiled timber with a gently arched top, a narrow aged-brass frame and two small brass hanging rings at the top corners. Hand-lettered gold-leaf capitals in two lines, centred. Line 1: \"CLOCKMAKER\" in large letters. Line 2: \"REPAIRS & WINDING\" in smaller letters. Under line 2, a small brass cog wheel between two short rules.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: C-L-O-C-K-M-A-K-E-R; R-E-P-A-I-R-S, an ampersand, W-I-N-D-I-N-G.\nSTYLE: Photographic realism with restraint. Dark oiled timber with fine grain, the paint old and slightly worn at the edges, gold leaf with fine cracks, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for a hanging shop sign in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A sign board of dark oiled timber with a gently arched top, a narrow aged-brass frame and two small brass hanging rings at the top corners. Hand-lettered gold-leaf capitals in two lines, centred. Line 1: \"CLOCKMAKER\" in large letters. Line 2: \"REPAIRS & WINDING\" in smaller letters. Under line 2, a small brass cog wheel between two short rules.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: C-L-O-C-K-M-A-K-E-R; R-E-P-A-I-R-S, an ampersand, W-I-N-D-I-N-G.\nSTYLE: Photographic realism with restraint. Dark oiled timber with fine grain, the paint old and slightly worn at the edges, gold leaf with fine cracks, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+    "size": "1536x1024",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 305,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 305
+      },
+      "output_tokens": 1372,
+      "total_tokens": 1677,
+      "output_tokens_details": {
+        "image_tokens": 1372,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0426,
+  "billed_usd": 0.0427,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}
