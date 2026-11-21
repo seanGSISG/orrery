@@ -64,15 +64,16 @@ jobs:
           path: build/windows/
           if-no-files-found: error
 
+  # Boots the Windows export that the export job uploads.
   windows-boot:
     name: Boot the Windows export
+    needs: export
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v7
         with:
-          templates: "true"
-      - run: just export
+          name: orrery-windows
+          path: build/windows/
       - name: Boot the Windows export
         timeout-minutes: 2
         run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'

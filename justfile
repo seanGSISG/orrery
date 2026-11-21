@@ -51,14 +51,25 @@ lint: import
     files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
-    # Parse and type-check every game script, also the ones that no test loads.
-    for f in "${gd[@]}"; do
-        if ! log=$("{{ godot }}" --headless --path game --check-only --script "res://${f#game/}" 2>&1); then
-            echo "$log" >&2
-            echo "just lint: $f does not compile" >&2
-            exit 1
-        fi
-    done
+    # Compile every game script, also the ones that no test loads. Load them from a running
+    # SceneTree, not with --check-only, so that references to autoloads resolve.
+    check=$(mktemp --suffix=.gd)
+    trap 'rm -f "$check"' EXIT
+    cat > "$check" <<'GDSCRIPT'
+    extends SceneTree
+
+    func _initialize() -> void:
+        for path: String in OS.get_cmdline_user_args():
+            load("res://" + path.trim_prefix("game/"))
+        quit()
+    GDSCRIPT
+    status=0
+    log=$("{{ godot }}" --headless --path game --script "$check" -- "${gd[@]}" 2>&1) || status=$?
+    if (( status != 0 )) || grep -q 'SCRIPT ERROR' <<<"$log"; then
+        echo "$log" >&2
+        echo "just lint: a game script does not compile" >&2
+        exit 1
+    fi
     mapfile -t py < <(files '*.py')
     uvx "ruff@$RUFF_VERSION" check "${py[@]}"
     uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
