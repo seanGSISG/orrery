@@ -33,8 +33,8 @@ class Crossing:
 class Pad:
 	extends LevelObject
 
-	## Marble centre z at the first touch; INF before it.
-	var first_touch: float = INF
+	## Marble centre z at the first touch; -INF before it, so a missing touch fails a test.
+	var first_touch: float = -INF
 
 	## Builds the box Solid, owned by the pad so that its contacts name the pad.
 	func _init() -> void:
@@ -50,7 +50,7 @@ class Pad:
 
 	## Keeps the marble centre's z at the first touch.
 	func on_touch(run: LevelRun, _contact: Contact) -> void:
-		if first_touch == INF:
+		if first_touch == -INF:
 			first_touch = run.marble.position.z
 
 
