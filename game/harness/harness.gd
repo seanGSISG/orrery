@@ -28,6 +28,8 @@ const NOT_FOUND: int = -32001
 const NOT_AVAILABLE: int = -32002
 ## The display renders nothing (godot --headless), so there is no frame to save.
 const NO_FRAME: int = -32003
+## The player setting changed, but the save file could not be written.
+const NOT_SAVED: int = -32004
 
 var paused: bool = false
 ## Ticks per physics frame while not paused.
@@ -371,7 +373,8 @@ func _set_setting(params: Params) -> Variant:
 	if params.failed():
 		return params.failure
 	if Save.settings.to_dict().has(key):
-		Save.change_settings({key: value})
+		if not Save.change_settings({key: value}):
+			return Failure.new(NOT_SAVED, "setting %s changed but the save file was not written" % key)
 		return {"key": key, "value": Save.settings.to_dict()[key]}
 	if not ProjectSettings.has_setting(key):
 		return Failure.new(NOT_FOUND, "no setting %s" % key)

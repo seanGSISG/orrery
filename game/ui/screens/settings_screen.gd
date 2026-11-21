@@ -227,11 +227,17 @@ func _add(row: FocusButton) -> void:
 
 
 ## Saves and applies a new value of field. A new window mode turns the resolution row on or
-## off, so the tab is built again.
+## off, so the display tab is built again after the row's input ends.
 func _change(field: String, value: Variant) -> void:
 	Save.change_settings({field: value})
 	if field == "window_mode":
-		_show_tab.call_deferred(tab, 0)
+		_rebuild_display.call_deferred()
+
+
+## Builds the display tab again while it still shows, with the focus on the mode row.
+func _rebuild_display() -> void:
+	if is_visible_in_tree() and tab == TABS.find("SETTINGS_DISPLAY"):
+		_show_tab(tab)
 
 
 ## Saves and applies a new button of action on device.

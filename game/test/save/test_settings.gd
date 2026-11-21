@@ -77,9 +77,14 @@ func test_window_mode() -> void:
 			assert_eq(get_window().mode, modes[mode])
 
 
+## A saved size resizes the window; the default (0, 0) gives the project's window size back.
 func test_resolution() -> void:
 	_start({"resolution": Vector2i(1280, 720)})
 	assert_eq(get_window().size, Vector2i(1280, 720))
+	Settings.new().apply()
+	var width: int = ProjectSettings.get_setting("display/window/size/viewport_width")
+	var height: int = ProjectSettings.get_setting("display/window/size/viewport_height")
+	assert_eq(get_window().size, Vector2i(width, height))
 
 
 func test_frame_cap() -> void:

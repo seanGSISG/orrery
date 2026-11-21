@@ -23,7 +23,8 @@ var _dots: Array[ValueMark] = []
 var _labels: Array[Label] = []
 var _text: Label = UiTheme.label("", &"DataStrong")
 var _mark: ValueMark
-## True while a mouse button is down on the row, so that a click steps toward its side.
+## True when the last button on the row was the left mouse button, so that a click steps
+## toward its side and ui_accept does not.
 var _by_mouse: bool = false
 
 
@@ -78,11 +79,12 @@ func step(by: int, wrap: bool = false) -> void:
 	changed.emit(index)
 
 
-## Steps with ui_left and ui_right, and notes a mouse button for _pressed().
+## Steps with ui_left and ui_right, and notes for _pressed() whether a left click chose it.
 func _gui_input(event: InputEvent) -> void:
 	super(event)
-	if event is InputEventMouseButton:
-		_by_mouse = event.is_pressed() or _by_mouse
+	if event is InputEventMouseButton or event is InputEventKey or event is InputEventJoypadButton:
+		var click: InputEventMouseButton = event as InputEventMouseButton
+		_by_mouse = click != null and click.button_index == MOUSE_BUTTON_LEFT
 	var by: int = 0
 	if event.is_action_pressed(&"ui_left", true):
 		by = -1
@@ -101,7 +103,6 @@ func _gui_input(event: InputEvent) -> void:
 func _pressed() -> void:
 	super()
 	var mouse: bool = _by_mouse
-	_by_mouse = false
 	if look == &"choice" or look == &"switch":
 		step(1, true)
 	elif mouse:

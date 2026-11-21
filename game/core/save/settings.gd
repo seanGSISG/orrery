@@ -18,6 +18,11 @@ const WINDOW_MODES: Dictionary[StringName, Window.Mode] = {
 	&"fullscreen": Window.MODE_EXCLUSIVE_FULLSCREEN,
 }
 
+## The resolution that apply() last put into the window. apply() resizes the window only when
+## the setting differs from it, so a window that the player resized by hand keeps its size
+## when another setting changes.
+static var _applied_resolution: Vector2i = Vector2i.ZERO
+
 ## Camera shake on landings (FollowCamera.shake_enabled).
 var camera_shake: bool = true
 ## Controller rumble (Rumble.enabled).
@@ -39,7 +44,8 @@ var ui_volume: float = 1.0
 var ghost: bool = true
 ## One of WINDOW_MODES.
 var window_mode: StringName = &"windowed"
-## Size of the window in windowed mode. (0, 0) keeps the size that the game starts with.
+## Size of the window in windowed mode. (0, 0) is the size that the game starts with (the
+## project's window size).
 var resolution: Vector2i = Vector2i.ZERO
 ## Frames per second at most (Engine.max_fps); 0 is uncapped.
 var frame_cap: int = 0
@@ -80,16 +86,25 @@ func vsync_mode() -> DisplayServer.VSyncMode:
 
 
 ## Sets the window mode, the size of a window, the frame cap, V-Sync and HDR output. It
-## changes the window only where it differs, so a change of another setting does not move it.
+## changes the window only where the setting changed, so a change of another setting does not
+## move it.
 func _apply_display() -> void:
 	var window: Window = (Engine.get_main_loop() as SceneTree).root
 	var mode: Window.Mode = window_mode_id()
 	if window.mode != mode:
 		window.mode = mode
-	if mode == Window.MODE_WINDOWED and resolution != Vector2i.ZERO and window.size != resolution:
-		window.size = resolution
+	if mode == Window.MODE_WINDOWED and resolution != _applied_resolution:
+		_applied_resolution = resolution
+		window.size = resolution if resolution != Vector2i.ZERO else _start_size()
 		window.move_to_center()
 	Engine.max_fps = maxi(frame_cap, 0)
 	if DisplayServer.window_get_vsync_mode() != vsync_mode():
 		DisplayServer.window_set_vsync_mode(vsync_mode())
 	window.hdr_output_requested = hdr and DisplayServer.window_is_hdr_output_supported()
+
+
+## Returns the window size that the project starts the game with.
+static func _start_size() -> Vector2i:
+	var width: int = ProjectSettings.get_setting("display/window/size/viewport_width")
+	var height: int = ProjectSettings.get_setting("display/window/size/viewport_height")
+	return Vector2i(width, height)

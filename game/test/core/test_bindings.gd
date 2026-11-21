@@ -33,7 +33,8 @@ func test_code_round_trip() -> void:
 		assert_true(Bindings.event(code).is_match(event), code + " gives the same button")
 
 
-## A release, a small stick push and the mouse wheel cannot be bindings.
+## A release, a small stick push and the mouse wheel cannot be bindings, and a damaged code
+## gives no event.
 func test_events_that_are_not_bindings() -> void:
 	var release: InputEventKey = InputEventKey.new()
 	release.physical_keycode = KEY_K
@@ -45,8 +46,11 @@ func test_events_that_are_not_bindings() -> void:
 	wheel.pressed = true
 	for event: InputEvent in [release, nudge, wheel]:
 		assert_eq(Bindings.code(event), "", event.as_text())
-	assert_null(Bindings.event("key:x"))
-	assert_null(Bindings.event("laser:1"))
+	var damaged: Array[String] = [
+		"key:x", "laser:1", "key:0", "button:-1", "axis:0:0", "axis:9:1", "mouse:5"
+	]
+	for code: String in damaged:
+		assert_null(Bindings.event(code), code + " names no button")
 
 
 ## A pad binding replaces the pad buttons of the action and keeps its key; an empty set of

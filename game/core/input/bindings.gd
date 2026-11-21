@@ -64,33 +64,39 @@ static func code(event: InputEvent) -> String:
 	return ""
 
 
-## Returns the input event of a binding code, for any device, or null for a code that is not
-## one.
+## Returns the input event of a binding code, for any device, or null for a code that names
+## no real button (from a damaged save file), so the action keeps its default there.
 static func event(binding: String) -> InputEvent:
 	var parts: PackedStringArray = binding.split(":")
-	if parts.size() < 2 or not parts[1].is_valid_int():
+	if parts.size() != (3 if parts[0] == "axis" else 2) or not parts[1].is_valid_int():
 		return null
 	var number: int = parts[1].to_int()
 	var made: InputEvent
 	match parts[0]:
 		"key":
+			if number <= KEY_NONE:
+				return null
 			var key_event: InputEventKey = InputEventKey.new()
 			key_event.physical_keycode = number as Key
 			made = key_event
 		"mouse":
+			if number not in InputGlyph.MOUSE_BUTTONS:
+				return null
 			var mouse: InputEventMouseButton = InputEventMouseButton.new()
 			mouse.button_index = number as MouseButton
 			made = mouse
 		"button":
+			if number < 0 or number >= JOY_BUTTON_SDL_MAX:
+				return null
 			var button: InputEventJoypadButton = InputEventJoypadButton.new()
 			button.button_index = number as JoyButton
 			made = button
 		"axis":
-			if parts.size() != 3 or not parts[2].is_valid_int():
+			if number < 0 or number >= JOY_AXIS_SDL_MAX or parts[2] not in ["1", "-1"]:
 				return null
 			var motion: InputEventJoypadMotion = InputEventJoypadMotion.new()
 			motion.axis = number as JoyAxis
-			motion.axis_value = signf(parts[2].to_int())
+			motion.axis_value = parts[2].to_float()
 			made = motion
 		_:
 			return null
