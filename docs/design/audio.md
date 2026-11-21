@@ -25,7 +25,7 @@ Terms used in this file:
 
 ## 3. Music
 
-- **Which group plays:** a run plays the group in its level's `music` field. If that field is empty, it plays the group of the level's tier (`beginner`, `intermediate`, ...). With no run (the title and the menus), the group `title` plays. `Music` checks `Game.run` each frame, so `Game` does not call it.
+- **Which group plays:** a run plays the group in its level's `music` field. If that field is empty, it plays the group of the level's tier (`beginner`, `intermediate`, ...). With no run (the title and the menus), the group `title` plays. `Music` follows `Game.run` (when `Game` adds a run, and each frame for a change to null), so `Game` does not call it.
 - **A normal group** plays as an `AudioStreamPlaylist`: shuffled, looped, with a 2 s fade from track to track (`Music.PLAYLIST_FADE`). The playlist moves to the next track after `beat_count` beats of the track, or at the end of the file when `beat_count` is 0.
 - **The group `ascent`** plays as one `AudioStreamInteractive`. Each track is a clip, in file name order. `Music.set_zone(zone)` changes to clip `zone` (0 is the first; a larger zone keeps the last clip). The change waits for the next bar line of the playing track, then cross-fades over 4 beats into the start of the new track. The Ascent mode (#27) calls `set_zone` when the marble enters a zone.
 - **A change of group** cross-fades over 1.5 s (`Music.FADE`). A group with no tracks fades out to silence.

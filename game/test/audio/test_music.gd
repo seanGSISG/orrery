@@ -125,3 +125,15 @@ func test_buses_send_to_master_and_volumes_go_through_settings() -> void:
 	AudioBuses.apply(settings)
 	assert_almost_eq(AudioBuses.volume(AudioBuses.MUSIC), 0.25, 0.001, "apply sets each bus")
 	AudioBuses.apply(Settings.new())
+
+
+func test_a_run_that_game_loads_has_sound_before_its_first_tick() -> void:
+	var run: LevelRun = Game.load_level(&"flat")
+	run.auto_step = false
+	run.feedback.emit(&"gem.collect", 1.0, Vector3.ZERO)
+	var gem: AudioStreamPlayer = Music.sfx.player(&"gem") as AudioStreamPlayer
+	assert_true(gem.playing, "the SfxPlayer attached when Game added the run")
+	Game.remove_child(run)
+	run.free()
+	Game.run = null
+	Music.sfx.attach(null)

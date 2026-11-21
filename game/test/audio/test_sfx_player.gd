@@ -80,8 +80,11 @@ func _playing_count() -> int:
 func test_each_feedback_kind_plays_its_sound_on_the_sfx_bus() -> void:
 	_start()
 	for kind: StringName in EXPECTED:
+		var before: Node = sfx.player(EXPECTED[kind])
 		run.feedback.emit(kind, 0.8, Vector3(1, 0, -2))
+		assert_ne(sfx.player(EXPECTED[kind]), before, "%s starts a new voice" % kind)
 		_assert_plays(EXPECTED[kind], kind)
+		hold(rolling(Vector2.ZERO), 0.05)
 
 
 func test_landing_strength_picks_soft_or_hard() -> void:

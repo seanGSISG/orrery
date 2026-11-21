@@ -9,8 +9,8 @@ extends Node
 ##   different: its tracks are the clips of one AudioStreamInteractive, and set_zone()
 ##   changes the track on the next bar line.
 ## - A change of group cross-fades over FADE seconds. A group with no tracks fades out.
-## - Each frame it checks Game.run. A new run gets its group's music, and `sfx` attaches to
-##   it.
+## - It follows Game.run: when Game adds a run, and each frame for a change to null. A new
+##   run gets its group's music, and `sfx` attaches to it before the run's first tick.
 
 const ROOT: String = "res://audio/music/"
 const TITLE: StringName = &"title"
@@ -57,12 +57,20 @@ func _ready() -> void:
 	sfx = SfxPlayer.new()
 	add_child(sfx)
 	_follow(Game.run)
+	Game.child_entered_tree.connect(_on_game_child)
 
 
-## Follows Game.run when it changes.
+## Follows Game.run when it changes to null or to a run that _on_game_child missed.
 func _process(_delta: float) -> void:
 	if Game.run != _run:
 		_follow(Game.run)
+
+
+## Follows a new run as soon as Game adds it, before its first tick, so no feedback is lost.
+func _on_game_child(node: Node) -> void:
+	var run: LevelRun = node as LevelRun
+	if run != null and run == Game.run:
+		_follow(run)
 
 
 ## Gives run (null: no run, the title) its music group and the sound effects.
