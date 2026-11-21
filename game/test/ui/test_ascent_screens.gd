@@ -38,6 +38,19 @@ func test_continue_goes_on_at_the_spot() -> void:
 	assert_almost_eq(Game.snapshot().height, 12.0, 0.01)
 
 
+## A spot of other zones has no Continue: the climb would start at the bottom.
+func test_no_continue_for_a_spot_of_other_zones() -> void:
+	if not climb():
+		return
+	put(ZONE_2)
+	quit_climb()
+	var upper: Array[StringName] = [Ascent.FIXTURE[1], Ascent.FIXTURE[2]]
+	ui.ascent.zones = upper
+	Game.screen = &"title"
+	Game.screen = &"ascent"
+	assert_false(ui.ascent.continue_item.visible)
+
+
 ## New climb, the item below Continue, starts at the bottom though a spot is saved.
 func test_new_climb_starts_at_the_bottom() -> void:
 	if not climb():

@@ -95,6 +95,15 @@ func test_no_checkpoints_by_default() -> void:
 	assert_eq(run.state.checkpoint, &"")
 
 
+## A checkpoint that a zone has for a play of its own is not in the climb.
+func test_checkpoint_of_a_zone_goes_away() -> void:
+	var zones: Array[StringName] = [&"rules"]
+	run = Ascent.start(true, zones)
+	assert_not_null(run, "the test level rules, which has a checkpoint, is the zone")
+	if run != null:
+		assert_eq(objects(_is_checkpoint).size(), 0)
+
+
 ## Assist puts a checkpoint on each zone start and marks the climb.
 func test_assist_adds_a_checkpoint_at_each_zone_start() -> void:
 	Save.ascent.assist = true

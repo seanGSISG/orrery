@@ -17,6 +17,7 @@ extends Node3D
 ##   (AscentGate) and ends the run;
 ## - the sun, the sky and the lightmap of each zone go away: AscentSky (a child of the Ascent
 ##   node) lights the climb by the height;
+## - a checkpoint of a zone goes away too: the climb has no checkpoints but those of Assist;
 ## - every mesh gets a visibility range, so the zones far above and below are not drawn.
 ##
 ## What the mode does in a climb:
@@ -99,7 +100,7 @@ var _falls: AscentFalls = AscentFalls.new()
 var _starts: Array[StartPad] = []
 var _checkpoints: Array[Checkpoint] = []
 ## The ids of the zones in the climb, from the bottom.
-var _zone_ids: PackedStringArray = []
+var _zone_ids: Array[StringName] = []
 var _gate: Finish
 ## The climb start (the marble centre on the first start pad) and the up there.
 var _base: Vector3 = Vector3.ZERO
@@ -143,6 +144,20 @@ static func zones() -> Array[StringName]:
 	return built
 
 
+## Returns true when the save has a spot that a climb of the zones ids continues: the climb
+## starts with the zones that the spot was saved in. More zones on top are fine. A spot of
+## other zones is a place in another world, so such a climb starts at the bottom. The Ascent
+## menu shows Continue by the same rule.
+static func has_spot(ids: Array[StringName]) -> bool:
+	var saved: PackedStringArray = Save.ascent.spot_zones.split(",", false)
+	if not Save.ascent.has_spot or saved.is_empty() or saved.size() > ids.size():
+		return false
+	for i: int in saved.size():
+		if saved[i] != String(ids[i]):
+			return false
+	return true
+
+
 ## Returns the marble centre on the start pad of the zone with index zone_index (0 is the
 ## first).
 func start_of(zone_index: int) -> Vector3:
@@ -170,7 +185,7 @@ func save_spot() -> void:
 		record.spot_position = _run.spawn_point(pad)
 		record.spot_velocity = Vector3.ZERO
 	record.spot_height = _height_of(record.spot_position)
-	record.spot_zones = ",".join(_zone_ids)
+	record.spot_zones = ",".join(PackedStringArray(_zone_ids))
 	record.spot_checkpoint = _checkpoints.find(_run.rules.checkpoint as Checkpoint)
 	record.spot_floor = _falls.floor_height
 	record.spot_low = _falls.low_height
@@ -220,7 +235,7 @@ func _build(ids: Array[StringName]) -> Level:
 			push_warning("Ascent: zone %s has no start pad; the climb goes on without it" % id)
 			zone_level.free()
 			continue
-		_light_by_height(zone_level)
+		_strip(zone_level)
 		_set_ranges(zone_level)
 		_starts.append(pads[0] as StartPad)
 		_zone_ids.append(id)
@@ -234,18 +249,25 @@ func _build(ids: Array[StringName]) -> Level:
 	return level
 
 
-## Removes the sun, the sky and the lightmap of a zone. AscentSky lights the whole climb.
-func _light_by_height(zone_level: Level) -> void:
-	var lights: Array[Node] = []
+## Removes what a zone has for a play of its own: the sun, the sky and the lightmap
+## (AscentSky lights the whole climb), and every checkpoint (the climb has none, but those of
+## Assist).
+func _strip(zone_level: Level) -> void:
+	var own: Array[Node] = []
 	_find(
 		zone_level,
-		lights,
+		own,
 		func(node: Node) -> bool:
-			return node is WorldEnvironment or node is DirectionalLight3D or node is LightmapGI
+			return (
+				node is WorldEnvironment
+				or node is DirectionalLight3D
+				or node is LightmapGI
+				or node is Checkpoint
+			)
 	)
-	for light: Node in lights:
-		light.get_parent().remove_child(light)
-		light.free()
+	for node: Node in own:
+		node.get_parent().remove_child(node)
+		node.free()
 
 
 ## Gives every mesh of a zone its visibility range: FAR from its nearest side.
@@ -294,7 +316,7 @@ func _begin(run: LevelRun, new_climb: bool) -> void:
 		zone_heights.append(_height_of(run.spawn_point(start)))
 	top = _height_of(run.spawn_point(_gate)) if _gate != null else zone_heights[-1]
 	_kill_height = run.rules.kill_height
-	if new_climb or not _has_spot():
+	if new_climb or not has_spot(_zone_ids):
 		_new_climb()
 	else:
 		_continue()
@@ -304,16 +326,6 @@ func _begin(run: LevelRun, new_climb: bool) -> void:
 	run.teleported.connect(_follow)
 	Game.screen_changed.connect(_on_screen_changed)
 
-
-## Returns true when the save has a spot of this climb: the climb starts with the zones that
-## the spot was saved in. A spot of other zones is a place in another world.
-func _has_spot() -> bool:
-	var saved: PackedStringArray = Save.ascent.spot_zones.split(",", false)
-	return (
-		Save.ascent.has_spot
-		and not saved.is_empty()
-		and saved == _zone_ids.slice(0, saved.size())
-	)
 
 
 ## Starts the stats of a new climb. The spot of the last climb is gone at the next save.

@@ -4,9 +4,10 @@ extends Screen
 ## climb and the Assist switch, under the facts of the saved climb and of the best climb. B
 ## or Esc goes back to the title.
 ##
-## Continue and New climb start the mode (Ascent.start()). While no zone of the climb is
-## built, New climb is off and Continue does not show. Assist is Save.ascent.assist: the item
-## turns it on and off and saves it. It counts from the next start of the climb.
+## Continue and New climb start the mode (Ascent.start()). Continue shows only for a spot that
+## the climb continues (Ascent.has_spot()). While no zone of the climb is built, New climb is
+## off. Assist is Save.ascent.assist: the item turns it on and off and saves it. It counts from
+## the next start of the climb.
 
 ## Width of the title, the rule and the facts.
 const WIDTH: float = 640.0
@@ -70,15 +71,16 @@ func _ready() -> void:
 func open() -> void:
 	var record: AscentRecord = Save.ascent
 	var built: bool = not _climb().is_empty()
+	var spot: bool = Ascent.has_spot(_climb())
 	var best_time: float = Save.level(Ascent.ID).best_time
 	_spot.text = "%s · %s" % [HeightText.metres(record.spot_height), TimeText.full(record.spot_time)]
 	_best_height.text = HeightText.metres(record.best_height)
 	_best_time.text = TimeText.full(best_time)
-	_spot_line.visible = record.has_spot
+	_spot_line.visible = spot
 	_height_line.visible = record.best_height >= 1.0
 	_time_line.visible = best_time >= 0.0
 	_table.visible = _spot_line.visible or _height_line.visible or _time_line.visible
-	continue_item.visible = record.has_spot and built
+	continue_item.visible = spot
 	new_item.set_enabled(built)
 	_show_assist()
 	if continue_item.visible:

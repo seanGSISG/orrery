@@ -224,16 +224,18 @@ func _load_mode(params: Params) -> Variant:
 		return Failure.new(NOT_FOUND, "no zone level of the climb is built")
 	if zone < 1 or zone > built.size():
 		return Failure.new(INVALID_PARAMS, "zone must be in 1..%d" % built.size())
-	var before: bool = Save.ascent.assist
 	Save.ascent.assist = assist
 	var run: LevelRun = Ascent.start(not resume, built)
-	if run == null:
-		Save.ascent.assist = before
-		return Failure.new(NOT_FOUND, "no zone level of the climb has a start pad")
+	var climb: Ascent = Ascent.of(run)
+	# The climb leaves out a scene that is not a level or has no start pad (the level lint
+	# gives every built level one), so it can have fewer zones than scenes.
+	var count: int = climb.zone_heights.size() if climb != null else 0
+	if zone > count:
+		return Failure.new(INVALID_PARAMS, "the climb has %d zones with a start pad" % count)
 	run.auto_step = false
 	_owed = 0.0
 	if zone > 1:
-		run.teleport(Ascent.of(run).start_of(zone - 1), Vector3.ZERO)
+		run.teleport(climb.start_of(zone - 1), Vector3.ZERO)
 	return Game.snapshot().to_dict()
 
 

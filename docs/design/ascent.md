@@ -42,6 +42,7 @@ Rules for a zone script:
 
 What the mode does with the zones:
 
+- It removes every checkpoint of a zone: the climb has no checkpoints but those of Assist.
 - It removes every finish pad but the last. So the marble rolls from the top floor of a zone onto the start floor of the next zone. The last finish pad gets the gate and ends the run.
 - It gives every mesh a visibility range: `Ascent.FAR` (300 m) from the nearest side of the mesh, with a fade over the last 40 m. A zone must be made of many meshes for this to help. One mesh for a whole tower is drawn as a whole.
 - A zone that has no scene, or no start pad, is left out with a warning.
@@ -82,7 +83,7 @@ Object names must be different in every zone only when a bot drives the whole cl
 - when the run leaves the tree (Save and quit, a new level, the end of the game);
 - when the player closes the window.
 
-The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run starts at the saved tick, so every mover has the pose that it had. The clock runs on, and the last Assist checkpoint is the one that the marble reached. The spot counts only in a climb that starts with the zones of the spot: more zones on top are fine, and a climb of other zones starts at the bottom. While the marble waits for a respawn, the spot is the place of that respawn. Objects with a state of their own (a trapdoor, crumbling tiles) start again in their first state.
+The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run starts at the saved tick, so every mover has the pose that it had. The clock runs on, and the last Assist checkpoint is the one that the marble reached. The spot counts only in a climb that starts with the zones of the spot: more zones on top are fine, and a climb of other zones starts at the bottom (`Ascent.has_spot()`; the Ascent menu shows Continue by the same rule). While the marble waits for a respawn, the spot is the place of that respawn. Objects with a state of their own (a trapdoor, crumbling tiles) start again in their first state.
 
 **The gate.** The last finish pad ends the run. The mode removes the spot. `RunTracker` saves the time and the ghost with `Save.finish()` under the level id `ascent`, as for any level. So the best time is `Save.level(&"ascent").best_time`, and the ghost of the best climb plays in the next climb when `Settings.ghost` is on.
 
@@ -127,5 +128,6 @@ Zones 1 to 3 are on the Earth only. M2 adds the hours of the higher zones (sunse
 1. **Eggs.** Ascent has 10 eggs, but the save has one egg for each level id. In a climb, any egg sets the egg of the level id `ascent`, and an egg is closed again after a continue. The zone tickets need an egg save for each zone.
 2. **Assisted records.** An assisted climb can set the best time and the ghost. The stats screen marks the climb, but the best time has no mark.
 3. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
-4. **More zones.** When M2 adds zones 4 to 8, the best time and the ghost of the 3-zone climb are of a shorter climb.
-5. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
+4. **More zones.** The best time and the ghost are of the level id `ascent`, for any set of zones. So a best time from a climb of fewer zones (a build with only zone 1, or the 3 zones of M1 when M2 adds zones 4 to 8) stands for the longer climb too. A record for each set of zones needs a level id from the zone ids.
+5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
+6. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
