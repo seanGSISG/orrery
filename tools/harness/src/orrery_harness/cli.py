@@ -76,10 +76,19 @@ def _parser() -> tuple[argparse.ArgumentParser, dict[str, Command]]:
         "id"
     )
     mode = add(
-        "load_mode", lambda g, a: g.load_mode(a.mode, a.zone), "load a mode (stub)"
+        "load_mode",
+        lambda g, a: g.load_mode(a.mode, a.zone, a.zones, a.resume, a.assist),
+        "start a mode: ascent",
     )
     mode.add_argument("mode")
-    mode.add_argument("--zone")
+    mode.add_argument("--zone", type=int, help="start on this zone; 1 is the first")
+    mode.add_argument("--zones", nargs="+", help="zone level ids, from the bottom")
+    mode.add_argument(
+        "--resume", action="store_true", default=None, help="continue the saved spot"
+    )
+    mode.add_argument(
+        "--assist", action=argparse.BooleanOptionalAction, help="turn Assist on or off"
+    )
     held = add(
         "input",
         lambda g, a: g.input(

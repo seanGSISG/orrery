@@ -36,7 +36,7 @@ var medal: StringName = &"none"
 var power_up: StringName = &""
 ## Node name of the last checkpoint; empty means the start pad. Rules.
 var checkpoint: StringName = &""
-## True when the egg was found in this run. Rules.
+## True when an egg was found in this run. Rules.
 var egg_found: bool = false
 ## Ascent only: m above the climb start, along up. Ascent mode (#27).
 var height: float = 0.0

@@ -63,6 +63,22 @@ def game_launch(
 
 
 @server.tool()
+def game_load_mode(
+    mode: Literal["ascent"] = "ascent",
+    zone: int | None = None,
+    zones: list[str] | None = None,
+    resume: bool = False,
+    assist: bool | None = None,
+) -> GameState:
+    """Start a mode in the launched game and return the state. ascent starts a new climb of
+    every built zone, or continues the saved spot when resume is true. zone (1 is the first)
+    puts the marble on the start pad of that zone; zones are the zone level ids from the
+    bottom; assist turns Assist on or off first. state.height is m above the climb start."""
+    with _game() as harness:
+        return harness.load_mode(mode, zone, zones, resume, assist)
+
+
+@server.tool()
 def game_state() -> GameState:
     """Return the GameState: tick, level, status, marble position, velocity, gems, timer."""
     with _game() as harness:

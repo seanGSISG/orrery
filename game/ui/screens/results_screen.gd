@@ -1,7 +1,8 @@
 class_name ResultsScreen
 extends Screen
 ## The results of a finished run, over the level: the time and the medal on the dial, and a
-## table with the record, the gems, the egg and the target times. Next plays the level after
+## table with the record, the gems, the egg (for a level with several eggs: how many of them
+## are found) and the target times. Next plays the level after
 ## this one, Retry restarts (so does the `restart` action; Game handles it), and Levels or
 ## ui_cancel goes to the level select.
 ##
@@ -20,6 +21,9 @@ var catalog: LevelCatalog
 var previous_best: float = -1.0
 ## True when the run that shows beat previous_best, or is the first finish. open() sets it.
 var new_record: bool = false
+## The egg line: Found or Not found, or for a level with several eggs how many of them are
+## found ("1/2"). A test reads it.
+var egg: Label = UiTheme.label("", &"DataStrong")
 
 var _dial: Dial = Dial.new()
 var _name: Label = UiTheme.label("", &"Subtitle")
@@ -30,7 +34,6 @@ var _record_name: Label = UiTheme.label("", &"Row")
 var _record: Label = UiTheme.label("", &"DataStrong")
 var _gems: Label = UiTheme.label("", &"DataStrong")
 var _egg_icon: Icon = Icon.new(&"check", UiLook.INK, 18.0)
-var _egg: Label = UiTheme.label("", &"DataStrong")
 var _gold: Label = UiTheme.label("", &"DataStrong")
 var _par: Label = UiTheme.label("", &"DataStrong")
 var _gold_line: Control
@@ -90,9 +93,21 @@ func open() -> void:
 	else:
 		_record.text = ""
 	_gems.text = "%d/%d" % [state.gems_collected, state.gems_total]
-	var egg: bool = state.egg_found or Save.level(level.id).egg
-	_egg_icon.visible = egg
-	_egg.text = "RESULTS_EGG_FOUND" if egg else "RESULTS_EGG_MISSING"
+	# An egg of the level is found when the save has its id or this run found it: the save
+	# of a find can land a tick after it.
+	var saved: PackedStringArray = Save.level(level.id).eggs
+	var total: int = 0
+	var found: int = 0
+	for object: LevelObject in run.objects:
+		if object is Egg:
+			total += 1
+			var known: bool = saved.has(String(object.name)) or run.rules.found_eggs.has(object)
+			found += 1 if known else 0
+	var every: bool = total > 0 and found == total
+	_egg_icon.visible = every
+	egg.text = "RESULTS_EGG_FOUND" if every else "RESULTS_EGG_MISSING"
+	if total > 1:
+		egg.text = "%d/%d" % [found, total]
 	_gold.text = TimeText.full(level.gold)
 	_par.text = TimeText.full(level.par)
 	_gold_line.visible = level.gold > 0.0
@@ -131,42 +146,18 @@ func _build_dial() -> void:
 	add_child(side)
 
 
-## Builds the table on the right: one line per fact, with a rule between the lines.
+## Builds the table on the right: one line per fact.
 func _build_table() -> Control:
-	var table: VBoxContainer = UiTheme.column(0)
+	var table: StatTable = StatTable.new(TABLE_WIDTH)
 	table.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
 	table.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	table.grow_vertical = Control.GROW_DIRECTION_BOTH
-	table.custom_minimum_size.x = TABLE_WIDTH
-	var top: HSeparator = HSeparator.new()
-	top.theme_type_variation = &"RuleStrong"
-	table.add_child(top)
-	var egg: HBoxContainer = UiTheme.row(14)
-	egg.add_child(_egg_icon)
-	egg.add_child(_egg)
-	_add_line(table, _record_name, _record)
-	_add_line(table, UiTheme.label("RESULTS_GEMS", &"Row"), _gems)
-	_add_line(table, UiTheme.label("RESULTS_EGG", &"Row"), egg)
-	_gold_line = _add_line(table, UiTheme.label("RESULTS_GOLD", &"Row"), _gold)
-	_par_line = _add_line(table, UiTheme.label("RESULTS_PAR", &"Row"), _par)
+	var egg_row: HBoxContainer = UiTheme.row(14)
+	egg_row.add_child(_egg_icon)
+	egg_row.add_child(egg)
+	table.add_line(_record_name, _record)
+	table.add_line(UiTheme.label("RESULTS_GEMS", &"Row"), _gems)
+	table.add_line(UiTheme.label("RESULTS_EGG", &"Row"), egg_row)
+	_gold_line = table.add_line(UiTheme.label("RESULTS_GOLD", &"Row"), _gold)
+	_par_line = table.add_line(UiTheme.label("RESULTS_PAR", &"Row"), _par)
 	return table
-
-
-## Adds one line to table: name on the left, value on the right, and a rule below. Returns
-## the line.
-func _add_line(table: VBoxContainer, name_label: Label, value: Control) -> Control:
-	var line: VBoxContainer = UiTheme.column(0)
-	var row: HBoxContainer = UiTheme.row(24)
-	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(name_label)
-	row.add_child(value)
-	var inset: MarginContainer = MarginContainer.new()
-	inset.theme_type_variation = &"TableLine"
-	inset.add_child(row)
-	line.add_child(inset)
-	var rule: HSeparator = HSeparator.new()
-	rule.theme_type_variation = &"Rule"
-	line.add_child(rule)
-	table.add_child(line)
-	return line
