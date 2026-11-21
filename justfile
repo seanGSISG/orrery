@@ -243,8 +243,9 @@ bake *ids: fresh-levels import
     trap 'cp "$settings" game/project.godot; rm -f "$log" "$settings"' EXIT
     # A bake needs a real GPU, so the editor runs in a hidden gamescope display. gamescope's exit
     # code does not follow Godot's, so the plugin's summary line is the only success check.
+    # The Dummy audio driver keeps the editor silent.
     timeout 3600 gamescope --backend headless -W 1280 -H 720 -- \
-        "{{ godot }}" --editor --path game -- --bake-lightmaps "${scenes[@]}" >"$log" 2>&1 || true
+        "{{ godot }}" --audio-driver Dummy --editor --path game -- --bake-lightmaps "${scenes[@]}" >"$log" 2>&1 || true
     # The sidecar records the level each new bake belongs to; `just test` warns when they differ.
     for id in "$@"; do
         if grep -q "^BAKE ok res://levels/built/$id.glb " "$log"; then
@@ -257,3 +258,10 @@ bake *ids: fresh-levels import
         exit 1
     fi
     grep -E '^BAKE' "$log"
+
+# --- Audio (#25) ---
+
+# Synthesise the sound effects (game/audio/sfx/) and the test music loops, and check them. `--montage PATH` also joins the sounds into one OGG
+[positional-arguments]
+build-sfx *args:
+    uv run --script tools/audio/sfx/synth_sfx.py "$@"
