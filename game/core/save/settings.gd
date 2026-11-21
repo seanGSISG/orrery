@@ -14,8 +14,8 @@ var dead_zone: float = 0.15
 var look_sensitivity: float = 1.0
 ## Up on the stick or the mouse looks down (PlayerSource.invert_y).
 var invert_y: bool = false
-## &"low", &"medium", &"high" or &"ultra" (docs/plan.md §2.13).
-var graphics_preset: StringName = &"high"
+## &"low", &"medium", &"high" or &"ultra" (Graphics.use()).
+var graphics_preset: StringName = &"medium"
 ## Bus volumes, 0..1.
 var master_volume: float = 1.0
 var music_volume: float = 1.0

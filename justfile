@@ -40,9 +40,25 @@ run level="flat": import
 build-levels *ids:
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
+# Build the levels whose .glb is missing or older than its script, the kit or the importer
+[private]
+[script("bash")]
+fresh-levels:
+    set -euo pipefail
+    inputs=(kit/*.py tools/blender/build_level.py game/levels/level_converter.gd)
+    stale=()
+    for script in levels/*/*.py; do
+        id=$(basename "$script" .py)
+        glb="game/levels/built/$id.glb"
+        for input in "$script" "${inputs[@]}"; do
+            if [[ ! -f $glb || $input -nt $glb ]]; then stale+=("$id"); break; fi
+        done
+    done
+    if (( ${#stale[@]} > 0 )); then just build-levels "${stale[@]}"; fi
+
 # Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
 [script("bash")]
-test: import
+test: fresh-levels import
     set -euo pipefail
     log=$(mktemp)
     trap 'rm -f "$log"' EXIT
@@ -157,3 +173,15 @@ test-pad: import
         echo "just test-pad: the virtual pad test did not pass" >&2
         exit 1
     fi
+
+# --- Gallery and performance (#20) ---
+
+# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html
+[positional-arguments]
+gallery *ids: fresh-levels import
+    uv run --quiet --script tools/gallery/gallery.py "$@"
+
+# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets
+[positional-arguments]
+perf *ids: fresh-levels import
+    GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"

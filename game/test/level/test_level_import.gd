@@ -19,11 +19,12 @@ func _start_fixture() -> bool:
 
 
 ## Returns a scene like an imported .glb: a root with one marker node for each data entry.
-## The default markers make a level that passes the lint.
+## The default markers make a test-tier level that passes the lint.
 func _scene(markers: Array[Dictionary] = []) -> Node3D:
 	var root: Node3D = autofree(Node3D.new())
 	root.name = "scene"
-	var all: Array[Dictionary] = [{"type": "level", "id": "t"}, {"type": "start"}]
+	var all: Array[Dictionary] = [{"type": "level", "id": "t", "tier": "test"}]
+	all.append({"type": "start"})
 	all.append({"type": "finish"})
 	all.append_array(markers)
 	for data: Dictionary in all:
@@ -75,7 +76,7 @@ func test_marble_rests_on_a_built_track_piece() -> void:
 
 func test_level_marker_fills_the_root_data() -> void:
 	var scene: Node3D = _scene()
-	var data: Dictionary = {"type": "level", "id": "t", "par": 30}
+	var data: Dictionary = {"type": "level", "id": "t", "tier": "test", "par": 30}
 	scene.get_child(0).set_meta(&"extras", {"orrery": data})
 	var level: Level = LevelConverter.new().convert(scene)
 	assert_eq(level.id, &"t")
@@ -127,6 +128,42 @@ func test_unknown_setting_fails() -> void:
 func test_unknown_marker_type_fails() -> void:
 	var errors: String = _errors(_scene([{"type": "nothing"}]))
 	assert_string_contains(errors, "unknown marker type `nothing`")
+
+
+## Only a level in levels/test/ may leave out the gallery shots.
+func test_level_outside_the_test_tier_needs_the_gallery_shots() -> void:
+	var scene: Node3D = _scene([{"type": "shot"}])
+	scene.get_child(3).name = "overview"
+	var data: Dictionary = {"type": "level", "id": "t", "tier": "beginner"}
+	scene.get_child(0).set_meta(&"extras", {"orrery": data})
+	var errors: String = _errors(scene)
+	assert_string_contains(errors, "needs the gallery shot `egg`")
+	assert_string_contains(errors, "needs the gallery shot `finish`")
+	assert_false(errors.contains("shot `overview`"))
+
+
+## A level with no light of its own gets the stand-in sun and sky; its tier picks the rig.
+func test_level_without_light_gets_the_stand_in_rig() -> void:
+	var scene: Node3D = _scene()
+	LevelConverter.new().convert(scene)
+	var suns: Array[Node] = scene.find_children("*", "DirectionalLight3D", true, false)
+	var skies: Array[Node] = scene.find_children("*", "WorldEnvironment", true, false)
+	assert_eq(suns.size(), 1)
+	assert_eq(skies.size(), 1)
+	assert_true((suns[0] as DirectionalLight3D).shadow_enabled)
+	var environment: Environment = (skies[0] as WorldEnvironment).environment
+	assert_eq(environment.tonemap_mode, Environment.TONE_MAPPER_AGX)
+	var sky: ProceduralSkyMaterial = environment.sky.sky_material as ProceduralSkyMaterial
+	assert_eq(sky.sky_top_color, LevelConverter.SKY_TOP["noon"])
+
+
+## A level that brings its own sun keeps it and gets no stand-in sky.
+func test_level_with_its_own_sun_gets_no_rig() -> void:
+	var scene: Node3D = _scene()
+	scene.add_child(DirectionalLight3D.new())
+	LevelConverter.new().convert(scene)
+	assert_eq(scene.find_children("*", "DirectionalLight3D", true, false).size(), 1)
+	assert_eq(scene.find_children("*", "WorldEnvironment", true, false).size(), 0)
 
 
 func test_level_without_a_start_fails() -> void:

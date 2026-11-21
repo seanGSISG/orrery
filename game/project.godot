@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 InputHub="*res://core/input/input_hub.gd"
 Game="*res://core/game.gd"
 Save="*res://core/save/save.gd"
+Graphics="*res://settings/graphics.gd"
 
 [debug]
 
@@ -106,6 +107,10 @@ look_down={
 
 3d_physics/layer_1="solid"
 3d_physics/layer_2="trigger"
+
+[orrery]
+
+graphics/preset="medium"
 
 [physics]
 
