@@ -13,7 +13,7 @@ import math
 import bmesh
 import bpy
 
-from kit.scene import Vec3, add_object, default_name
+from kit.scene import Vec3, add_mesh, default_name
 from kit.surfaces import surface as surface_material
 
 THICKNESS = 0.5
@@ -41,7 +41,7 @@ def track(
     `at`. surface: the surface type of all its faces. material, trim: the kit materials of
     the slab and of its edge trim; `trim=""` leaves the trim out."""
     name = name or default_name("track", "-col")
-    return _slab(name, at, width, length, 0.0, yaw, surface, material, trim)
+    return _slab(name, at, width, length, 0.0, yaw, surface, material, trim, False)
 
 
 def ramp(
@@ -54,12 +54,15 @@ def ramp(
     name: str | None = None,
     material: str = "limestone",
     trim: str = "brass",
+    fill: bool = False,
 ) -> bpy.types.Object:
     """Adds a ramp: a slab THICKNESS m thick whose top face climbs `rise` m (down when
     negative) over `length` m. The next piece starts at `at` + (0, length, rise) for yaw 0.
-    surface, material and trim are as for track()."""
+    surface, material and trim are as for track(). fill: the ramp is a wedge with a level
+    underside, THICKNESS below its lower end, so its sides are walls and nothing rolls
+    under it."""
     name = name or default_name("ramp", "-col")
-    return _slab(name, at, width, length, rise, yaw, surface, material, trim)
+    return _slab(name, at, width, length, rise, yaw, surface, material, trim, fill)
 
 
 def _slab(
@@ -72,16 +75,18 @@ def _slab(
     surface: str,
     material: str,
     trim: str,
+    fill: bool,
 ) -> bpy.types.Object:
     """Builds a closed slab mesh with outward faces, so that the trimesh collides on top, and
-    its edge trim."""
+    its edge trim. fill: the underside is level, THICKNESS below the lower end."""
     bm = bmesh.new()
     half = width / 2
+    floor = min(0.0, rise) - THICKNESS
     profile = [
         (0.0, 0.0),
         (length, rise),
-        (length, rise - THICKNESS),
-        (0.0, -THICKNESS),
+        (length, floor if fill else rise - THICKNESS),
+        (0.0, floor if fill else -THICKNESS),
     ]
     left = [bm.verts.new((-half, y, z)) for y, z in profile]
     right = [bm.verts.new((half, y, z)) for y, z in profile]
@@ -90,7 +95,7 @@ def _slab(
     for i in range(4):
         j = (i + 1) % 4
         bm.faces.new((left[i], left[j], right[j], right[i]))
-    obj = _finish(bm, name, f"{name}-col", surface_material(surface, material))
+    obj = _finish(bm, name, surface_material(surface, material), collide=True)
     obj.location = at
     obj.rotation_euler = (0.0, 0.0, math.radians(yaw))
     if trim:
@@ -126,16 +131,13 @@ def _trim(
         for i in range(len(section)):
             j = (i + 1) % len(section)
             bm.faces.new((front[i], front[j], back[j], back[i]))
-    return _finish(bm, name, name, material)
+    return _finish(bm, name, material, collide=False)
 
 
 def _finish(
-    bm: bmesh.types.BMesh, mesh_name: str, name: str, material: bpy.types.Material
+    bm: bmesh.types.BMesh, name: str, material: bpy.types.Material, collide: bool
 ) -> bpy.types.Object:
-    """Turns bm into the object `name` with outward faces and one material, and frees bm."""
+    """Turns bm into the object `name` (`<name>-col` when it collides) with outward faces
+    and one material, and frees bm."""
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    mesh = bpy.data.meshes.new(mesh_name)
-    bm.to_mesh(mesh)
-    bm.free()
-    mesh.materials.append(material)
-    return add_object(name, mesh)
+    return add_mesh(bm, name, material, collide)
