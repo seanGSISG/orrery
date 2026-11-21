@@ -70,7 +70,7 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 `docs/design/ascent.md` has the mode. Its screens:
 
 - `TitleScreen.ascent` opens the Ascent menu.
-- `AscentScreen` reads `Save.ascent` and `Save.level(Ascent.ID)`. Continue shows only with a saved spot. New climb is off (faint, and the focus passes it by) while no zone of the climb is built. The Assist item turns `Save.ascent.assist` on and off and writes the save.
+- `AscentScreen` reads `Save.ascent` and the level record of the climb (`Ascent.record_id()`). Continue shows only with a saved spot. New climb is off (faint, and the focus passes it by) while no zone of the climb is built. The Assist item turns `Save.ascent.assist` on and off and writes the save.
 - `AscentStatsScreen` reads the `Ascent` node of the finished run (`Ascent.of(Game.run)`). `Ui` gives it the best time from before the climb, as it does for the results.
 - `StatTable` is the table of the results, the Ascent menu and the Ascent stats.
 

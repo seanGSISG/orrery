@@ -32,6 +32,9 @@ var auto_step: bool = true
 ## False: the player's `restart` action does nothing (Game.restart()). Ascent sets it, because
 ## a restart there would throw a long climb away. restart() itself always works.
 var restartable: bool = true
+## False: a finish of the run is not kept as a best time, and its recording is not kept as
+## the ghost (RunTracker). Ascent sets it for a climb that used Assist.
+var keeps_records: bool = true
 
 var _world: WorldQuery
 var _tick: int = 0

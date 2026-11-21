@@ -85,7 +85,7 @@ func _save_ascent() -> void:
 		zones = Ascent.FIXTURE
 	var ui: Ui = get_tree().root.find_child("Ui", true, false) as Ui
 	ui.ascent.zones = zones
-	Save.finish(Ascent.ID, 552.4, &"none", null)
+	Save.finish(Ascent.record_id(zones), 552.4, &"none", null)
 	Save.ascent.has_spot = true
 	Save.ascent.spot_zones = ",".join(PackedStringArray(zones))
 	Save.ascent.spot_height = 132.0
@@ -113,20 +113,19 @@ func _save_ascent() -> void:
 	await _save("ascent_stats")
 
 
-## Points Save at a new demo save: some medals, best times and eggs in the test tier.
+## Points Save at a new demo save: some medals and best times in the test tier, and the egg
+## of LEVEL.
 func _load_demo_save() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_DIR).path_join(SaveGame.FILE))
 	Save.dir = SAVE_DIR
 	Save.read()
 	Save.settings.apply()
 	Save.finish(LEVEL, 21.84, &"qualified", null)
-	Save.find_egg(LEVEL)
+	Save.find_egg(LEVEL, &"egg_00")
 	Save.finish(&"feel", 46.82, &"gold", null)
-	Save.find_egg(&"feel")
 	Save.finish(&"fixture", 8.05, &"gold", null)
 	Save.finish(&"floors", 73.5, &"none", null)
 	Save.finish(&"movers", 31.27, &"qualified", null)
-	Save.find_egg(&"pushers")
 
 
 ## Makes the pad, or the keyboard, the device used last, so that the glyphs show its buttons.

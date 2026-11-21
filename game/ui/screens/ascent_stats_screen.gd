@@ -7,7 +7,8 @@ extends Screen
 ##
 ## Ui sets `previous_best` before it shows the screen. A climb is a new record when it beats
 ## previous_best: the save of the finish can land a tick after the finish, so the screen does
-## not ask Save for it.
+## not ask Save for it. An assisted climb is never a new record: the screen shows its time,
+## the Assist mark and the best time as it was.
 
 ## Width of the table.
 const TABLE_WIDTH: float = 640.0
@@ -16,8 +17,8 @@ const DIAL_SIDE: float = 0.625
 
 ## The best time of the climb before this one, s; negative for no climb to the gate before.
 var previous_best: float = -1.0
-## True when the climb that shows beat previous_best, or is the first to the gate. open()
-## sets it.
+## True when the climb that shows beat previous_best, or is the first to the gate, and did
+## not use Assist. open() sets it.
 var new_record: bool = false
 ## The values that show; a test reads them.
 var time: Label = UiTheme.label("", &"BigTime")
@@ -64,12 +65,13 @@ func open() -> void:
 	var state: GameState = Game.run.state
 	time.text = TimeText.full(state.timer)
 	_dial.show_times(state.timer, 0.0, 0.0, true)
-	new_record = previous_best < 0.0 or state.timer < previous_best
+	var faster: bool = previous_best < 0.0 or state.timer < previous_best
+	new_record = faster and not climb.assisted
 	_record_name.text = "RESULTS_NEW_RECORD" if new_record else "RESULTS_BEST"
 	_record_name.theme_type_variation = &"RowAccent" if new_record else &"Row"
 	_record.theme_type_variation = &"DataAccent" if new_record else &"DataStrong"
 	if not new_record:
-		_record.text = TimeText.full(previous_best)
+		_record.text = TimeText.full(previous_best) if previous_best >= 0.0 else "TIME_NONE"
 	elif previous_best >= 0.0:
 		_record.text = "−" + TimeText.difference(previous_best - state.timer)
 	else:

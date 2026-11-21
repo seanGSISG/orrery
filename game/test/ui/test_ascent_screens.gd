@@ -21,7 +21,7 @@ func test_ascent_is_open_from_the_start() -> void:
 	Game.screen = &"ascent"
 	tap_button(JOY_BUTTON_A)
 	assert_eq(shown(), &"play")
-	assert_eq(Game.snapshot().level, Ascent.ID)
+	assert_eq(Game.snapshot().level, Ascent.record_id(Ascent.FIXTURE))
 	assert_almost_eq(Game.snapshot().height, 0.0, 0.01)
 
 
@@ -160,9 +160,9 @@ func test_gate_shows_the_stats() -> void:
 	assert_false(ui.ascent.continue_item.visible, "a finished climb has no spot")
 
 
-## The stats mark a climb that used Assist, and a slower climb is no new record.
+## The stats mark a climb that used Assist. It is no new record, also as the first climb to
+## the gate.
 func test_stats_mark_an_assisted_climb() -> void:
-	Save.finish(Ascent.ID, 0.001, &"none", null)
 	Save.ascent.assist = true
 	if not climb():
 		return

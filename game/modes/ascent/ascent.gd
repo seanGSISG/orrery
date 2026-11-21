@@ -3,8 +3,10 @@ extends Node3D
 ## The Ascent mode (docs/plan.md §2.9): one climb through every zone, with no checkpoints.
 ## Ascent.start() builds the climb from the zone levels, plays it through Game and adds one
 ## Ascent node to the run. Ascent.of(run) returns that node; the HUD and the stats screen read
-## it. The climb is a Level with the id, the tier and the music group ID, so its best time and
-## the ghost of the best climb save through Save.finish() like those of any level.
+## it. The climb is a Level with the tier and the music group ID. Its level id is
+## record_id() of its zones, so its best time and the ghost of the best climb save through
+## Save.finish() like those of any level, and a climb of other zones has a record of its own.
+## An egg saves under the id of its zone, so it stays found when the climb gets more zones.
 ##
 ## How a zone plugs in. A zone is a level script of its own, built like any level: one start
 ## pad, one finish pad, both routes. It uses the climb's coordinates, so every zone loads at
@@ -29,7 +31,8 @@ extends Node3D
 ##   marble that climbs past its best.
 ## - Assist (Save.ascent.assist). The climb has a checkpoint at each zone start. A fall of
 ##   ASSIST_DROP m below the last one puts the marble back on it. The climb is marked as
-##   assisted, for good.
+##   assisted, for good. An assisted climb never replaces a record: it writes no best time,
+##   no ghost and no best height (Sean, 2026-11-21). The stats screen shows its time.
 ## - The spot. save_spot() keeps the place, the clock, the stats and the recording of the
 ##   climb so far. It runs when the game pauses and when the run ends, also by a closed
 ##   window. The next start() continues there: the movers are where they were, the last
@@ -41,7 +44,7 @@ extends Node3D
 ## Emitted when the marble enters another zone; zone is its index, 0 for the first.
 signal zone_changed(zone: int)
 
-## The level id, the tier and the music group of the climb.
+## The tier and the music group of the climb, and the start of its level id (record_id()).
 const ID: StringName = &"ascent"
 ## The zone levels of the game, from the bottom (levels/ascent/zone_<n>.py).
 const ZONES: Array[StringName] = [&"zone_1", &"zone_2", &"zone_3"]
@@ -134,14 +137,30 @@ static func of(run: LevelRun) -> Ascent:
 	return run.get_node_or_null(^"Ascent") as Ascent if run != null else null
 
 
-## Returns the ids of the zones of the game that are built, from the bottom. With none, the
-## game has no climb yet.
+## Returns the ids of the zones of the game that the climb has now: ZONES from the bottom up
+## to the first one that is not built. With none, the game has no climb yet.
 static func zones() -> Array[StringName]:
+	return built_from_bottom(ZONES)
+
+
+## Returns ids from the first one up to the first one that has no scene. A zone joins only
+## its neighbours, so a zone above a gap is not part of the climb: the marble cannot get to
+## it, nor to a gate on it.
+static func built_from_bottom(ids: Array[StringName]) -> Array[StringName]:
 	var built: Array[StringName] = []
-	for id: StringName in ZONES:
-		if Game.level_path(id) != "":
-			built.append(id)
+	for id: StringName in ids:
+		if Game.level_path(id) == "":
+			break
+		built.append(id)
 	return built
+
+
+## Returns the level id of a climb of the zones ids, from the bottom: "ascent:" and the ids
+## with a + between them, for example &"ascent:zone_1+zone_2+zone_3". The best time and the
+## ghost of the best climb are kept under it (Save.level(), Save.ghost()), so a record of a
+## climb of fewer zones never stands for a longer climb.
+static func record_id(ids: Array[StringName]) -> StringName:
+	return StringName("%s:%s" % [ID, "+".join(PackedStringArray(ids))])
 
 
 ## Returns true when the save has a spot that a climb of the zones ids continues: the climb
@@ -220,7 +239,6 @@ func _notification(what: int) -> void:
 func _build(ids: Array[StringName]) -> Level:
 	var level: Level = Level.new()
 	level.name = &"Climb"
-	level.id = ID
 	level.title = "TITLE_ASCENT"
 	level.tier = ID
 	level.music = ID
@@ -243,6 +261,7 @@ func _build(ids: Array[StringName]) -> Level:
 	if _starts.is_empty():
 		level.free()
 		return null
+	level.id = record_id(_zone_ids)
 	_keep_last_finish(level)
 	if Save.ascent.assist:
 		_add_checkpoints()
@@ -335,6 +354,7 @@ func _new_climb() -> void:
 	_falls = AscentFalls.new()
 	_ended = false
 	Save.ascent.assisted = Save.ascent.assist
+	_run.keeps_records = not Save.ascent.assisted
 
 
 ## Puts the run at the saved spot, with the stats and the recording of the climb so far.
@@ -346,6 +366,7 @@ func _continue() -> void:
 	_falls.fallen = record.fallen
 	_falls.resume(record.spot_position, record.spot_floor, record.spot_low)
 	record.assisted = record.assisted or record.assist
+	_run.keeps_records = not record.assisted
 	var tracker: RunTracker = _tracker()
 	if tracker != null:
 		var recording: Ghost = Save.ghost(CLIMB_GHOST)
@@ -371,8 +392,8 @@ func _on_stepped() -> void:
 		var ground: Contact = _floor(state)
 		if _falls.track(state.position, height, ground != null):
 			_plant_flag()
-		var fixed: bool = ground != null and ground.object == null
-		if fixed and height > Save.ascent.best_height + BEST_STEP:
+		var counts: bool = ground != null and ground.object == null and _run.keeps_records
+		if counts and height > Save.ascent.best_height + BEST_STEP:
 			Save.ascent.best_height = height
 			Save.ascent.best_position = ground.point
 	elif state.status == &"finished" and not _ended:

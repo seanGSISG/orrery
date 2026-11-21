@@ -60,12 +60,14 @@ func test_level_with_no_scene_does_not_play() -> void:
 ## level that is not qualified yet.
 func test_shows_saved_progress() -> void:
 	Save.finish(&"flat", 8.0, &"gold", null)
-	Save.find_egg(&"flat")
+	Save.find_egg(&"flat", &"egg_00")
+	Save.find_egg(&"rules", &"Egg")
 	tap_button(JOY_BUTTON_A)
 	tap_button(JOY_BUTTON_RIGHT_SHOULDER)
 	var mark: LevelNode = ui.level_select.map.node_of(&"flat")
 	assert_eq(mark.medal, &"gold")
-	assert_true(mark.egg)
+	assert_false(mark.egg, "flat has no egg to find")
+	assert_true(ui.level_select.map.node_of(&"rules").egg, "the one egg of rules is found")
 	assert_true(ui.level_select.map.node_of(&"rules").has_focus(), "the next level to beat")
 
 

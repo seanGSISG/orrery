@@ -72,7 +72,7 @@ func open() -> void:
 	var record: AscentRecord = Save.ascent
 	var built: bool = not _climb().is_empty()
 	var spot: bool = Ascent.has_spot(_climb())
-	var best_time: float = Save.level(Ascent.ID).best_time
+	var best_time: float = Save.level(Ascent.record_id(_climb())).best_time
 	_spot.text = "%s · %s" % [HeightText.metres(record.spot_height), TimeText.full(record.spot_time)]
 	_best_height.text = HeightText.metres(record.best_height)
 	_best_time.text = TimeText.full(best_time)

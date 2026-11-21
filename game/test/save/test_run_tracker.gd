@@ -36,7 +36,25 @@ func test_egg_saves_when_found() -> void:
 	assert_true(run.state.egg_found)
 	var loaded: SaveGame = _save()
 	loaded.read()
-	assert_true(loaded.level(&"rules").egg)
+	assert_eq(loaded.level(&"rules").eggs, PackedStringArray(["Egg"]))
+
+
+## A level with two eggs saves each egg by its name when the marble finds it.
+func test_each_egg_saves_by_its_name() -> void:
+	var second: Egg = (load(Level.EGG_SCENE) as PackedScene).instantiate() as Egg
+	second.name = &"Egg2"
+	second.position = Vector3(6, 0, -10)
+	run.free()
+	start_run(RULES, [second])
+	tracker = RunTracker.attach(run, save)
+	run.step(rolling(Vector2(0, 1)))
+	visit(Vector3(6, 0, -10))
+	var loaded: SaveGame = _save()
+	loaded.read()
+	assert_eq(loaded.level(&"rules").eggs, PackedStringArray(["Egg2"]))
+	visit(EGG)
+	loaded.read()
+	assert_eq(loaded.level(&"rules").eggs, PackedStringArray(["Egg", "Egg2"]))
 
 
 ## A finish saves the time, the medal and the ghost. In the next attempt the ghost marble

@@ -11,13 +11,23 @@ const FALL: float = AscentFalls.FALL_HEIGHT
 func test_all_zones_load_at_the_start() -> void:
 	if not climb():
 		return
-	assert_eq(run.state.level, Ascent.ID)
+	assert_eq(run.state.level, &"ascent:ascent_fixture_1+ascent_fixture_2+ascent_fixture_3")
+	assert_eq(run.level.tier, Ascent.ID)
 	assert_eq(run.level.get_children().filter(_is_level).size(), 3, "zone levels")
 	assert_not_null(run.level.find_child("lift", true, false), "the lift of zone 2")
 	assert_not_null(run.level.find_child("flight_8", true, false), "a ramp of zone 3")
 	assert_eq(objects(func(o: LevelObject) -> bool: return o is Finish).size(), 1)
 	assert_eq(ascent.zone_heights, PackedFloat32Array([0.0, 12.0, 24.0]))
 	assert_almost_eq(ascent.top, 36.0, 0.001)
+
+
+## The climb of the game is its built zones up to the first one that is not built: a zone
+## above a gap does not join the climb.
+func test_climb_stops_at_the_first_zone_that_is_not_built() -> void:
+	var ids: Array[StringName] = [Ascent.FIXTURE[0], &"no_such_zone", Ascent.FIXTURE[2]]
+	var first: Array[StringName] = [Ascent.FIXTURE[0]]
+	assert_eq(Ascent.built_from_bottom(ids), first)
+	assert_eq(Ascent.built_from_bottom(Ascent.FIXTURE), Ascent.FIXTURE)
 
 
 ## Every mesh of the zones has a visibility range, so far geometry is not drawn.
@@ -83,6 +93,23 @@ func test_time_of_day_follows_the_height() -> void:
 	assert_gt(ascent.sky.elevation, dawn)
 
 
+## The light is the sky preset of dawn at the climb start and of noon at the top of zone 3,
+## and a blend of the two between them.
+func test_light_goes_from_dawn_to_noon() -> void:
+	var sky: AscentSky = AscentSky.new()
+	autofree(sky)
+	var sun: DirectionalLight3D = sky.get_node(^"sun") as DirectionalLight3D
+	assert_almost_eq(sky.elevation, AscentSky.DAWN.sun_elevation, 0.001)
+	assert_almost_eq(sun.light_energy, AscentSky.DAWN.sun_energy, 0.001)
+	sky.show_height(AscentSky.NOON_HEIGHT - 0.5)
+	sky.show_height(AscentSky.NOON_HEIGHT)
+	assert_almost_eq(sky.elevation, AscentSky.NOON.sun_elevation, 0.001, "a short last step")
+	assert_almost_eq(sun.light_energy, AscentSky.NOON.sun_energy, 0.001)
+	sky.show_height(AscentSky.NOON_HEIGHT * 0.5)
+	var between: float = (AscentSky.DAWN.sun_elevation + AscentSky.NOON.sun_elevation) * 0.5
+	assert_almost_eq(sky.elevation, between, 0.001)
+
+
 ## The climb has no checkpoint: a marble that leaves the world comes back at the climb start.
 func test_no_checkpoints_by_default() -> void:
 	if not climb():
@@ -103,6 +130,22 @@ func test_checkpoint_of_a_zone_goes_away() -> void:
 	assert_not_null(run, "the test level rules, which has a checkpoint, is the zone")
 	if run != null:
 		assert_eq(objects(_is_checkpoint).size(), 0)
+
+
+## An egg of a zone saves under the id of the zone, with its name, so it stays found when
+## the climb gets more zones.
+func test_egg_saves_under_its_zone() -> void:
+	var zones: Array[StringName] = [&"rules"]
+	run = Ascent.start(true, zones)
+	assert_not_null(run, "the test level rules, which has an egg, is the zone")
+	if run == null:
+		return
+	run.auto_step = false
+	run.teleport(Vector3(-6, TUNING.radius, -10), Vector3.ZERO)
+	run.step(MarbleInput.new())
+	assert_true(run.state.egg_found)
+	assert_eq(Save.level(&"rules").eggs, PackedStringArray(["Egg"]))
+	assert_eq(Save.level(run.level.id).eggs.size(), 0, "not under the id of the climb")
 
 
 ## Assist puts a checkpoint on each zone start and marks the climb.

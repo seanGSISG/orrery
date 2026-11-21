@@ -47,6 +47,32 @@ func test_record_is_of_the_level_that_finished() -> void:
 	assert_false(ui.results.new_record)
 
 
+## A level with two eggs shows how many of them are found: one in the first run, and both
+## in a later run that finds the other one.
+func test_two_eggs_show_a_count() -> void:
+	var level: Level = Game.make_level(&"rules")
+	var second: Egg = (load(Level.EGG_SCENE) as PackedScene).instantiate() as Egg
+	second.name = &"Egg2"
+	second.position = Vector3(6, 0, -10)
+	level.add_child(second)
+	var run: LevelRun = Game.play(level)
+	run.auto_step = false
+	step_run(run, 1)
+	run.teleport(run.spawn_point(second), Vector3.ZERO)
+	run.step(MarbleInput.new())
+	finish_run(run)
+	await wait_process_frames(2)
+	assert_eq(ui.results.egg.text, "1/2")
+	run.restart()
+	await wait_process_frames(2)
+	step_run(run, 1)
+	run.teleport(run.spawn_point(run.find_child("Egg", true, false) as LevelObject), Vector3.ZERO)
+	run.step(MarbleInput.new())
+	finish_run(run)
+	await wait_process_frames(2)
+	assert_eq(ui.results.egg.text, "2/2", "the egg of the first run is in the save")
+
+
 ## A on Next plays the level after this one.
 func test_pad_plays_next_level() -> void:
 	finish_run(start_level(&"rules"))
