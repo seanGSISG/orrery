@@ -30,7 +30,7 @@ Also in the weight shaft: the clock's counterweight, a 2.4 m platform that moves
 2. In the weight shaft, climb one half-turn, jump the 2 m gap onto the counterweight and ride it to +47 m.
 3. Leave the gear room by the west door and weave through the three vents without a landing.
 4. Leave the clock floor by the east door and take both loose slopes at full speed.
-5. From the bell floor, take the two rafters to the crown.
+5. Climb the ramp round the great bell, as on a first run. From the bell floor, take the two rafters to the crown.
 
 ## Gems
 

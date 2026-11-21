@@ -115,6 +115,7 @@
 <path class="m-case" d="M316 742L366 632L210 562L308 518L170 446L240 406H436"/>
 <path class="m-r2" d="M316 742L366 632L210 562L308 518L170 446L240 406H436"/>
 <path class="m-r2" d="M446 392L404 356V322L432 284V180L316 184"/>
+<path class="m-r2" d="M312 168V134"/>
 <!-- objects -->
 <use href="#b02start" x="300" y="752"/><use href="#b02finish" x="300" y="116"/>
 <use href="#b02gem" x="360" y="615"/><use href="#b02gem" x="190" y="565"/>

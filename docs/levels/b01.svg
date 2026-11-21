@@ -93,7 +93,7 @@
 <rect class="e-2 m-edge" x="470" y="580" width="50" height="120"/>
 <rect class="e-2 m-edge" x="520" y="380" width="70" height="320"/>
 <rect class="e-2" x="518" y="582" width="6" height="116"/>
-<rect class="e-2 m-edge" x="470" y="330" width="120" height="50"/>
+<rect class="e-2 m-edge" x="398" y="330" width="192" height="50"/>
 <rect class="e-2" x="522" y="376" width="66" height="8"/>
 <rect class="e0 m-edge" x="470" y="440" width="50" height="40"/>
 <rect class="e-2 m-edge" x="470" y="480" width="50" height="100"/>
@@ -109,12 +109,12 @@
 <path class="m-r1" d="M78 446L82 600L140 660L385 578"/>
 <path class="m-r1" d="M398 562L486 462L490 592L498 640"/>
 <path class="m-r1" d="M508 646L552 532"/>
-<path class="m-r1" d="M546 516L502 580V470L310 444V336L212 284"/>
+<path class="m-r1" d="M546 516L530 592L498 596V470L310 444V336L212 284"/>
 <path class="m-r1" d="M204 262L288 180"/>
 <path class="m-case" d="M316 730L452 694L498 664"/>
 <path class="m-r2" d="M316 730L452 694L498 664"/>
 <path class="m-r2" d="M514 640L562 536"/>
-<path class="m-r2" d="M566 518L512 590L504 474L404 584L312 586L214 586L140 652H52L78 560V452L104 402L152 326L196 286"/>
+<path class="m-r2" d="M566 518L536 600L506 602L502 474L404 584L312 586L214 586L140 652H52L78 560V452L104 402L152 326L196 286"/>
 <path class="m-r2" d="M214 268L300 192"/>
 <!-- objects -->
 <use href="#b01start" x="300" y="745"/>

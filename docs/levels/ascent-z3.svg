@@ -120,7 +120,7 @@
 <path class="m-walk" d="M440-1600L560-1660" style="stroke:#d7dbe8;stroke-dasharray:6 5"/>
 <path class="m-walk" d="M496-1806H518M522-1819H544M550-1832H580"/>
 <!-- fall lines -->
-<path class="m-fall" d="M146-164L140-70"/><path class="m-fall" d="M188-376L262-228"/><path class="m-fall" d="M56-144V-20"/><path class="m-fall" d="M120-600L130-516"/><path class="m-fall" d="M420-960L360-906"/><path class="m-fall" d="M440-1100L340-1196"/><path class="m-fall" d="M70-1350L150-1190"/><path class="m-fall" d="M574-1650L560-1440"/><path class="m-fall" d="M300-1720L320-1606"/>
+<path class="m-fall" d="M146-164L140-70"/><path class="m-fall" d="M188-376L262-228"/><path class="m-fall" d="M56-144V-20"/><path class="m-fall" d="M120-600L130-516"/><path class="m-fall" d="M420-960L360-906"/><path class="m-fall" d="M440-1090L356-926"/><path class="m-fall" d="M70-1350L150-1190"/><path class="m-fall" d="M574-1650L560-1440"/><path class="m-fall" d="M300-1720L320-1606"/>
 <!-- first-run route -->
 <path class="m-r1" d="M278-8L249-18L215-28L188-38L112-88H96L90-156L116-168L144-178L172-188L200-192L240-228"/>
 <path class="m-r1" d="M236-238L203-248L173-258L148-266L50-312L146-360L102-402L186-398L292-444"/>
