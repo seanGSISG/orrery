@@ -51,7 +51,7 @@ func _input(event: InputEvent) -> void:
 func _used_device(event: InputEvent) -> StringName:
 	var axis: InputEventJoypadMotion = event as InputEventJoypadMotion
 	if axis != null:
-		return &"pad" if absf(axis.axis_value) > dead_zone else &""
+		return &"pad" if _push(axis) > dead_zone else &""
 	if event is InputEventMouseMotion:
 		return &"keyboard" if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else &""
 	if not event.is_pressed() or event.is_echo():
@@ -61,6 +61,16 @@ func _used_device(event: InputEvent) -> StringName:
 	if event is InputEventKey or event is InputEventMouseButton:
 		return &"keyboard"
 	return &""
+
+
+## Returns how far the stick or trigger of axis is pushed, 0..1. A stick's push is the length
+## of its x and y, as in the radial dead zone of PlayerSource.
+static func _push(axis: InputEventJoypadMotion) -> float:
+	if axis.axis >= JOY_AXIS_TRIGGER_LEFT:
+		return absf(axis.axis_value)
+	var x: JoyAxis = (axis.axis - axis.axis % 2) as JoyAxis
+	var y: JoyAxis = (x + 1) as JoyAxis
+	return Vector2(Input.get_joy_axis(axis.device, x), Input.get_joy_axis(axis.device, y)).length()
 
 
 ## Forwards the events that nothing else handled to the active source.

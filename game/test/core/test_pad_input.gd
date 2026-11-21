@@ -91,6 +91,11 @@ func test_state_reports_last_device() -> void:
 	watch_signals(InputHub)
 	_axis(JOY_AXIS_LEFT_X, 0.1)
 	assert_eq(Game.snapshot().input_device, &"keyboard", "drift")
+	_axis(JOY_AXIS_LEFT_Y, 0.12)
+	assert_eq(Game.snapshot().input_device, &"pad", "diagonal push outside the radial dead zone")
+	_key(KEY_W)
+	_axis(JOY_AXIS_LEFT_Y, 0.0)
+	_axis(JOY_AXIS_LEFT_X, 0.0)
 	_axis(JOY_AXIS_LEFT_X, 0.3)
 	assert_eq(Game.snapshot().input_device, &"pad", "stick push")
 	assert_eq(InputHub.pad, PAD)
@@ -104,7 +109,7 @@ func test_state_reports_last_device() -> void:
 	_send(motion)
 	# The headless display server cannot capture the mouse, so captured motion is not tested.
 	assert_eq(Game.snapshot().input_device, &"pad", "uncaptured mouse")
-	assert_signal_emit_count(InputHub, "device_changed", 3)
+	assert_signal_emit_count(InputHub, "device_changed", 5)
 
 
 ## Unplugging the active pad mid-game falls back to the keyboard; the next pad press takes

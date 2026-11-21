@@ -20,6 +20,7 @@ Run: uv run tools/pad/virtual_pad.py --seconds 15 --press a
 """
 
 import argparse
+import math
 import time
 from dataclasses import dataclass
 
@@ -72,25 +73,33 @@ def parse_step(text: str) -> Step:
     words = text.split()
     match words:
         case ["press", button, seconds] if button in BUTTONS:
-            return Step((Hold(e.EV_KEY, BUTTONS[button], 1),), float(seconds))
+            return Step((Hold(e.EV_KEY, BUTTONS[button], 1),), _seconds(seconds))
         case ["stick", stick, x, y, seconds] if stick in STICKS:
             ax, ay = STICKS[stick]
             holds = (
                 Hold(e.EV_ABS, ax, round(_unit(x) * 32767)),
                 Hold(e.EV_ABS, ay, round(-_unit(y) * 32767)),
             )
-            return Step(holds, float(seconds))
+            return Step(holds, _seconds(seconds))
         case ["trigger", trigger, value, seconds] if trigger in TRIGGERS:
             level = round(max(_unit(value), 0.0) * 255)
-            return Step((Hold(e.EV_ABS, TRIGGERS[trigger], level),), float(seconds))
+            return Step((Hold(e.EV_ABS, TRIGGERS[trigger], level),), _seconds(seconds))
         case ["wait", seconds]:
-            return Step((), float(seconds))
+            return Step((), _seconds(seconds))
     raise ValueError(f"bad step: {text!r}")
 
 
 def parse_sequence(text: str) -> list[Step]:
     """Parse steps separated by ";"."""
     return [parse_step(part) for part in text.split(";") if part.strip()]
+
+
+def _seconds(text: str) -> float:
+    """Parse a step duration; raise ValueError unless it is finite and positive."""
+    seconds = float(text)
+    if not 0.0 < seconds < math.inf:
+        raise ValueError(f"bad seconds: {text!r}")
+    return seconds
 
 
 def _unit(text: str) -> float:
