@@ -122,6 +122,7 @@ graphics/preset="medium"
 3d/physics_engine="Jolt Physics"
 common/physics_ticks_per_second=120
 common/physics_interpolation=true
+jolt_physics_3d/collisions/collision_margin_fraction=0.0
 jolt_physics_3d/queries/use_enhanced_internal_edge_removal=true
 
 [rendering]
