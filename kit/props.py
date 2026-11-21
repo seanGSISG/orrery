@@ -29,8 +29,9 @@ def prop(
 ) -> bpy.types.Object:
     """Places the prop `assets/props/<name>.glb` with its base centre at `at` and returns its
     object, `prop_<name>_00`, `prop_<name>_01` ... rotation: XYZ angles in degrees.
-    collider: none, box or cylinder (around the prop's bounds; it collides on surface type
-    default). Props of one name share one mesh."""
+    collider: none, box (the prop's bounds) or cylinder (as tall as the bounds, its radius
+    half the larger width, so it fits a round prop); it collides on surface type default.
+    Props of one name share one mesh."""
     if collider not in COLLIDERS:
         raise ValueError(f"kit.prop({name!r}): collider must be one of {COLLIDERS}")
     mesh = _mesh(name)

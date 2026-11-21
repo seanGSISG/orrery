@@ -242,6 +242,14 @@ def test_jobs_files_with_one_name_keep_their_own_state(tmp_path: Path) -> None:
     assert images.state_path(first) == images.state_path(first)
 
 
+def test_a_missing_jobs_file_gives_the_json_error(
+    tmp_path: Path, settings: Config, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["batch", str(tmp_path / "typo.jsonl"), "--dry-run"], settings)
+    assert "cannot read the jobs file" in json.loads(capsys.readouterr().out)["error"]
+
+
 def test_the_default_cap_comes_from_the_config(settings: Config) -> None:
     assert settings.max_usd_per_run == 5.0
 

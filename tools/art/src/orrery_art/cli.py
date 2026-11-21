@@ -234,7 +234,10 @@ def run_task(
         print(f"Started task {task_id}", file=sys.stderr)
     data = client.wait(task_id, settings.poll_seconds, settings.timeout_minutes * 60)
     output = data.get("output") or {}
-    if "model_url" not in output:
+    model_url = output.get("model_url")
+    if not isinstance(model_url, str) or not model_url.startswith(
+        ("http://", "https://")
+    ):
         raise tripo.TripoError(f"task {task_id} succeeded but returned no model_url")
     files = client.download(output, task.path)
     consumed = data.get("credits_consumed")

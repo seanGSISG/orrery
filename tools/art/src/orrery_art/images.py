@@ -109,7 +109,13 @@ def read_jobs(path: Path, defaults: ImageSettings) -> list[ImageJob]:
     """Reads a JSONL file of jobs. Raises ValueError that names each bad line."""
     jobs: list[ImageJob] = []
     problems: list[str] = []
-    for number, text in enumerate(path.read_text().splitlines(), 1):
+    try:
+        lines = path.read_text().splitlines()
+    except OSError as error:
+        raise ValueError(
+            f"{path}: cannot read the jobs file ({error.strerror})"
+        ) from None
+    for number, text in enumerate(lines, 1):
         if not text.strip():
             continue
         try:
@@ -268,7 +274,10 @@ class BatchState:
 
     def write(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(asdict(self), indent=2) + "\n")
+        # Write a new file and swap it in, so an interrupted write never loses the batch id.
+        partial = path.with_name(path.name + ".partial")
+        partial.write_text(json.dumps(asdict(self), indent=2) + "\n")
+        partial.replace(path)
 
 
 def state_path(jobs_file: Path) -> Path:
@@ -317,6 +326,8 @@ def wait(
         try:
             batch = client.batches.retrieve(batch_id)
         except (openai.APIConnectionError, openai.InternalServerError) as error:
+            if not keep_waiting:
+                raise
             print(
                 f"{batch_id}: status check failed, retrying: {error}", file=sys.stderr
             )

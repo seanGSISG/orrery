@@ -248,6 +248,8 @@ prop-cleanup source name *args:
     mkdir -p assets/props
     mv "$staged" "$dest"
     # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
+    # A source without a record leaves none, so an old record never names a new prop.
+    rm -f "$dest.json"
     if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
     echo "$dest"
 
