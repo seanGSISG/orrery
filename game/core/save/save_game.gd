@@ -2,8 +2,8 @@ class_name SaveGame
 extends Node
 ## Progress, settings, the Ascent climb and ghosts (docs/plan.md §2.3, §2.13, §4.4). The
 ## autoload Save (save.gd) is the one instance in the game; tests make their own with another
-## dir. read() loads the file; every change through finish() or find_egg() writes it at once.
-## After a change to settings or ascent, call write().
+## dir. read() loads the file; every change through finish(), find_egg() or change_settings()
+## writes it at once. After a change to ascent, call write().
 ##
 ## Files in dir:
 ## - save.json: {"version": 1, "levels": {id: LevelRecord}, "settings": Settings,
@@ -86,6 +86,17 @@ func write() -> bool:
 		"ascent": ascent.to_dict(),
 	}
 	return _write_atomic(_path(), JSON.stringify(data, "\t", true, true).to_utf8_buffer())
+
+
+## Sets the settings in values (key: value), puts them into the game (Settings.apply()) and
+## writes the file. A value is of its setting's type, or its JSON value ([x, y] for a
+## Vector2i). An unknown key, or a value that does not convert, changes nothing. Returns
+## false when the file could not be written. The settings menu and the harness `set_setting`
+## change settings through it.
+func change_settings(values: Dictionary) -> bool:
+	settings.fill(values)
+	settings.apply()
+	return write()
 
 
 ## Returns the saved progress of level id. A level with no progress gives a new default
