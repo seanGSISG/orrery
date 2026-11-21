@@ -14,7 +14,7 @@ from mcp.server.mcpserver import Image, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from orrery_harness import game
-from orrery_harness.client import GameState, Harness, HarnessError, LogLine
+from orrery_harness.client import BotResult, GameState, Harness, HarnessError, LogLine
 
 server = MCPServer(
     name="orrery",
@@ -100,6 +100,15 @@ def game_screenshot(shot: str | None = None) -> list[Image | str]:
         saved = harness.screenshot(str(path), shot)
     note = f"{saved.width}x{saved.height} on {saved.adapter}, saved to {saved.path}"
     return [Image(path=saved.path), f"BLANK FRAME: {note}" if saved.blank else note]
+
+
+@server.tool()
+def game_run_bot(route: str | None = None) -> BotResult:
+    """Restart the level and let the route bot play a route to the end at full speed, then
+    pause. route is first_run (default), expert or a route name. Returns finished, time (s)
+    and falls; when the bot gave up, also stuck_at, waypoint and reason."""
+    with _game() as harness:
+        return harness.run_bot(route)
 
 
 @server.tool()
