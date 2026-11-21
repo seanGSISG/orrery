@@ -129,17 +129,35 @@ The zone has no lightmap bake: in the climb, the mode removes each zone's lightm
 
 The dry chimney stands at the south end of the ridge walk (+14 m). Its flue, 1.3 m wide, goes down 15 m to the hearth of the guildhall's hall. The egg stands in front of the hearth. A door 2.4 m wide in the hall's east wall opens to the street beside the square.
 
-### Placeholders for props and decals
+### Props, decals and placeholders
 
-A placeholder is an empty with the custom property `town_spot` = {kind, size, note}, from `town.spot()`. It shows nothing in the game. To put a model in, change the `town.spot("prop", name, at, rotation, ...)` line to `kit.prop(name, at=..., rotation=..., collider=...)` at the same place. No spot stands on a way up.
+The art of the zone-1 trial (#96; `assets/props/`, `assets/decals/`, `docs/licenses.md`) is in place. Every play surface is still kit geometry; a prop is decoration with a simple collider where the marble could otherwise roll through it.
+
+| Prop | Instances | Where | Collider |
+|---|---|---|---|
+| `fountain` | 1 | The middle of the square, with still water in its basin (a glass disc that does not collide) | cylinder |
+| `lamp_post` | 10 | Round the square, off the ways up | cylinder |
+| `bread_cart` | 1 | South-east of the fountain | box |
+| `barrels` | 4 | By the bakery door, by the workshop door, by the inn, by the waterwheel | cylinder |
+| `flower_trough` | 7 | Beside the fountain, beside the tower's great door, in front of the south houses, by the guildhall door | box |
+
+| Decal | Where |
+|---|---|
+| `dial_tower` | The four dials of the clock floor, 8.8 m across, under the brass hands at six o'clock |
+| `dial_shop` | The workshop's west wall, beside the clockmaker's sign |
+| `sign_bakery`, `sign_clockmaker` | Both faces of the hanging boards of the bakery and the clockmaker |
+| `sign_guildhall` | Over the hall door of the guildhall |
+| `sign_workshop` | The workshop's south wall, over the balcony |
+| `plaque_square` | Over the great door of the tower |
+
+`town.decal(name, art, at, yaw, size)` puts a picture of `assets/decals/` on an upright quad. Its alpha cuts the outline at 0.5 (glTF alpha mode MASK), and it does not collide.
+
+The props and decals that wait for their art have a placeholder: an empty with the custom property `town_spot` = {kind, size, note}, from `town.spot()`. It shows nothing in the game. To put a model in, change its `town.spot("prop", name, at, rotation, ...)` line to `kit.prop(name, at=..., rotation=..., collider=...)` at the same place. No spot stands on a way up.
 
 | Prop spot | Place (x, y, z) | Size (w × d × h, m) | To make |
 |---|---|---|---|
 | `prop_bench_1`, `prop_bench_2` | (−10.5, 30.8, 0), (10.5, 29.6, 0) | 1.8 × 0.6 × 0.9 | Benches with their backs to the tower |
 | `prop_bench_3` | (−15.8, 26.0, 0) | 1.8 × 0.6 × 0.9 | Bench by the guildhall lane |
-| `prop_barrels_bakery` | (−17.4, 16.6, 0) | 1.2 × 1.2 × 1.1 | Flour barrels by the bakery door |
-| `prop_handcart` | (6.0, 3.0, 0) | 1.6 × 2.6 × 1.2 | Baker's handcart |
-| `prop_flower_tub_1`, `prop_flower_tub_2` | (−3.6, 15.0, 0), (3.6, 15.0, 0) | 0.9 × 0.9 × 0.8 | Flower tubs by the fountain |
 | `prop_goods_stall_2`, `prop_goods_stall_3` | (−12.5, 9.95, 0.95), (−16.0, 9.95, 0.95) | 2.6 × 0.6 × 0.5 | Bread and fruit on the stall counters |
 | `prop_clock_parts` | (13.8, 22.5, 0) | 1.2 × 0.8 × 1.0 | A crate of clock parts by the workshop door |
 | `prop_hay_cart` | (0.0, −5.0, 0) | 1.8 × 3.2 × 1.6 | Hay cart in the south street |
@@ -147,8 +165,5 @@ A placeholder is an empty with the custom property `town_spot` = {kind, size, no
 
 | Decal spot | Where | Art to make |
 |---|---|---|
-| `decal_clock_dial_south`, `_east`, `_north`, `_west` | The four dials of the clock floor, 9 m across | Dial face, no numerals |
-| `decal_sign_bakery`, `decal_sign_clockmaker`, `decal_sign_inn` | The boards of the three hanging shop signs | Sign art on both faces |
-| `decal_guildhall_crest` | Over the hall door | The guild's crest |
-| `decal_tower_door_plaque` | Over the great door of the tower | Name plaque |
+| `decal_sign_inn` | The board of the inn's hanging sign, south side of the square | Sign art on both faces |
 | `decal_street_name_south`, `decal_street_name_east` | The corner house of the south street, and the workshop's west wall | Street name plates |

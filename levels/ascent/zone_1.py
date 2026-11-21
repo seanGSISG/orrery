@@ -214,25 +214,13 @@ kit.inlay(
 )
 START: Place = (0.0, 23.5, 0.0)
 
-# The fountain in the middle of the square.
+# The fountain in the middle of the square: the hero prop, 2 m across, with still water in its
+# basin. A cylinder keeps the marble out of it.
 FOUNTAIN = (0.0, 15.0)
-kit.lathe(
-    (*FOUNTAIN, 0.0),
-    [
-        (2.6, 0.0),
-        (2.6, 0.55),
-        (2.35, 0.6),
-        (2.2, 0.25),
-        (0.5, 0.25),
-        (0.45, 1.6),
-        (1.3, 1.8),
-        (1.35, 1.95),
-        (0.3, 2.0),
-        (0.2, 2.9),
-        (0.0, 3.0),
-    ],
-    name="fountain",
-)
+kit.prop("fountain", at=(*FOUNTAIN, 0.0), collider="cylinder")
+water = town.Parts()
+water.solid(kit.arc(FOUNTAIN, 0.86, 0, 360), 0.55, 0.62, "glass")
+water.add("fountain_water", collide=False)
 
 # --- 1. Town: the market side (way A) -----------------------------------------------------------
 
@@ -768,7 +756,7 @@ for name, at, yaw in (
     ("north", (TOWER[0], Y1, DIAL_Z), 180.0),
     ("west", (X0, TOWER[1], DIAL_Z), -90.0),
 ):
-    town.clock_face(f"clock_dial_{name}", at, yaw, DIAL_R)
+    town.clock_face(f"clock_dial_{name}", at, yaw, DIAL_R, art="dial_tower")
 # Three bell weights rise 10 m each, east, west and east, with a ledge between them.
 BELL_WEIGHTS = {
     "bell_weight_1": (BELL_X, CLOCK_FLOOR, 0.0),
@@ -1078,13 +1066,9 @@ for side, face in TOWER_FACES.items():
         dress, face, face.length / 2, 3.2, BELFRY + 5.0, BELFRY + 13.0, pane="iron"
     )
 town.window(dress, TOWER_FACES["s"], 6.0, 3.0, 0.9, 5.4, door=True)
-town.spot(
-    "decal",
-    "tower_door_plaque",
-    (TOWER[0], Y0 - 0.06, 6.2),
-    (90.0, 0.0, 0.0),
-    (2.4, 0.02, 0.6),
-    "name plaque over the great door",
+# The square's name plaque over the great door, clear of the door's lintel (5.6 m).
+town.decal(
+    "plaque_square", "plaque_square", (TOWER[0], Y0 - 0.02, 6.7), 0.0, (2.4, 1.6)
 )
 dress.add("tower_dress", collide=False)
 # The broken crown: merlons at the corners.
@@ -1250,9 +1234,8 @@ street(
     "s",
 )
 
-# Street lamps round the square, off the ways up.
-lamps = town.Parts()
-for at in (
+# Street lamps round the square, off the ways up. A cylinder makes each post solid.
+LAMPS = [
     (-12.0, 1.0),
     (12.0, 1.0),
     (-16.2, 22.0),
@@ -1261,13 +1244,11 @@ for at in (
     (7.0, 29.6),
     (-3.5, 0.6),
     (3.5, 0.6),
-):
-    town.lamp(lamps, (*at, 0.0))
-lamps.add("town_lamps")
-# The fountain's water.
-water = town.Parts()
-water.solid(kit.arc(FOUNTAIN, 2.3, 0, 360), 0.3, 0.45, "glass")
-water.add("fountain_water")
+    (-16.4, 5.0),
+    (16.0, 5.5),
+]
+for at in LAMPS:
+    kit.prop("lamp_post", at=(*at, 0.0), collider="cylinder")
 
 # The windows and doors of the bakery, the workshop and the guildhall. They do not collide.
 fronts = town.Parts()
@@ -1296,18 +1277,23 @@ for along in (3.0, 6.5):
         6.8,
     )
 fronts.add("town_fronts", collide=False)
-# Shop signs: decal spots on hanging boards.
-town.sign("sign_bakery", (bx1, 16.2, 3.4), (1.0, 0.0))
-town.sign("sign_clockmaker", (wx0, 20.0, 4.6), (-1.0, 0.0), width=1.2, height=0.8)
-town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0))
-town.spot(
-    "decal",
-    "guildhall_crest",
-    (gx1 + 0.06, 25.5, 5.2),
-    (90.0, 0.0, 90.0),
-    (1.6, 0.02, 1.6),
-    "the guild's crest over the hall door",
+# Shop signs: art on the hanging boards of the bakery and the clockmaker; the inn's board waits
+# for its art. Signs and a shop dial on the walls.
+town.sign("sign_bakery", (bx1, 16.2, 3.4), (1.0, 0.0), art="sign_bakery")
+town.sign(
+    "sign_clockmaker",
+    (wx0, 20.0, 4.6),
+    (-1.0, 0.0),
+    width=1.2,
+    height=0.8,
+    art="sign_clockmaker",
 )
+town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0))
+town.decal(
+    "sign_guildhall", "sign_guildhall", (gx1 + 0.02, 25.5, 3.85), 90.0, (2.4, 0.9)
+)
+town.decal("sign_workshop", "sign_workshop", (18.5, wy0 - 0.02, 6.1), 0.0, (1.65, 1.1))
+town.decal("dial_shop", "dial_shop", (wx0 - 0.02, 16.0, 6.4), -90.0, (1.2, 1.2))
 town.spot(
     "decal",
     "street_name_south",
@@ -1324,7 +1310,25 @@ town.spot(
     (1.0, 0.02, 0.3),
     "street name plate",
 )
-# Prop spots: decorative props come later (docs/levels/ascent-z1.md). None is on a way up.
+# Props: decoration from the art trial (#96). Each has a simple collider, so the marble meets it
+# as it looks; none stands on a way up.
+PROPS: list[tuple[str, Place, float, str]] = [
+    ("bread_cart", (6.0, 3.0, 0.0), 30.0, "box"),
+    ("barrels", (-17.4, 16.6, 0.0), 0.0, "cylinder"),
+    ("barrels", (13.6, 25.6, 0.0), 0.0, "cylinder"),
+    ("barrels", (-10.2, -0.3, 0.0), 0.0, "cylinder"),
+    ("barrels", (24.2, 15.6, 0.0), 0.0, "cylinder"),
+    ("flower_trough", (-2.3, FOUNTAIN[1], 0.0), 0.0, "box"),
+    ("flower_trough", (2.3, FOUNTAIN[1], 0.0), 0.0, "box"),
+    ("flower_trough", (-2.6, Y0 - 0.6, 0.0), 90.0, "box"),
+    ("flower_trough", (2.6, Y0 - 0.6, 0.0), 90.0, "box"),
+    ("flower_trough", (-14.0, -0.35, 0.0), 90.0, "box"),
+    ("flower_trough", (14.0, -0.35, 0.0), 90.0, "box"),
+    ("flower_trough", (gx1 + 0.35, 22.0, 0.0), 0.0, "box"),
+]
+for name, at, yaw, collider in PROPS:
+    kit.prop(name, at=at, rotation=(0.0, 0.0, yaw), collider=collider)
+# Prop spots: props whose art comes later (docs/levels/ascent-z1.md). None is on a way up.
 PROP_SPOTS = {
     "bench_1": ((-10.5, 30.8, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
     "bench_2": ((10.5, 29.6, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
@@ -1334,48 +1338,24 @@ PROP_SPOTS = {
         (1.8, 0.6, 0.9),
         "bench by the guildhall lane",
     ),
-    "barrels_bakery": (
-        (-17.4, 16.6, 0.0),
-        0.0,
-        (1.2, 1.2, 1.1),
-        "flour barrels by the bakery door",
-    ),
-    "handcart": ((6.0, 3.0, 0.0), 30.0, (1.6, 2.6, 1.2), "baker's handcart"),
-    "flower_tub_1": (
-        (-3.6, 15.0, 0.0),
-        0.0,
-        (0.9, 0.9, 0.8),
-        "flower tub by the fountain",
-    ),
-    "flower_tub_2": (
-        (3.6, 15.0, 0.0),
-        0.0,
-        (0.9, 0.9, 0.8),
-        "flower tub by the fountain",
-    ),
     "goods_stall_2": (
         (-12.5, 9.95, 0.95),
         0.0,
         (2.6, 0.6, 0.5),
-        "bread loaves on the counter",
+        "bread on the counter",
     ),
     "goods_stall_3": (
         (-16.0, 9.95, 0.95),
         0.0,
         (2.6, 0.6, 0.5),
-        "fruit baskets on the counter",
+        "fruit on the counter",
     ),
-    "clock_parts": (
-        (13.8, 22.5, 0.0),
-        -90.0,
-        (1.2, 0.8, 1.0),
-        "a crate of clock parts by the workshop",
-    ),
+    "clock_parts": ((13.8, 22.5, 0.0), -90.0, (1.2, 0.8, 1.0), "crate of clock parts"),
     "hay_cart": (
         (0.0, -5.0, 0.0),
         0.0,
         (1.8, 3.2, 1.6),
-        "a hay cart in the south street",
+        "hay cart in the south street",
     ),
     "anvil": ((25.0, 14.0, 0.0), 0.0, (0.8, 0.5, 0.8), "anvil by the waterwheel"),
 }
@@ -1647,3 +1627,4 @@ kit.shot("shaft", at=(-4.2, 37.0, 33.0), rotation=(-25, 0, -60))
 kit.shot("gear_room", at=(4.6, 34.2, 59.0), rotation=(-12, 0, 45))
 kit.shot("clock_floor", at=(-4.6, 34.2, 84.0), rotation=(8, 0, -40))
 kit.shot("belfry", at=(4.6, 43.6, 118.0), rotation=(-15, 0, 140))
+kit.shot("clock", at=(16.0, 37.5, 95.0), rotation=(0, 0, 82))

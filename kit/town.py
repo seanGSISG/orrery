@@ -11,7 +11,7 @@ Play pieces (they collide):
   building or a street lamp to a Parts mesh, so that a street of them is one mesh;
   windows() and window() dress any wall face.
 
-Decoration (no collision): sign() and clock_face().
+Decoration (no collision): sign(), clock_face() and decal(), a picture from assets/decals/.
 
 Placeholders: spot() leaves a named empty where a prop model or a decal comes later. It shows
 nothing in the game; docs/levels/ascent-z1.md lists the spots.
@@ -25,6 +25,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
+from pathlib import Path
 from typing import Literal
 
 import bmesh
@@ -41,6 +42,8 @@ Rgb = tuple[float, float, float]
 # A wall opening: (centre along the wall, width, sill height, head height), m.
 Opening = tuple[float, float, float, float]
 
+# Decal art: PNG pictures with alpha (Git LFS), from the asset tools (tools/art/README.md).
+DECALS = Path(__file__).resolve().parents[1] / "assets" / "decals"
 # A curved piece gets one section for each this many degrees of its arc.
 ARC_STEP = 5.0
 # A lift gear: the gap from its tooth tips to the casing, the casing's thickness, the gap from
@@ -721,11 +724,17 @@ def window(
 
 
 def sign(
-    name: str, at: Vec3, out: Point, width: float = 1.0, height: float = 0.7
+    name: str,
+    at: Vec3,
+    out: Point,
+    width: float = 1.0,
+    height: float = 0.7,
+    art: str = "",
 ) -> bpy.types.Object:
     """Adds a hanging shop sign: an iron bracket from the wall point `at` along the unit
-    direction `out`, and a board below it, side on to the street. The decal spot
-    `decal_<name>` marks the board for its art."""
+    direction `out`, and a board below it, side on to the street. art: the decal on both
+    faces of the board (decal()); without it, the decal spot `decal_<name>` marks the board
+    for its art."""
     x, y, z = at
     left = (-out[1], out[0])
     reach = width + 0.3
@@ -742,14 +751,27 @@ def sign(
     board = (z - 0.1 - height, z - 0.1)
     parts.slab(near, out, width, 0.06, board, "wood")
     middle = (x + out[0] * (0.2 + width / 2), y + out[1] * (0.2 + width / 2))
-    spot(
-        "decal",
-        name,
-        (*middle, (board[0] + board[1]) / 2),
-        (90.0, 0.0, math.degrees(math.atan2(out[1], out[0]))),
-        (width, 0.06, height),
-        "shop sign art, on both faces of the board",
-    )
+    facing = math.degrees(math.atan2(out[1], out[0]))
+    if not art:
+        spot(
+            "decal",
+            name,
+            (*middle, (board[0] + board[1]) / 2),
+            (90.0, 0.0, facing),
+            (width, 0.06, height),
+            "shop sign art, on both faces of the board",
+        )
+    for side in (1, -1):
+        # The board is 0.06 m thick round the line `left` 0.03 m from the bracket.
+        face = (middle[0] + left[0] * side * 0.035, middle[1] + left[1] * side * 0.035)
+        if art:
+            decal(
+                f"{name}_{'a' if side > 0 else 'b'}",
+                art,
+                (*face, (board[0] + board[1]) / 2),
+                facing + (180.0 if side > 0 else 0.0),
+                (width, height),
+            )
     return parts.add(name, collide=False)
 
 
@@ -760,18 +782,19 @@ def clock_face(
     radius: float,
     hour: float = 6.0,
     minute: float = 0.0,
+    art: str = "",
 ) -> bpy.types.Object:
     """Adds a clock dial on a wall: `at` is the dial's middle on the wall face, and yaw turns
-    the dial from facing -y. A stone dial plate, a gold rim, twelve brass hour bars (no
-    numerals) and two brass hands at hour:minute. The decal spot `decal_<name>` marks the
-    dial for its art."""
+    the dial from facing -y. A stone dial plate, a gold rim, the hour marks and two brass
+    hands at hour:minute. art: the decal of a dial with no hands, which gives the marks;
+    without it, twelve brass hour bars (no numerals) and a decal spot `decal_<name>`."""
     a = math.radians(yaw)
     right = (math.cos(a), math.sin(a))
     out = (math.sin(a), -math.cos(a))
     parts = Parts()
     _dial_ring(parts, at, right, out, 0.0, radius, (0.0, 0.12), "limestone")
     _dial_ring(parts, at, right, out, radius - 0.25, radius + 0.1, (0.0, 0.2), "gold")
-    for h in range(12):
+    for h in range(0 if art else 12):
         bar = 0.18 if h % 3 == 0 else 0.11
         angle = math.radians(90.0 - 30.0 * h)
         _dial_bar(
@@ -793,9 +816,61 @@ def clock_face(
         parts, at, right, out, minute_angle, (-0.4, radius * 0.75), 0.14, (0.24, 0.3)
     )
     middle = (at[0] + out[0] * 0.125, at[1] + out[1] * 0.125, at[2])
-    size = (2 * radius, 0.02, 2 * radius)
-    spot("decal", name, middle, (90.0, 0.0, yaw), size, "clock dial art, no numerals")
+    if art:
+        decal(f"{name}_art", art, middle, yaw, (2 * radius - 0.2, 2 * radius - 0.2))
+    else:
+        size = (2 * radius, 0.02, 2 * radius)
+        spot(
+            "decal", name, middle, (90.0, 0.0, yaw), size, "clock dial art, no numerals"
+        )
     return parts.add(name, collide=False)
+
+
+def decal(
+    name: str, art: str, at: Vec3, yaw: float, size: tuple[float, float]
+) -> bpy.types.Object:
+    """Adds a flat picture: the art `assets/decals/<art>.png` on an upright quad `size`
+    (width, height) m whose middle is `at`, facing -y turned by yaw degrees, as a clock dial
+    does. Put it a few millimetres proud of its wall. Its alpha cuts the outline at 0.5. It
+    does not collide; decals of one art share one material."""
+    a = math.radians(yaw)
+    right = Vector((math.cos(a), math.sin(a), 0.0))
+    up = Vector((0.0, 0.0, 1.0))
+    middle = Vector(at)
+    w, h = size[0] / 2, size[1] / 2
+    bm = bmesh.new()
+    corners = [middle - right * w - up * h, middle + right * w - up * h]
+    corners += [middle + right * w + up * h, middle - right * w + up * h]
+    face = bm.faces.new([bm.verts.new(c) for c in corners])
+    uv = bm.loops.layers.uv.new("UVMap")
+    for loop, coord in zip(face.loops, ((0, 0), (1, 0), (1, 1), (0, 1)), strict=True):
+        loop[uv].uv = coord
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(_decal_material(art))
+    return add_object(name, mesh)
+
+
+def _decal_material(art: str) -> bpy.types.Material:
+    """Returns the material of a decal art: its picture as the colour, its alpha cut at 0.5
+    (a Round node, which the glTF export writes as alpha mode MASK), made once per level."""
+    found = bpy.data.materials.get(f"decal_{art}")
+    if found is not None:
+        return found
+    found = bpy.data.materials.new(f"decal_{art}")
+    found.use_backface_culling = True
+    tree = found.node_tree
+    bsdf = tree.nodes["Principled BSDF"]
+    picture = tree.nodes.new("ShaderNodeTexImage")
+    picture.image = bpy.data.images.load(str(DECALS / f"{art}.png"))
+    tree.links.new(picture.outputs["Color"], bsdf.inputs["Base Color"])
+    cut = tree.nodes.new("ShaderNodeMath")
+    cut.operation = "ROUND"
+    tree.links.new(picture.outputs["Alpha"], cut.inputs[0])
+    tree.links.new(cut.outputs["Value"], bsdf.inputs["Alpha"])
+    bsdf.inputs["Roughness"].default_value = 0.65
+    return found
 
 
 def _dial(
