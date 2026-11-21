@@ -10,13 +10,7 @@ import bpy
 
 out = sys.argv[sys.argv.index("--") + 1]
 scene = bpy.context.scene
-engines = {
-    e.identifier
-    for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items
-}
-scene.render.engine = (
-    "BLENDER_EEVEE" if "BLENDER_EEVEE" in engines else "BLENDER_EEVEE_NEXT"
-)
+scene.render.engine = "BLENDER_EEVEE"  # the pinned Blender 5.2 identifier
 (
     scene.render.resolution_x,
     scene.render.resolution_y,

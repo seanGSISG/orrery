@@ -17,6 +17,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 GODOT=$(cd "$ROOT" && mise which godot 2>/dev/null || true)
 BLENDER="$HOME/.local/bin/blender-$BLENDER_SERIES"
+# Vendor + product of the virtual Xbox 360 pad (tools/pad/virtual_pad.py), as they
+# appear in an SDL/Godot joypad GUID.
+PAD_ID=5e0400008e020000
 fails=0
 
 report() {  # report STATUS NAME DETAIL
@@ -24,11 +27,12 @@ report() {  # report STATUS NAME DETAIL
   printf '   \033[%sm%-8s\033[0m %-28s %s\n' "$colour" "$1" "$2" "$3"
 }
 
-# probe MODE LOG [launcher...]: run the Godot probe project; succeeds on its marker line.
+# probe MODE LOG [launcher...]: run the Godot probe project. Succeeds when the run
+# exits 0 (gamescope exits 0 unless the timeout kills it) and prints its marker line.
 probe() {
   local mode="$1" log="$2"; shift 2
-  timeout 90 "$@" "$GODOT" --path "$WORK/probe" -- --mode="$mode" --out="$WORK/render.png" >"$log" 2>&1
-  grep -q "^PROBE $mode ok" "$log"
+  timeout 90 "$@" "$GODOT" --path "$WORK/probe" -- --mode="$mode" --out="$WORK/render.png" --match="$PAD_ID" >"$log" 2>&1 \
+    && grep -q "^PROBE $mode ok" "$log"
 }
 GS=(gamescope --backend headless -W 640 -H 360 --)
 
@@ -61,16 +65,23 @@ else
   report FAIL "Godot GPU frame, gamescope" "see $LOG/godot-*.log"
 fi
 
-# 4. Virtual Xbox controller seen by Godot
-uv run --quiet "$ROOT/tools/pad/virtual_pad.py" --seconds 40 --press a >"$LOG/pad.log" 2>&1 &
+# 4. Virtual Xbox controller seen by Godot. Only an A press from the virtual pad
+# counts, so a real controller cannot pass this check. There is no fallback to
+# verify here: without it, controller tests drop to the harness input path.
+uv run --quiet "$ROOT/tools/pad/virtual_pad.py" --seconds 240 --press a >"$LOG/pad.log" 2>&1 &
 pad=$!
-sleep 2
-if probe joypad "$LOG/joypad-headless.log" ; then
+for _ in $(seq 1 90); do
+  grep -q '^virtual pad up:' "$LOG/pad.log" || ! kill -0 "$pad" 2>/dev/null && break
+  sleep 1
+done
+if ! grep -q '^virtual pad up:' "$LOG/pad.log"; then
+  report FAIL "Virtual Xbox controller" "the virtual pad did not start; see $LOG/pad.log"
+elif probe joypad "$LOG/joypad-headless.log"; then
   report PASS "Virtual Xbox controller" "$(grep -o 'name=.*' "$LOG/joypad-headless.log")"
 elif probe joypad "$LOG/joypad-gamescope.log" "${GS[@]}"; then
   report PASS "Virtual Xbox controller" "$(grep -o 'name=.*' "$LOG/joypad-gamescope.log") (in gamescope only)"
 else
-  report FALLBACK "Virtual Xbox controller" "test through the harness input path only; see $LOG/pad.log"
+  report FAIL "Virtual Xbox controller" "Godot did not read the virtual pad; see $LOG/joypad-*.log"
 fi
 kill "$pad" 2>/dev/null; wait "$pad" 2>/dev/null
 
@@ -78,11 +89,13 @@ kill "$pad" 2>/dev/null; wait "$pad" 2>/dev/null
 export WINEPREFIX="$CACHE/wine" WINEDEBUG=-all WINEDLLOVERRIDES="mscoree,mshtml="
 mkdir -p "$WORK/win"
 if "$GODOT" --headless --path "$WORK/probe" --export-debug "Windows Desktop" "$WORK/win/probe.exe" >"$LOG/win-export.log" 2>&1 \
-  && timeout 180 wine "$WORK/win/probe.console.exe" --headless -- --mode=boot >"$LOG/wine.log" 2>&1 \
-  && grep -q "^PROBE boot ok" "$LOG/wine.log"; then
-  report PASS "Windows export under Wine" "boots headless"
-elif [[ -f "$WORK/win/probe.exe" ]]; then
-  report FALLBACK "Windows export under Wine" "export works; boot check moves to the CI Windows runner"
+  && [[ -s "$WORK/win/probe.exe" ]]; then
+  if timeout 180 wine "$WORK/win/probe.console.exe" --headless -- --mode=boot >"$LOG/wine.log" 2>&1 \
+    && grep -q "^PROBE boot ok" "$LOG/wine.log"; then
+    report PASS "Windows export under Wine" "boots headless"
+  else
+    report FALLBACK "Windows export under Wine" "export works; boot check moves to the CI Windows runner"
+  fi
 else
   report FAIL "Windows export under Wine" "export failed; see $LOG/win-export.log"
 fi

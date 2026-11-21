@@ -1,7 +1,9 @@
 extends Node3D
 ## Toolchain probe for tools/setup/check.sh. Picks a mode from the user args after `--`:
 ##   --mode=render --out=<png>  renders a lit cube; fails on a blank frame
-##   --mode=joypad              waits up to 15 s for a joypad A press
+##   --mode=joypad --match=<id> waits up to 15 s for an A press from the joypad whose
+##                              GUID starts with "03" (USB) and contains <id>
+##                              (vendor + product, as in the GUID)
 ##   --mode=boot                prints a marker and quits (Windows export under Wine)
 ## Each mode prints one "PROBE <mode> ok|..." line and quits with 0 on success.
 
@@ -15,7 +17,7 @@ func _ready() -> void:
 		"render":
 			await _render(str(args.get("out", "user://probe.png")))
 		"joypad":
-			await _joypad()
+			await _joypad(str(args.get("match", "")))
 		_:
 			print("PROBE boot ok")
 			get_tree().quit(0)
@@ -70,12 +72,15 @@ func _render(out: String) -> void:
 	get_tree().quit(0 if passed else 1)
 
 
-func _joypad() -> void:
+func _joypad(match_id: String) -> void:
 	var deadline: int = Time.get_ticks_msec() + 15000
 	var seen: String = "none"
 	while Time.get_ticks_msec() < deadline:
 		for id: int in Input.get_connected_joypads():
-			seen = Input.get_joy_name(id)
+			var guid: String = Input.get_joy_guid(id)
+			seen = "%s (%s)" % [Input.get_joy_name(id), guid]
+			if not (guid.begins_with("03") and match_id in guid):
+				continue
 			if Input.is_joy_button_pressed(id, JOY_BUTTON_A):
 				print("PROBE joypad ok name=%s" % seen)
 				get_tree().quit(0)

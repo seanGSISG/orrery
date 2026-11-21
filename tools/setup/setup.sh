@@ -65,16 +65,18 @@ git lfs install >/dev/null && ok "git lfs"
 step "Godot (mise)"
 (cd "$ROOT" && mise trust -q && mise install -q)
 GODOT=$(cd "$ROOT" && mise which godot)
-gver=$("$GODOT" --version | head -1)               # 4.7.2.stable.official.<hash>
-tdir="$HOME/.local/share/godot/export_templates/$(cut -d. -f1-4 <<<"$gver")"
+gver=$("$GODOT" --version | head -1)               # e.g. 4.7.2.stable.official.<hash>
+gnum=${gver%%.stable*}                             # 4.7.2 (or 4.8 for a release with no patch number)
+tdir="${XDG_DATA_HOME:-$HOME/.local/share}/godot/export_templates/$gnum.stable"
 ok "godot $gver"
 if [[ ! -f "$tdir/version.txt" ]]; then
-  gtag="$(cut -d. -f1-3 <<<"$gver")-stable"
+  gtag="$gnum-stable"
   tpz="$DL/Godot_v${gtag}_export_templates.tpz"
   download "$tpz" "https://github.com/godotengine/godot/releases/download/$gtag/Godot_v${gtag}_export_templates.tpz"
   verify "$tpz" "$GODOT_TEMPLATES_SHA512" sha512
-  tmp=$(mktemp -d); unzip -q "$tpz" -d "$tmp"
-  mkdir -p "$tdir" && cp -r "$tmp/templates/." "$tdir/" && rm -rf "$tmp" "$tpz"
+  # Unpack beside the target, then rename: an interrupted install never looks complete.
+  rm -rf "$tdir.partial" && mkdir -p "$tdir.partial" && unzip -q "$tpz" -d "$tdir.partial"
+  rm -rf "$tdir" && mv "$tdir.partial/templates" "$tdir" && rm -rf "$tdir.partial" "$tpz"
 fi
 ok "export templates in $tdir"
 
