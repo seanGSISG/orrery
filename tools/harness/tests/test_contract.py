@@ -123,6 +123,19 @@ def test_logs(harness: Harness) -> None:
     assert harness.logs(since=lines[-1].seq) == []
 
 
+def test_run_bot_plays_each_route_to_the_finish(harness: Harness) -> None:
+    harness.load_level("route_bot")
+    first = harness.run_bot()
+    assert (first.finished, first.falls, first.stuck_at) == (True, 0, None)
+    assert harness.state().status == "finished"
+    expert = harness.run_bot("expert")
+    assert expert.finished
+    assert 0.0 < expert.time < first.time
+    with pytest.raises(HarnessError) as missing:
+        harness.run_bot("no_such_route")
+    assert missing.value.code == NOT_FOUND
+
+
 def test_set_setting(harness: Harness) -> None:
     key = "physics/common/max_physics_steps_per_frame"
     assert harness.set_setting(key, 8) == 8

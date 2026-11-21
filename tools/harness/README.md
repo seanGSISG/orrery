@@ -12,6 +12,7 @@ just harness launch --level flat --resolution 1280x720   # gamescope, no window
 just harness input --move 0 1 --frames 90                # hold "forward" for 90 ticks
 just harness step 150                                    # step 150 ticks, then pause
 just harness screenshot --path build/harness/flat.png
+just harness run_bot --route expert                      # the route bot plays a route
 just harness quit
 ```
 
@@ -27,7 +28,7 @@ just harness quit
 
 ## MCP tools
 
-`game_launch {level, display, width, height}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot}` (returns the image), `game_logs {since}`, `game_quit`. The other harness commands (`teleport`, `pause`, `set_time_scale` and so on) are in the CLI.
+`game_launch {level, display, width, height}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot}` (returns the image), `game_run_bot {route}`, `game_logs {since}`, `game_quit`. The other harness commands (`teleport`, `pause`, `set_time_scale` and so on) are in the CLI.
 
 ## Protocol
 
@@ -43,4 +44,6 @@ One JSON-RPC 2.0 request or response per line on `127.0.0.1:<port>`. The game st
 2. Add a typed method to `Harness` in `client.py`, a CLI subcommand in `cli.py` and, if agents need it often, a `game_*` tool in `mcp_server.py`.
 3. Add a contract test in `tests/test_contract.py`.
 
-For example, the route bot (#14) adds `run_bot {route?}`: the handler makes the bot's `InputSource` active with `InputHub.use_source()`, steps the run until it finishes or fails, makes the harness source active again and returns `{finished, time, falls, stuck_at?}`.
+## Route bot
+
+`run_bot {route?}` restarts the level and lets the route bot (`game/harness/route_bot.gd`) play one of its routes to the end at full speed, then pauses the run. `route` is a route kind (`first_run`, the default, or `expert`) or a route node name. The result is `{finished, time, falls}`, and `{stuck_at, waypoint, reason}` when the bot gave up. `game/objects/route/route.gd` describes how a level script places a route. `just test-levels` runs the same bot in-process, without the harness, so it runs on Windows too.

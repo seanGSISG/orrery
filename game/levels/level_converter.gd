@@ -18,6 +18,8 @@ extends RefCounted
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
 ##   with the Surface res://core/level/<surface>_surface.tres.
 ## - Lint: a level has exactly one `level`, one `start` and one `finish` marker.
+## - Route lint (#14): each `route` marker has the kind first_run or expert, a level has at most
+##   one route of each kind, and a level of a tier other than `test` has a first_run route.
 ## Each error names the level id and the node.
 
 const LEVEL_SCRIPT: Script = preload("res://core/level/level.gd")
@@ -56,6 +58,7 @@ func convert(scene: Node3D) -> Level:
 		var count: int = counts.get(type, 0)
 		if count != 1:
 			_fail(scene, "needs exactly one `%s` marker, found %d" % [type, count])
+	_check_routes(markers, str(level_data.get("tier", "")))
 	for marker: Node3D in markers:
 		var data: Dictionary = _marker_data(marker)
 		var type: String = str(data.get("type", ""))
@@ -135,6 +138,23 @@ func _place(marker: Node3D, data: Dictionary) -> void:
 		object.add_child(point)
 		point.owner = _root
 	marker.free()
+
+
+## The route lint (#14) on the markers of a level of tier; an empty tier is a test scene.
+func _check_routes(markers: Array[Node3D], tier: String) -> void:
+	var kinds: Array[StringName] = []
+	for marker: Node3D in markers:
+		var data: Dictionary = _marker_data(marker)
+		if str(data.get("type", "")) != "route":
+			continue
+		var kind: StringName = StringName(str(data.get("kind", "")))
+		if kind not in Route.KINDS:
+			_fail(marker, "a `route` needs the kind first_run or expert, got `%s`" % kind)
+		elif kind in kinds:
+			_fail(marker, "a second `%s` route" % kind)
+		kinds.append(kind)
+	if tier not in ["", "test"] and &"first_run" not in kinds:
+		_fail(_root, "needs a `route` marker of kind first_run (objects/route/route.gd)")
 
 
 ## Puts a Camera3D with the marker's name and transform in the marker's place. It looks along

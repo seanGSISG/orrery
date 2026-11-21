@@ -15,4 +15,18 @@ kit.marker("gem", at=(0, 5, 0.3))
 kit.marker("gem", at=(0, 12, 1.3))
 kit.marker("gem", at=(0, 19, 2.3))
 kit.marker("finish", at=(0, 22, 2))
-kit.shot("overview", at=(12, -6, 10), rotation=(-30, 0, 40))
+
+# Route bot (#14). The gems float out of reach, so the bot jumps 0.6 m before each one. The
+# take-off speed sets the length of each jump; the last one must land before the end.
+for kind, actions in (
+    ("first_run", "0 speed 6; 0 jump; 1 speed 6; 1 jump; 2 speed 5; 2 jump"),
+    ("expert", "0 speed 9; 0 jump; 1 speed 9; 1 jump; 2 speed 6; 2 jump"),
+):
+    kit.marker(
+        "route",
+        at=(0, 2, 0),
+        points=[(0, 4.4, 0), (0, 11.4, 0.85), (0, 18.4, 2), (0, 22, 2)],
+        name=f"route_{kind}",
+        kind=kind,
+        actions=actions,
+    )
