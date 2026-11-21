@@ -127,7 +127,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 
 ## 4. Types
 
-These are the shapes only; the bodies are left out. Every name below is final for the contract PR.
+These are the shapes only; the bodies are left out. They match the code in `game/core/` on `plan-1` after #65. A change after the contract PR carries the PR that made it, for example "(changed in #50)". Other numbers, such as #13, are tickets. Where this section and the code differ, the code wins.
 
 ```gdscript
 # core/input/marble_input.gd
@@ -147,9 +147,19 @@ func handle_event(_event: InputEvent) -> void       # the hub forwards unhandled
 
 # core/input/input_hub.gd: autoload InputHub (no class_name; a class_name would hide the autoload)
 extends Node
+signal device_changed(device: StringName)          # (added in #49) for the button glyphs
 var device: StringName = &"keyboard"               # last physical device: &"keyboard" or &"pad"
+var pad: int = -1                                  # (added in #49) device id of the last pad used; rumble goes there
+var dead_zone: float = 0.15                        # (added in #49) radial stick dead zone, 0..1
 func use_source(source: InputSource) -> void       # makes source the only active source
 func next_input(state: GameState) -> MarbleInput
+# The hub also rumbles the pad for every LevelRun's feedback, through Rumble (#18).
+
+# core/input/player_source.gd (#7, pad in #18): the default source; keyboard, mouse and Xbox pad
+class_name PlayerSource
+extends InputSource
+static var look_sensitivity: float = 1.0
+static var invert_y: bool = false
 
 # core/marble/marble_tuning.gd; the instance is core/marble_tuning.tres (plan §4.2)
 class_name MarbleTuning
@@ -258,67 +268,119 @@ extends Node3D
 signal feedback(kind: StringName, strength: float, at: Vector3)   # every object's and the marble's feedback
 var level: Level
 var marble: Marble
+var start: StartPad             # (added in #50) the first start pad; null when the level has none
 var rules: Rules
 var slot: PowerUpSlot
-var objects: Array[LevelObject]
+var objects: Array[LevelObject]  # every LevelObject under the level, in tree order
 var state: GameState
 var last_input: MarbleInput     # the camera reads camera_yaw and camera_pitch here
 var auto_step: bool = true      # false: only explicit step() calls advance the run
 static func create(level: Level) -> LevelRun   # add the result to the tree; _ready() starts the run
 func step(input: MarbleInput) -> void          # one tick, in the order of §3
-func restart() -> void                         # t = 0, reset(true) on every object, marble on the start pad
-func respawn(at: Vector3) -> void              # reset(false) on every object, marble at `at`; the clock runs on
+func restart() -> void                         # t = 0, reset(true) on every object, a new PowerUpSlot, marble on the start pad, rules.reset()
+func respawn(at: Vector3) -> void              # reset(false) on every object, marble at `at`; the clock, the gems and the slot stay
+func teleport(at: Vector3, new_velocity: Vector3) -> void   # (added in #50) marble.teleport(), then writes the state; the harness command uses it
+func spawn_point(pad: LevelObject) -> Vector3  # (added in #50) the marble centre that rests on pad; above the origin when pad is null
 
 # core/level/rules.gd: stub from #7, logic from #13
 class_name Rules
 extends RefCounted
+const KILL_DEPTH: float = 5.0       # m below the lowest Solid of the level where out of bounds starts
+const RESPAWN_DELAY: float = 0.5    # s from out of bounds to the respawn
+var kill_height: float              # world y; the marble centre below it is out of bounds
+var checkpoint: LevelObject = null  # the last checkpoint; null means the start pad
 func _init(run: LevelRun) -> void
-func reset(restart: bool) -> void   # the stub counts Gem objects into state.gems_total
-func after_step() -> void
-func collect_gem() -> void
-func reach_checkpoint(checkpoint: LevelObject) -> void
-func reach_finish() -> void
-func find_egg() -> void
+func reset() -> void                # (changed in #50: no `restart` parameter) gems_total counts the Gem objects; no gems, no time, no checkpoint, no egg
+func after_step() -> void           # the clock, the finish, out of bounds and the respawn
+func collect_gem() -> bool          # (changed in #50: returns true when the gem counts) false unless status is playing
+func reach_checkpoint(reached: LevelObject) -> bool   # (changed in #50) true when it becomes the last checkpoint
+func reach_finish() -> void         # the finish calls it each tick that the marble is on it
+func find_egg() -> bool             # (changed in #50) true when the egg counts as found
+
+# core/powerups/power_up.gd (#17): what the slot holds; one subclass per power-up type
+@abstract
+class_name PowerUp
+extends RefCounted
+var id: StringName                  # the marker type, for example &"coil_spring"
+func _init(power_up_id: StringName) -> void
+@abstract func use(run: LevelRun) -> void   # applies the effect once, before the marble moves
 
 # core/level/power_up_slot.gd: stub from #7, logic from #17
 class_name PowerUpSlot
 extends RefCounted
-var held: StringName = &""
+var held: PowerUp = null            # (changed in #54: a PowerUp, not a StringName)
 func _init(run: LevelRun) -> void
-func take(id: StringName) -> bool              # false when the slot is full; the pickup stays
-func before_step(input: MarbleInput) -> void   # on a new use press: apply the effect and empty the slot
+func take(power_up: PowerUp) -> bool           # (changed in #54: takes a PowerUp) false when the slot is full or the run is not playing; the pickup stays
+func before_step(input: MarbleInput) -> void   # on a new use press: use() the power-up, empty the slot, emit `<id>.use`
 
 # core/game.gd: autoload Game (no class_name); #22 adds the menu screens
 extends Node
 var run: LevelRun                   # null in menus
 var screen: StringName = &"play"
-func load_level(id: StringName) -> LevelRun   # res://levels/built/<id>.glb, else res://test/levels/<id>.tscn
+func load_level(id: StringName) -> LevelRun   # res://levels/built/<id>.glb, else res://test/levels/<id>.tscn; adds a FollowCamera; null (and the old run stays) when neither is a Level
 func snapshot() -> GameState        # run.state (or a new GameState) with screen and input_device filled in
 # Game also maps the `restart` action to run.restart().
+
+# core/camera/follow_camera.gd (#7 basic, #11 orbit camera); core/camera/blob_shadow.gd (#11)
+class_name FollowCamera
+extends Camera3D
+var run: LevelRun
+func follow(state: GameState, input: MarbleInput, dt: float) -> void   # the one seam; called each physics frame
+
+# core/save/save_game.gd (#21); the autoload Save (core/save/save.gd) extends it and adds a RunTracker to each run that Game loads
+class_name SaveGame
+extends Node
+var dir: String = "user://"
+var settings: Settings            # SaveRecord; camera, rumble, dead zone, graphics preset, volumes, ghost on/off
+var ascent: AscentRecord          # SaveRecord; the exact spot, falls, best height and time
+func read() -> void               # save.json from dir, or the defaults when it is missing or damaged
+func write() -> bool              # writes to save.json.tmp, then renames it over save.json
+func level(id: StringName) -> LevelRecord                         # best_time (-1: none), medal, egg
+func is_unlocked(id: StringName) -> bool                          # Campaign order; a level after a qualified one
+func is_tier_unlocked(tier: StringName) -> bool
+func finish(id: StringName, time: float, medal: StringName, ghost: Ghost) -> bool   # true for a new best time
+func find_egg(id: StringName) -> void
+func ghost(id: StringName) -> Ghost                               # the best run's ghost, or null
+
+# core/ghost/ghost.gd (#21): one recorded run, RATE (30) samples per second of level clock
+class_name Ghost
+extends RefCounted
+func record(time: float, position: Vector3, rotation: Quaternion) -> void
+func finish(time: float, position: Vector3, rotation: Quaternion) -> void
+func transform_at(time: float) -> Transform3D     # playback; never re-simulates
+func to_bytes() -> PackedByteArray                # the .ghost file format (header in ghost.gd)
+static func from_bytes(bytes: PackedByteArray) -> Ghost
+
+# core/save/run_tracker.gd (#21): records the ghost, shows the best run's GhostMarble, calls save.find_egg() and save.finish()
+class_name RunTracker
+extends LevelObject
+static func attach(run: LevelRun, save: SaveGame) -> RunTracker   # no marker places it
 ```
 
-The camera (#7 basic, then #11) has one seam: `follow(state: GameState, input: MarbleInput, dt: float) -> void`. A test can give it a `GameState` with any `up`, so #11 does not wait for the gravity fields of #10.
+The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float) -> void`. A test can give it a `GameState` with any `up`, so the camera does not need the gravity fields.
 
 ## 5. Object contract
 
-- **Files:** `game/objects/<type>/<type>.tscn` and `<type>.gd`. `<type>` is the marker type, for example `gem`, `start`, `finish`, `moving_platform`. The root script extends `LevelObject`. The class name can differ from the type (`StartPad` in `objects/start/`). The importer finds the scene by this name rule, so there is no registry file.
+- **Files:** `game/objects/<type>/<type>.tscn` and `<type>.gd`. `<type>` is the marker type, for example `gem`, `start`, `finish`, `moving_platform`, `coil_spring`, `route`. The root script extends `LevelObject`. The class name can differ from the type (`StartPad` in `objects/start/`). The importer finds the scene by this name rule, so there is no registry file.
 - **Settings:** the `@export` vars of the root are the typed settings. The importer (#8) reads each key of the marker dictionary except `type`. The key must name an `@export` var, and the value must convert to the var's type (int to float is allowed). If not, the import fails and gives the level id and the node name. The run never sees the dictionary.
 - **Positions and paths:** use the marker's own transform and its child empties, not vector settings (A1). The importer turns the child empties into `Marker3D` children of the object, in name order. A platform path is a list of these children.
 - **Colliders:** use a `Solid` for every part the marble touches. Use an `Area3D` on the trigger layer, with `monitoring` and `monitorable` off, for each volume (F4).
 - **Time:** an object that moves calculates its pose from `t` in `advance()`. It does not drive collision with `AnimationPlayer` or timers. `restart()` sets `t` to 0, so movers return to their start pose without extra code.
-- **Allowed actions:** an object changes the game only through these calls: `run.marble.add_velocity()`, `run.marble.teleport()`, `run.rules.*`, `run.slot.take()`, `Solid.move()`, changes to its own `collision_layer`, and `feedback.emit()`.
-- **Feedback:** `kind` is `&"<type>.<event>"`, for example `&"bumper.hit"`. `strength` is 0..1, and `at` is a world position. `LevelRun.feedback` re-emits every object's and the marble's feedback. Audio (#25) and rumble (#18) connect there. Kinds are strings, so no shared enum file gets an edit from every object ticket.
+- **Allowed actions:** an object changes the game only through these calls: `run.marble.add_velocity()`, `run.marble.teleport()`, `run.rules.*`, `run.slot.take()`, `Solid.move()`, changes to its own `collision_layer`, and `feedback.emit()`. It may read `run.state`. A power-up is a `PowerUp` subclass in the object's folder (`CoilSpringPowerUp`); the pickup passes a new instance to `run.slot.take()`.
+- **Feedback:** `kind` is `&"<type>.<event>"`, for example `&"bumper.hit"`. The marble uses `marble.land`, `marble.bounce` and `marble.jump`; the slot emits `<id>.use`. `strength` is 0..1, and `at` is a world position. `LevelRun.feedback` re-emits every object's and the marble's feedback. Audio (#25) and rumble (#18) connect there. Kinds are strings, so no shared enum file gets an edit from every object ticket.
 - **Tests:** an object test reads `run.state` and watches `run` for `feedback` with GUT `watch_signals`.
 
-| Object | Hooks it uses |
-|---|---|
-| Bumper | `on_touch`: `run.marble.add_velocity(contact.normal * strength)`, emit `bumper.hit` |
-| Steam Vent | `on_overlap`: `add_velocity(axis * acceleration * dt)` each tick |
-| Pendulum, platform, gear | `advance`: `Solid.move(pose(t), velocity, angular_velocity)`; the solver handles the hit or the carry |
-| Trapdoor | `on_touch`: start the drop; `advance`: hinge pose; it resets after 5 s |
-| Crumbling Tiles | `on_touch`: start the timer, then `collision_layer = 0`; `reset(false)` brings the tiles back |
-| Gem, checkpoint, finish, egg | `on_overlap(first)`: `run.rules.collect_gem()` and the other rule calls |
-| Coil Spring pickup | `on_overlap(first)`: hide only if `run.slot.take(&"coil_spring")` returns true |
+| Object (class) | Settings (default) | Hooks it uses |
+|---|---|---|
+| Bumper (`Bumper`) | `speed` 15 m/s, `radius` 0.5 m, `height` 1 m | `on_touch`: raise the marble's speed away from the drum axis to `speed`, relative to the drum, with `add_velocity` (changed in #53: the push is across the floor, not along the contact normal); emit `bumper.hit` |
+| Steam Vent (`SteamVent`) | `lift` 8 m, `radius` 1 m, `push` 60 m/s² | `on_overlap`: `add_velocity(axis * min(rise, push * dt))` each tick, until the marble coasts to `lift` m above the grate; emit `steam_vent.blow` on entry (changed in #53) |
+| Pendulum (`Pendulum`), Moving platform (`MovingPlatform`), Turning gear (`TurningGear`) | see `docs/levels/README.md` | `advance`: `Solid.move(pose(t), velocity, angular_velocity)`; the solver handles the hit or the carry. The pendulum's `on_touch` only emits `pendulum.hit` |
+| Trapdoor (`Trapdoor`) | `delay` 0.5 s, `close_after` 5 s, 4 × 4 × 0.5 m | `on_touch`: start the drop on the first touch; `advance`: hinge pose, emit `trapdoor.open`; the door shuts again `close_after` s after it starts to open; `reset` shuts it |
+| Crumbling Tiles (`CrumblingTiles`) | `delay` 0.5 s, `tile` 2 m, 4 × 4 × 0.5 m | `on_touch`: start the timer of each touched tile, emit `tile.crack`; `advance`: after `delay` set that tile's `collision_layer = 0`, emit `tile.fall`; any `reset` brings the tiles back (changed in #55: a tile does not return by itself) |
+| Gem, checkpoint, egg | `cut` for the gem | `on_overlap`: `run.rules.collect_gem()`, `reach_checkpoint(self)` and `find_egg()`. The object reacts only when the call returns true |
+| Finish (`Finish`) | none | `on_overlap`: `run.rules.reach_finish()` each tick; `advance`: opens when all gems are collected, emits `finish.open` and `finish.reach` |
+| Coil Spring (`CoilSpring`) | `launch_speed` 20 m/s, `respawn_delay` 5 s | `on_overlap`: `run.slot.take(CoilSpringPowerUp.new(launch_speed))`; hide the pickup for `respawn_delay` s only if `take()` returns true; emit `coil_spring.pickup` (changed in #54) |
+| Start (`StartPad`), Route (`Route`) | `kind`, `actions` for the route | None. The run reads the start pad (`LevelRun.start`). The route bot reads the route (`docs/plan.md` §4.6) |
 
 ## 6. Observable state
 
@@ -335,6 +397,7 @@ The camera (#7 basic, then #11) has one seam: `follow(state: GameState, input: M
 | `velocity` | Vector3 | m/s | run, from marble (#7) |
 | `spin` | Vector3 | angular velocity, rad/s | run, from marble (#7) |
 | `up` | Vector3 | unit vector, opposite of gravity | run, from marble (#7, #10) |
+| `frame` | Basis | `Marble.frame`: the yaw reference of `MarbleInput.camera_yaw`, with y = up. In JSON: three vectors, the columns | run, from marble (added in #50) |
 | `on_ground` | bool | the last sub-step had a contact | run, from marble (#7) |
 | `gems_collected` | int | gems collected in this run | rules (#13) |
 | `gems_total` | int | gems in the level | rules (the stub counts them, #7) |
@@ -345,13 +408,14 @@ The camera (#7 basic, then #11) has one seam: `follow(state: GameState, input: M
 | `egg_found` | bool | the egg was found in this run | rules (#13) |
 | `height` | float | Ascent: m above the climb start, along up; 0 elsewhere | Ascent mode (#27) |
 
-The brief listed 13 fields. Five fields are new, and each one has a use in a ticket:
+The brief listed 13 fields. Six fields are new, and each one has a use in a ticket:
 
 - `tick`: harness step checks and respawn timing.
 - `level`: checks that `load_level` loaded the level.
 - `up`: #10 and #11.
 - `medal`: #13.
 - `egg_found`: #13.
+- `frame`: #13. The harness and the route bot turn a camera yaw into a move direction with it.
 
 ## 7. Layout and file ownership
 
@@ -361,19 +425,29 @@ game/
 ├── core/
 │   ├── game.gd                #7 (autoload Game)
 │   ├── marble_tuning.tres     #7 creates it; #10 tunes it
-│   ├── input/                 #7: marble_input, input_source, input_hub, player_source (#18 adds the pad later)
+│   ├── input/                 #7: marble_input, input_source, input_hub, player_source; #18: pad, rumble, input_glyph
 │   ├── marble/                #7, then #10: marble.gd/.tscn, marble_tuning.gd, world_query.gd, contact.gd
 │   ├── gravity/               #10: gravity_field.gd, uniform_gravity.gd/.tscn
 │   ├── camera/                #7 follow_camera.gd, then #11: orbit camera, blob shadow
+│   ├── powerups/              #17: power_up.gd
+│   ├── save/                  #21: save_game, save (autoload), run_tracker, records, settings, campaign
+│   ├── ghost/                 #21: ghost, ghost_marble
 │   └── level/                 #7: level, level_run, level_object, solid, surface, default_surface.tres, game_state
 │       ├── rules.gd           stub from #7, then #13
 │       └── power_up_slot.gd   stub from #7, then #17
 ├── objects/
 │   ├── start/                 #7
 │   ├── gem/ finish/ checkpoint/ egg/      placeholder scenes from #7, then #13
-│   └── moving_platform/ turning_gear/     #12
+│   ├── moving_platform/ turning_gear/     #12
+│   ├── bumper/ steam_vent/ pendulum/      #15
+│   ├── trapdoor/ crumbling_tiles/         #16
+│   ├── coil_spring/                       #17
+│   └── route/                             #14
 ├── levels/                    #8: level_import.gd (post-import script), built/ (ignored by git)
-├── harness/                   #9 (the route bot from #14 goes here later)
+├── harness/                   #9; the route bot and the level test scene from #14
+├── debug/                     #19: feel-review course and tuning overlay
+├── audio/                     #25: Music, SfxPlayer, buses (`docs/design/audio.md`)
+├── settings/                  #20: graphics presets
 └── test/
     ├── support/run_test.gd    #7
     ├── levels/flat.tscn       #7; every other test level has one owner, its creator (#10: physics.tscn, pusher.gd)
