@@ -103,7 +103,11 @@ ok "blender-$BLENDER_SERIES -> $bdir"
 step "Blender MCP (official Blender Lab)"
 mdir="$HOME/.local/share/orrery/blender_mcp"
 [[ -d "$mdir/.git" ]] || git clone -q "$BLENDER_MCP_REPO" "$mdir"
-if [[ "$(cat "$mdir/.orrery-installed" 2>/dev/null)" != "$BLENDER_MCP_COMMIT" ]]; then
+# Reinstall when the pin changed, the checkout moved, or the add-on is not enabled.
+addon_on=$("$BIN/blender-$BLENDER_SERIES" -b -noaudio --python-expr \
+  "import addon_utils; print('ADDON', all(addon_utils.check('bl_ext.user_default.mcp')))" 2>/dev/null | grep -c '^ADDON True' || true)
+if [[ "$(cat "$mdir/.orrery-installed" 2>/dev/null)" != "$BLENDER_MCP_COMMIT" \
+  || "$(git -C "$mdir" rev-parse HEAD)" != "$BLENDER_MCP_COMMIT" || "$addon_on" != 1 ]]; then
   git -C "$mdir" fetch -q origin
   git -C "$mdir" checkout -q "$BLENDER_MCP_COMMIT"
   zdir=$(mktemp -d)

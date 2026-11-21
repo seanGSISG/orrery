@@ -15,7 +15,7 @@ import os
 import sys
 
 from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp.client.stdio import get_default_environment, stdio_client
 from mcp.types import ImageContent, TextContent
 
 
@@ -30,7 +30,11 @@ async def check(mcp_dir: str) -> str:
     params = StdioServerParameters(
         command="uv",
         args=["--directory", mcp_dir, "run", "--quiet", "blender-mcp"],
-        env=dict(os.environ),
+        # The client's safe default environment plus the one variable the server needs.
+        env={
+            **get_default_environment(),
+            "BLENDER_PATH": os.environ.get("BLENDER_PATH", "blender"),
+        },
     )
     async with (
         stdio_client(params) as (read, write),
@@ -52,7 +56,12 @@ async def check(mcp_dir: str) -> str:
         docs = await session.call_tool(
             "search_api_docs", {"query": "export_scene gltf", "max_results": 3}
         )
-        if "bpy.ops.export_scene" not in text_of(docs):
+        hits = json.loads(text_of(docs)).get("hits", [])
+        if not any(
+            h.get("path", "").endswith("bpy.ops.export_scene.rst")
+            and "function:: gltf(" in h.get("text", "")
+            for h in hits
+        ):
             raise SystemExit("search_api_docs: no glTF export entry found")
         return version
 
