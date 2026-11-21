@@ -151,4 +151,4 @@ A placeholder is an empty with the custom property `town_spot` = {kind, size, no
 | `decal_sign_bakery`, `decal_sign_clockmaker`, `decal_sign_inn` | The boards of the three hanging shop signs | Sign art on both faces |
 | `decal_guildhall_crest` | Over the hall door | The guild's crest |
 | `decal_tower_door_plaque` | Over the great door of the tower | Name plaque |
-| `decal_street_name_south`, `decal_street_name_east` | Corner houses of the square | Street name plates |
+| `decal_street_name_south`, `decal_street_name_east` | The corner house of the south street, and the workshop's west wall | Street name plates |

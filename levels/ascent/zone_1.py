@@ -340,11 +340,14 @@ town.block(
     (DRY_CHIMNEY[0] - 1.0, DRY_CHIMNEY[1] - 1.0, 0.0),
     (DRY_CHIMNEY[0] - 0.65, DRY_CHIMNEY[1] + 1.0, 1.2),
 )
+# The hearth's cheeks stand flush with the flue walls, so the hearth is as wide as the flue
+# and holds no ledge for a marble that drops in.
 for side in (-1, 1):
+    near, far = DRY_CHIMNEY[1] + side * FLUE / 2, DRY_CHIMNEY[1] + side * 1.0
     town.block(
         f"hearth_cheek_{(side + 1) // 2}",
-        (DRY_CHIMNEY[0] - 1.0, DRY_CHIMNEY[1] + side * 0.65 - 0.35, 0.0),
-        (DRY_CHIMNEY[0] + 1.0, DRY_CHIMNEY[1] + side * 0.65 + 0.35, 1.2),
+        (DRY_CHIMNEY[0] - 1.0, min(near, far), 0.0),
+        (DRY_CHIMNEY[0] + 1.0, max(near, far), 1.2),
     )
 EGG: Place = (DRY_CHIMNEY[0] + 2.2, DRY_CHIMNEY[1], 0.0)
 kit.marker("egg", at=EGG)
@@ -1316,7 +1319,7 @@ town.spot(
 town.spot(
     "decal",
     "street_name_east",
-    (14.5 - 0.06, 6.0, 3.0),
+    (14.5 - 0.06, 13.0, 3.0),
     (90.0, 0.0, -90.0),
     (1.0, 0.02, 0.3),
     "street name plate",
