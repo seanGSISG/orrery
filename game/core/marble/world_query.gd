@@ -51,8 +51,8 @@ func contacts(center: Vector3) -> Array[Contact]:
 		_query.exclude = others
 		var pairs: Array[Vector3] = _space.collide_shape(_query, 16)
 		var own: Array[Contact] = []
-		for k: int in range(1, pairs.size(), 2):
-			_add_contact(own, center, pairs[k], solid)
+		for k: int in range(0, pairs.size(), 2):
+			_add_contact(own, center, pairs[k], pairs[k + 1], solid)
 		out.append_array(own)
 	_query.exclude = []
 	return out
@@ -87,27 +87,37 @@ func _set_query(center: Vector3, margin: float, motion: Vector3, mask: int, area
 	_query.collide_with_bodies = not areas
 
 
-## Adds the contact at point on solid to out, which holds only that Solid's contacts. Of two
-## contacts with almost the same normal, only the deeper one stays: within about 2 mm of an
-## internal edge, Jolt also gives the neighbour triangle's edge point, with a normal tilted
-## by up to 0.01 rad.
-func _add_contact(out: Array[Contact], center: Vector3, point: Vector3, solid: Solid) -> void:
+## Adds the contact at point on solid to out, which holds only that Solid's contacts. deepest
+## is the pair's other point: the point of the sphere, grown by the margin, that lies deepest
+## past the surface. Of two contacts with almost the same normal, only the deeper one stays:
+## within about 2 mm of an internal edge, Jolt also gives the neighbour triangle's edge point,
+## with a normal tilted by up to 0.01 rad.
+func _add_contact(
+	out: Array[Contact], center: Vector3, deepest: Vector3, point: Vector3, solid: Solid
+) -> void:
 	var offset: Vector3 = center - point
 	var distance: float = offset.length()
 	if distance < 0.000001:
 		return
+	var normal: Vector3 = offset / distance
+	var depth: float = _radius - distance
+	# A mover can push a convex Solid over the centre. Then deepest lies on the far side of the
+	# surface from the centre, and the way out is from the centre toward point (F23).
+	if (point - deepest).dot(normal) < -0.5 * _radius:
+		normal = -normal
+		depth = _radius + distance
 	var contact: Contact = null
 	for known: Contact in out:
-		if known.normal.dot(offset / distance) > SAME_NORMAL:
-			if _radius - distance <= known.depth:
+		if known.normal.dot(normal) > SAME_NORMAL:
+			if depth <= known.depth:
 				return
 			contact = known
 	if contact == null:
 		contact = Contact.new()
 		out.append(contact)
 	contact.point = point
-	contact.normal = offset / distance
-	contact.depth = _radius - distance
+	contact.normal = normal
+	contact.depth = depth
 	contact.velocity = solid.velocity_at(point)
 	contact.surface = solid.surface if solid.surface != null else Solid.DEFAULT_SURFACE
 	contact.object = solid.owner as LevelObject

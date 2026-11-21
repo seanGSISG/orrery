@@ -1,0 +1,159 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://core/level/level.gd" id="1"]
+[ext_resource type="Script" path="res://core/level/solid.gd" id="2"]
+[ext_resource type="Shader" path="res://test/levels/grid.gdshader" id="3"]
+[ext_resource type="Script" path="res://core/level/surface.gd" id="4"]
+[ext_resource type="PackedScene" path="res://core/gravity/uniform_gravity.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://objects/start/start.tscn" id="6"]
+
+[sub_resource type="ShaderMaterial" id="stone"]
+shader = ExtResource("3")
+
+[sub_resource type="ShaderMaterial" id="wall_look"]
+shader = ExtResource("3")
+shader_parameter/tile_a = Color(0.22, 0.16, 0.2, 1)
+shader_parameter/tile_b = Color(0.3, 0.22, 0.27, 1)
+
+[sub_resource type="ShaderMaterial" id="ramp_look"]
+shader = ExtResource("3")
+shader_parameter/tile_a = Color(0.17, 0.22, 0.17, 1)
+shader_parameter/tile_b = Color(0.24, 0.31, 0.24, 1)
+
+[sub_resource type="ShaderMaterial" id="ice_look"]
+shader = ExtResource("3")
+shader_parameter/tile_a = Color(0.55, 0.72, 0.85, 1)
+shader_parameter/tile_b = Color(0.7, 0.85, 0.95, 1)
+
+[sub_resource type="Resource" id="ice"]
+script = ExtResource("4")
+id = &"ice"
+friction = 0.1
+
+[sub_resource type="BoxShape3D" id="floor_shape"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxMesh" id="floor_mesh"]
+material = SubResource("stone")
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxShape3D" id="wall_shape"]
+size = Vector3(40, 20, 1)
+
+[sub_resource type="BoxMesh" id="wall_mesh"]
+material = SubResource("wall_look")
+size = Vector3(40, 20, 1)
+
+[sub_resource type="BoxShape3D" id="ramp_shape"]
+size = Vector3(8, 1, 6)
+
+[sub_resource type="BoxMesh" id="ramp_mesh"]
+material = SubResource("ramp_look")
+size = Vector3(8, 1, 6)
+
+[sub_resource type="BoxShape3D" id="ice_shape"]
+size = Vector3(6, 1, 6)
+
+[sub_resource type="BoxMesh" id="ice_mesh"]
+material = SubResource("ice_look")
+size = Vector3(6, 1, 6)
+
+[sub_resource type="BoxShape3D" id="island_shape"]
+size = Vector3(10, 1, 10)
+
+[sub_resource type="BoxMesh" id="island_mesh"]
+material = SubResource("stone")
+size = Vector3(10, 1, 10)
+
+[sub_resource type="BoxShape3D" id="side_shape"]
+size = Vector3(1, 10, 10)
+
+[sub_resource type="BoxMesh" id="side_mesh"]
+material = SubResource("wall_look")
+size = Vector3(1, 10, 10)
+
+[sub_resource type="Environment" id="sky"]
+background_mode = 1
+background_color = Color(0.05, 0.06, 0.1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.6, 0.75, 1)
+ambient_light_energy = 0.6
+
+[node name="Physics" type="Node3D"]
+script = ExtResource("1")
+id = &"physics"
+title = "Physics"
+tier = &"test"
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("floor_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("floor_mesh")
+
+[node name="Wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, -20.5)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Wall"]
+shape = SubResource("wall_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Wall"]
+mesh = SubResource("wall_mesh")
+
+[node name="Ramp" type="StaticBody3D" parent="."]
+transform = Transform3D(0.8660254, -0.5, 0, 0.5, 0.8660254, 0, 0, 0, 1, 12.25, 1.5669873, 10)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Ramp"]
+shape = SubResource("ramp_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Ramp"]
+mesh = SubResource("ramp_mesh")
+
+[node name="Ice" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, -0.5, 0)
+script = ExtResource("2")
+surface = SubResource("ice")
+
+[node name="Shape" type="CollisionShape3D" parent="Ice"]
+shape = SubResource("ice_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Ice"]
+mesh = SubResource("ice_mesh")
+
+[node name="Island" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 40)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="Island"]
+shape = SubResource("island_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Island"]
+mesh = SubResource("island_mesh")
+
+[node name="IslandWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 5, 40)
+script = ExtResource("2")
+
+[node name="Shape" type="CollisionShape3D" parent="IslandWall"]
+shape = SubResource("side_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="IslandWall"]
+mesh = SubResource("side_mesh")
+
+[node name="SideGravity" parent="." instance=ExtResource("5")]
+transform = Transform3D(0, 10, 0, -10, 0, 0, 0, 0, 10, 0, 5, 40)
+
+[node name="Start" parent="." instance=ExtResource("6")]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, -0.46984634, 0.32898995, 0, 0.57357645, 0.81915206, -0.57357645, -0.6710101, 0.46984634, 0, 10, 0)
+shadow_enabled = true
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("sky")

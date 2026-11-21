@@ -1,6 +1,6 @@
 # Core runtime design
 
-Status: proposed for the M1 tickets #7 to #13. Ticket #7 commits this file as `docs/design/core-runtime.md`. Where this file and `docs/plan.md` differ, the plan wins. The two deviations in §10 need Sean's approval first.
+Status: accepted 2026-11-20 (chief of staff, technical). It covers the M1 tickets #7 to #13. Where this file and `docs/plan.md` differ, the plan wins. The two deviations in §10 need Sean's approval first.
 
 Terms used in this file:
 
@@ -69,6 +69,8 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 | F20 | Other scripts see a new `class_name` only after `--import`. `just test` already imports first. GUT exits 0 when a test script fails to parse. The #4 check for `Parse Error` catches this. | VERIFIED |
 | F21 | An empty hook call costs 0.05 µs, so 200 objects add 10 µs per tick. Objects do not need to opt in to hooks. | VERIFIED |
 | F22 | A collider inside an instanced object scene has `owner` set to the object root. | VERIFIED |
+| F23 | When a mover puts the sphere centre inside a convex Solid (`BoxShape3D`), `collide_shape` still gives one pair: the first point is the centre minus (radius + margin) along the outward face normal, and the second is on the nearest face. So `centre - point` points into the Solid, and `point - first` points out. A trimesh (`ConcavePolygonShape3D`) gives no pair once the centre passes its face, because the inside faces are back faces (F6). | VERIFIED (#10) |
+| F24 | `intersect_shape` finds an `Area3D` box under a turned, non-uniformly scaled node at the scaled size (scale (4, 2, 6): hits up to 0.2 m outside each face, misses at 0.3 m). A field volume can be a 1 m cube that the node scales. | VERIFIED (#10) |
 | A1 | The Blender glTF exporter writes custom-property vectors unchanged, in Blender's Z-up axes. Use child empties for positions and paths, because the exporter converts their transforms. | ASSUMED |
 | A2 | Shape queries do not tell which triangle, and so which material, a contact is on. So each surface type needs its own `Solid`. | ASSUMED |
 | A3 | Jolt can move dozens of static bodies each tick at a low cost. | ASSUMED |
@@ -86,22 +88,23 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 6. `rules.after_step()`: clock, out of bounds, respawn, finish (#13).
 7. Write `state` and keep `last_input = input`.
 
-**Sub-steps** (v0 in #7, full in #10):
+**Sub-steps** (#10):
 
-- The number of sub-steps is `n = clamp(ceil(|v|·dt / (max_substep_move·r)), 1, max_substeps)`. At 15 m/s this gives 2. Above 192 m/s a sub-step moves more than r/2, and the sweep still prevents tunnelling (F5).
+- A sub-step lasts until the marble could move `max_substep_move·r` with its speed at the start of the sub-step and the largest steady acceleration (gravity, air control, rolling), or until the tick ends. At 15 m/s a tick has 2 sub-steps. The last of `max_substeps` (16) sub-steps takes the rest of the tick, so above 192 m/s it moves more than r/2. The sweep still stops it at the first surface (F5).
 - Each sub-step does these steps:
-  1. Apply gravity from the field with the highest priority, or else the tuning gravity (straight down).
-  2. Find contacts.
-  3. Respond to them, relative to `contact.velocity`. The response leaves the marble 0.1 mm (`Marble.SKIN`) above each surface, because a sweep from exact contact stops at once (F5). For a contact inside the margin only, it stops only the motion that would pass the surface in this sub-step.
-  4. Apply rolling, air control and jump.
-  5. Sweep the move with `cast_motion`.
-  6. Collect the overlapped triggers.
+  1. Find contacts.
+  2. Hits, with the velocity from before this sub-step's gravity, relative to `contact.velocity`, for each contact that the marble reaches in this sub-step. A glancing hit (speed into the surface below `slide_threshold` × speed) or a hit below `min_bounce_speed` loses its speed into the surface and slides on. Any other hit bounces with `restitution` × `Surface.restitution`, and bounce friction acts at the contact point. The first hit on a floor that ends a flight (the last sub-step had no ground) emits `marble.land`; any other bounce emits `marble.bounce`.
+  3. Apply gravity from the field with the highest priority, or else the tuning gravity (straight down). Up is the opposite of the gravity, and `Marble.frame` turns by the shortest arc to match.
+  4. Support: push out to `Marble.SKIN` (0.1 mm) above each surface, because a sweep from exact contact stops at once (F5), and stop only the motion that would pass the surface in this sub-step. The ground is the most upward floor (normal · up ≥ `floor_min_up`) that the marble hit or presses on. Walls and ceilings give no rolling, no jump and no landing.
+  5. On the ground: rolling with friction (`Surface.friction` scales it), then the jump. The jump raises the speed away from the ground to `jump_impulse` along the ground normal. A held jump jumps again at each landing. In the air: air control, up to the speed that input asks for on the ground, so hops do not add speed. The spin does not change in the air. Then support again, so input never pushes into a surface: else the sweep would stop the whole move there, also the part along the surface. Repeat the pass while it still pushes, at most 16 times (`Marble.SUPPORT_PASSES`): at two surfaces that meet at an acute angle, each pass pushes a little back into the other, and the passes converge on the seam.
+  6. Sweep the move with `cast_motion`. An impulse in the sub-step (a jump, a hit by a mover, friction at a bounce) can make this one move longer than `max_substep_move·r`; the sweep still stops it at the first surface, and the next sub-step is short again. The forces act for exactly the sub-step's time.
+  7. Collect the touched objects and the overlapped triggers, and take the gravity at the new position for the next sub-step.
 
 **Contact rules** (`WorldQuery`):
 
 - Call `intersect_shape` on the solid layer with margin `contact_margin` (0.01) and at most 32 results, then keep the unique `Solid`s. Use 32, because one body can fill several entries (F4).
-- For each Solid, call `collide_shape` (at most 16 pairs) with the other Solids in `exclude`. Use the second point of each pair.
-- `normal = (centre - point).normalized()`. `depth = radius - distance`. The depth is negative when the contact is inside the margin.
+- For each Solid, call `collide_shape` (at most 16 pairs) with the other Solids in `exclude`. The second point of each pair is on the Solid. The first is the point of the grown sphere that is deepest past the surface (F23).
+- `normal = (centre - point).normalized()`. `depth = radius - distance`. The depth is negative when the contact is inside the margin. When a mover put the centre inside a convex Solid (`point - first` points against the normal, F23), the normal flips and `depth = radius + distance`, so the response pushes the marble out of the Solid, not deeper in.
 - Merge the contacts of one Solid whose normals almost agree (`dot > 0.9998`), and keep the deeper contact with its point and normal. This removes the duplicates from F1 and the edge points close to an internal edge (F7). Contacts of different Solids stay apart, so a flush object keeps its touch.
 - Sweep with `cast_motion` and margin 0.
 - Find overlaps with `intersect_shape` on the trigger layer, areas only, then use `collider.owner as LevelObject`.
@@ -155,12 +158,14 @@ extends Resource
 @export var braking_acceleration: float = 30.0
 @export var air_acceleration: float = 5.0
 @export var jump_impulse: float = 7.5
+@export var floor_min_up: float = 0.1   # a floor's normal has at least this dot with up
 @export var static_friction: float = 1.1
 @export var kinetic_friction: float = 0.7
 @export var bounce_friction: float = 0.2
 @export var restitution: float = 0.5
 @export var slide_threshold: float = 0.5
 @export var min_bounce_speed: float = 0.1
+@export var hard_impact_speed: float = 20.0   # feedback strength 1 at this speed into a surface
 @export var max_substep_move: float = 0.5   # times radius
 @export var max_substeps: int = 16
 @export var contact_margin: float = 0.01
@@ -219,7 +224,9 @@ class_name GravityField
 extends LevelObject
 @export var priority: int = 0
 func gravity_at(point: Vector3) -> Vector3
-# UniformGravity: -global_basis.y * strength. PointGravity (M3): toward global_position.
+# UniformGravity (#10): @export var strength: float = 20.0; gravity -global_basis.y * strength.
+# core/gravity/uniform_gravity.tscn: a 1 m cube volume; turn the node to aim, scale it to size (F24).
+# PointGravity (M3): toward global_position.
 
 # core/level/level_object.gd
 class_name LevelObject
@@ -352,7 +359,7 @@ game/
 │   ├── marble_tuning.tres     #7 creates it; #10 tunes it
 │   ├── input/                 #7: marble_input, input_source, input_hub, player_source (#18 adds the pad later)
 │   ├── marble/                #7, then #10: marble.gd/.tscn, marble_tuning.gd, world_query.gd, contact.gd
-│   ├── gravity/               #10: gravity_field.gd, uniform_gravity.gd
+│   ├── gravity/               #10: gravity_field.gd, uniform_gravity.gd/.tscn
 │   ├── camera/                #7 follow_camera.gd, then #11: orbit camera, blob shadow
 │   └── level/                 #7: level, level_run, level_object, solid, surface, default_surface.tres, game_state
 │       ├── rules.gd           stub from #7, then #13
@@ -365,7 +372,7 @@ game/
 ├── harness/                   #9 (the route bot from #14 goes here later)
 └── test/
     ├── support/run_test.gd    #7
-    ├── levels/flat.tscn       #7; every other test level has one owner, its creator
+    ├── levels/flat.tscn       #7; every other test level has one owner, its creator (#10: physics.tscn, pusher.gd)
     ├── core/                  test_marble_roll and test_player_source #7, test_marble_physics #10, test_camera #11
     ├── level/                 test_game_state #7, test_level_import #8, test_rules #13
     ├── objects/<type>/        the owner of objects/<type>/
@@ -483,5 +490,5 @@ An object test adds the object with `start_run(FLAT, [bumper])`, rolls the marbl
 5. **Marker vectors:** use child empties for positions and paths (A1).
 6. **Render smoothness:** the run steps at 120 Hz. Displays faster than 120 Hz need physics interpolation or camera smoothing (#11, #24). Harness `step` bursts draw no frames between ticks.
 7. **Pose from time:** movers calculate their pose from `t`. An object authored with `AnimationPlayer` cannot drive collision. This is fine for the M1 set. Check it again for the M3 objects.
-8. **Held buttons:** `jump` and `use` are held states. The code that reads them finds the press. #10 decides whether a held jump repeats.
+8. **Held buttons:** `jump` and `use` are held states. The code that reads them finds the press. A held jump repeats: the marble jumps again at each landing (#10).
 9. **Precision:** JSON vectors carry 32-bit noise (F17). Cross-OS repeatability is not checked (F15).

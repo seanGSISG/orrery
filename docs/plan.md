@@ -306,7 +306,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 
 - Reads the level's `route` markers and steers the marble with the same `MarbleInput` as a player: it aims at the next waypoint from the marble's current position and speed, and it does each waypoint's action (jump, use power-up, wait until a platform arrives).
 - Because it steers from the current state, small physics differences between runs or between Linux and Windows do not break it. Level tests do not need exact physics repeats.
-- **Par and gold:** start as the bot's time × 1.5 (par) and × 1.15 (gold). A person tunes them after playing.
+- **Par and gold:** each level script carries two routes, the first-run route and an expert route, and the bot times both. Par starts as the first-run route time × 1.5. Gold starts as the expert route time × 1.15, so gold needs the expert line. A person tunes them after playing.
 - From M3, a search program tries many input sequences per level to find unintended shortcuts. Agents fix the shortcuts or keep them as intended skips.
 
 ### 4.7 Rendering and performance
