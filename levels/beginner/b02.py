@@ -159,18 +159,21 @@ def column(name: str, at: Point, top: float, radius: float) -> None:
     ring(f"{name}_ring", at, radius - 0.3, radius - 0.18, top)
 
 
-def post(name: str, at: Point) -> None:
-    """Adds a stone post of the undercroft, from its floor to its ceiling."""
+def post(name: str, at: Point, top: float = 0.48) -> None:
+    """Adds a stone post of the undercroft, from its floor to its ceiling. `top` is the
+    radius of its cap; stand the cap under solid floor, so that a marble that falls through
+    an opening does not land on it."""
     room = CEILING - FLOOR
+    k = top / 0.48
     kit.lathe(
         at=(*at, FLOOR),
         profile=[
-            (0.5, 0.0),
-            (0.5, 0.3),
-            (0.32, 0.45),
-            (0.28, room - 0.5),
-            (0.42, room - 0.2),
-            (0.48, room),
+            (0.5 * k, 0.0),
+            (0.5 * k, 0.3),
+            (0.32 * k, 0.45),
+            (0.28 * k, room - 0.5),
+            (0.42 * k, room - 0.2),
+            (top, room),
         ],
         name=name,
     )
@@ -274,10 +277,11 @@ kit.deck(
 block("undercroft", UNDERCROFT, top=FLOOR)
 # The north wall of the alcove, which carries the end of the hall's north kerb.
 block("undercroft_wall", kit.rect(-20, 44, -14, 44.5), top=0.0)
-# Posts hold the ceiling, under solid panels. The last one hides the egg's nook from the
-# west.
-for i, at in enumerate(((-18, 38), (-14, 38), (-10, 34), (-6, 38), (-4.6, 33.8))):
+# Posts hold the ceiling, under solid panels. A slim post hides the egg's nook from the
+# west: it stands under the strip of floor between the crumbling cell and the egg's door.
+for i, at in enumerate(((-18, 38), (-14, 38), (-10, 34), (-6, 38))):
     post(f"undercroft_post_{i}", at)
+post("undercroft_post_nook", (HALL_WEST + CELL * EGG_DOOR[0], 34.0), FRAME - 0.02)
 
 for (c, r), kind in loose.items():
     centre = cell_centre(c, r)
