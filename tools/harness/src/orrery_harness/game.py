@@ -147,7 +147,10 @@ def stop() -> None:
 
 
 def end(session: Session) -> None:
-    """Quits the game, and kills it when it does not quit within 10 s."""
+    """Quits the game, and kills it when it does not quit within 10 s. A game that no longer
+    runs gets no quit, because another game may have its port now."""
+    if not running(session):
+        return
     try:
         with session.connect() as game:
             game.quit()
