@@ -127,11 +127,11 @@ func _init(run: LevelRun, route: Route) -> void:
 
 
 ## Restarts the run and plays the route to its end at full speed, through InputHub. Returns
-## the result (see above). Make your own source active again afterwards. A bot drives once; make
-## a new bot for the next drive.
+## the result (see above). Make your own source active again afterwards. A bot drives once,
+## before any next_input() call; make a new bot for the next drive.
 func drive() -> Dictionary:
-	if done or not problems.is_empty():
-		push_error("RouteBot: drive() runs once, on a route without problems")
+	if _started or not problems.is_empty():
+		push_error("RouteBot: drive() runs once, on a new bot and a route without problems")
 		return result()
 	_run.auto_step = false
 	_run.restart()
