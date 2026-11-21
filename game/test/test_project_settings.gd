@@ -1,6 +1,7 @@
 extends GutTest
-## Checks the engine settings that docs/plan.md fixes: Jolt physics at 120 ticks per
-## second, and strict typing warnings that stop the build.
+## Checks the engine settings that docs/plan.md and docs/design/core-runtime.md fix: Jolt
+## physics at 120 ticks per second with internal-edge removal, and strict typing warnings
+## that stop the build.
 
 const STRICT_WARNINGS: PackedStringArray = [
 	"untyped_declaration",
@@ -19,6 +20,13 @@ func test_physics_runs_jolt_at_120_ticks() -> void:
 	var engine: String = ProjectSettings.get_setting("physics/3d/physics_engine")
 	assert_eq(engine, "Jolt Physics")
 	assert_eq(Engine.physics_ticks_per_second, 120)
+
+
+## Jolt drops the internal-edge contacts that make a marble drift on flat trimesh floors.
+func test_jolt_removes_internal_edges() -> void:
+	var setting: String = "physics/jolt_physics_3d/queries/use_enhanced_internal_edge_removal"
+	var removes: bool = ProjectSettings.get_setting(setting)
+	assert_true(removes)
 
 
 ## Each strict typing warning is an error.

@@ -206,13 +206,13 @@ orrery/
 │   ├── project.godot
 │   ├── addons/gut/
 │   ├── core/              marble solver, camera, input, gravity fields, save data
-│   ├── objects/           one folder per object or power-up (scene + script + test)
+│   ├── objects/           one folder per object or power-up (scene + script)
 │   ├── modes/             campaign, ascent, planetarium
 │   ├── ui/                menus and HUD
 │   ├── audio/             buses, music players
 │   ├── harness/           automation interface and route bot (left out of release exports)
 │   ├── levels/built/      built .glb files (generated, ignored by git)
-│   └── test/              GUT tests
+│   └── test/              GUT tests; object tests in test/objects/<type>/
 ├── levels/                level scripts, the source of truth
 │   ├── beginner/  intermediate/  advanced/  secret/
 │   ├── ascent/            zone_1.py … zone_8.py
@@ -229,13 +229,15 @@ orrery/
 
 Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`.
 
+Object tests live in `game/test/objects/<type>/`, not beside the object: the release exports leave out only `test/*`, and GUT scans only `res://test/`. The runtime design is in `docs/design/core-runtime.md`.
+
 ### 4.2 Marble physics
 
 Every serious marble game writes its own marble physics (`docs/research/gameplay.md` §6). Orrery does too. The solver is our own code, written from the documented behaviour. No code comes from reference projects.
 
 - **State:** position, linear velocity, angular velocity, radius, mass, current gravity vector, held power-up effects.
 - **Tick:** Godot physics runs at 120 Hz. Each tick splits into sub-steps so that the marble moves at most half its radius per sub-step.
-- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh; moving objects are `AnimatableBody3D`, and the solver reads their velocity at the contact point. The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
+- **Contacts:** a sphere query against the level's collision shapes (`PhysicsDirectSpaceState3D.collide_shape` for contact points, `cast_motion` for the sweep). Static level geometry is a trimesh. Every collider is a `Solid` (a `StaticBody3D`). A moving object moves its `Solid` from code each tick with `Solid.move()`, which sets the physics transform at once and records the surface velocity; the solver reads that velocity at the contact point. Movers are not `AnimatableBody3D`: its transform reaches shape queries only at the next physics frame, and `LevelRun.step()` runs ticks outside physics frames (`docs/design/core-runtime.md` §1 and §2). The contact normal comes from the marble centre to the closest point, which avoids catching on the inner edges between triangles.
 - **Motion model:**
   - Input sets a target angular velocity around the axis perpendicular to the move direction and the surface normal. Spin approaches the target at the angular acceleration limit; with no input, braking pulls spin toward zero.
   - Friction at the contact couples spin and linear velocity: static friction, then kinetic friction when the contact slips. Each surface type scales the friction.
@@ -314,6 +316,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - Ascent and Planetarium: dynamic sky and sun (time of day follows height in Ascent), SDFGI on Ultra only.
 - Presets: **Low** (no GI or fog, lower shadow resolution), **Medium**, **High**, **Ultra** (4K-ready, SDFGI, full volumetrics).
 - **Targets:** 1080p at 60 fps on a GTX 1660 / RX 5600-class GPU at Medium. Agents can't test that GPU directly, so the performance check fails when GPU frame time at Medium on the RTX 5090 goes over a budget (start at 3 ms; calibrate in M1 against a known-good scene). High-refresh monitors work.
+- **Visual quality bar:** `docs/design/visual-quality.md` turns "crisp and photorealistic" into checks. It holds the preset table, the anti-aliasing choice, the lightmap bake settings, the glass-marble approach, the texture policy (2K default with a short list of 4K exceptions, which replaces the 2K cap in 2.11 and 9), the material rules, the gallery review rubric and what `just perf` measures per preset. Every art and rendering ticket meets it.
 
 ### 4.8 Audio implementation
 
