@@ -112,7 +112,7 @@ feel: (build-levels "feel")
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd game/skies/sky_preset.gd game/skies/*.tres)
+    inputs=(kit/*.py assets/props/*.glb tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd game/skies/sky_preset.gd game/skies/*.tres)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)
@@ -174,14 +174,16 @@ lint: import
     tools=() deps=()
     for f in "${py[@]}"; do
         grep -qE '^(import|from) bpy' "$f" && continue
-        [[ $f == tools/harness/* || $f == tools/audio/music/* ]] && continue
+        [[ $f == tools/harness/* || $f == tools/audio/music/* || $f == tools/art/* ]] && continue
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
     uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
-    # The harness and the music pipeline are uv projects; ty checks each with its locked dependencies.
+    # The harness, the music pipeline and the asset tools are uv projects; ty checks each with
+    # its locked dependencies.
     uv run --quiet --project tools/harness --with "ty==$TY_VERSION" ty check tools/harness
     uv run --quiet --project tools/audio/music --with "ty==$TY_VERSION" ty check tools/audio/music
+    uv run --quiet --project tools/art --with "ty==$TY_VERSION" ty check tools/art
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
@@ -223,6 +225,57 @@ test-harness *args: import
 [positional-arguments]
 test-music *args:
     uv run --quiet --project tools/audio/music pytest tools/audio/music "$@"
+
+# --- Asset tools (tools/art/README.md) ---
+
+# GPT-Image art and Tripo models: `just art image|batch|model|check ...`. Paid calls need --yes;
+# --dry-run sends nothing. Keys come from the environment or the git-ignored .env
+[positional-arguments]
+art *args:
+    @uv run --quiet --project tools/art orrery-art "$@"
+
+# A textured GLB from an image (Tripo image-to-3D), into build/art/models/: same as `just art model`
+[positional-arguments]
+model *args:
+    @uv run --quiet --project tools/art orrery-art model "$@"
+
+# Clean a generated GLB into assets/props/<name>.glb for kit.prop: real height in m, the origin
+# on the base centre, a triangle budget, optionally one kit material. For example
+# `just prop-cleanup build/art/models/lamp.glb lamp --height 1.8 --triangles 4000 --material brass`
+[positional-arguments]
+[script("bash")]
+prop-cleanup source name *args:
+    set -euo pipefail
+    # Read the arguments as data from $1 and $2: just interpolation would paste them into the script.
+    source=$1 name=$2
+    shift 2
+    if [[ ! $name =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just prop-cleanup: the name must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    staged="$tmp/$name.glb" dest="assets/props/$name.glb"
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/prop_cleanup.py -- "$source" "$staged" "$@" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just prop-cleanup: Blender failed" >&2
+        exit 1
+    fi
+    grep '^prop-cleanup:' "$tmp/log"
+    "${GLTF_VALIDATOR:-gltf_validator}" "$staged"
+    mkdir -p assets/props
+    mv "$staged" "$dest"
+    # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
+    # A source without a record leaves none, so an old record never names a new prop.
+    rm -f "$dest.json"
+    if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
+    echo "$dest"
+
+# Run the asset tool tests: mocked APIs, no paid call. The prop tests need blender-5.2
+[positional-arguments]
+test-art *args:
+    uv run --quiet --project tools/art pytest tools/art "$@"
 
 # Build the Linux debug export (harness and test levels included) into build/linux-debug/
 export-debug: import

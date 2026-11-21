@@ -1,0 +1,23 @@
+[project]
+name = "orrery-art"
+version = "0.1.0"
+description = "Orrery asset tools: GPT-Image 2D art and Tripo image-to-3D props, with a dry run and a spend guard."
+requires-python = ">=3.13"
+# openai 3 talks HTTP through httpx2; the Tripo client uses it too.
+dependencies = ["httpx2==2.16.2", "openai==3.57.0"]
+
+[project.scripts]
+orrery-art = "orrery_art.cli:main"
+
+[dependency-groups]
+dev = ["pytest==9.2.0"]
+
+[build-system]
+requires = ["uv_build>=0.9,<1"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+src = ["src"]

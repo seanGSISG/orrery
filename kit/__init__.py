@@ -23,6 +23,7 @@ from kit.masonry import (
 )
 from kit.outlines import arc, box, rect
 from kit.pieces import ramp, track
+from kit.props import prop
 from kit.surfaces import surface
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
     "level",
     "marker",
     "pillar",
+    "prop",
     "ramp",
     "rect",
     "shot",
