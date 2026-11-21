@@ -11,8 +11,8 @@ extends Camera3D
 ## A focus move longer than this in one tick is a teleport (restart, respawn): the camera
 ## snaps instead of smoothing, m.
 const SNAP_DISTANCE: float = 1.0
-## Radius of the cast that finds the far face of a thin Solid, m. The camera stops this far
-## inside that face, so it sees the face from behind.
+## How far the camera stops inside the far face of a thin Solid, along its line to the
+## marble, m. From there it sees the face from behind.
 const INSIDE: float = 0.02
 
 ## Turn camera shake off or on (the accessibility setting of docs/plan.md §2.13). It applies
@@ -52,8 +52,8 @@ var shadow: BlobShadow = BlobShadow.new()
 ## The cast at clearance, made again when clearance changes.
 var _world: WorldQuery
 var _world_radius: float = 0.0
-## The thin cast that finds the far face of a thin Solid.
-var _inside: WorldQuery
+## The ray that finds the far face of a thin Solid. It ignores back faces.
+var _ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
 ## Yaw reference, as Marble.frame: y is the marble's up, and it turns by the shortest arc.
 var _frame: Basis = Basis.IDENTITY
 ## The camera's up, which turns toward the marble's up at up_rate.
@@ -71,7 +71,8 @@ var _time: float = 0.0
 func _ready() -> void:
 	process_physics_priority = 1
 	add_child(shadow)
-	_inside = WorldQuery.new(get_world_3d().direct_space_state, INSIDE, 0.0)
+	_ray.collision_mask = WorldQuery.SOLID_MASK
+	_ray.hit_back_faces = false
 	if run != null:
 		run.feedback.connect(_on_feedback)
 
@@ -113,7 +114,8 @@ func follow(state: GameState, input: MarbleInput, dt: float) -> void:
 ## Returns the camera distance along back (a unit vector) at which no Solid hides the marble.
 ## It is where the clearance cast from the focus stops, but at least min_distance. When
 ## min_distance puts the camera past the far face of a thin Solid, the camera moves in to just
-## inside that face: from there it sees the Solid's faces from behind, which are not drawn.
+## inside that face, and again for each thin Solid nearer the marble: from there it sees the
+## Solids' faces from behind, which are not drawn.
 func _open_distance(back: Vector3) -> float:
 	if _world == null or _world_radius != clearance:
 		_world = WorldQuery.new(get_world_3d().direct_space_state, clearance, 0.0)
@@ -121,11 +123,18 @@ func _open_distance(back: Vector3) -> float:
 	var open: float = distance * _world.sweep(_focus, back * distance)
 	if open >= min_distance:
 		return open
-	# The thin cast ignores a Solid that the camera is already in, and the back faces of
-	# a Solid around it, so it stops only at a far face that the camera sees from the front.
-	var eye: Vector3 = _focus + back * min_distance
-	var past: float = min_distance * _inside.sweep(eye, -back * min_distance)
-	return min_distance if past >= min_distance else min_distance - past - 2.0 * INSIDE
+	# The ray from the camera to the marble ignores back faces, so it meets only a face that
+	# the camera sees from the front. Each step moves the camera in by at least INSIDE.
+	open = min_distance
+	_ray.to = _focus
+	while true:
+		_ray.from = _focus + back * open
+		var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(_ray)
+		if hit.is_empty():
+			return open
+		var face: Vector3 = hit["position"]
+		open = (face - _focus).dot(back) - INSIDE
+	return open
 
 
 ## Returns the small turn of the camera for the shake left, and lets the shake decay.

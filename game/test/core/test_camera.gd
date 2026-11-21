@@ -90,16 +90,21 @@ func test_up_follows_a_change_smoothly() -> void:
 ## the camera past the wall. The camera stops inside the wall, so a ray from the camera to the
 ## marble meets no face that the camera sees from the front.
 func test_marble_stays_in_sight_behind_a_thin_wall() -> void:
-	_start(FLAT, [_thin_wall()])
+	_start(FLAT, [_thin_wall(0.4, 0.2)])
 	run.marble.teleport(Vector3(0, 0.2, 0.4 - 0.2 - Marble.SKIN), Vector3.ZERO)
 	_play(_looking(0.0, PlayerSource.START_PITCH), 0.2)
-	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		camera.global_position, run.state.position, WorldQuery.SOLID_MASK
-	)
-	ray.hit_back_faces = false
-	var hit: Dictionary = camera.get_world_3d().direct_space_state.intersect_ray(ray)
-	assert_true(hit.is_empty(), "a front face hides the marble: %s" % [hit])
+	assert_eq(_front_face_to_marble(), {}, "a front face hides the marble")
 	assert_gt(camera.global_position.z, 0.4, "the camera went into the wall")
+
+
+## With two 0.1 m walls 0.05 m apart inside min_distance, the camera stops inside the wall
+## nearer the marble, not inside the farther one.
+func test_marble_stays_in_sight_behind_two_thin_walls() -> void:
+	_start(FLAT, [_thin_wall(0.4, 0.1), _thin_wall(0.55, 0.1)])
+	run.marble.teleport(Vector3(0, 0.2, 0.4 - 0.2 - Marble.SKIN), Vector3.ZERO)
+	_play(_looking(0.0, 0.0), 0.2)
+	assert_eq(_front_face_to_marble(), {}, "a front face hides the marble")
+	assert_between(camera.global_position.z, 0.4, 0.5, "the camera is in the nearer wall")
 
 
 ## The camera reads clearance and field_of_view each tick, so the tuning overlay changes them
@@ -195,17 +200,28 @@ func _camera_up(input: MarbleInput) -> Vector3:
 	return (camera.global_basis * Basis(Vector3.RIGHT, -input.camera_pitch)).y
 
 
-## Returns a Solid wall 0.2 m thick from z = 0.4 to 0.6, with a one-sided triangle mesh as
+## Returns the first face on the ray from the camera to the marble that the camera sees from
+## the front, or {} when the camera sees the marble. Back faces are not drawn, so they do not
+## count.
+func _front_face_to_marble() -> Dictionary:
+	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+		camera.global_position, run.state.position, WorldQuery.SOLID_MASK
+	)
+	ray.hit_back_faces = false
+	return camera.get_world_3d().direct_space_state.intersect_ray(ray)
+
+
+## Returns a Solid wall from z = near to near + thickness, with a one-sided triangle mesh as
 ## the level converter makes.
-func _thin_wall() -> Solid:
+func _thin_wall(near: float, thickness: float) -> Solid:
 	var box: BoxMesh = BoxMesh.new()
-	box.size = Vector3(4, 2, 0.2)
+	box.size = Vector3(4, 2, thickness)
 	var mesh: ConcavePolygonShape3D = ConcavePolygonShape3D.new()
 	mesh.set_faces(box.get_faces())
 	var shape: CollisionShape3D = CollisionShape3D.new()
 	shape.shape = mesh
 	var wall: Solid = Solid.new()
-	wall.position = Vector3(0, 1, 0.5)
+	wall.position = Vector3(0, 1, near + thickness / 2.0)
 	wall.add_child(shape)
 	return wall
 
