@@ -261,12 +261,12 @@ test-pad: import
 
 # --- Gallery and performance (#20) ---
 
-# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html
+# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html. Fails on a shader compile error
 [positional-arguments]
 gallery *ids: fresh-levels import
     uv run --quiet --script tools/gallery/gallery.py "$@"
 
-# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets
+# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets. Fails on a shader compile error
 [positional-arguments]
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
@@ -320,7 +320,7 @@ build-sfx *args:
 # --- HUD and menus (#22) ---
 
 # Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope).
-# The Dummy audio driver keeps the run silent
+# The Dummy audio driver keeps the run silent. It fails on a shader compile error in the log
 [script("bash")]
 ui-shots: fresh-levels import
     set -euo pipefail
@@ -338,6 +338,8 @@ ui-shots: fresh-levels import
             echo "just ui-shots: not every screenshot was saved at ${width}x${height}" >&2
             exit 1
         fi
+        # A shader that does not compile draws as a grey solid, and the screenshots still save.
+        uv run --quiet --project tools/harness orrery-harness check-log "$log"
         grep '^ui-shots: /' "$log"
     done
 

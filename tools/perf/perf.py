@@ -83,6 +83,21 @@ def level_ids(ids: list[str]) -> list[str]:
     return ids or sorted(script.stem for script in ROOT.glob("levels/*/*.py"))
 
 
+def check_shaders(log: str, name: str) -> None:
+    """Raises RuntimeError with the first shader compile errors in the game log (the harness
+    CLI holds the one check that `just gallery` and `just ui-shots` also use)."""
+    command = ["uv", "run", "--quiet", "--project", str(ROOT / "tools/harness")]
+    check = subprocess.run(
+        [*command, "orrery-harness", "check-log"],
+        input=log,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if check.returncode != 0:
+        raise RuntimeError(f"{name}: {check.stderr.strip()}")
+
+
 def measure(level: str, run: Run) -> Result:
     """Runs the perf scene for one level and one run, and returns its report."""
     out = OUT / f"{level}-{run.preset}-{run.height}.json"
@@ -114,6 +129,7 @@ def measure(level: str, run: Run) -> Result:
         raise RuntimeError(
             f"{level} {run.name}: failed (exit {done.returncode})\n{log}"
         )
+    check_shaders(f"{done.stdout}\n{done.stderr}", f"{level} {run.name}")
     report = json.loads(out.read_text())
     if (report["width"], report["height"]) != (run.width, run.height):
         size = f"{report['width']}x{report['height']}"
