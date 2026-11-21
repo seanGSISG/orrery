@@ -46,7 +46,9 @@ func after_each() -> void:
 	get_window().size = _window_size
 
 
-func test_tabs_change_with_both_devices() -> void:
+## The tabs change with both devices, B or Esc goes back, and so does a click on the Back
+## hint, for a player with only the mouse.
+func test_tabs_and_back() -> void:
 	for pad: bool in [true, false]:
 		Game.screen = &"settings"
 		assert_eq(ui.settings.tab, GRAPHICS)
@@ -57,6 +59,13 @@ func test_tabs_change_with_both_devices() -> void:
 		assert_eq(ui.settings.tab, DISPLAY)
 		_move(pad, &"cancel")
 		assert_eq(shown(), &"title")
+	Game.screen = &"settings"
+	var hints: Hints = ui.settings.find_children("*", "Hints", true, false)[0]
+	var click: InputEventMouseButton = InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	(hints.get_child(0) as Control).gui_input.emit(click)
+	assert_eq(shown(), &"title", "a click on the Back hint")
 
 
 func test_graphics_preset() -> void:

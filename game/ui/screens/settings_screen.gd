@@ -71,10 +71,27 @@ func _init() -> void:
 	_scroll.add_child(content)
 	column.add_child(_scroll)
 	var hints: Hints = Hints.new()
-	hints.add_hint(&"ui_cancel", "HINT_BACK")
-	hints.add_hint(&"settings_defaults", "HINT_DEFAULTS")
+	_on_click(hints.add_hint(&"ui_cancel", "HINT_BACK"), _back_by_click)
+	_on_click(hints.add_hint(&"settings_defaults", "HINT_DEFAULTS"), _reset)
 	column.add_child(hints)
 	add_safe_area().add_child(column)
+
+
+## Makes a click on hint call action, so a player with only the mouse can use the hints.
+static func _on_click(hint: Control, action: Callable) -> void:
+	hint.mouse_filter = Control.MOUSE_FILTER_STOP
+	hint.gui_input.connect(
+		func(event: InputEvent) -> void:
+			var click: InputEventMouseButton = event as InputEventMouseButton
+			if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+				action.call()
+	)
+
+
+## Goes back as B or Esc does, for a click on the Back hint.
+func _back_by_click() -> void:
+	if back():
+		Music.play_ui(&"back")
 
 
 ## Shows the first tab, with the focus on its first row.
@@ -150,7 +167,7 @@ func _build_display() -> void:
 	for each: Vector2i in sizes:
 		size_texts.append("%d × %d" % [each.x, each.y])
 	var resolution: OptionRow = _option(
-		"resolution", "SETTINGS_RESOLUTION", sizes, size_texts, &"stepper", _window_size()
+		"resolution", "SETTINGS_RESOLUTION", sizes, size_texts, &"stepper", get_window().size
 	)
 	resolution.set_enabled(Save.settings.window_mode == &"windowed")
 	var caps: Array[String] = []
@@ -160,6 +177,9 @@ func _build_display() -> void:
 	_option("vsync", "SETTINGS_VSYNC", SWITCH, OFF_ON, &"switch")
 	if DisplayServer.window_is_hdr_output_supported():
 		_option("hdr", "SETTINGS_HDR", SWITCH, OFF_ON, &"switch")
+	else:
+		# Hidden, but Defaults still resets it.
+		_fields.append("hdr")
 
 
 func _build_audio() -> void:
@@ -285,17 +305,11 @@ func _resolutions() -> Array[Vector2i]:
 	for each: Vector2i in RESOLUTIONS:
 		if screen == Vector2i.ZERO or (each.x <= screen.x and each.y <= screen.y):
 			sizes.append(each)
-	var now: Vector2i = _window_size()
+	var now: Vector2i = get_window().size
 	if not sizes.has(now):
 		sizes.append(now)
 		sizes.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.x * a.y < b.x * b.y)
 	return sizes
-
-
-## Returns the window size that the resolution setting names, else the size of the window.
-func _window_size() -> Vector2i:
-	var saved: Vector2i = Save.settings.resolution
-	return saved if saved != Vector2i.ZERO else get_window().size
 
 
 ## Returns the index of value in values: the nearest one for a number, else the equal one, else

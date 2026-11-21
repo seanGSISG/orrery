@@ -60,7 +60,8 @@ static func code(event: InputEvent) -> String:
 		var button: MouseButton = (event as InputEventMouseButton).button_index
 		return "mouse:%d" % button if button in InputGlyph.MOUSE_BUTTONS else ""
 	if event is InputEventJoypadButton:
-		return "button:%d" % (event as InputEventJoypadButton).button_index
+		var pad_button: JoyButton = (event as InputEventJoypadButton).button_index
+		return "button:%d" % pad_button if pad_button < JOY_BUTTON_SDL_MAX else ""
 	return ""
 
 

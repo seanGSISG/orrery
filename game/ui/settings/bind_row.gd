@@ -77,7 +77,7 @@ func _input(event: InputEvent) -> void:
 		_stop()
 	elif code != "":
 		_stop()
-		bound.emit(Bindings.device_of(Bindings.event(code)), code)
+		bound.emit(Bindings.device_of(event), code)
 		show_buttons()
 	if event.is_pressed() or code != "":
 		get_viewport().set_input_as_handled()
