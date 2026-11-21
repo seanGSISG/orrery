@@ -23,6 +23,8 @@ const SHARE: float = INERTIA / (1.0 + INERTIA)
 ## Gap that the response leaves between the marble and a surface, m. A sweep that starts in
 ## exact contact stops at once for the smallest move into the surface.
 const SKIN: float = 0.0001
+## Most support passes after input. 16 passes keep the move along a 20° V seam.
+const SUPPORT_PASSES: int = 16
 
 @export var tuning: MarbleTuning
 
@@ -125,9 +127,15 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 	else:
 		_steer(input, h)
 	# Support again: input must not push into a surface either, or the sweep would stop the
-	# whole move there, also the part along the surface.
-	for contact: Contact in contacts:
-		_meet(contact, h)
+	# whole move there, also the part along the surface. Where two surfaces meet at an acute
+	# angle, each pass pushes a little back into the other; the passes converge on the seam.
+	for _pass: int in SUPPORT_PASSES:
+		var pushed: bool = false
+		for contact: Contact in contacts:
+			if _meet(contact, h) > 0.0:
+				pushed = true
+		if not pushed:
+			break
 	# 6. Sweep. An impulse in this sub-step (a jump, a hit by a mover, friction at a bounce)
 	# can make this one move longer than max_substep_move radii; the sweep still stops it at
 	# the first surface.

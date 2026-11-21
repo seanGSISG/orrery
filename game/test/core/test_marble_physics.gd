@@ -157,15 +157,22 @@ func test_ground_is_floor_during_wall_hit() -> void:
 	assert_lt(absf(run.state.velocity.z), 0.2)
 
 
-## Rolling along a wall with input partly into it keeps rolling along the wall: the wall
-## stops only the motion into it.
-func test_rolls_along_wall_with_input_into_it() -> void:
-	_start(PHYSICS)
-	var from: Vector3 = Vector3(-10, TUNING.radius, WALL_Z + TUNING.radius)
-	run.marble.teleport(from, Vector3(10, 0, 0))
-	hold(rolling(Vector2(1, 1).normalized()), 1.0)
-	assert_gt(run.state.position.x - from.x, 9.5)
-	assert_almost_eq(run.state.position.z, from.z, 0.01)
+## Input partly into a surface never stalls the move along it: the marble moves as far as its
+## speed carries it along a wall on the floor, along a wall in the air (air control), and
+## along the seam of a 60° V.
+func test_input_into_surfaces_does_not_stall_the_move() -> void:
+	var seam: Vector3 = Vector3(0, 2, 5)
+	_start(PHYSICS, [_slab(PI / 3, seam), _slab(-PI / 3, seam)])
+	var into: MarbleInput = rolling(Vector2(1, 1).normalized())
+	var cases: Dictionary[String, Vector3] = {
+		"floor and wall": Vector3(-10, TUNING.radius, WALL_Z + TUNING.radius),
+		"wall in the air": Vector3(-10, 10, WALL_Z + TUNING.radius),
+	}
+	for case: String in cases:
+		run.marble.teleport(cases[case], Vector3(10, 0, 0))
+		_assert_moves_at_speed(into, 0.5, case)
+	run.marble.teleport(seam + Vector3(0, TUNING.radius / cos(PI / 3), 8), Vector3(0, 0, -10))
+	_assert_moves_at_speed(into, 0.5, "60° V seam")
 
 
 ## In the air, input changes the velocity at air_acceleration and leaves the spin alone.
@@ -276,11 +283,28 @@ func _apex() -> float:
 	return top
 
 
-## Returns a 4 m slab Solid turned by angle around +Z, whose top face ends at bottom: on the
-## +X side for a positive angle.
+## Steps with input for `seconds` after one settling tick, and asserts that the marble moved as
+## far as its speed carried it: a stalled sweep moves it less.
+func _assert_moves_at_speed(input: MarbleInput, seconds: float, case: String) -> void:
+	run.step(input)
+	var rate: float = Engine.physics_ticks_per_second
+	var moved: float = 0.0
+	var carried: float = 0.0
+	for _i: int in roundi(seconds * rate):
+		var before: Vector3 = run.state.position
+		var speed: float = run.state.velocity.length()
+		run.step(input)
+		moved += (run.state.position - before).length()
+		carried += (speed + run.state.velocity.length()) * 0.5 / rate
+	assert_gt(carried, 2.0, case)
+	assert_almost_eq(moved, carried, carried * 0.02, case)
+
+
+## Returns a 4 m wide, 20 m long slab Solid turned by angle around +Z, whose top face ends at
+## bottom: on the +X side for a positive angle.
 func _slab(angle: float, bottom: Vector3) -> Solid:
 	var box: BoxShape3D = BoxShape3D.new()
-	box.size = Vector3(4, 0.2, 4)
+	box.size = Vector3(4, 0.2, 20)
 	var shape: CollisionShape3D = CollisionShape3D.new()
 	shape.shape = box
 	var solid: Solid = Solid.new()
