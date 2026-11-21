@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Orrery style board</title>
+<style>
+  :root {
+    --night: #0b0e14;
+    --deck: #141922;
+    --line: #262d3a;
+    --stone: #ece6da;
+    --haze: #8f97a6;
+    --brass: #d0a85c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--stone);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1680px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px) 96px; }
+  header {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 12px 32px; padding: clamp(28px, 5vw, 56px) 0 8px;
+  }
+  h1 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 650; letter-spacing: -0.01em; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  nav a { color: var(--haze); text-decoration: none; }
+  nav a:hover, nav a:focus-visible { color: var(--brass); }
+  .lead { max-width: 62ch; margin: 8px 0 0; color: var(--haze); font-size: clamp(17px, 1.5vw, 20px); }
+  h2 {
+    margin: clamp(48px, 7vw, 88px) 0 20px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: clamp(20px, 2.2vw, 26px); font-weight: 600;
+  }
+  .board { display: grid; gap: clamp(20px, 3vw, 36px); }
+  @media (min-width: 960px) {
+    .pair { grid-template-columns: 1fr 1fr; }
+    .moods { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 640px) and (max-width: 959px) { .moods { grid-template-columns: 1fr 1fr; } }
+  figure { margin: 0; }
+  figure a { display: block; border-radius: 6px; overflow: hidden; background: var(--deck); }
+  figure a:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  img { display: block; width: 100%; height: auto; }
+  figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding-top: 10px; }
+  figcaption b { color: var(--brass); font-weight: 650; font-size: 18px; letter-spacing: 0.01em; }
+  figcaption span { color: var(--haze); }
+  .moods figcaption b { color: var(--stone); font-size: 16px; }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: choice; display: grid; gap: 12px; }
+  ol li {
+    counter-increment: choice;
+    display: grid; grid-template-columns: 2.2em 1fr; align-items: baseline;
+    padding: 16px 20px; background: var(--deck); border: 1px solid var(--line); border-radius: 6px;
+    font-size: 18px;
+  }
+  ol li::before { content: counter(choice); color: var(--brass); font-weight: 650; }
+  ol b { color: var(--brass); font-weight: 650; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Orrery style board</h1>
+    <nav>
+      <a href="#look">Game look</a>
+      <a href="#skies">Skies</a>
+      <a href="#gem">Gem</a>
+      <a href="#marble">Marble</a>
+      <a href="#moods">Moods</a>
+      <a href="#choices">Choices</a>
+    </nav>
+  </header>
+  <p class="lead">This board sets the look: materials, light, sky and scale. Level layouts come from the level briefs. The Blender renders are the items to approve.</p>
+
+  <h2 id="look">Game look, Beginner dawn: three candidates</h2>
+  <div class="board">
+    <figure>
+      <a href="render-a.webp"><img src="render-a.webp" width="1920" height="1080" alt="Blender render: a round limestone plaza with a brass lip and a gold clock face above a sea of clouds at golden dawn; a wide banked route and a narrow beam climb to a terrace, and a bridge leads to a small platform"></a>
+      <figcaption><b>Candidate A</b><span>Honey limestone, aged brass · golden dawn · plaza, fork with a shortcut beam, banked ramp to a terrace, bridge to a small platform</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-b.webp"><img src="render-b.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same play space in pale cream limestone and satin brass, in a soft pink dawn"></a>
+      <figcaption><b>Candidate B</b><span>Pale cream limestone, satin brass · soft pink dawn · same play space</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-c.webp"><img src="render-c.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same play space in grey weathered limestone and dark bronze, at first light"></a>
+      <figcaption><b>Candidate C</b><span>Grey weathered limestone, dark bronze · first light · same play space</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-eye.webp"><img src="render-eye.webp" width="1920" height="1080" loading="lazy" alt="Blender render from close behind the glass marble on the plaza: a blue gem hovers beside it, the brass lip curves to the right, and the route and the beam climb to the terrace"></a>
+      <figcaption><b>Player&#39;s view</b><span>Candidate A · marble on the plaza, a gem and the brass lip beside it, the fork ahead</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="skies">Skies of the higher tiers</h2>
+  <div class="board">
+    <figure>
+      <a href="render-noon.webp"><img src="render-noon.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same play space at noon, high above a thin cloud layer, under a deep blue sky with a slightly curved horizon"></a>
+      <figcaption><b>Noon</b><span>Intermediate · high altitude, deep blue sky, no planet · same play space</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-dusk.webp"><img src="render-dusk.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same play space at dusk at the edge of space: a curved horizon with a thin blue band, faint stars and one pale planet behind the haze"></a>
+      <figcaption><b>Dusk</b><span>Advanced · edge of space, one planet behind the haze, faint stars · same play space</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="gem">Gem</h2>
+  <div class="board">
+    <figure>
+      <a href="render-gem.webp"><img src="render-gem.webp" width="1920" height="1080" loading="lazy" alt="Blender render: a blue cut gem, a little taller than the glass marble beside it, hovers above the stone and gold floor"></a>
+      <figcaption><b>Gem</b><span>1.25 × the marble, 0.3 m above the floor · blue double pyramid, amber hexagon, magenta brilliant</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="marble">Marble</h2>
+  <div class="board pair">
+    <figure>
+      <a href="render-marble-a.webp"><img src="render-marble-a.webp" width="1920" height="1080" loading="lazy" alt="Blender render of a clear glass marble with a small brass orrery inside"></a>
+      <figcaption><b>Marble A</b><span>Clear glass, brass orrery core</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-marble-b.webp"><img src="render-marble-b.webp" width="1920" height="1080" loading="lazy" alt="Blender render of a polished blue stone marble with gold orbit lines"></a>
+      <figcaption><b>Marble B</b><span>Polished blue stone, gold inlay</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="moods">Mood references, not the game look</h2>
+  <div class="board moods">
+    <figure>
+      <a href="mood-dawn.webp"><img src="mood-dawn.webp" width="1600" height="892" loading="lazy" alt="AI image: a round tower-top plaza with a clock face above a sea of clouds at dawn"></a>
+      <figcaption><b>Dawn</b><span>Tower-top plaza, ramp to a terrace, bridge to a turret</span></figcaption>
+    </figure>
+    <figure>
+      <a href="mood-noon.webp"><img src="mood-noon.webp" width="1600" height="892" loading="lazy" alt="AI image: a curved stone deck and a straight beam between two platforms, high above the clouds at noon"></a>
+      <figcaption><b>Noon</b><span>Fork: wide curved deck and a straight beam</span></figcaption>
+    </figure>
+    <figure>
+      <a href="mood-dusk.webp"><img src="mood-dusk.webp" width="1600" height="892" loading="lazy" alt="AI image: round stone platforms and a brass gear at the edge of space at dusk, with one pale planet"></a>
+      <figcaption><b>Dusk</b><span>Stacked platforms, gear platform, bumpers</span></figcaption>
+    </figure>
+    <figure>
+      <a href="ref-plaza.webp"><img src="ref-plaza.webp" width="1600" height="892" loading="lazy" alt="AI image: a tower-top plaza with a banked brass lip and a clock face"></a>
+      <figcaption><b>Plaza</b><span>Banked brass lip, clock-face inlay</span></figcaption>
+    </figure>
+    <figure>
+      <a href="ref-fork.webp"><img src="ref-fork.webp" width="1600" height="892" loading="lazy" alt="AI image: a winding stone route, two narrow beams and a platform on a brass arm, above the clouds"></a>
+      <figcaption><b>Fork</b><span>Winding route, beam shortcut, platform on a brass arm</span></figcaption>
+    </figure>
+    <figure>
+      <a href="ref-zone-2.webp"><img src="ref-zone-2.webp" width="1600" height="892" loading="lazy" alt="AI image: stone discs and brass gears of a broken clock tower stacked in the air above town roofs"></a>
+      <figcaption><b>Ascent zone 2</b><span>Broken clock tower: discs and gears in a spiral</span></figcaption>
+    </figure>
+    <figure>
+      <a href="ref-zone-3.webp"><img src="ref-zone-3.webp" width="1600" height="892" loading="lazy" alt="AI image: slate and copper roofs with two airships moored above them"></a>
+      <figcaption><b>Ascent zone 3</b><span>Roof decks and airships</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="choices">Choices</h2>
+  <ol>
+    <li><span>Materials and light: <b>Candidate A</b>, <b>B</b> or <b>C</b></span></li>
+    <li><span>Marble: <b>Marble A</b> or <b>Marble B</b></span></li>
+    <li><span>Gem look: OK?</span></li>
+    <li><span>Noon and dusk skies: OK?</span></li>
+  </ol>
+</main>
+</body>
+</html>

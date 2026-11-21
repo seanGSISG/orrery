@@ -136,6 +136,23 @@ def test_run_bot_plays_each_route_to_the_finish(harness: Harness) -> None:
     assert missing.value.code == NOT_FOUND
 
 
+def test_saves_go_to_the_session_user_data(
+    session: game.Session, harness: Harness
+) -> None:
+    """A finish saves into the session's own user://, not into the player's. A second
+    session gets its own folder and leaves the first one's files, and end() deletes it."""
+    harness.load_level("route_bot")
+    assert harness.run_bot().finished
+    data = Path(session.data)
+    assert any(data.rglob("save.json"))
+    assert any(data.rglob("route_bot.ghost"))
+    other = game.start(game.LaunchOptions(display="none"))
+    assert Path(other.data).is_dir() and other.data != session.data
+    game.end(other)
+    assert not Path(other.data).exists()
+    assert any(data.rglob("route_bot.ghost"))
+
+
 def test_set_setting(harness: Harness) -> None:
     key = "physics/common/max_physics_steps_per_frame"
     assert harness.set_setting(key, 8) == 8
@@ -156,11 +173,20 @@ def test_protocol_errors(harness: Harness) -> None:
     assert empty.value.code == INVALID_REQUEST
 
 
+@pytest.mark.parametrize("display", ["headless", "window", "none"])
+def test_launch_is_silent(display: game.Display) -> None:
+    """Every launch passes the Dummy audio driver to Godot, so tests play no sound."""
+    line = game.command("godot", display, 1234, game.LaunchOptions(level="flat"))
+    at = line.index("godot")
+    assert line[at + 1 : at + 3] == ["--audio-driver", "Dummy"]
+
+
 def test_quit() -> None:
     session = game.start(game.LaunchOptions(display="none"))
     with session.connect() as harness:
         harness.quit()
     assert game._wait_exit(session, 10.0)
+    game.end(session)
 
 
 @pytest.mark.gpu
@@ -178,3 +204,21 @@ def test_screenshot_saves_a_gpu_frame(tmp_path: Path) -> None:
     assert (shot.width, shot.height) == (640, 360)
     assert not shot.blank
     assert Path(shot.path).stat().st_size > 1000
+
+
+@pytest.mark.gpu
+def test_screenshot_after_a_step_shows_the_last_tick(tmp_path: Path) -> None:
+    """The marble rolls for a second in one step. The frame after it must be the frame of a
+    marble teleported to the same state, which draws without physics interpolation."""
+    session = game.start(game.LaunchOptions(level="flat", resolution=(640, 360)))
+    try:
+        with session.connect() as harness:
+            harness.step(30)
+            harness.input(move=(0.0, 1.0))
+            state = harness.step(120)
+            rolled = harness.screenshot(str(tmp_path / "rolled.png"))
+            harness.teleport(state.position, state.velocity)
+            placed = harness.screenshot(str(tmp_path / "placed.png"))
+    finally:
+        game.end(session)
+    assert Path(rolled.path).read_bytes() == Path(placed.path).read_bytes()

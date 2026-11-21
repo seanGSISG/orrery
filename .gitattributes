@@ -19,5 +19,8 @@ game/levels/lightmaps/*.exr    filter=lfs diff=lfs merge=lfs -text
 game/levels/lightmaps/*.png    filter=lfs diff=lfs merge=lfs -text
 game/levels/lightmaps/*.lmbake filter=lfs diff=lfs merge=lfs -text
 
+# Music tracks (#26). Their .import files stay plain text.
+game/audio/music/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+
 # Baked tier skies (`just bake-skies`). Their .import files stay plain text.
 game/skies/*.hdr               filter=lfs diff=lfs merge=lfs -text

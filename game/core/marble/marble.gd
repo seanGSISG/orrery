@@ -43,6 +43,10 @@ var on_ground: bool = false
 var touches: Array[Contact] = []
 ## After step(): the objects whose triggers overlapped in any sub-step.
 var overlaps: Array[LevelObject] = []
+## The rotation of the ball mesh, which rolls with the spin. Ghosts record it.
+var ball_rotation: Quaternion:
+	get:
+		return _ball.quaternion
 
 ## Gravity for the next sub-step, m/s².
 var _gravity: Vector3 = Vector3.ZERO

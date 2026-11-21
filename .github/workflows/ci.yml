@@ -17,6 +17,9 @@ defaults:
   run:
     shell: bash
 
+# Every job imports the project, with its Git LFS files (textures, skies, lightmaps, music).
+# The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
+# downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
 jobs:
   lint:
     name: Lint
@@ -61,8 +64,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      # The setup action pulls the Git LFS files (textures, skies, lightmaps) through its cache.
-      # `lfs: true` here would download them again on every run, past the cache.
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v7
