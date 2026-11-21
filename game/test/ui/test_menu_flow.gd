@@ -37,9 +37,10 @@ func test_keyboard_opens_level_select_and_goes_back() -> void:
 	assert_eq(shown(), &"title")
 
 
-## The D-pad moves from Play to Settings, past Ascent, which is off until it has a mode. A
-## opens the settings, and B returns to the title.
+## The D-pad moves from Play over Ascent to Settings. A opens the settings, and B returns to
+## the title.
 func test_pad_opens_settings_from_title() -> void:
+	tap_button(JOY_BUTTON_DPAD_DOWN)
 	tap_button(JOY_BUTTON_DPAD_DOWN)
 	tap_button(JOY_BUTTON_A)
 	assert_eq(shown(), &"settings")

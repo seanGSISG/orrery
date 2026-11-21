@@ -3,8 +3,8 @@ extends Screen
 ## The title screen: the name of the game, the chart, and the menu Play, Ascent, Settings and
 ## Quit. The live level behind it is Ui's Backdrop.
 ##
-## Ascent has no mode yet, so its item is off. #27 turns it on with ascent.set_enabled(true)
-## and starts the mode in _on_ascent().
+## Ascent opens the Ascent menu (AscentScreen). Its item is off while no zone of the climb is
+## built: it shows faint and the focus passes it by.
 
 ## Width of the name and the rule under it.
 const NAME_WIDTH: float = 640.0
@@ -39,9 +39,8 @@ func _init() -> void:
 	column.add_child(gap)
 	column.add_child(menu)
 	add_safe_area().add_child(column)
-	ascent.set_enabled(false)
 	play.pressed.connect(func() -> void: Game.screen = &"level_select")
-	ascent.pressed.connect(_on_ascent)
+	ascent.pressed.connect(func() -> void: Game.screen = &"ascent")
 	settings.pressed.connect(func() -> void: Game.screen = &"settings")
 	quit.pressed.connect(func() -> void: get_tree().quit())
 
@@ -51,9 +50,5 @@ func _ready() -> void:
 
 
 func open() -> void:
+	ascent.set_enabled(not Ascent.zones().is_empty())
 	play.grab_focus()
-
-
-## Starts Ascent. #27 fills it in.
-func _on_ascent() -> void:
-	pass

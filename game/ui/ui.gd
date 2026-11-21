@@ -5,7 +5,8 @@ extends CanvasLayer
 ##
 ## - With no run and no menu (the start of the game), it shows the title.
 ## - The `pause` action (Menu or Esc) pauses a level and resumes it.
-## - When the run finishes, it stops the marble on the finish and shows the results.
+## - When the run finishes, it stops the marble on the finish and shows the results, or the
+##   stats of an Ascent climb.
 ## - Under a menu with no run, it shows the Backdrop.
 ## - It plays the menu sounds: a move of the focus here, select in the items, back in Screen.
 ## - The HUD shows only through the run's FollowCamera, so a screenshot from a level's shot
@@ -20,6 +21,8 @@ var level_select: LevelSelectScreen = LevelSelectScreen.new()
 var settings: SettingsScreen = SettingsScreen.new()
 var pause: PauseScreen = PauseScreen.new()
 var results: ResultsScreen = ResultsScreen.new()
+var ascent: AscentScreen = AscentScreen.new()
+var ascent_stats: AscentStatsScreen = AscentStatsScreen.new()
 ## The screens by their name in Game.screen. &"play" is not here: it shows the HUD.
 var screens: Dictionary[StringName, Screen] = {
 	&"title": title,
@@ -27,6 +30,8 @@ var screens: Dictionary[StringName, Screen] = {
 	&"settings": settings,
 	&"pause": pause,
 	&"results": results,
+	&"ascent": ascent,
+	&"ascent_stats": ascent_stats,
 }
 
 var _root: Control = Control.new()
@@ -69,12 +74,12 @@ func _process(_delta: float) -> void:
 	if Game.screen == &"play" and finished:
 		# The marble stays on the finish, and the run stops (Game), under the results.
 		run.teleport(run.state.position, Vector3.ZERO)
-		Game.screen = &"results"
-	elif Game.screen == &"results" and not finished:
+		Game.screen = &"ascent_stats" if Ascent.of(run) != null else &"results"
+	elif Game.screen in Game.END_SCREENS and not finished:
 		# The harness or a bot restarted the run.
 		Game.screen = &"play"
 	elif Game.screen == &"play":
-		hud.show_state(run.state, run.level)
+		hud.show_state(run.state, run.level, Ascent.of(run))
 		hud.visible = get_viewport().get_camera_3d() is FollowCamera
 
 
@@ -103,9 +108,11 @@ func _show(screen: StringName) -> void:
 	if screen == &"results":
 		results.catalog = level_select.catalog
 		results.previous_best = _best_before
+	if screen == &"ascent_stats":
+		ascent_stats.previous_best = _best_before
 	if screen == &"play" and run != null:
 		_begin_attempt(run)
-		hud.show_state(run.state, run.level)
+		hud.show_state(run.state, run.level, Ascent.of(run))
 	_take_mouse(screen != &"play")
 	hud.visible = screen == &"play" and run != null
 	for id: StringName in screens:

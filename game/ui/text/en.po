@@ -123,3 +123,57 @@ msgstr "Settings"
 
 msgid "SETTINGS_BACK"
 msgstr "Back"
+
+# The unit of a height: metres. It stands after the number.
+msgid "UNIT_M"
+msgstr "m"
+
+msgid "PAUSE_SAVE_QUIT"
+msgstr "Save and quit"
+
+msgid "ASCENT_CONTINUE"
+msgstr "Continue"
+
+msgid "ASCENT_NEW"
+msgstr "New climb"
+
+# Assist adds a checkpoint at the start of each zone.
+msgid "ASCENT_ASSIST_OFF"
+msgstr "Assist: off"
+
+msgid "ASCENT_ASSIST_ON"
+msgstr "Assist: on"
+
+# The saved climb that Continue goes on with.
+msgid "ASCENT_SPOT"
+msgstr "This climb"
+
+msgid "ASCENT_BEST_HEIGHT"
+msgstr "Best height"
+
+msgid "ASCENT_BEST_TIME"
+msgstr "Best time"
+
+# The words over the gate at the top of the last zone, and the title of the stats screen.
+msgid "ASCENT_GATE"
+msgstr "To be continued"
+
+msgid "ASCENT_HEIGHT"
+msgstr "Height"
+
+msgid "ASCENT_FALLS"
+msgstr "Falls"
+
+# The total height that the falls of the climb cost.
+msgid "ASCENT_FALLEN"
+msgstr "Fallen"
+
+# A line of the stats of a climb that used Assist.
+msgid "ASCENT_ASSIST"
+msgstr "Assist"
+
+msgid "ASCENT_ASSIST_USED"
+msgstr "Used"
+
+msgid "ASCENT_DONE"
+msgstr "Done"

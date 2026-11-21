@@ -26,6 +26,9 @@ var state: GameState = GameState.new()
 var last_input: MarbleInput = MarbleInput.new()
 ## False: only explicit step() calls advance the run.
 var auto_step: bool = true
+## False: the player's `restart` action does nothing (Game.restart()). Ascent sets it, because
+## a restart there would throw a long climb away. restart() itself always works.
+var restartable: bool = true
 
 var _world: WorldQuery
 var _tick: int = 0
@@ -103,6 +106,18 @@ func respawn(at: Vector3) -> void:
 	for object: LevelObject in objects:
 		object.reset(false)
 	marble.teleport(at, Vector3.ZERO)
+	_write_state()
+
+
+## Continues a saved run (Ascent): the run is at tick, so every mover has the pose of that
+## time, the level clock shows clock s, and the marble is at `at` with new_velocity. Call it
+## in place of the first step, on a run that has just started.
+func resume(tick: int, clock: float, at: Vector3, new_velocity: Vector3) -> void:
+	_tick = tick
+	for object: LevelObject in objects:
+		object.advance(self, _tick * _dt)
+	rules.set_clock(clock)
+	marble.teleport(at, new_velocity)
 	_write_state()
 
 

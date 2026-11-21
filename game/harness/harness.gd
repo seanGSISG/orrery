@@ -22,10 +22,8 @@ const METHOD_NOT_FOUND: int = -32601
 const INVALID_PARAMS: int = -32602
 ## The command needs a level run, and no level is loaded.
 const NO_RUN: int = -32000
-## The level, camera shot or setting does not exist.
+## The level, mode, camera shot or setting does not exist.
 const NOT_FOUND: int = -32001
-## The command is a stub until a later ticket.
-const NOT_AVAILABLE: int = -32002
 ## The display renders nothing (godot --headless), so there is no frame to save.
 const NO_FRAME: int = -32003
 
@@ -199,8 +197,32 @@ func _load_level(params: Params) -> Variant:
 	return Game.snapshot().to_dict()
 
 
-func _load_mode(_params: Params) -> Variant:
-	return Failure.new(NOT_AVAILABLE, "load_mode: modes arrive with #22 and #27")
+## Starts a mode; "ascent" is the only one so far. It starts a new Ascent climb, or continues
+## the saved spot when resume is true. zones are the zone level ids from the bottom (default:
+## Ascent.zones()), assist turns Assist on or off first, and zone (1 is the first) puts the
+## marble on the start pad of that zone.
+func _load_mode(params: Params) -> Variant:
+	var mode: String = params.text("mode", "", true)
+	var zones: Array[StringName] = params.names("zones")
+	var zone: int = params.integer("zone", 1)
+	var resume: bool = params.flag("resume", false)
+	var assist: bool = params.flag("assist", Save.ascent.assist)
+	if params.failed():
+		return params.failure
+	if mode != "ascent":
+		return Failure.new(NOT_FOUND, "no mode %s; the modes are: ascent" % mode)
+	Save.ascent.assist = assist
+	var run: LevelRun = Ascent.start(not resume, zones)
+	if run == null:
+		return Failure.new(NOT_FOUND, "no zone level of the climb is built")
+	run.auto_step = false
+	_owed = 0.0
+	var climb: Ascent = Ascent.of(run)
+	if zone < 1 or zone > climb.zone_heights.size():
+		return Failure.new(INVALID_PARAMS, "zone must be in 1..%d" % climb.zone_heights.size())
+	if zone > 1:
+		run.teleport(climb.start_of(zone - 1), Vector3.ZERO)
+	return Game.snapshot().to_dict()
 
 
 func _state(_params: Params) -> Variant:
@@ -446,6 +468,22 @@ class Params:
 		if value != floorf(value):
 			fail("%s must be an integer" % key)
 		return int(value)
+
+	## A list of names; an empty list when the key is left out.
+	func names(key: String) -> Array[StringName]:
+		var out: Array[StringName] = []
+		var value: Variant = _read(key, TYPE_ARRAY, false)
+		if value == null:
+			return out
+		var items: Array = value
+		for item: Variant in items:
+			if item is String:
+				var text: String = item
+				out.append(StringName(text))
+		if out.size() != items.size():
+			fail("%s must be a list of strings" % key)
+			out.clear()
+		return out
 
 	func vector2(key: String, default: Vector2) -> Vector2:
 		var parts: PackedFloat64Array = _numbers(key, 2, false)

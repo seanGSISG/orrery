@@ -33,6 +33,11 @@ func _init(text_key: String, glyph_action: StringName = &"", glyph_on_focus: boo
 	add_child(_row)
 
 
+## Shows the text of text_key as the name of the item.
+func set_text(text_key: String) -> void:
+	_label.text = text_key
+
+
 ## Turns the item on or off. An item that is off cannot be chosen and takes no focus.
 func set_enabled(enabled: bool) -> void:
 	disabled = not enabled
