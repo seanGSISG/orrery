@@ -8,9 +8,7 @@ extends Node
 ## the GPU time of each frame with RenderingServer.viewport_get_measured_render_time_gpu and
 ## the peak VRAM with Performance.RENDER_VIDEO_MEM_USED. With --motion it then saves two orbit
 ## frames 1/60 s apart as motion-1.png and motion-2.png (rubric check 3). Last it writes the
-## report to --out as JSON and quits; a failed run writes no report and quits with 1. A level
-## without a WorldEnvironment gets a stand-in sky and sun, so that the presets have effects to
-## turn on.
+## report to --out as JSON and quits; a failed run writes no report and quits with 1.
 
 ## The path visits these shots in this order, then the level's other shots.
 const SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
@@ -46,7 +44,6 @@ func _run() -> void:
 		return
 	# The marble stays on the start pad, so every preset sees the same frames.
 	Game.run.auto_step = false
-	var stand_in: bool = _add_stand_in_sky(Game.run.level)
 	if not Graphics.use(preset):
 		get_tree().quit(1)
 		return
@@ -78,7 +75,6 @@ func _run() -> void:
 		"frames": times.size(),
 		"gpu_ms": _stats(times),
 		"vram_mb": vram / 1048576.0,
-		"stand_in_sky": stand_in,
 	}
 	DirAccess.make_dir_recursive_absolute(out.get_base_dir())
 	var file: FileAccess = FileAccess.open(out, FileAccess.WRITE)
@@ -99,29 +95,6 @@ func _args() -> Dictionary[String, String]:
 		if args[i].begins_with("--"):
 			out[args[i].trim_prefix("--")] = args[i + 1]
 	return out
-
-
-## Adds a plain sky, distance fog and a sun with shadows when level has no WorldEnvironment.
-## Returns true when it added them. The level's own sky (#24) replaces this stand-in.
-static func _add_stand_in_sky(level: Node) -> bool:
-	if not level.find_children("*", "WorldEnvironment", true, false).is_empty():
-		return false
-	var sky: Sky = Sky.new()
-	sky.sky_material = ProceduralSkyMaterial.new()
-	var environment: Environment = Environment.new()
-	environment.background_mode = Environment.BG_SKY
-	environment.sky = sky
-	environment.tonemap_mode = Environment.TONE_MAPPER_AGX
-	environment.fog_enabled = true
-	environment.fog_density = 0.002
-	var world: WorldEnvironment = WorldEnvironment.new()
-	world.environment = environment
-	level.add_child(world)
-	var sun: DirectionalLight3D = DirectionalLight3D.new()
-	sun.shadow_enabled = true
-	sun.rotation_degrees = Vector3(-50.0, 30.0, 0.0)
-	level.add_child(sun)
-	return true
 
 
 ## Returns the global transforms of the level's Camera3D shots, the SHOTS first.

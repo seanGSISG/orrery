@@ -20,6 +20,10 @@ extends RefCounted
 ## - Lint: a level has exactly one `level`, one `start` and one `finish` marker. A level outside
 ##   levels/test/ (tier `test`) also has the gallery shots `overview`, `start`, `finish` and
 ##   `egg` (docs/design/visual-quality.md §7).
+## - Light: a level without its own WorldEnvironment and DirectionalLight3D gets a stand-in
+##   rig: one sun with shadows and a procedural sky with AgX tonemapping. The level's `sky`
+##   picks dawn, noon or dusk; without one, the tier does (beginner dawn, intermediate noon,
+##   advanced dusk, others noon). The look baseline (#24) replaces it with the real skies.
 ## Each error names the level id and the node.
 
 const LEVEL_SCRIPT: Script = preload("res://core/level/level.gd")
@@ -28,6 +32,28 @@ const OBJECT_SCENE: String = "res://objects/%s/%s.tscn"
 const SURFACE: String = "res://core/level/%s_surface.tres"
 const ONE_EACH: Array[String] = ["level", "start", "finish"]
 const GALLERY_SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
+## The stand-in light rigs by name: sun elevation in degrees, sun colour and sky colours.
+const SUN_ELEVATION: Dictionary[String, float] = {"dawn": 20.0, "noon": 60.0, "dusk": 25.0}
+const SUN_COLOR: Dictionary[String, Color] = {
+	"dawn": Color(1.0, 0.82, 0.66),
+	"noon": Color(1.0, 0.97, 0.92),
+	"dusk": Color(1.0, 0.68, 0.48),
+}
+const SKY_TOP: Dictionary[String, Color] = {
+	"dawn": Color(0.3, 0.42, 0.65),
+	"noon": Color(0.24, 0.45, 0.82),
+	"dusk": Color(0.1, 0.13, 0.3),
+}
+const SKY_HORIZON: Dictionary[String, Color] = {
+	"dawn": Color(0.92, 0.74, 0.6),
+	"noon": Color(0.7, 0.8, 0.9),
+	"dusk": Color(0.85, 0.55, 0.45),
+}
+const TIER_RIG: Dictionary[String, String] = {
+	"beginner": "dawn",
+	"intermediate": "noon",
+	"advanced": "dusk",
+}
 
 ## The problems of the last convert() call.
 var errors: PackedStringArray = []
@@ -76,6 +102,7 @@ func convert(scene: Node3D) -> Level:
 		else:
 			_place(marker, data)
 	_build_solids(meshes)
+	_add_light_rig(level_data)
 	scene.set_script(LEVEL_SCRIPT)
 	_apply(scene, LEVEL_SCRIPT, level_data, "level")
 	if not errors.is_empty():
@@ -289,3 +316,37 @@ func _fail(node: Node, message: String) -> void:
 ## Records an error about the node named node.
 func _error(node: String, message: String) -> void:
 	errors.append("level %s: node %s: %s" % [_id, node, message])
+
+
+## Adds the stand-in sun and sky when the level has no WorldEnvironment and no
+## DirectionalLight3D of its own.
+func _add_light_rig(level_data: Dictionary) -> void:
+	for type: String in ["WorldEnvironment", "DirectionalLight3D"]:
+		if not _root.find_children("*", type, true, false).is_empty():
+			return
+	var rig: String = str(level_data.get("sky", ""))
+	if not SUN_ELEVATION.has(rig):
+		rig = TIER_RIG.get(str(level_data.get("tier", "")), "noon")
+	var material: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
+	material.sky_top_color = SKY_TOP[rig]
+	material.sky_horizon_color = SKY_HORIZON[rig]
+	material.ground_horizon_color = SKY_HORIZON[rig]
+	var sky: Sky = Sky.new()
+	sky.sky_material = material
+	var environment: Environment = Environment.new()
+	environment.background_mode = Environment.BG_SKY
+	environment.sky = sky
+	environment.tonemap_mode = Environment.TONE_MAPPER_AGX
+	# A light haze for the presets that turn volumetric fog on; the default washes out the sky.
+	environment.volumetric_fog_density = 0.002
+	var world: WorldEnvironment = WorldEnvironment.new()
+	world.name = "sky"
+	world.environment = environment
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "sun"
+	sun.shadow_enabled = true
+	sun.light_color = SUN_COLOR[rig]
+	sun.rotation_degrees = Vector3(-SUN_ELEVATION[rig], 35.0, 0.0)
+	for node: Node in [world, sun]:
+		_root.add_child(node)
+		node.owner = _root

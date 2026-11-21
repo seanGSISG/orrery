@@ -16,7 +16,8 @@ It fails when:
 - Medium at 1080p has a 99th percentile above MEDIUM_P99_MS, or uses more than MAX_VRAM_MB,
 - Ultra at 4K has a 99th percentile above ULTRA_4K_P99_MS,
 - the mean GPU time at 1080p does not rise from Low to Medium to High to Ultra.
-The two GPU time budgets are for the RTX 5090; on another GPU they only report.
+The two GPU time budgets are for the RTX 5090; on another GPU they only report. Run it on an
+idle GPU: other GPU work (a Blender render, ComfyUI) inflates the times and can fail the gates.
 
 Environment: GODOT (default godot) is the Godot binary.
 """
@@ -74,7 +75,6 @@ class Result:
     p50: float
     p99: float
     vram_mb: float
-    stand_in_sky: bool
 
 
 def level_ids(ids: list[str]) -> list[str]:
@@ -122,7 +122,6 @@ def measure(level: str, run: Run) -> Result:
         gpu["p50"],
         gpu["p99"],
         report["vram_mb"],
-        report["stand_in_sky"],
     )
 
 
@@ -156,8 +155,7 @@ def main() -> None:
         except (RuntimeError, OSError, subprocess.TimeoutExpired) as error:
             failed.append(f"{level}: {error}")
             continue
-        sky = " (stand-in sky)" if results[0].stand_in_sky else ""
-        print(f"{level} on {results[0].adapter}{sky}: GPU ms mean / p50 / p99, VRAM MB")
+        print(f"{level} on {results[0].adapter}: GPU ms mean / p50 / p99, VRAM MB")
         for r in results:
             print(
                 f"  {r.run.name:12} {r.mean:6.3f} {r.p50:6.3f} {r.p99:6.3f} {r.vram_mb:7.0f}"
