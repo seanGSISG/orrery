@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2078" role="img" aria-labelledby="ascentz1title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2078" role="img" aria-labelledby="ascentz1title" aria-describedby="ascentz1desc">
 <title id="ascentz1title">Ascent 1 Clockmaker's Square: side elevation with top-down inset</title>
+<desc id="ascentz1desc">The brief ascent-z1.md in docs/levels describes the routes, the landmarks and every object on this map in text.</desc>
 <style>
 .m-bg{fill:#0f1218}
 .m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
@@ -134,7 +135,7 @@
 <!-- expert route -->
 <path class="m-r2" d="M22-204L32-222L226-282L262-272"/>
 <path class="m-r2" d="M274-282L352-320L314-324V-464L300-470L330-492"/>
-<path class="m-r2" d="M256-508H232L224-584L182-594L186-664L230-672L226-744L163-756L135-766L163-776L191-786L219-796L240-806"/>
+<path class="m-r2" d="M256-508H232Q222-614 178-602Q174-694 232-682Q238-764 200-746L163-756L135-766L163-776L191-786L219-796L240-806"/>
 <path class="m-r2" d="M300-812H384L398-808L498-868L536-872L526-946L468-948L386-996L392-1076L419-1086L387-1096L366-1106"/>
 <path class="m-r2" d="M362-1112L270-1156L350-1196L270-1244L360-1290"/>
 <path class="m-r2" d="M372-1306L556-1396L378-1500"/>
@@ -189,7 +190,7 @@
 <g transform="translate(397,1781)"><path class="m-r1" d="M-20 0H16"/></g>
 <text class="m-t" x="431" y="1788">First-run route</text>
 <g transform="translate(52,1825)"><path class="m-r2" d="M-20 0H16"/></g>
-<text class="m-t" x="86" y="1832">Expert route</text>
+<text class="m-t" x="86" y="1832">Expert, where it differs</text>
 <g transform="translate(397,1825)"><path class="m-fall" d="M-14-12L10 10"/></g>
 <text class="m-t" x="431" y="1832">Where a fall lands</text>
 <g transform="translate(52,1869)"><path class="m-walk" d="M-18 0H18"/></g>

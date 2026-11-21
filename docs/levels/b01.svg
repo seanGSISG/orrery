@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1178" role="img" aria-labelledby="b01title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1178" role="img" aria-labelledby="b01title" aria-describedby="b01desc">
 <title id="b01title">B1 Dawn Plaza: top-down plan</title>
+<desc id="b01desc">The brief b01.md in docs/levels describes the routes, the landmarks and every object on this map in text.</desc>
 <style>
 .m-bg{fill:#0f1218}
 .m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}

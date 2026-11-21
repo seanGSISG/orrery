@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2314" role="img" aria-labelledby="ascentz2title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2314" role="img" aria-labelledby="ascentz2title" aria-describedby="ascentz2desc">
 <title id="ascentz2title">Ascent 2 The Broken Tower: side elevation with top-down inset</title>
+<desc id="ascentz2desc">The brief ascent-z2.md in docs/levels describes the routes, the landmarks and every object on this map in text.</desc>
 <style>
 .m-bg{fill:#0f1218}
 .m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
@@ -121,10 +122,10 @@
 <!-- expert route -->
 <path class="m-r2" d="M276-8L252-16L222-26L248-36L228-46L36-104"/>
 <path class="m-r2" d="M22-108L40-186L64-188L90-196L124-206L160-216L196-226L240-236"/>
-<path class="m-r2" d="M256-240L236-318L204-322L176-398L150-402L196-486L260-496L300-508"/>
-<path class="m-r2" d="M330-512L404-510L556-576L600-578L590-654L544-660L554-734L600-740L590-812L551-826L575-836L551-846"/>
+<path class="m-r2" d="M256-240Q252-344 208-332Q198-424 152-412Q150-504 204-488L260-496L300-508"/>
+<path class="m-r2" d="M330-512L404-510L556-576L600-578Q606-684 540-672Q534-764 606-752Q606-834 566-818L551-826L575-836L551-846"/>
 <path class="m-r2" d="M548-836Q310-808 84-844"/>
-<path class="m-r2" d="M78-866L92-934L124-938L144-1014L180-1018L194-1094L224-1098L246-1194L300-1206"/>
+<path class="m-r2" d="M78-866Q82-964 128-952Q134-1044 182-1032Q188-1124 226-1112Q232-1206 264-1196L300-1206"/>
 <path class="m-r2" d="M306-1216L294-1284L250-1284L158-1344H120L128-1424H192L382-1504"/>
 <!-- objects -->
 <use href="#ascentz2vent" x="28" y="-110"/><use href="#ascentz2vent" x="254" y="-246"/><use href="#ascentz2vent" x="208" y="-326"/><use href="#ascentz2vent" x="152" y="-406"/>
@@ -174,7 +175,7 @@
 <g transform="translate(52,2061)"><path class="m-r1" d="M-20 0H16"/></g>
 <text class="m-t" x="86" y="2068">First-run route</text>
 <g transform="translate(397,2061)"><path class="m-r2" d="M-20 0H16"/></g>
-<text class="m-t" x="431" y="2068">Expert route</text>
+<text class="m-t" x="431" y="2068">Expert, where it differs</text>
 <g transform="translate(52,2105)"><path class="m-fall" d="M-14-12L10 10"/></g>
 <text class="m-t" x="86" y="2112">Where a fall lands</text>
 <g transform="translate(397,2105)"><path class="m-walk" d="M-18 0H18"/></g>

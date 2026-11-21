@@ -16,7 +16,8 @@ One brief and one map per level. The brief is the design; the level script follo
 - Scale: 10 SVG units = 1 m on every map. The coordinates in each SVG are the design positions in decimetres.
 - Beginner maps are plans with north up. Colour shows height in 2 m bands. Numbers on the map are spot heights in metres.
 - Ascent maps are side views from the south, with a height axis in metres and a small plan. Zone 1 is 0 to 150 m, zone 2 is 150 to 300 m, zone 3 is 300 to 500 m.
-- Solid white line: the route of a first run. Dashed pink line: the expert route.
+- Solid white line: the route of a first run. Dashed pink line: the expert route. On the Ascent maps the expert line is drawn only where it leaves the first-run route. Where it is not drawn, the expert follows the white line.
+- Where the expert line arcs over a ledge from one Steam Vent to the next, the marble does not land on that ledge.
 - Symbols are larger than life. A gem is 0.5 m wide in the game.
 
 ## Sizing numbers

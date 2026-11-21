@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2778" role="img" aria-labelledby="ascentz3title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 2778" role="img" aria-labelledby="ascentz3title" aria-describedby="ascentz3desc">
 <title id="ascentz3title">Ascent 3 Sky Harbour: side elevation with top-down inset</title>
+<desc id="ascentz3desc">The brief ascent-z3.md in docs/levels describes the routes, the landmarks and every object on this map in text.</desc>
 <style>
 .m-bg{fill:#0f1218}
 .m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
@@ -186,7 +187,7 @@
 <g transform="translate(397,2481)"><path class="m-r1" d="M-20 0H16"/></g>
 <text class="m-t" x="431" y="2488">First-run route</text>
 <g transform="translate(52,2525)"><path class="m-r2" d="M-20 0H16"/></g>
-<text class="m-t" x="86" y="2532">Expert route</text>
+<text class="m-t" x="86" y="2532">Expert, where it differs</text>
 <g transform="translate(397,2525)"><path class="m-fall" d="M-14-12L10 10"/></g>
 <text class="m-t" x="431" y="2532">Where a fall lands</text>
 <g transform="translate(52,2569)"><path class="m-walk" d="M-18 0H18"/></g>
