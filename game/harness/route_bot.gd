@@ -25,9 +25,10 @@ const STUCK_SECONDS: float = 5.0
 const PROGRESS: float = 0.25
 ## The bot gives up at this fall.
 const MAX_FALLS: int = 3
-## The marble reaches a point within this distance across the floor, m, or when it crosses the
-## line through the point across the way there, within PASS_WIDTH of the point.
-const REACH: float = 0.35
+## The marble reaches a point within this distance across the floor, m. A jump or a use point
+## counts instead when the marble crosses the line through the point across the way there,
+## within PASS_WIDTH of the point, so that the press comes at the point.
+const REACH: float = 0.45
 const PASS_WIDTH: float = 1.5
 ## The marble reaches a stop within this distance, m, at less than this speed over the ground,
 ## m/s.
@@ -91,6 +92,7 @@ var _jump_grounded: bool = false
 var _yaw: float = 0.0
 var _best: float = INF
 var _since_best: float = 0.0
+var _started: bool = false
 var _falling: bool = false
 ## True after the marble reached the last point.
 var _at_end: bool = false
@@ -125,15 +127,14 @@ func _init(run: LevelRun, route: Route) -> void:
 
 
 ## Restarts the run and plays the route to its end at full speed, through InputHub. Returns
-## the result (see above). Make your own source active again afterwards. A bot drives once; make
-## a new bot for the next drive.
+## the result (see above). Make your own source active again afterwards. A bot drives once,
+## before any next_input() call; make a new bot for the next drive.
 func drive() -> Dictionary:
-	if done or not problems.is_empty():
-		push_error("RouteBot: drive() runs once, on a route without problems")
+	if _started or not problems.is_empty():
+		push_error("RouteBot: drive() runs once, on a new bot and a route without problems")
 		return result()
 	_run.auto_step = false
 	_run.restart()
-	_start(_run.state)
 	InputHub.use_source(self)
 	while not done:
 		_run.step(InputHub.next_input(_run.state))
@@ -150,11 +151,11 @@ func result() -> Dictionary:
 	return out
 
 
-## Returns the input for the next tick.
+## Returns the input for the next tick. The first call starts the route at the marble.
 func next_input(state: GameState) -> MarbleInput:
 	var input: MarbleInput = MarbleInput.new()
 	input.camera_pitch = PlayerSource.START_PITCH
-	if _follow(state):
+	if problems.is_empty() and _follow(state):
 		_act(state, input)
 	input.camera_yaw = _yaw
 	return input
@@ -174,6 +175,9 @@ func _start(state: GameState) -> void:
 func _follow(state: GameState) -> bool:
 	if done:
 		return false
+	if not _started:
+		_started = true
+		_start(state)
 	if state.status == &"finished":
 		done = true
 		finished = true
@@ -224,9 +228,9 @@ func _act(state: GameState, input: MarbleInput) -> void:
 
 
 ## True when the marble reached point. A stop needs the marble on the ground within STOP_REACH,
-## nearly still over the ground. Another point needs it past the line through the point across the
-## way there, within PASS_WIDTH; a point without a jump or a use also counts within REACH. A
-## point on another floor does not count.
+## nearly still over the ground. A jump or a use point needs it past the line through the point
+## across the way there, within PASS_WIDTH. Any other point needs it within REACH, so a marble
+## that passes a gem off the line turns back to it. A point on another floor does not count.
 func _reached(point: Route.Waypoint, state: GameState) -> bool:
 	var up: Vector3 = state.up
 	var offset: Vector3 = point.position - state.position
@@ -237,10 +241,10 @@ func _reached(point: Route.Waypoint, state: GameState) -> bool:
 		var slip: Vector3 = _flat(state.velocity - _ground_velocity(up), up)
 		return state.on_ground and to.length() < STOP_REACH and slip.length() < STOP_SPEED
 	var near: bool = to.length() < REACH
-	if near and not (point.jump or point.use):
-		return true
+	if not (point.jump or point.use):
+		return near
 	var way: Vector3 = _flat(point.position - _from, up)
-	if way.length() < REACH:
+	if way.is_zero_approx():
 		return near
 	var along: Vector3 = way.normalized()
 	var ahead: float = to.dot(along)
@@ -334,10 +338,10 @@ func _steer(state: GameState, input: MarbleInput) -> void:
 
 
 ## The direction of the line to point, across the floor: from the last point, or straight at
-## the point when the line is too short, or the camera's forward when the marble is on it.
+## the point when the line has no length, or the camera's forward when the marble is on it.
 func _along(point: Route.Waypoint, state: GameState) -> Vector3:
 	var way: Vector3 = _flat(point.position - _from, state.up)
-	if way.length() < REACH:
+	if way.is_zero_approx():
 		way = _flat(point.position - state.position, state.up)
 	return way.normalized() if not way.is_zero_approx() else _camera_axes(state.frame, state.up).z
 
