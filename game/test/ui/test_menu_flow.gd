@@ -3,7 +3,8 @@ extends UiTest
 ## step sends pad or key events, and the game state reports the screen.
 
 
-## With no level, the game shows the title, and the state reports it.
+## A new game has no level, and Game.screen is &"play" (UiTest starts each Ui so). The Ui
+## shows the title, and the state reports it.
 func test_starts_on_title() -> void:
 	assert_eq(shown(), &"title")
 	var reported: String = Game.snapshot().to_dict()["screen"]
