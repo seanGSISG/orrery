@@ -132,10 +132,10 @@ func _join_flush(contacts: Array[Contact]) -> Array[Contact]:
 	return out
 
 
-## Returns true when the surface one margin past point (seen from plane's point) lies in plane
-## or drops away from it. A ray down onto that spot gives the surface normal; the Solid there
-## can be a neighbour of the point's Solid, for example where the marble rides a seam. No hit
-## (a steep rise) counts as a rise. A point under plane's point needs no ray.
+## Returns true when the surface one margin past point (seen from plane's point) lies within
+## FLUSH of plane or below it, and does not rise. A ray down onto that spot finds the surface;
+## the Solid there can be a neighbour of the point's Solid, for example where the marble rides
+## a seam. No hit (a steep rise) counts as a rise. A point under plane's point needs no ray.
 func _stays_down(point: Vector3, plane: Contact) -> bool:
 	var along: Vector3 = point - plane.point
 	along -= plane.normal * along.dot(plane.normal)
@@ -148,8 +148,9 @@ func _stays_down(point: Vector3, plane: Contact) -> bool:
 	var hit: Dictionary = _space.intersect_ray(_ray)
 	if hit.is_empty():
 		return false
+	var at: Vector3 = hit["position"]
 	var normal: Vector3 = hit["normal"]
-	return normal.dot(along) >= -RISE
+	return (at - spot).dot(plane.normal) <= FLUSH and normal.dot(along) >= -RISE
 
 
 ## Adds the contact at point on solid to out, which holds only that Solid's contacts. deepest

@@ -20,8 +20,10 @@ const LANES: Array[float] = [0.5, 0.0]
 
 ## What _cross() measured.
 class Crossing:
-	## Largest vertical speed, m/s.
+	## Largest vertical speed, m/s, up or down.
 	var vertical: float = 0.0
+	## Largest upward speed, m/s.
+	var upward: float = 0.0
 	## Ticks that ended with on_ground false.
 	var airborne: int = 0
 
@@ -41,12 +43,12 @@ func test_rolls_smoothly_across_flush_seams() -> void:
 
 
 ## A real 0.1 m step up between two Solids still throws the marble up. The course has no
-## other step, so all the vertical speed comes from this one.
+## other step, so all the upward speed comes from this one.
 func test_step_between_solids_is_felt() -> void:
 	start_run(FLAT, _course(0.1))
 	for speed: float in SPEEDS:
-		var vertical: float = _cross(speed, LANES[0]).vertical
-		assert_gt(vertical, 5.0 * SMOOTH, "vertical speed at %.0f m/s" % speed)
+		var upward: float = _cross(speed, LANES[0]).upward
+		assert_gt(upward, 5.0 * SMOOTH, "upward speed at %.0f m/s" % speed)
 
 
 ## A marble at 15 m/s that rolls onto a 10° ramp Solid, flush with the floor, moves as far as
@@ -73,7 +75,7 @@ func test_rolls_onto_a_flush_ramp_without_a_stall() -> void:
 
 
 ## Rolls the marble along -Z at x from START with the input that keeps speed, until it passes
-## END or 6 s pass, and returns the largest vertical speed and the ticks in the air.
+## END or 6 s pass, and returns what it measured.
 func _cross(speed: float, x: float) -> Crossing:
 	var input: MarbleInput = rolling(Vector2(0, speed / TUNING.max_roll_speed))
 	run.marble.teleport(Vector3(x, TOP + TUNING.radius, START), Vector3(0, 0, -speed))
@@ -81,6 +83,7 @@ func _cross(speed: float, x: float) -> Crossing:
 	for _i: int in 6 * Engine.physics_ticks_per_second:
 		run.step(input)
 		crossing.vertical = maxf(crossing.vertical, absf(run.state.velocity.y))
+		crossing.upward = maxf(crossing.upward, run.state.velocity.y)
 		if not run.state.on_ground:
 			crossing.airborne += 1
 		if run.state.position.z < END:
