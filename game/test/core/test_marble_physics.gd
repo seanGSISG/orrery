@@ -87,6 +87,24 @@ func test_bounces_by_restitution() -> void:
 	assert_eq(heard, [&"marble.land"] as Array[StringName])
 
 
+## A slow fall that starts inside the contact margin still ends in marble.land, not a bounce.
+func test_landing_from_inside_margin_is_a_landing() -> void:
+	_start(FLAT)
+	run.marble.teleport(Vector3(0, TUNING.radius + TUNING.contact_margin * 0.8, 0), Vector3.ZERO)
+	hold(MarbleInput.new(), 0.2)
+	assert_gt(heard.size(), 0)
+	if not heard.is_empty():
+		assert_eq(heard[0], &"marble.land")
+
+
+## A fast fall gains exactly gravity × time, also when the sub-steps are short.
+func test_fast_fall_gains_gravity_times_time() -> void:
+	_start(FLAT)
+	run.marble.teleport(Vector3(0, 100, 0), Vector3(0, -30, 0))
+	hold(MarbleInput.new(), 0.5)
+	assert_almost_eq(run.state.velocity.y, -30.0 - TUNING.gravity * 0.5, 0.002)
+
+
 ## Below min_bounce_speed a hit stops the marble; above it the marble bounces back.
 func test_bounces_only_above_min_bounce_speed() -> void:
 	_start(PHYSICS)

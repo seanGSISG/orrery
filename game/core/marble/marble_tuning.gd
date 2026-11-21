@@ -18,9 +18,10 @@ extends Resource
 @export var air_acceleration: float = 5.0
 ## A jump raises the speed away from the ground to this value, m/s, along the contact normal.
 @export var jump_impulse: float = 7.5
-## A jump needs ground whose normal has at least this dot with up. So a wall or a ceiling
-## gives no jump; 0.1 allows slopes up to 84°.
-@export var jump_min_up: float = 0.1
+## A floor is a surface whose normal has at least this dot with up; 0.1 allows slopes up to
+## 84°. The marble rolls on, jumps off and lands on floors only. Walls and ceilings stop it
+## and bounce it, but give no rolling, no jump and no landing.
+@export var floor_min_up: float = 0.1
 ## Friction coefficients on the ground. Each Surface scales them.
 @export var static_friction: float = 1.1
 @export var kinetic_friction: float = 0.7

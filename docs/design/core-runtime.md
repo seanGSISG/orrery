@@ -90,14 +90,14 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 
 **Sub-steps** (#10):
 
-- A sub-step lasts until the marble moves `max_substep_move·r` at its speed at the start of the sub-step, or until the tick ends. At 15 m/s a tick has 2 sub-steps. The last of `max_substeps` (16) sub-steps takes the rest of the tick, so above 192 m/s it moves more than r/2. The sweep still stops it at the first surface (F5).
+- A sub-step lasts until the marble could move `max_substep_move·r` with its speed at the start of the sub-step and the largest steady acceleration (gravity, air control, rolling), or until the tick ends. At 15 m/s a tick has 2 sub-steps. The last of `max_substeps` (16) sub-steps takes the rest of the tick, so above 192 m/s it moves more than r/2. The sweep still stops it at the first surface (F5).
 - Each sub-step does these steps:
   1. Find contacts.
-  2. Hits, with the velocity from before this sub-step's gravity, relative to `contact.velocity`, for each contact that the marble reaches in this sub-step. A glancing hit (speed into the surface below `slide_threshold` × speed) or a hit below `min_bounce_speed` loses its speed into the surface and slides on. Any other hit bounces with `restitution` × `Surface.restitution`, and bounce friction acts at the contact point. A hit that ends a flight emits `marble.land`; any other bounce emits `marble.bounce`.
+  2. Hits, with the velocity from before this sub-step's gravity, relative to `contact.velocity`, for each contact that the marble reaches in this sub-step. A glancing hit (speed into the surface below `slide_threshold` × speed) or a hit below `min_bounce_speed` loses its speed into the surface and slides on. Any other hit bounces with `restitution` × `Surface.restitution`, and bounce friction acts at the contact point. A hit on a floor that ends a flight (the last sub-step had no ground) emits `marble.land`; any other bounce emits `marble.bounce`.
   3. Apply gravity from the field with the highest priority, or else the tuning gravity (straight down). Up is the opposite of the gravity, and `Marble.frame` turns by the shortest arc to match.
-  4. Support: push out to `Marble.SKIN` (0.1 mm) above each surface, because a sweep from exact contact stops at once (F5), and stop only the motion that would pass the surface in this sub-step. The ground is the most upward contact that the marble hit or presses on.
-  5. On the ground: rolling with friction (`Surface.friction` scales it), then the jump. The jump raises the speed away from the ground to `jump_impulse` along the ground normal. It needs a ground whose normal has at least `jump_min_up` with up, so walls and ceilings give no jump. A held jump jumps again at each landing. In the air: air control, up to the speed that input asks for on the ground, so hops do not add speed. The spin does not change in the air.
-  6. Sweep the move with `cast_motion`. When the response made the marble faster than the sub-step allows, the sub-step ends early, so the move stays within `max_substep_move·r`.
+  4. Support: push out to `Marble.SKIN` (0.1 mm) above each surface, because a sweep from exact contact stops at once (F5), and stop only the motion that would pass the surface in this sub-step. The ground is the most upward floor (normal · up ≥ `floor_min_up`) that the marble hit or presses on. Walls and ceilings give no rolling, no jump and no landing.
+  5. On the ground: rolling with friction (`Surface.friction` scales it), then the jump. The jump raises the speed away from the ground to `jump_impulse` along the ground normal. A held jump jumps again at each landing. In the air: air control, up to the speed that input asks for on the ground, so hops do not add speed. The spin does not change in the air.
+  6. Sweep the move with `cast_motion`. When an impulse (a jump, a hit by a mover, friction at a bounce) made the move longer than `max_substep_move·r`, the sub-step ends early.
   7. Collect the touched objects and the overlapped triggers, and take the gravity at the new position for the next sub-step.
 
 **Contact rules** (`WorldQuery`):
@@ -158,7 +158,7 @@ extends Resource
 @export var braking_acceleration: float = 30.0
 @export var air_acceleration: float = 5.0
 @export var jump_impulse: float = 7.5
-@export var jump_min_up: float = 0.1   # a jump needs ground whose normal has this dot with up
+@export var floor_min_up: float = 0.1   # a floor's normal has at least this dot with up
 @export var static_friction: float = 1.1
 @export var kinetic_friction: float = 0.7
 @export var bounce_friction: float = 0.2

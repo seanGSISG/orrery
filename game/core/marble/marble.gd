@@ -44,6 +44,8 @@ var overlaps: Array[LevelObject] = []
 
 ## Gravity for the next sub-step, m/s².
 var _gravity: Vector3 = Vector3.ZERO
+## True when the last sub-step stood on a floor, so the next hit on a floor is no landing.
+var _standing: bool = false
 
 @onready var _ball: Node3D = $Ball
 
@@ -81,6 +83,7 @@ func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	velocity = new_velocity
 	spin = up.cross(new_velocity) / tuning.radius
 	on_ground = false
+	_standing = false
 	reset_physics_interpolation()
 
 
@@ -88,11 +91,11 @@ func teleport(at: Vector3, new_velocity: Vector3) -> void:
 ## length in seconds.
 func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) -> float:
 	var h: float = left
-	if velocity.length() * h > reach:
-		h = reach / velocity.length()
+	if reach < INF:
+		h = minf(left, _span(reach))
 	# 1. Contacts.
 	var contacts: Array[Contact] = world.contacts(position)
-	var landing: bool = not on_ground
+	var landing: bool = not _standing
 	on_ground = not contacts.is_empty()
 	# 2. Hits, with the velocity from before this sub-step's gravity.
 	var hits: Array[Contact] = []
@@ -101,24 +104,29 @@ func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) 
 			hits.append(contact)
 	# 3. Gravity.
 	velocity += _gravity * h
-	# 4. Support. The ground is the most upward contact that the marble hit or presses on.
+	# 4. Support. The ground is the most upward floor that the marble hit, or touched (within
+	# 2 SKIN) and presses on. A marble that only closes a gap to the floor still flies.
 	var ground: Contact = null
 	var pressure: float = 0.0
 	for contact: Contact in contacts:
 		var push: float = _meet(contact, h)
-		var pressed: bool = push > 0.0 or hits.has(contact)
-		if pressed and (ground == null or contact.normal.dot(up) > ground.normal.dot(up)):
+		var rise: float = contact.normal.dot(up)
+		var pressed: bool = push > 0.0 and contact.depth > -2.0 * SKIN
+		if rise < tuning.floor_min_up or not (pressed or hits.has(contact)):
+			continue
+		if ground == null or rise > ground.normal.dot(up):
 			ground = contact
 			pressure = push
+	_standing = ground != null
 	# 5. Rolling and the jump on the ground, air control in the air.
 	if ground != null:
 		_roll(ground, pressure, h, input)
-		if input.jump and ground.normal.dot(up) >= tuning.jump_min_up:
+		if input.jump:
 			_jump(ground)
 	else:
 		_steer(input, h)
-	# 6. Sweep. When the response made the marble faster, the sub-step ends early, so the
-	# move stays within reach.
+	# 6. Sweep. An impulse in this sub-step (a jump, a hit by a mover, friction at a bounce)
+	# can make the move longer than reach. Then the sub-step ends early.
 	var motion: Vector3 = velocity * h
 	if motion.length() > reach:
 		h *= reach / motion.length()
@@ -133,8 +141,8 @@ func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) 
 ## seconds. All speeds are relative to the surface. A glancing hit (slide_threshold) or a hit
 ## slower than min_bounce_speed loses its speed into the surface and slides on; the speed
 ## along the surface stays. Any other hit bounces with the restitution, and bounce friction
-## acts at the contact point. A hit that ends a flight (landing is true) emits marble.land;
-## any other bounce emits marble.bounce. Returns true when the marble hit.
+## acts at the contact point. A hit on a floor that ends a flight (landing is true) emits
+## marble.land; any other bounce emits marble.bounce. Returns true when the marble hit.
 func _hit(contact: Contact, h: float, landing: bool) -> bool:
 	var n: Vector3 = contact.normal
 	var relative: Vector3 = velocity - contact.velocity
@@ -152,7 +160,8 @@ func _hit(contact: Contact, h: float, landing: bool) -> bool:
 		_rub(n, contact.velocity, grip * closing * (1.0 + bounce))
 		bounced = true
 	var strength: float = minf(closing / tuning.hard_impact_speed, 1.0)
-	if landing and closing >= tuning.min_bounce_speed:
+	var floor_hit: bool = n.dot(up) >= tuning.floor_min_up
+	if landing and floor_hit and closing >= tuning.min_bounce_speed:
 		feedback.emit(&"marble.land", strength, contact.point)
 	elif bounced:
 		feedback.emit(&"marble.bounce", strength, contact.point)
@@ -216,8 +225,8 @@ func _rub(n: Vector3, surface_velocity: Vector3, limit: float) -> void:
 
 ## Jumps off ground along its normal: the speed away from the surface rises to jump_impulse.
 ## A marble that already moves away faster keeps its speed. A held jump jumps again at the
-## next landing. The caller jumps only off ground that faces up (jump_min_up), so a wall or a
-## ceiling gives no jump, and one flight cannot jump twice.
+## next landing. Only a floor is ground (floor_min_up), so a wall or a ceiling gives no jump,
+## and one flight cannot jump twice.
 func _jump(ground: Contact) -> void:
 	var rise: float = tuning.jump_impulse - (velocity - ground.velocity).dot(ground.normal)
 	if rise > 0.0:
@@ -256,6 +265,17 @@ func _axes(input: MarbleInput, n: Vector3) -> Basis:
 	var heading: Basis = frame * Basis(Vector3.UP, input.camera_yaw)
 	var forward: Vector3 = (n * heading.z.dot(n) - heading.z).normalized()
 	return Basis(forward.cross(n), n, forward)
+
+
+## Returns how long the marble takes to move reach with its speed and the largest steady
+## acceleration of a sub-step (gravity, air control and rolling): the root h of
+## (speed + acceleration × h) × h = reach. So only an impulse can make a move longer.
+func _span(reach: float) -> float:
+	var speed: float = velocity.length()
+	var steady: float = (
+		_gravity.length() + tuning.air_acceleration + tuning.angular_acceleration * tuning.radius
+	)
+	return 2.0 * reach / (speed + sqrt(speed * speed + 4.0 * steady * reach))
 
 
 ## Returns current instead of wished when both have the same sign and current is faster.
