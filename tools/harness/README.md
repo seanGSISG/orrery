@@ -18,6 +18,8 @@ just harness quit
 
 `launch` records the game in `build/harness/session.json`. Every other command, and the MCP server, talks to that game. Each command prints its result as JSON.
 
+Each game starts with its own empty `user://` in a new `build/harness/user-<port>-<random>/` folder, so harness sessions and tests never read or write the player's saves, ghosts or settings, nor each other's. The folder goes when the game ends (the next `launch`, or `game_quit`), with any screenshot saved there without `--path`.
+
 `--display` selects where the game renders:
 
 | Display | What it does |

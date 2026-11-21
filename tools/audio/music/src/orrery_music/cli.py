@@ -31,8 +31,13 @@ def main() -> None:
     args = parser.parse_args()
     tracks = [TRACKS[t] for t in (args.track or sorted(TRACKS))]
     if args.command in ("generate", "all"):
-        for track in tracks:
-            generate(track, OUT, args.ace, args.sa3)
+        failed = [
+            t for track in tracks for t in generate(track, OUT, args.ace, args.sa3)
+        ]
+        if failed:
+            raise SystemExit(
+                f"ComfyUI failed on {len(failed)} takes: {', '.join(failed)}"
+            )
     if args.command in ("build", "all"):
         from orrery_music.build import build
 

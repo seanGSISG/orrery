@@ -49,11 +49,9 @@ var run: LevelRun
 ## The shadow under the marble. The camera places it each tick.
 var shadow: BlobShadow = BlobShadow.new()
 
-## The cast at clearance, made again when clearance changes.
+## The cast at clearance and the ray to the marble, made again when clearance changes.
 var _world: WorldQuery
 var _world_radius: float = 0.0
-## The ray that finds the far face of a thin Solid. It ignores back faces.
-var _ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
 ## Yaw reference, as Marble.frame: y is the marble's up, and it turns by the shortest arc.
 var _frame: Basis = Basis.IDENTITY
 ## The camera's up, which turns toward the marble's up at up_rate.
@@ -71,8 +69,6 @@ var _time: float = 0.0
 func _ready() -> void:
 	process_physics_priority = 1
 	add_child(shadow)
-	_ray.collision_mask = WorldQuery.SOLID_MASK
-	_ray.hit_back_faces = false
 	if run != null:
 		run.feedback.connect(_on_feedback)
 
@@ -126,10 +122,8 @@ func _open_distance(back: Vector3) -> float:
 	# The ray from the camera to the marble ignores back faces, so it meets only a face that
 	# the camera sees from the front. Each step moves the camera in by at least INSIDE.
 	open = min_distance
-	_ray.to = _focus
 	while true:
-		_ray.from = _focus + back * open
-		var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(_ray)
+		var hit: Dictionary = _world.ray(_focus + back * open, _focus)
 		if hit.is_empty():
 			return open
 		var face: Vector3 = hit["position"]

@@ -477,6 +477,8 @@ def build(track: Track, out: Path, root: Path) -> list[Candidate]:
                 flush=True,
             )
             cands.append(cand)
+    if not reports:
+        raise FileNotFoundError(f"no complete take for {track.id}: run generate again")
     kept = select(cands)
     manifest = root / "manifest" / f"{track.id}.json"
     manifest.parent.mkdir(parents=True, exist_ok=True)
