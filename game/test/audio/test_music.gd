@@ -78,7 +78,9 @@ func test_set_zone_switches_the_live_track_on_the_bar_line() -> void:
 		Music.set_zone(7)
 		assert_eq(playback.get_current_clip_index(), 0, "no switch before the bar line")
 		# The audio thread mixes in real time; the first bar line is BAR seconds in.
-		await wait_seconds(BAR + 0.5)
+		await wait_seconds(BAR * 0.5)
+		assert_eq(playback.get_current_clip_index(), 0, "the first track still plays mid-bar")
+		await wait_seconds(BAR * 0.5 + 0.5)
 		assert_eq(playback.get_current_clip_index(), 1, "zone 7 plays the last track")
 	await _silence()
 
