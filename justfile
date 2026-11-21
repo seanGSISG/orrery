@@ -42,17 +42,26 @@ test: import
     count=$(grep -oE '^Tests +[0-9]+' "$log" | grep -oE '[0-9]+' || true)
     if (( ${count:-0} == 0 )); then echo "just test: zero tests ran" >&2; exit 1; fi
 
-# Lint GDScript (gdlint), Python (Ruff; ty outside Blender scripts) and shell scripts (shellcheck)
+# Lint GDScript (gdlint, and a Godot compile check), Python (Ruff; ty outside Blender
+# scripts) and shell scripts (shellcheck). Tool versions come from tools/setup/pins.env
 [script("bash")]
-lint:
+lint: import
     set -euo pipefail
     source tools/setup/pins.env
     files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
+    # Parse and type-check every game script, also the ones that no test loads.
+    for f in "${gd[@]}"; do
+        if ! log=$("{{ godot }}" --headless --path game --check-only --script "res://${f#game/}" 2>&1); then
+            echo "$log" >&2
+            echo "just lint: $f does not compile" >&2
+            exit 1
+        fi
+    done
     mapfile -t py < <(files '*.py')
-    uvx ruff check "${py[@]}"
-    uvx ruff format --check "${py[@]}"
+    uvx "ruff@$RUFF_VERSION" check "${py[@]}"
+    uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
     # Blender scripts import bpy, which exists only inside Blender. Tool scripts declare
     # their dependencies inline (PEP 723); ty checks them with those dependencies.
     tools=() deps=()
@@ -61,7 +70,7 @@ lint:
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
-    uvx "${deps[@]}" ty check "${tools[@]}"
+    uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
