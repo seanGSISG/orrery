@@ -316,6 +316,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - Ascent and Planetarium: dynamic sky and sun (time of day follows height in Ascent), SDFGI on Ultra only.
 - Presets: **Low** (no GI or fog, lower shadow resolution), **Medium**, **High**, **Ultra** (4K-ready, SDFGI, full volumetrics).
 - **Targets:** 1080p at 60 fps on a GTX 1660 / RX 5600-class GPU at Medium. Agents can't test that GPU directly, so the performance check fails when GPU frame time at Medium on the RTX 5090 goes over a budget (start at 3 ms; calibrate in M1 against a known-good scene). High-refresh monitors work.
+- **Visual quality bar:** `docs/design/visual-quality.md` turns "crisp and photorealistic" into checks. It holds the preset table, the anti-aliasing choice, the lightmap bake settings, the glass-marble approach, the texture policy (2K default with a short list of 4K exceptions, which replaces the 2K cap in 2.11 and 9), the material rules, the gallery review rubric and what `just perf` measures per preset. Every art and rendering ticket meets it.
 
 ### 4.8 Audio implementation
 
