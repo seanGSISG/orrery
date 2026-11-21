@@ -18,7 +18,11 @@ func qualified() -> bool:
 	return medal == &"qualified" or medal == &"gold"
 
 
-## Returns true when the player found every egg of the level, which has total eggs
-## (LevelInfo.eggs). False for a level with no egg.
-func has_eggs(total: int) -> bool:
-	return total > 0 and eggs.size() >= total
+## Returns true when the player found every egg of the level, whose egg ids are ids
+## (LevelInfo.eggs). An id of the save that the level no longer has does not count. False for
+## a level with no egg.
+func has_eggs(ids: PackedStringArray) -> bool:
+	for id: String in ids:
+		if not eggs.has(id):
+			return false
+	return not ids.is_empty()

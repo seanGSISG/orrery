@@ -125,13 +125,16 @@ func test_version_1_egg_becomes_the_egg_id() -> void:
 	assert_false(text.contains("\"egg\":"), "the flag of version 1 is gone")
 
 
-## The eggs of a level are a set: has_eggs() is true when every egg of the level is found.
+## The eggs of a level are a set of ids: has_eggs() is true when every egg of the level is
+## in it. An id that the level no longer has does not stand for another egg.
 func test_every_egg_of_a_level() -> void:
+	var ids: PackedStringArray = ["egg_crate", "egg_fin"]
 	save.find_egg(&"zone_3", &"egg_crate")
-	assert_false(save.level(&"zone_3").has_eggs(2))
+	save.find_egg(&"zone_3", &"egg_of_an_old_build")
+	assert_false(save.level(&"zone_3").has_eggs(ids), "one of two, and an id of no egg")
 	save.find_egg(&"zone_3", &"egg_fin")
-	assert_true(save.level(&"zone_3").has_eggs(2))
-	assert_false(save.level(&"zone_3").has_eggs(0), "a level with no egg")
+	assert_true(save.level(&"zone_3").has_eggs(ids))
+	assert_false(save.level(&"zone_3").has_eggs(PackedStringArray()), "a level with no egg")
 
 
 ## Beginner level 1 is open; each next level opens when the one before it is qualified.
