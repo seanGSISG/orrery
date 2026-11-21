@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Orrery style board</title>
+<style>
+  :root {
+    --night: #0b0e14;
+    --deck: #141922;
+    --line: #262d3a;
+    --stone: #ece6da;
+    --haze: #8f97a6;
+    --brass: #d0a85c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--stone);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1680px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px) 96px; }
+  header {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 12px 32px; padding: clamp(28px, 5vw, 56px) 0 8px;
+  }
+  h1 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 650; letter-spacing: -0.01em; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  nav a { color: var(--haze); text-decoration: none; }
+  nav a:hover, nav a:focus-visible { color: var(--brass); }
+  .lead { max-width: 60ch; margin: 8px 0 0; color: var(--haze); font-size: clamp(17px, 1.5vw, 20px); }
+  h2 {
+    margin: clamp(48px, 7vw, 88px) 0 20px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: clamp(20px, 2.2vw, 26px); font-weight: 600;
+  }
+  .board { display: grid; gap: clamp(20px, 3vw, 36px); }
+  @media (min-width: 960px) { .pair { grid-template-columns: 1fr 1fr; } }
+  figure { margin: 0; }
+  figure a { display: block; border-radius: 6px; overflow: hidden; background: var(--deck); }
+  figure a:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  img { display: block; width: 100%; height: auto; }
+  figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding-top: 10px; }
+  figcaption b { color: var(--brass); font-weight: 650; font-size: 18px; letter-spacing: 0.01em; }
+  figcaption span { color: var(--haze); }
+  ol { margin: 0; padding: 0; list-style: none; counter-reset: choice; display: grid; gap: 12px; }
+  ol li {
+    counter-increment: choice;
+    display: grid; grid-template-columns: 2.2em 1fr; align-items: baseline;
+    padding: 16px 20px; background: var(--deck); border: 1px solid var(--line); border-radius: 6px;
+    font-size: 18px;
+  }
+  ol li::before { content: counter(choice); color: var(--brass); font-weight: 650; }
+  ol b { color: var(--brass); font-weight: 650; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Orrery style board</h1>
+    <nav>
+      <a href="#world">World</a>
+      <a href="#ascent">Ascent</a>
+      <a href="#marble">Marble</a>
+      <a href="#track">Track</a>
+      <a href="#choices">Choices</a>
+    </nav>
+  </header>
+  <p class="lead">This board decides the look: materials, light, sky and scale. Level layouts come later, from the level briefs.</p>
+
+  <h2 id="world">World, by tier</h2>
+  <div class="board">
+    <figure>
+      <a href="world-dawn.webp"><img src="world-dawn.webp" width="1600" height="892" alt="A wide stone plaza above a sea of clouds at dawn, with a clock face in the floor, gems, and a ramp to a second tier"></a>
+      <figcaption><b>World-dawn</b><span>Beginner · open plaza with a second tier · Earth sky, dawn</span></figcaption>
+    </figure>
+    <div class="board pair">
+      <figure>
+        <a href="world-noon-a.webp"><img src="world-noon-a.webp" width="1600" height="892" loading="lazy" alt="A course of stone decks that splits into a wide winding route and a narrow shortcut, under a bright blue sky"></a>
+        <figcaption><b>World-noon-A</b><span>Intermediate · branching course · bright high-altitude blue sky</span></figcaption>
+      </figure>
+      <figure>
+        <a href="world-noon-b.webp"><img src="world-noon-b.webp" width="1600" height="892" loading="lazy" alt="The same kind of branching course under a deep blue sky with a curved horizon"></a>
+        <figcaption><b>World-noon-B</b><span>Intermediate · branching course · deep blue stratosphere, curved horizon</span></figcaption>
+      </figure>
+    </div>
+    <figure>
+      <a href="world-dusk.webp"><img src="world-dusk.webp" width="1600" height="892" loading="lazy" alt="Stone platforms stacked at several heights at dusk, with one ringed planet low on the horizon"></a>
+      <figcaption><b>World-dusk</b><span>Advanced · stacked platforms · edge of space, dusk, one planet</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="ascent">Ascent, zones 1 to 3</h2>
+  <div class="board">
+    <figure>
+      <a href="zone-1.webp"><img src="zone-1.webp" width="1600" height="892" loading="lazy" alt="A town square at dawn; the pieces of a broken clock tower float above it at many heights"></a>
+      <figcaption><b>Zone-1</b><span>Clockmaker's town square, dawn · first steps of the climb, several ways up</span></figcaption>
+    </figure>
+    <figure>
+      <a href="zone-2.webp"><img src="zone-2.webp" width="1600" height="892" loading="lazy" alt="Floating pieces of a clock tower stacked at many heights, linked by ramps, stairs and beams"></a>
+      <figcaption><b>Zone-2</b><span>Broken clock tower · vertical stack with several routes</span></figcaption>
+    </figure>
+    <figure>
+      <a href="zone-3.webp"><img src="zone-3.webp" width="1600" height="892" loading="lazy" alt="Stone decks at different heights cross slate rooftops and climb to moored airships"></a>
+      <figcaption><b>Zone-3</b><span>Rooftops and airships · forking roof decks</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="marble">Marble</h2>
+  <div class="board pair">
+    <figure>
+      <a href="marble-a.webp"><img src="marble-a.webp" width="1328" height="1328" loading="lazy" alt="A clear glass marble with a small brass orrery inside"></a>
+      <figcaption><b>Marble-A</b><span>Clear glass, brass orrery core</span></figcaption>
+    </figure>
+    <figure>
+      <a href="marble-b.webp"><img src="marble-b.webp" width="1328" height="1328" loading="lazy" alt="A polished dark blue stone marble with gold orbit lines"></a>
+      <figcaption><b>Marble-B</b><span>Polished blue stone, gold inlay</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="track">Track test renders, Beginner look: plaza and fork</h2>
+  <div class="board">
+    <figure>
+      <a href="render-a.webp"><img src="render-a.webp" width="1920" height="1080" loading="lazy" alt="Blender render of a limestone plaza that forks into a wide route and a narrow beam, above clouds in a warm dawn"></a>
+      <figcaption><b>Render-A</b><span>Weathered limestone, aged brass · warm dawn · Marble-A</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-b.webp"><img src="render-b.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same plaza and fork in white marble and gold, in a pink dawn"></a>
+      <figcaption><b>Render-B</b><span>White marble, gold · pink dawn · Marble-B</span></figcaption>
+    </figure>
+    <figure>
+      <a href="render-c.webp"><img src="render-c.webp" width="1920" height="1080" loading="lazy" alt="Blender render of the same plaza and fork in blue-black marble and brass, in a clear dawn"></a>
+      <figcaption><b>Render-C</b><span>Blue-black marble, aged brass · clear dawn · Marble-A</span></figcaption>
+    </figure>
+  </div>
+
+  <h2 id="choices">Choices</h2>
+  <ol>
+    <li><span>Marble look: <b>Marble-A</b> or <b>Marble-B</b></span></li>
+    <li><span>Track materials and light: <b>Render-A</b>, <b>Render-B</b> or <b>Render-C</b></span></li>
+    <li><span>Intermediate sky: <b>World-noon-A</b> or <b>World-noon-B</b></span></li>
+    <li><span>Anything to change</span></li>
+  </ol>
+</main>
+</body>
+</html>
