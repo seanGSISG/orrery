@@ -6,8 +6,8 @@ extends InputSource
 ## any time. Stick roll stays analog: half a push rolls at half strength. InputHub uses this
 ## source by default.
 ##
-## The static vars are the player's settings; a settings menu sets them, and they apply at
-## once.
+## The static vars are the player's camera settings; a settings menu sets them, and they
+## apply at once. The stick dead zone setting is InputHub.dead_zone.
 
 ## Radians of camera turn per pixel of mouse motion, at look_sensitivity 1.
 const LOOK_SPEED: float = 0.003
@@ -19,9 +19,6 @@ const PITCH_MIN: float = -1.4
 const PITCH_MAX: float = 0.4
 const START_PITCH: float = -0.45
 
-## Radial dead zone of both sticks, 0..1 of a full push. Inside it a stick gives nothing;
-## outside it the push scales again from 0 to 1, so there is no jump at its edge.
-static var dead_zone: float = 0.15
 ## Multiplies the camera turn of the mouse and the right stick.
 static var look_sensitivity: float = 1.0
 ## True: pushing the right stick up or moving the mouse up looks down.
@@ -36,12 +33,12 @@ var _pitch: float = START_PITCH
 func next_input(_state: GameState) -> MarbleInput:
 	var input: MarbleInput = MarbleInput.new()
 	input.move = Input.get_vector(
-		&"roll_left", &"roll_right", &"roll_back", &"roll_forward", dead_zone
+		&"roll_left", &"roll_right", &"roll_back", &"roll_forward", InputHub.dead_zone
 	)
 	input.jump = Input.is_action_pressed(&"jump")
 	input.use = Input.is_action_pressed(&"use")
 	var look: Vector2 = Input.get_vector(
-		&"look_left", &"look_right", &"look_down", &"look_up", dead_zone
+		&"look_left", &"look_right", &"look_down", &"look_up", InputHub.dead_zone
 	)
 	# The square curve gives fine aim near the centre and full speed at the rim.
 	look *= look.length() * look_sensitivity / Engine.physics_ticks_per_second

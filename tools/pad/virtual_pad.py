@@ -124,12 +124,13 @@ def make_pad() -> UInput:
     )
 
 
-def play(pad: UInput, step: Step) -> None:
-    """Hold the step's inputs for its seconds, then let go (buttons up, axes centred)."""
+def play(pad: UInput, step: Step, end: float) -> None:
+    """Hold the step's inputs for its seconds, but not past the monotonic time end, then let
+    go (buttons up, axes centred)."""
     for hold in step.holds:
         pad.write(hold.type, hold.code, hold.value)
     pad.syn()
-    time.sleep(step.seconds)
+    time.sleep(max(min(step.seconds, end - time.monotonic()), 0.0))
     for hold in step.holds:
         pad.write(hold.type, hold.code, 0)
     pad.syn()
@@ -157,7 +158,9 @@ def main() -> None:
         end = time.monotonic() + args.seconds
         while time.monotonic() < end:
             for step in steps:
-                play(pad, step)
+                if time.monotonic() >= end:
+                    break
+                play(pad, step, end)
 
 
 if __name__ == "__main__":

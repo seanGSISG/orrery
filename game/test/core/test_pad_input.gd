@@ -11,7 +11,7 @@ const PAD: int = 7
 const VIRTUAL_PAD_ID: String = "5e0400008e020000"
 const BUTTONS: Array[JoyButton] = [JOY_BUTTON_A, JOY_BUTTON_X, JOY_BUTTON_BACK, JOY_BUTTON_START]
 
-var _dead_zone: float = PlayerSource.dead_zone
+var _dead_zone: float = InputHub.dead_zone
 var _look_sensitivity: float = PlayerSource.look_sensitivity
 var _invert_y: bool = PlayerSource.invert_y
 var _rumble_enabled: bool = Rumble.enabled
@@ -22,7 +22,7 @@ func after_each() -> void:
 		_axis(axis as JoyAxis, 0.0)
 	for button: JoyButton in BUTTONS:
 		_button(button, false)
-	PlayerSource.dead_zone = _dead_zone
+	InputHub.dead_zone = _dead_zone
 	PlayerSource.look_sensitivity = _look_sensitivity
 	PlayerSource.invert_y = _invert_y
 	Rumble.enabled = _rumble_enabled
@@ -33,7 +33,7 @@ func after_each() -> void:
 ## The left stick rolls at the strength of the push, rescaled outside the dead zone, and a
 ## diagonal push keeps its direction.
 func test_left_stick_rolls_analog() -> void:
-	var zone: float = PlayerSource.dead_zone
+	var zone: float = InputHub.dead_zone
 	_axis(JOY_AXIS_LEFT_Y, -0.6)
 	var input: MarbleInput = PlayerSource.new().next_input(GameState.new())
 	assert_almost_eq(input.move, Vector2(0.0, (0.6 - zone) / (1.0 - zone)), Vector2.ONE * 0.01)
@@ -48,7 +48,7 @@ func test_left_stick_rolls_analog() -> void:
 func test_dead_zone_setting_applies() -> void:
 	_axis(JOY_AXIS_LEFT_X, 0.25)
 	assert_gt(PlayerSource.new().next_input(GameState.new()).move.x, 0.0)
-	PlayerSource.dead_zone = 0.3
+	InputHub.dead_zone = 0.3
 	assert_eq(PlayerSource.new().next_input(GameState.new()).move, Vector2.ZERO)
 
 
@@ -85,20 +85,29 @@ func test_right_stick_turns_camera() -> void:
 	assert_almost_eq(pitch, -0.05 * PlayerSource.STICK_PITCH_RATE, 0.01, "inverted, half speed")
 
 
-## The state reports the device used last; stick drift does not switch to the pad.
+## The state reports the device used last: a stick push outside the dead zone or a button
+## press takes over; stick drift, a key release and uncaptured mouse motion do not.
 func test_state_reports_last_device() -> void:
 	watch_signals(InputHub)
-	_axis(JOY_AXIS_LEFT_X, 0.2)
-	assert_eq(Game.snapshot().input_device, &"keyboard")
-	_button(JOY_BUTTON_A, true)
-	assert_eq(Game.snapshot().input_device, &"pad")
+	_axis(JOY_AXIS_LEFT_X, 0.1)
+	assert_eq(Game.snapshot().input_device, &"keyboard", "drift")
+	_axis(JOY_AXIS_LEFT_X, 0.3)
+	assert_eq(Game.snapshot().input_device, &"pad", "stick push")
 	assert_eq(InputHub.pad, PAD)
 	_key(KEY_W)
-	assert_eq(Game.snapshot().input_device, &"keyboard")
-	assert_signal_emit_count(InputHub, "device_changed", 2)
+	assert_eq(Game.snapshot().input_device, &"keyboard", "key press")
+	_button(JOY_BUTTON_A, true)
+	_send(_key_event(KEY_W, false))
+	assert_eq(Game.snapshot().input_device, &"pad", "key release")
+	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
+	motion.relative = Vector2(20, 0)
+	_send(motion)
+	# The headless display server cannot capture the mouse, so captured motion is not tested.
+	assert_eq(Game.snapshot().input_device, &"pad", "uncaptured mouse")
+	assert_signal_emit_count(InputHub, "device_changed", 3)
 
 
-## Unplugging the active pad mid-game falls back to the keyboard; the next pad input takes
+## Unplugging the active pad mid-game falls back to the keyboard; the next pad press takes
 ## over again.
 func test_unplugging_pad_falls_back_to_keyboard() -> void:
 	_button(JOY_BUTTON_A, true)
@@ -106,6 +115,8 @@ func test_unplugging_pad_falls_back_to_keyboard() -> void:
 	assert_eq(InputHub.device, &"keyboard")
 	assert_eq(InputHub.pad, -1)
 	_button(JOY_BUTTON_A, false)
+	assert_eq(InputHub.device, &"keyboard", "a release does not take over")
+	_button(JOY_BUTTON_A, true)
 	assert_eq(InputHub.device, &"pad")
 
 
@@ -219,11 +230,15 @@ func _button(button: JoyButton, pressed: bool) -> void:
 
 ## Taps a key, so the keyboard is the device used last.
 func _key(key: Key) -> void:
-	for pressed: bool in [true, false]:
-		var event: InputEventKey = InputEventKey.new()
-		event.physical_keycode = key
-		event.pressed = pressed
-		_send(event)
+	_send(_key_event(key, true))
+	_send(_key_event(key, false))
+
+
+func _key_event(key: Key, pressed: bool) -> InputEventKey:
+	var event: InputEventKey = InputEventKey.new()
+	event.physical_keycode = key
+	event.pressed = pressed
+	return event
 
 
 func _send(event: InputEvent) -> void:

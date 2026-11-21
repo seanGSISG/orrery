@@ -147,7 +147,7 @@ test-pad: import
     steps="press a 0.3; wait 0.7; stick left 0 1 0.6; stick left 0 -1 0.6; wait 0.3"
     (sleep 3; exec uv run --quiet tools/pad/virtual_pad.py --seconds 60 --sequence "$steps") >"$padlog" 2>&1 &
     pad=$!
-    trap 'pkill -P "$pad" 2>/dev/null; kill "$pad" 2>/dev/null; rm -f "$log" "$padlog"' EXIT
+    trap 'pkill -P "$pad" || true; kill "$pad" 2>/dev/null || true; rm -f "$log" "$padlog"' EXIT
     ORRERY_VIRTUAL_PAD=1 "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd \
         -gdisable_colors -gunit_test_name=test_virtual_pad 2>&1 | tee "$log"
     if ! grep -qE '^Passing Tests +1$' "$log" || grep -qE '^(Failing|Risky)' "$log"; then

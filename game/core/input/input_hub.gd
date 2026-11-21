@@ -8,13 +8,14 @@ extends Node
 ## Emitted when the device used last changes, for example to redraw button glyphs.
 signal device_changed(device: StringName)
 
-## The stick push from which a stick or trigger counts as pad use.
-const PAD_AXIS_USE: float = 0.5
-
 ## The last physical device used: &"keyboard" or &"pad".
 var device: StringName = &"keyboard"
 ## Godot's device id of the pad used last; -1 before any pad input. Rumble goes to it.
 var pad: int = -1
+## The player's stick dead zone setting: a radial dead zone for both sticks, 0..1 of a full
+## push. A push inside it does nothing and does not count as pad use; outside it, PlayerSource
+## scales the push again from 0 to 1, so there is no jump at its edge.
+var dead_zone: float = 0.15
 
 var _source: InputSource = PlayerSource.new()
 
@@ -37,12 +38,29 @@ func next_input(state: GameState) -> MarbleInput:
 
 ## Tracks the last physical device from every event, also the ones the UI uses.
 func _input(event: InputEvent) -> void:
-	var axis: InputEventJoypadMotion = event as InputEventJoypadMotion
-	if event is InputEventJoypadButton or (axis != null and absf(axis.axis_value) > PAD_AXIS_USE):
+	var used: StringName = _used_device(event)
+	if used == &"pad":
 		pad = event.device
-		_set_device(&"pad")
-	elif event is InputEventKey or event is InputEventMouseButton:
-		_set_device(&"keyboard")
+	if used != &"":
+		_set_device(used)
+
+
+## Returns the device that event shows the player using: &"pad" or &"keyboard". Returns &""
+## for an event that is not deliberate use: a release, a key repeat, a stick push inside the
+## dead zone, or mouse motion while the mouse does not turn the camera.
+func _used_device(event: InputEvent) -> StringName:
+	var axis: InputEventJoypadMotion = event as InputEventJoypadMotion
+	if axis != null:
+		return &"pad" if absf(axis.axis_value) > dead_zone else &""
+	if event is InputEventMouseMotion:
+		return &"keyboard" if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else &""
+	if not event.is_pressed() or event.is_echo():
+		return &""
+	if event is InputEventJoypadButton:
+		return &"pad"
+	if event is InputEventKey or event is InputEventMouseButton:
+		return &"keyboard"
+	return &""
 
 
 ## Forwards the events that nothing else handled to the active source.
