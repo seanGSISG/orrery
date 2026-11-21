@@ -244,7 +244,7 @@ func _reached(point: Route.Waypoint, state: GameState) -> bool:
 	if not (point.jump or point.use):
 		return near
 	var way: Vector3 = _flat(point.position - _from, up)
-	if way.length() < REACH:
+	if way.is_zero_approx():
 		return near
 	var along: Vector3 = way.normalized()
 	var ahead: float = to.dot(along)
@@ -338,10 +338,10 @@ func _steer(state: GameState, input: MarbleInput) -> void:
 
 
 ## The direction of the line to point, across the floor: from the last point, or straight at
-## the point when the line is too short, or the camera's forward when the marble is on it.
+## the point when the line has no length, or the camera's forward when the marble is on it.
 func _along(point: Route.Waypoint, state: GameState) -> Vector3:
 	var way: Vector3 = _flat(point.position - _from, state.up)
-	if way.length() < REACH:
+	if way.is_zero_approx():
 		way = _flat(point.position - state.position, state.up)
 	return way.normalized() if not way.is_zero_approx() else _camera_axes(state.frame, state.up).z
 

@@ -88,3 +88,25 @@ func test_a_marble_that_passes_a_point_off_the_line_turns_back_to_it() -> void:
 	state.position = Vector3(0.2, 0.2, -5.0)
 	bot.next_input(state)
 	assert_eq(bot.waypoint, 1)
+
+
+func test_a_jump_point_close_after_another_point_jumps_at_its_line() -> void:
+	var route: Route = ROUTE.instantiate() as Route
+	route.name = &"CloseJump"
+	route.actions = "1 jump"
+	for at: Vector3 in [Vector3(0, 0, -4), Vector3(0, 0, -4.4)]:
+		var point: Marker3D = Marker3D.new()
+		point.position = at
+		route.add_child(point)
+	start_run(LEVEL, [route])
+	var bot: RouteBot = RouteBot.new(run, RouteBot.find(run, "CloseJump"))
+	var state: GameState = GameState.new()
+	state.status = &"playing"
+	state.on_ground = true
+	state.position = Vector3(0, 0.2, 0)
+	bot.next_input(state)
+	state.position = Vector3(0, 0.2, -4.0)
+	assert_false(bot.next_input(state).jump, "0.4 m before the jump point")
+	assert_eq(bot.waypoint, 1)
+	state.position = Vector3(0, 0.2, -4.45)
+	assert_true(bot.next_input(state).jump, "past the jump point's line")
