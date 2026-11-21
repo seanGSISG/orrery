@@ -17,7 +17,9 @@ extends RefCounted
 ##   `<name>-colonly` collides and goes away. Their faces are grouped by the `surface` extra of
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
 ##   with the Surface res://core/level/<surface>_surface.tres.
-## - Lint: a level has exactly one `level`, one `start` and one `finish` marker.
+## - Lint: a level has exactly one `level`, one `start` and one `finish` marker. A level outside
+##   levels/test/ (tier `test`) also has the gallery shots `overview`, `start`, `finish` and
+##   `egg` (docs/design/visual-quality.md §7).
 ## Each error names the level id and the node.
 
 const LEVEL_SCRIPT: Script = preload("res://core/level/level.gd")
@@ -25,6 +27,7 @@ const SOLID_SCRIPT: Script = preload("res://core/level/solid.gd")
 const OBJECT_SCENE: String = "res://objects/%s/%s.tscn"
 const SURFACE: String = "res://core/level/%s_surface.tres"
 const ONE_EACH: Array[String] = ["level", "start", "finish"]
+const GALLERY_SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
 
 ## The problems of the last convert() call.
 var errors: PackedStringArray = []
@@ -44,6 +47,7 @@ func convert(scene: Node3D) -> Level:
 	_find(scene, markers, meshes)
 	var level_data: Dictionary = {}
 	var counts: Dictionary[String, int] = {}
+	var shots: Array[String] = []
 	for marker: Node3D in markers:
 		var data: Dictionary = _marker_data(marker)
 		var type: String = str(data.get("type", ""))
@@ -52,10 +56,16 @@ func convert(scene: Node3D) -> Level:
 		if type == "level":
 			level_data = data
 			_id = str(data.get("id", _id))
+		elif type == "shot":
+			shots.append(String(marker.name))
 	for type: String in ONE_EACH:
 		var count: int = counts.get(type, 0)
 		if count != 1:
 			_fail(scene, "needs exactly one `%s` marker, found %d" % [type, count])
+	if str(level_data.get("tier", "")) != "test":
+		for shot: String in GALLERY_SHOTS:
+			if shot not in shots:
+				_fail(scene, "needs the gallery shot `%s`" % shot)
 	for marker: Node3D in markers:
 		var data: Dictionary = _marker_data(marker)
 		var type: String = str(data.get("type", ""))
