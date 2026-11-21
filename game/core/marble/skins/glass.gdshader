@@ -23,7 +23,7 @@ uniform float blur : hint_range(0.0, 4.0) = 0.5;
 /// Colour of the light that passes through the rim.
 uniform vec3 rim_tint : source_color = vec3(0.25, 0.42, 0.62);
 /// How close to the outline the rim stays: a higher value gives a thinner rim.
-uniform float rim_power : hint_range(1.0, 16.0) = 6.0;
+uniform float rim_power : hint_range(1.0, 16.0) = 4.0;
 /// Width of the dark line at the outline: 1 is the radius of the marble on the frame.
 uniform float outline_width : hint_range(0.0, 0.5) = 0.08;
 uniform float roughness : hint_range(0.0, 1.0) = 0.05;
