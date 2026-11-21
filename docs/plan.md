@@ -382,8 +382,8 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just import` | `godot --headless --path game --import` |
 | `just build-levels [id…]` | Builds level scripts into `game/levels/built/*.glb` and checks that they import |
 | `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff (check and format), ty, shellcheck. Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
-| `just test` | GUT unit tests, headless. Fails if a test fails, a test script does not load, or zero tests ran |
-| `just test-levels [id…]` | Runs the route bot on each built level, headless (4.6). Fails if `first_run` is not under par or `expert` not under gold |
+| `just test` | GUT unit tests, headless. Fails if a test fails, a test script does not load, or zero tests ran. It runs with an empty `user://` that it deletes, so tests never touch the player's save (#73) |
+| `just test-levels [id…]` | Runs the route bot on each built level, headless (4.6). Fails if `first_run` is not under par or `expert` not under gold. Like `just test`, it uses an empty `user://` (#73) |
 | `just suggest-times <id>` | Prints par and gold from the route bot's times (4.6) |
 | `just harness …` | Drives a debug build through the harness CLI (4.5) |
 | `just test-harness [-m gpu]` | Harness contract tests on a headless debug build. `-m gpu` adds the GPU screenshot test |
@@ -391,6 +391,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just perf [id…]` | Flies a fixed camera path through each level per graphics preset and checks GPU frame time and VRAM |
 | `just bake [id…]` | Bakes the lightmaps of levels on this GPU (4.7). Close every Godot editor on the project first |
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response (local only) |
+| `just ui-shots` | Saves a screenshot of each HUD and menu screen at 1080p and 4K into `build/ui/` |
 | `just build-sfx [--montage PATH]` | Synthesises the sound effects and the test music loops, and checks them. `--montage` also joins the sounds into one OGG |
 | `just feel` | Builds the feel-review course and plays it in a window with the tuning overlay (`docs/feel-review.md`) |
 | `just run [level]` | Plays a level in a window (default: `flat`) |

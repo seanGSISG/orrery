@@ -316,13 +316,16 @@ func _init(run: LevelRun) -> void
 func take(power_up: PowerUp) -> bool           # (changed in #54: takes a PowerUp) false when the slot is full or the run is not playing; the pickup stays
 func before_step(input: MarbleInput) -> void   # on a new use press: use() the power-up, empty the slot, emit `<id>.use`
 
-# core/game.gd: autoload Game (no class_name); #22 adds the menu screens
+# core/game.gd: autoload Game (no class_name); docs/design/ui.md has the screens
 extends Node
+signal screen_changed(screen: StringName)
 var run: LevelRun                   # null in menus
-var screen: StringName = &"play"
-func load_level(id: StringName) -> LevelRun   # res://levels/built/<id>.glb, else res://test/levels/<id>.tscn; adds a FollowCamera; null (and the old run stays) when neither is a Level
+var screen: StringName = &"play"    # set it to change the screen; game/ui/ui.gd shows it
+func level_path(id: StringName) -> String     # res://levels/built/<id>.glb, else res://test/levels/<id>.tscn, else ""
+func load_level(id: StringName) -> LevelRun   # the run of level_path(id), with a FollowCamera; shows &"play"
+func restart() -> void              # run.restart(), and shows &"play"
 func snapshot() -> GameState        # run.state (or a new GameState) with screen and input_device filled in
-# Game also maps the `restart` action to run.restart().
+# Game also maps the `restart` action to restart().
 
 # core/camera/follow_camera.gd (#7 basic, #11 orbit camera); core/camera/blob_shadow.gd (#11)
 class_name FollowCamera
@@ -394,7 +397,7 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 | `tick` | int | ticks since the start or restart | run (#7) |
 | `level` | StringName | level id; `""` in menus | run (#7) |
 | `status` | StringName | `none`, `playing`, `respawning` or `finished` | run (#7: `none`, `playing`); rules (#13: the others) |
-| `screen` | StringName | `play` now; #22 adds `title`, `level_select`, `settings`, `pause` | Game |
+| `screen` | StringName | `title`, `level_select`, `settings`, `play`, `pause` or `results` (`docs/design/ui.md`) | Game |
 | `input_device` | StringName | `keyboard` or `pad` | `Game.snapshot()`, from `InputHub.device` |
 | `position` | Vector3 | marble centre, world space, m | run, from marble (#7) |
 | `velocity` | Vector3 | m/s | run, from marble (#7) |

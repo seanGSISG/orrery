@@ -10,7 +10,7 @@ var tick: int = 0
 var level: StringName = &""
 ## &"none", &"playing", &"respawning" or &"finished". Run (&"none"), then rules.
 var status: StringName = &"none"
-## &"play"; #22 adds the menu screens. Game.
+## &"title", &"level_select", &"settings", &"play", &"pause" or &"results". Game.
 var screen: StringName = &"play"
 ## &"keyboard" or &"pad". Game.snapshot().
 var input_device: StringName = &"keyboard"

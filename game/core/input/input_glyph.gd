@@ -6,7 +6,9 @@ extends PanelContainer
 ## for_action() for the button name alone, for example in a text prompt. Both read the
 ## input map, so a rebound action shows its new button.
 ##
-## The art is a placeholder: a round badge in the Xbox button colour, or a dark key cap.
+## The look comes from the Theme (game/ui/look/ui_theme.gd): the panel is the type GlyphPad
+## for a pad button and GlyphKey for a key, and the name is a Label of the type GlyphText.
+## The Menu and View buttons show their symbol in place of their name.
 
 ## Names of the Xbox buttons, by JoyButton.
 const PAD_BUTTONS: Dictionary[int, String] = {
@@ -40,16 +42,15 @@ const MOUSE_BUTTONS: Dictionary[int, String] = {
 	MOUSE_BUTTON_RIGHT: "RMB",
 	MOUSE_BUTTON_MIDDLE: "MMB",
 }
-## Badge colours of the Xbox face buttons; other pad buttons use PAD_COLOR.
-const FACE_COLORS: Dictionary[String, Color] = {
-	"A": Color("#4caf50"),
-	"B": Color("#e53935"),
-	"X": Color("#1e88e5"),
-	"Y": Color("#c79100"),
-}
-const PAD_COLOR: Color = Color("#3c4250")
-const KEY_COLOR: Color = Color("#23262e")
-const KEY_BORDER: Color = Color("#8a90a0")
+## Pad buttons that show a symbol in place of their name.
+const SYMBOLS: Array[String] = ["Menu", "View"]
+## The part of the View symbol's back window that shows behind the front one, round the
+## middle of the glyph.
+const VIEW_BACK: Array[Vector2] = [
+	Vector2(-3, -3), Vector2(-3, -8), Vector2(9, -8), Vector2(9, 2), Vector2(4, 2)
+]
+## Width and height of a glyph with one letter.
+const SIDE: float = 44.0
 
 ## The input action to show, for example &"jump".
 @export var action: StringName = &"":
@@ -58,7 +59,8 @@ const KEY_BORDER: Color = Color("#8a90a0")
 		_refresh()
 
 var _label: Label = Label.new()
-var _style: StyleBoxFlat = StyleBoxFlat.new()
+## The pad button whose symbol _draw() shows; "" shows the name in the label.
+var _symbol: String = ""
 
 
 ## Returns the name of the first button for action on device (&"pad" or &"keyboard"), for
@@ -101,16 +103,31 @@ static func _is_pad(event: InputEvent) -> bool:
 
 ## Builds the badge and follows InputHub's device.
 func _ready() -> void:
+	_label.theme_type_variation = &"GlyphText"
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_style.set_content_margin_all(6.0)
-	_style.content_margin_left = 10.0
-	_style.content_margin_right = 10.0
-	add_theme_stylebox_override(&"panel", _style)
 	add_child(_label)
-	custom_minimum_size = Vector2(32.0, 32.0)
+	custom_minimum_size = Vector2(SIDE, SIDE)
+	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	InputHub.device_changed.connect(_refresh.unbind(1))
 	_refresh()
+
+
+## Draws the symbol of the Menu button (three lines) or the View button (two windows).
+func _draw() -> void:
+	var color: Color = get_theme_color(&"font_color", &"GlyphText")
+	var middle: Vector2 = size * 0.5
+	if _symbol == "Menu":
+		for y: float in [-6.0, 0.0, 6.0]:
+			draw_line(middle + Vector2(-8.0, y), middle + Vector2(8.0, y), color, 2.0, true)
+	elif _symbol == "View":
+		var back: PackedVector2Array = []
+		for corner: Vector2 in VIEW_BACK:
+			back.append(middle + corner)
+		draw_polyline(back, color, 2.0, true)
+		draw_rect(Rect2(middle + Vector2(-9.0, -3.0), Vector2(13.0, 10.0)), color, false, 2.0)
 
 
 ## Shows the button for action on the device used last.
@@ -119,11 +136,8 @@ func _refresh() -> void:
 		return
 	var on_pad: bool = InputHub.device == &"pad"
 	var text: String = for_action(action, InputHub.device)
-	_label.text = text
+	_symbol = text if on_pad and text in SYMBOLS else ""
+	_label.text = "" if _symbol != "" else text
 	visible = text != ""
-	var color: Color = FACE_COLORS.get(text, PAD_COLOR)
-	_style.bg_color = color if on_pad else KEY_COLOR
-	_style.set_corner_radius_all(16 if on_pad else 4)
-	_style.set_border_width_all(0 if on_pad else 2)
-	_style.border_color = KEY_BORDER
-	_label.add_theme_color_override(&"font_color", Color.WHITE)
+	theme_type_variation = &"GlyphPad" if on_pad else &"GlyphKey"
+	queue_redraw()

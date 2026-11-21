@@ -60,12 +60,15 @@ fresh-levels:
     done
     if (( ${#stale[@]} > 0 )); then just build-levels "${stale[@]}"; fi
 
-# Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
+# Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran.
+# XDG_DATA_HOME points Godot at an empty user:// that the recipe deletes, so tests never touch the
+# player's save. Windows (CI) has no XDG_DATA_HOME: Godot writes to APPDATA there, which is harmless.
 [script("bash")]
 test: fresh-levels import
     set -euo pipefail
-    log=$(mktemp)
-    trap 'rm -f "$log"' EXIT
+    log=$(mktemp) data=$(mktemp -d)
+    trap 'rm -rf "$log" "$data"' EXIT
+    export XDG_DATA_HOME="$data"
     "{{ godot }}" --headless --path game -s res://addons/gut/gut_cmdln.gd -gdisable_colors 2>&1 | tee "$log"
     # GUT skips a test script that does not parse, and it exits 0 when zero tests ran.
     if grep -q 'Parse Error' "$log"; then echo "just test: a script did not load" >&2; exit 1; fi
@@ -165,13 +168,16 @@ export-debug: import
 
 # --- Route bot (#14) ---
 
-# Run the route bot on built levels (all, or the given ids): first_run under par, expert under gold
+# Run the route bot on built levels (all, or the given ids): first_run under par, expert under gold.
+# Like `test`, it runs with an empty user:// (XDG_DATA_HOME) that the recipe deletes, so the bot's
+# finishes never write the player's save or ghosts.
 [positional-arguments]
 [script("bash")]
 test-levels *ids: fresh-levels import
     set -euo pipefail
-    log=$(mktemp)
-    trap 'rm -f "$log"' EXIT
+    log=$(mktemp) data=$(mktemp -d)
+    trap 'rm -rf "$log" "$data"' EXIT
+    export XDG_DATA_HOME="$data"
     # --quit-after stops a run whose test script did not load; it would wait forever.
     status=0
     "{{ godot }}" --headless --path game --quit-after 100 res://harness/route_bot_levels.tscn \
@@ -182,7 +188,8 @@ test-levels *ids: fresh-levels import
     fi
     exit "$status"
 
-# Print the par (first_run time × 1.5) and gold (expert time × 1.15) from route bot times
+# Print the par (first_run time × 1.5) and gold (expert time × 1.15) from route bot times. It runs
+# test-levels, so it also leaves the player's save alone
 suggest-times id: (test-levels "--suggest" id)
 
 # --- Controller (#18) ---
@@ -265,3 +272,27 @@ bake *ids: fresh-levels import
 [positional-arguments]
 build-sfx *args:
     uv run --script tools/audio/sfx/synth_sfx.py "$@"
+
+# --- HUD and menus (#22) ---
+
+# Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope).
+# The Dummy audio driver keeps the run silent
+[script("bash")]
+ui-shots: fresh-levels import
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    for size in "1920 1080" "3840 2160"; do
+        read -r width height <<<"$size"
+        # --quit-after stops a run whose script failed before its end; it would wait forever.
+        gamescope --backend headless -W "$width" -H "$height" -- "{{ godot }}" \
+            --audio-driver Dummy --path game --resolution "${width}x${height}" --quit-after 3000 \
+            res://test/ui/ui_shots.tscn -- --out "$PWD/build/ui/$height" >"$log" 2>&1 || true
+        # gamescope's exit code does not follow Godot's, so the script's last line is the check.
+        if ! grep -qx 'ui-shots: done' "$log"; then
+            grep -E '^(ui-shots|ERROR|SCRIPT ERROR)' "$log" >&2 || true
+            echo "just ui-shots: not every screenshot was saved at ${width}x${height}" >&2
+            exit 1
+        fi
+        grep '^ui-shots: /' "$log"
+    done
