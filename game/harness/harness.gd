@@ -271,7 +271,7 @@ func _teleport(params: Params) -> Variant:
 	var run: LevelRun = Game.run
 	if run == null:
 		return _no_run()
-	run.marble.teleport(at, velocity)
+	run.teleport(at, velocity)
 	return {}
 
 
