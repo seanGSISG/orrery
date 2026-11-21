@@ -155,7 +155,8 @@ def analyse_take(
         report.rejects.append(f"tempo drifts {grid.drift_ms:.0f} ms across the take")
     if contrast < LIMITS.drum_contrast:
         report.rejects.append(f"mushy drums (onset contrast {contrast:.1f})")
-    best: tuple[float, an.LoopCut, an.Seam, an.BarMap] | None = None
+    # Rank by (passes the seam and match limits, score): a cut that passes beats any that fails.
+    best: tuple[tuple[bool, float], an.LoopCut, an.Seam, an.BarMap] | None = None
     for phase in phases[:2]:
         bm = an.bar_map(y, grid, phase)
         for cut in an.loop_candidates(bm, track.loop_bars):
@@ -167,8 +168,13 @@ def analyse_take(
                 - 0.3 * max(0.0, seam.spectral_jump - 1)
             )
             rank -= 0.05 * (phase != phases[0])
-            if best is None or rank > best[0]:
-                best = (rank, cut, seam, bm)
+            passes = (
+                cut.match >= LIMITS.loop_match
+                and seam.flux_ratio <= LIMITS.seam_flux
+                and seam.spectral_jump <= LIMITS.seam_jump
+            )
+            if best is None or (passes, rank) > best[0]:
+                best = ((passes, rank), cut, seam, bm)
     if best is None:
         report.rejects.append(
             "no loop of an allowed length without a sparse or fading bar"
@@ -448,7 +454,17 @@ def build(track: Track, out: Path, root: Path) -> list[Candidate]:
         raise FileNotFoundError(f"{sf2}: download GeneralUser GS first (see README.md)")
     reports: list[TakeReport] = []
     cands: list[Candidate] = []
-    for flac in sorted((out / "takes" / track.id).glob("*.flac")):
+    flacs = sorted((out / "takes" / track.id).glob("*.flac"))
+    if not flacs:
+        raise FileNotFoundError(
+            f"no takes in {out / 'takes' / track.id}: run generate first"
+        )
+    for flac in flacs:
+        if not flac.with_suffix(".json").is_file():
+            print(
+                f"{flac.stem}: no take record (generate was cut short); run generate again"
+            )
+            continue
         report, audio, grid, _ = analyse_take(track, flac)
         reports.append(report)
         print(f"{report.take}: {'; '.join(report.rejects) or 'ok'}", flush=True)

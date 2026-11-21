@@ -41,9 +41,10 @@ _JS = """
 for (const b of document.querySelectorAll('button[data-seam]')) {
   b.addEventListener('click', () => {
     const a = document.getElementById(b.dataset.seam);
-    const go = () => { a.currentTime = Math.max(0, a.duration - 5); a.play(); };
+    const seek = () => { a.currentTime = Math.max(0, a.duration - 5); };
     a.loop = true;
-    if (Number.isFinite(a.duration)) go(); else a.addEventListener('loadedmetadata', go, { once: true });
+    if (Number.isFinite(a.duration)) seek(); else a.addEventListener('loadedmetadata', seek, { once: true });
+    a.play();
   });
 }
 for (const a of document.querySelectorAll('audio')) {
@@ -67,7 +68,7 @@ def write_review(root: Path) -> Path:
         cards: list[str] = []
         for i, c in enumerate(kept):
             full = html.escape(f"../../{c['file']}")
-            prev = html.escape(f"../../{c['preview']}")
+            prev = html.escape(f"previews/{Path(c['preview']).name}")
             aid = html.escape(f"a-{c['id']}")
             minutes, seconds = divmod(round(c["seconds"]), 60)
             model = (
