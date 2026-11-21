@@ -31,15 +31,14 @@ ROOT = Path(__file__).resolve().parents[2]
 LEVELS = ROOT / "levels"
 BUILT = ROOT / "game" / "levels" / "built"
 BUILD_LEVEL = ROOT / "tools" / "blender" / "build_level.py"
-IMPORT_SCRIPT = 'import_script/path="res://levels/level_import.gd"'
-IMPORT_SETTINGS = f"""[remap]
+IMPORT_SETTINGS = """[remap]
 
 importer="scene"
 
 [params]
 
 nodes/use_node_type_suffixes=false
-{IMPORT_SCRIPT}
+import_script/path="res://levels/level_import.gd"
 """
 
 
@@ -104,11 +103,9 @@ def build(level: Level) -> list[str]:
         errors = validation_errors(glb)
         if errors:
             return errors
-        # Name the post-import script before Godot can see the .glb. Godot adds its own keys
-        # to the file after an import; keep them while the script line is there.
-        settings = level.out.with_name(level.out.name + ".import")
-        if not settings.exists() or IMPORT_SCRIPT not in settings.read_text():
-            settings.write_text(IMPORT_SETTINGS)
+        # Name the post-import script before Godot can see the .glb. A fresh file also makes
+        # Godot import the level again, so a changed LevelConverter runs on every build.
+        level.out.with_name(level.out.name + ".import").write_text(IMPORT_SETTINGS)
         shutil.move(glb, level.out)
     return []
 
@@ -141,8 +138,8 @@ def import_and_check(levels: list[Level]) -> list[str]:
 def remove_stale(levels: list[Level]) -> None:
     """Deletes the built files of levels whose script is gone, so Godot does not import them."""
     ids = {level.id for level in levels}
-    for path in BUILT.glob("*.glb*"):
-        if path.name.split(".")[0] not in ids:
+    for path in [*BUILT.glob("*.glb"), *BUILT.glob("*.glb.import")]:
+        if path.name.removesuffix(".import").removesuffix(".glb") not in ids:
             path.unlink()
 
 
