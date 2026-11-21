@@ -262,8 +262,8 @@ func _set_time_scale(params: Params) -> Variant:
 	return {"scale": time_scale}
 
 
-## Puts the marble at position with velocity (default still). GameState shows it after the
-## next tick, because only the run writes GameState.
+## Puts the marble at position with velocity (default still). LevelRun.teleport() writes
+## GameState at once, so the next state command shows the new position.
 func _teleport(params: Params) -> Variant:
 	var at: Vector3 = params.vector3("position", Vector3.ZERO, true)
 	var velocity: Vector3 = params.vector3("velocity", Vector3.ZERO)

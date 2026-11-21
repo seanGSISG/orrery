@@ -7,6 +7,9 @@ extends Node3D
 
 ## Every object's and the marble's feedback, re-emitted for audio and rumble.
 signal feedback(kind: StringName, strength: float, at: Vector3)
+## At the end of each step(), when state holds the new tick. It comes once per tick, also
+## when the harness or a test steps many ticks in one frame.
+signal stepped
 
 const MARBLE: PackedScene = preload("res://core/marble/marble.tscn")
 
@@ -74,6 +77,7 @@ func step(input: MarbleInput) -> void:
 	last_input = input
 	rules.after_step()
 	_write_state()
+	stepped.emit()
 
 
 ## Starts again at t = 0 at once: every object resets, the rules and the power-up slot start
