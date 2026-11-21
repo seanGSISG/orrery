@@ -203,7 +203,9 @@ func _load_level(params: Params) -> Variant:
 ## the saved spot when resume is true. zones are the zone level ids from the bottom (default:
 ## the built zones of the game, or the fixture zones while none is built), assist turns Assist
 ## on or off first, and zone (1 is the first) puts the marble on the start pad of that zone.
-## A request that fails changes nothing: the run and Assist stay as they were.
+## A request that fails a check before the start changes nothing: the run and Assist stay as
+## they were. Only a hand-made scene with no start pad is found after the start, when the
+## climb has left it out (the level lint gives every built level a start pad).
 func _load_mode(params: Params) -> Variant:
 	var mode: String = params.text("mode", "", true)
 	var zones: Array[StringName] = params.names("zones")
