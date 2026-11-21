@@ -65,13 +65,24 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+B1 is built, so its row has the bot's times; the other rows are estimates. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
-| B1 | 27 s | 18 s | 41 s | 21 s |
+| B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
 | B2 | 32 s | 17 s | 48 s | 20 s |
 | B3 | 49 s | 23 s | 74 s | 26 s |
 | Ascent 1 (0 to 150 m) | 122 s | 67 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
 | Ascent 3 (300 to 500 m) | 152 s | 73 s | | |
+
+## Rules from the first built level
+
+B1 (`b01.md`, "As built") found these rules. They hold for every level.
+
+- **North is +y.** The camera looks along +y at the start, and the dawn, noon and dusk suns all stand ahead of the start and on its left. A wall or a ramp that faces the start is in shade.
+- **A kerb stops a marble that rolls.** A marble that comes through the air goes over a 0.3 m kerb: off the top of a ramp, after a drop of 2 m, or after a bounce. Put a parapet of 1 m or more there, or a floor behind the kerb.
+- **A piece that lies across an edge makes a step.** Give a beam or a ramp a level end that follows the edge.
+- **The route bot slows for each turn:** to 6.9 m/s at 30° and to 3.5 m/s at 90° or more (`RouteBot._turn_speed`). A sharp turn costs about half a second. On B1, curve points 2 to 3 m apart made the bot miss a point and turn back. So a fast route has few points, long legs and few turns.
+- **Leave 0.5 m between a route line and a kerb or a pillar.**
+- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines.

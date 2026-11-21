@@ -146,12 +146,18 @@ Godot writes the lightmap as `.exr` and the shadowmask as `.png` (`scene/3d/ligh
 
 ## 5. The glass marble
 
-The glass marble (and the translucent ghost) gets reflection and refraction without ray tracing:
+The glass marble gets reflection and refraction without ray tracing. Its look is one skin scene, `game/core/marble/skins/glass_orrery.tscn` (marble A of the style board). `marble.tscn` puts the skin under `Ball`, the node that turns with the spin. A second skin is a second scene in `skins/`.
 
-- **Material:** `BaseMaterial3D` with `transparency = TRANSPARENCY_ALPHA`, `metallic = 0`, `metallic_specular = 0.5` (F0 about 0.04, the value for glass with an index of refraction near 1.5), `roughness` 0.02 to 0.05, and `refraction_enabled = true`.
-- **Refraction:** `refraction_enabled` distorts the screen texture behind the marble along its normal. Only opaque objects appear in the refraction. This is correct for the tiny orrery inside the glass marble: it is an opaque mesh inside the sphere, so the glass bends it like a lens. Start `refraction_scale` at 0.05 (the default). If the result does not look like a solid glass ball, write a small spatial shader that bends the view ray through the sphere and reads `hint_screen_texture`. Do this only if the gallery shows the need.
-- **Reflection:** the static probes on every preset, plus the marble probe on Ultra. Fresnel from the PBR model makes the rim brighter at grazing angles.
-- **Shadow:** `TRANSPARENCY_ALPHA` "disables shadow casting". Add a child sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Core:** the brass orrery is an opaque mesh. `tools/blender/marble_core.py` builds it, and `just build-marble` exports it to `game/core/marble/built/` (a build output, like the levels). Because it is opaque, it is in the screen texture and the depth texture, and it has motion vectors for FSR 2.2.
+- **Glass:** a sphere with the shader `skins/glass.gdshader`. The shader reads `hint_screen_texture` and `hint_depth_texture`, so the glass draws in the transparent pass.
+  - Where the depth texture holds a point inside the ball, the pixel shows the core. The shader shows the screen texture at the same pixel, so the core is not sampled again and stays crisp. The glass does not magnify the core. The mesh has the sizes that the eye sees through glass with an index of refraction of 1.65.
+  - Elsewhere the shader bends the view ray through a solid ball (index of refraction 1.65) and reads the screen texture where the ray points, outside the marble's own outline. The world shows upside down and small, as in a real glass ball. Only opaque objects appear in this picture.
+  - The picture goes to `EMISSION` with `ALBEDO` black, `ROUGHNESS` 0.05 and `SPECULAR` 0.61 (F0 0.06, the value for an index of refraction of 1.65). The engine adds the sky, the probes and the sun as reflections.
+  - Toward the outline, the glass has a cool tint. The outline itself is a thin dark line with no reflection. The tint and the line keep the marble visible on pale stone and on a bright sky.
+- **Reflection:** the sky and the static probes on every preset, plus the marble probe on Ultra when the presets have it. Until a level has probes, the brass core reflects only the sky on Low and Medium; SSR adds the floor on High and Ultra.
+- **Shadow:** the glass itself casts no shadow. The skin has a second sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The core casts no shadow and takes none (`game/core/marble/core_import.gd`), because it is inside the sphere. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Ghost:** the ghost marble shows the shapes of the same skin in one pale, see-through look (`game/core/ghost/ghost.gdshader`). It does not read the screen texture.
+- **Cost:** measured on the fixture at 1080p (RTX 5090, a shared GPU), the glass adds about 0.15 ms of GPU time on Low and Medium and less than 0.05 ms on High and Ultra. Most of it is the copy of the screen texture. A cheaper glass for Low needs a field in `GraphicsPreset`.
 - **Later:** #38 can add ray-traced reflections on Ultra. This design does not depend on it.
 
 ## 6. Textures, materials and texel density
@@ -248,18 +254,18 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 
 | Preset | Resolution | Measures | Fails when |
 |---|---|---|---|
-| Low | 1080p | GPU time (mean, 99th percentile) | Its GPU time is higher than Medium's |
+| Low | 1080p | GPU time (mean, 99th percentile), VRAM | Its VRAM is not lower than Medium's |
 | Medium | 1080p | GPU time, VRAM | The 99th-percentile GPU time on the RTX 5090 is above the budget (`docs/plan.md` §4.7: start at 3 ms, calibrate in M1), or VRAM is above 4 GB |
 | High | 1440p | GPU time | Report only |
 | Ultra | 4K | GPU time | The 99th-percentile GPU time on the RTX 5090 is above 16.7 ms (60 fps) |
 
-- The check also fails when Low, Medium, High and Ultra do not cost more in that order at 1080p. This proves that the presets change real settings (#24).
+- The check also fails when Low, Medium, High and Ultra do not use more VRAM in that order at 1080p. This proves that the presets change real settings (#24). The check does not compare GPU time between presets: on a small level, the GPU time of Low and Medium changes by 2x from run to run on a shared GPU, and Medium and High cost about the same.
 - The camera path includes one fast orbit around the marble. During that orbit, the check saves two frames 1/60 s apart as the `motion` pair for rubric check 3.
 
 ## 9. Not verified
 
 - The Git LFS numbers for the whole scope are estimates. Section 10 has the numbers that #24 measured on the two fixture levels.
-- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. Only the small fixture levels are baked so far.
+- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 4.6 MB with every mesh at 0.1 m (section 10).
 - The material ranges in section 6 are common PBR practice, not values from a Godot source.
 - We did not test how much MSAA 2× costs on a real GTX 1660. The plan's 5090 budget stands in for it.
 - We did not test HDR output on Sean's KDE Wayland session, or in `gamescope`.
@@ -274,6 +280,7 @@ Sean approved look A of the style board on 2026-11-21: honey limestone, aged bra
 A level script names a kit material, and the importer gives those faces the game's material of that name.
 
 - Names: `limestone` (track decks), `brass` (trim and borders) and `gold` (inlays). `kit.surface(id, material)` makes the Blender material; `kit.track()` and `kit.ramp()` take `material="limestone"` and `trim="brass"`.
+- The pieces of `kit/masonry.py` (`deck`, `wall`, `arch`, `lathe`, `inlay` and the others) take `material` in the same way. An inlay is gold; gear teeth, a gear, a hoop and a ball are brass unless the level script says otherwise.
 - The trim is a brass angle section along the two long edges of a piece. It is a mesh of its own that does not collide, so it does not change how the marble rolls. Give `trim=""` for an edge that touches another piece.
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
@@ -324,7 +331,10 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Kit textures in Git LFS (sets A, B and C, and gold) | 47 MB |
 | Tier skies in Git LFS (dawn, noon, dusk) | 35 MB |
 | Sky sources in Git LFS (3 HDRIs, the planet map) | 14 MB |
+| Lightmap files, `b01` (#28: 96 meshes, 55,700 triangles, every mesh at 0.1 m per texel; bake 36 s) | 4.6 MB |
 | VRAM, `fixture`, Medium at 1080p | 875 MB |
+| VRAM, `b01`, Medium at 1080p | 892 MB |
+| GPU time, `b01`, mean / p99 at 1080p (three runs; see the note on clock speed below) | Low 0.22 to 0.54 / 0.27 to 0.78 ms, Medium 0.38 to 0.89 / 0.95 to 1.16 ms, High 0.83 to 0.90 / 0.94 to 3.00 ms, Ultra 1.30 to 1.33 / 1.60 to 1.62 ms |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |

@@ -6,15 +6,18 @@ extends Node
 ## writes it at once. After a change to ascent, call write().
 ##
 ## Files in dir:
-## - save.json: {"version": 1, "levels": {id: LevelRecord}, "settings": Settings,
-##   "ascent": AscentRecord}, each record as SaveRecord.to_dict() gives it.
+## - save.json: {"version": 2, "levels": {id: LevelRecord}, "settings": Settings,
+##   "ascent": AscentRecord}, each record as SaveRecord.to_dict() gives it. read() turns a
+##   file of an older version into this one (_migrate()).
 ## - ghosts/<id>.ghost: the ghost of the best run of level id, in the Ghost file format.
 ##
 ## Each write goes to <file>.tmp first and then renames it over the file, so a crash leaves
 ## the old file or the new one. A file that read() cannot use leaves the defaults in place,
 ## and the next write first keeps a copy of it as save.json.bad.
 
-const VERSION: int = 1
+## The format version of the file. 2 keeps the found eggs of a level as a set of egg ids;
+## 1 kept one `egg` flag for each level.
+const VERSION: int = 2
 const FILE: String = "save.json"
 const GHOSTS: String = "ghosts"
 const MEDALS: Array[StringName] = [&"none", &"qualified", &"gold"]
@@ -128,7 +131,7 @@ func finish(id: StringName, time: float, medal: StringName, ghost: Ghost) -> boo
 	if best:
 		record.best_time = time
 		if ghost != null and ghost.size() > 0:
-			_write_atomic(_ghost_path(id), ghost.to_bytes())
+			keep_ghost(id, ghost)
 	if better:
 		record.medal = medal
 	if best or better:
@@ -136,16 +139,25 @@ func finish(id: StringName, time: float, medal: StringName, ghost: Ghost) -> boo
 	return best
 
 
-## Keeps the Clockwork Egg of level id as found, and writes the file the first time.
-func find_egg(id: StringName) -> void:
+## Keeps the Clockwork Egg egg of level id as found, and writes the file the first time. egg
+## is the node name of the egg in the level.
+func find_egg(id: StringName, egg: StringName) -> void:
 	var record: LevelRecord = _record(id)
-	if not record.egg:
-		record.egg = true
+	if not record.eggs.has(String(egg)):
+		record.eggs.append(String(egg))
+		record.eggs.sort()
 		write()
 
 
-## Returns the ghost of the best run of level id, or null when there is none or its file is
-## damaged.
+## Writes ghost as the ghost file of id. finish() keeps the ghost of a best run this way.
+## Ascent also keeps the recording of a climb that is not finished, under an id of its own.
+## Returns false when the file could not be written.
+func keep_ghost(id: StringName, ghost: Ghost) -> bool:
+	return _write_atomic(_ghost_path(id), ghost.to_bytes())
+
+
+## Returns the ghost that finish() or keep_ghost() wrote for id, or null when there is none
+## or its file is damaged.
 func ghost(id: StringName) -> Ghost:
 	var path: String = _ghost_path(id)
 	if not FileAccess.file_exists(path):
@@ -172,8 +184,28 @@ func _ghost_path(id: StringName) -> String:
 
 ## Turns the data of an older format version into the current one. Each new version adds one
 ## step here. Version 1 is the first.
-static func _migrate(data: Dictionary, _from: int) -> Dictionary:
+static func _migrate(data: Dictionary, from: int) -> Dictionary:
+	if from < 2:
+		_eggs_to_sets(data)
 	return data
+
+
+## Version 1 to 2: a level had one `egg` flag, and now has `eggs`, the ids of its found eggs.
+## A found egg becomes the id of the one egg in the level's scene, or Level.DEFAULT_EGG when
+## the level has no scene now.
+static func _eggs_to_sets(data: Dictionary) -> void:
+	var levels: Dictionary = _section(data, "levels")
+	for id: Variant in levels:
+		var value: Variant = levels[id]
+		if not value is Dictionary:
+			continue
+		var fields: Dictionary = value
+		var flag: Variant = fields.get("egg")
+		var found: bool = flag if flag is bool else false
+		fields.erase("egg")
+		if found:
+			var ids: PackedStringArray = Level.egg_ids(Game.level_path(StringName(str(id))))
+			fields["eggs"] = [ids[0] if not ids.is_empty() else Level.DEFAULT_EGG]
 
 
 ## Returns data[key] when it is a dictionary, else an empty one.

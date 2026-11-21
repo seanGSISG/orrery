@@ -75,6 +75,12 @@ func is_tier_unlocked(tier: StringName) -> bool:
 	return not ids.is_empty() and Save.is_unlocked(ids[0])
 
 
+## Returns true when the player found every Clockwork Egg of level id. False for a level
+## with no egg.
+func has_eggs(id: StringName) -> bool:
+	return Save.level(id).has_eggs(info(id).eggs)
+
+
 ## Returns true when the player can play level id now: it is built and unlocked.
 func can_play(id: StringName) -> bool:
 	return Save.is_unlocked(id) and info(id).built

@@ -110,7 +110,7 @@ func _show_tier(focus_id: StringName) -> void:
 	for id: StringName in ids:
 		var record: LevelRecord = Save.level(id)
 		gold += 1 if record.medal == &"gold" else 0
-		eggs += 1 if record.egg else 0
+		eggs += 1 if catalog.has_eggs(id) else 0
 		if focus == &"" and catalog.can_play(id) and not record.qualified():
 			focus = id
 	if focus == &"" and not ids.is_empty():
@@ -144,8 +144,9 @@ func _show_level(id: StringName) -> void:
 	_medal_icon.icon = &"star" if record.medal == &"gold" else &"check"
 	_medal_icon.color = UiLook.GOLD if record.medal == &"gold" else UiLook.INK
 	_medal_icon.visible = record.qualified()
-	_egg_icon.icon = &"egg" if record.egg else &"egg_empty"
-	_egg_icon.color = UiLook.GOLD if record.egg else UiLook.INK_3
+	var eggs: bool = id != &"" and catalog.has_eggs(id)
+	_egg_icon.icon = &"egg" if eggs else &"egg_empty"
+	_egg_icon.color = UiLook.GOLD if eggs else UiLook.INK_3
 	_marks.visible = open_level
 	var locked: bool = not Save.is_unlocked(id)
 	_status.visible = id != &"" and not open_level

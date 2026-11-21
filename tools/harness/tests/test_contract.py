@@ -16,7 +16,6 @@ from orrery_harness.client import (
     INVALID_REQUEST,
     METHOD_NOT_FOUND,
     NO_FRAME,
-    NOT_AVAILABLE,
     NOT_FOUND,
     PARSE_ERROR,
     Harness,
@@ -54,10 +53,26 @@ def test_load_level(harness: Harness) -> None:
     assert missing.value.code == NOT_FOUND
 
 
-def test_load_mode_is_a_stub(harness: Harness) -> None:
-    with pytest.raises(HarnessError) as stub:
-        harness.load_mode("ascent")
-    assert stub.value.code == NOT_AVAILABLE
+def test_load_mode_starts_an_ascent_climb(harness: Harness) -> None:
+    # Test levels stand in for the zones, so the test needs no built level. A request that
+    # fails keeps the run that was there.
+    with pytest.raises(HarnessError) as bad:
+        harness.load_mode("ascent", zones=["flat"], zone=3)
+    assert bad.value.code == INVALID_PARAMS
+    assert harness.state().level == "flat"
+    state = harness.load_mode("ascent", zones=["flat", "rules"])
+    assert state.level == "ascent:flat+rules"
+    assert (state.tick, state.status) == (0, "playing")
+    assert state.height == pytest.approx(0.0, abs=0.01)
+    second = harness.load_mode("ascent", zones=["flat", "rules"], zone=2)
+    assert second.level == "ascent:flat+rules"
+    with pytest.raises(HarnessError) as missing:
+        harness.load_mode("campaign")
+    assert missing.value.code == NOT_FOUND
+    with pytest.raises(HarnessError) as unbuilt:
+        harness.load_mode("ascent", zones=["no_such_level"])
+    assert unbuilt.value.code == NOT_FOUND
+    assert harness.state().level == "ascent:flat+rules"
 
 
 def test_state(harness: Harness) -> None:

@@ -4,7 +4,7 @@ extends RefCounted
 ## the file, so a new setting needs only a new var with its default. to_dict() gives the
 ## plain JSON value of each var. fill() reads such a dictionary back and keeps the default of
 ## each var that is missing or has the wrong type. A var can be a bool, int, float, String,
-## StringName, Vector2i, Vector3 or a Dictionary[String, String].
+## StringName, Vector2i, Vector3, a PackedStringArray or a Dictionary[String, String].
 
 
 ## Returns every script var by name, with vectors as arrays and names as strings.
@@ -21,6 +21,9 @@ func to_dict() -> Dictionary[String, Variant]:
 		elif value is StringName:
 			var name: StringName = value
 			out[key] = String(name)
+		elif value is PackedStringArray:
+			var texts: PackedStringArray = value
+			out[key] = Array(texts)
 		else:
 			out[key] = value
 	return out
@@ -83,6 +86,11 @@ static func _typed(value: Variant, type: int) -> Variant:
 			var map: Dictionary = value if value is Dictionary else {}
 			var texts: bool = map.keys().all(_is_text) and map.values().all(_is_text)
 			return map.duplicate() if value is Dictionary and texts else null
+		TYPE_PACKED_STRING_ARRAY:
+			if value is PackedStringArray:
+				return value
+			var list: Array = value if value is Array else []
+			return PackedStringArray(list) if value is Array and list.all(_is_text) else null
 		TYPE_VECTOR3:
 			var items: Array = value if value is Array else []
 			if items.size() != 3 or not items.all(_is_number):

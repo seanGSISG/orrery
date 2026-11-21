@@ -15,7 +15,8 @@ run at 1080p also saves the `motion` pair into build/gallery/<id>/motion/ for `j
 It fails when:
 - Medium at 1080p has a 99th percentile above MEDIUM_P99_MS, or uses more than MAX_VRAM_MB,
 - Ultra at 4K has a 99th percentile above ULTRA_4K_P99_MS,
-- the mean GPU time at 1080p does not rise from Low to Medium to High to Ultra.
+- the VRAM at 1080p does not rise from Low to Medium to High to Ultra. VRAM proves that the
+  presets change real settings; the GPU time of a small level is too noisy for that.
 The two GPU time budgets are for the RTX 5090; on another GPU they only report. Run it on an
 idle GPU: other GPU work (a Blender render, ComfyUI) inflates the times and can fail the gates.
 
@@ -82,6 +83,21 @@ def level_ids(ids: list[str]) -> list[str]:
     return ids or sorted(script.stem for script in ROOT.glob("levels/*/*.py"))
 
 
+def check_shaders(log: str, name: str) -> None:
+    """Raises RuntimeError with the first shader compile errors in the game log (the harness
+    CLI holds the one check that `just gallery` and `just ui-shots` also use)."""
+    command = ["uv", "run", "--quiet", "--project", str(ROOT / "tools/harness")]
+    check = subprocess.run(
+        [*command, "orrery-harness", "check-log"],
+        input=log,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if check.returncode != 0:
+        raise RuntimeError(f"{name}: {check.stderr.strip()}")
+
+
 def measure(level: str, run: Run) -> Result:
     """Runs the perf scene for one level and one run, and returns its report."""
     out = OUT / f"{level}-{run.preset}-{run.height}.json"
@@ -113,6 +129,7 @@ def measure(level: str, run: Run) -> Result:
         raise RuntimeError(
             f"{level} {run.name}: failed (exit {done.returncode})\n{log}"
         )
+    check_shaders(f"{done.stdout}\n{done.stderr}", f"{level} {run.name}")
     report = json.loads(out.read_text())
     if (report["width"], report["height"]) != (run.width, run.height):
         size = f"{report['width']}x{report['height']}"
@@ -143,10 +160,10 @@ def problems(level: str, results: list[Result]) -> list[str]:
     ultra = next(r for r in results if r.run == Run("ultra", 3840, 2160))
     if calibrated and ultra.p99 > ULTRA_4K_P99_MS:
         found.append(f"Ultra 4K p99 {ultra.p99:.2f} ms > {ULTRA_4K_P99_MS} ms")
-    costs = [hd[preset].mean for preset in ORDER]
-    if any(a >= b for a, b in pairwise(costs)):
-        order = ", ".join(f"{p} {c:.3f}" for p, c in zip(ORDER, costs, strict=True))
-        found.append(f"1080p mean GPU ms do not rise from Low to Ultra: {order}")
+    vram = [hd[preset].vram_mb for preset in ORDER]
+    if any(a >= b for a, b in pairwise(vram)):
+        order = ", ".join(f"{p} {v:.0f}" for p, v in zip(ORDER, vram, strict=True))
+        found.append(f"1080p VRAM MB does not rise from Low to Ultra: {order}")
     return [f"{level}: {problem}" for problem in found]
 
 
