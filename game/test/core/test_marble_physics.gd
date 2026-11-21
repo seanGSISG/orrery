@@ -36,7 +36,7 @@ func test_jump_reaches_expected_apex() -> void:
 	_start(FLAT)
 	hold(MarbleInput.new(), 0.1)
 	var rest: float = run.state.position.y
-	run.step(jumping())
+	run.step(_jumping())
 	assert_almost_eq(run.state.velocity, Vector3.UP * TUNING.jump_impulse, Vector3.ONE * 0.01)
 	var expected: float = TUNING.jump_impulse ** 2.0 / (2.0 * TUNING.gravity)
 	assert_almost_eq(_apex() - rest, expected, 0.05)
@@ -47,7 +47,7 @@ func test_jump_reaches_expected_apex() -> void:
 func test_held_jump_repeats_on_landing() -> void:
 	_start(FLAT)
 	var flight: float = 2.0 * TUNING.jump_impulse / TUNING.gravity
-	hold(jumping(), flight * 1.6)
+	hold(_jumping(), flight * 1.6)
 	assert_eq(heard.count(&"marble.jump"), 2)
 
 
@@ -56,7 +56,7 @@ func test_held_jump_repeats_on_landing() -> void:
 func test_hopping_does_not_gain_speed() -> void:
 	_start(FLAT)
 	run.marble.teleport(Vector3(0, TUNING.radius, 30), Vector3(0, 0, -TUNING.max_roll_speed))
-	var input: MarbleInput = jumping()
+	var input: MarbleInput = _jumping()
 	input.move = Vector2(0, 1)
 	hold(input, 3.0)
 	var along: Vector3 = Vector3(run.state.velocity.x, 0, run.state.velocity.z)
@@ -67,7 +67,7 @@ func test_hopping_does_not_gain_speed() -> void:
 func test_jump_follows_contact_normal() -> void:
 	_start(PHYSICS)
 	run.marble.teleport(RAMP_TOP + RAMP_NORMAL * TUNING.radius, Vector3.ZERO)
-	run.step(jumping())
+	run.step(_jumping())
 	assert_almost_eq(run.state.velocity.normalized(), RAMP_NORMAL, Vector3.ONE * 0.02)
 	assert_almost_eq(run.state.velocity.length(), TUNING.jump_impulse, 0.1)
 
@@ -152,9 +152,20 @@ func test_ground_is_floor_during_wall_hit() -> void:
 	_start(PHYSICS)
 	var at: Vector3 = Vector3(0, TUNING.radius, WALL_Z + TUNING.radius)
 	run.marble.teleport(at, _toward_wall(asin(TUNING.slide_threshold) * 0.6, 10.0))
-	run.step(jumping())
+	run.step(_jumping())
 	assert_almost_eq(run.state.velocity.y, TUNING.jump_impulse, 0.05)
 	assert_lt(absf(run.state.velocity.z), 0.2)
+
+
+## Rolling along a wall with input partly into it keeps rolling along the wall: the wall
+## stops only the motion into it.
+func test_rolls_along_wall_with_input_into_it() -> void:
+	_start(PHYSICS)
+	var from: Vector3 = Vector3(-10, TUNING.radius, WALL_Z + TUNING.radius)
+	run.marble.teleport(from, Vector3(10, 0, 0))
+	hold(rolling(Vector2(1, 1).normalized()), 1.0)
+	assert_gt(run.state.position.x - from.x, 9.5)
+	assert_almost_eq(run.state.position.z, from.z, 0.01)
 
 
 ## In the air, input changes the velocity at air_acceleration and leaves the spin alone.
@@ -204,7 +215,7 @@ func test_jump_uses_field_up() -> void:
 	_start(PHYSICS)
 	run.marble.teleport(Vector3(ISLAND_WALL_X + TUNING.radius, ISLAND.y, ISLAND.z), Vector3.ZERO)
 	hold(MarbleInput.new(), 0.1)
-	run.step(jumping())
+	run.step(_jumping())
 	assert_almost_eq(run.state.velocity, Vector3.RIGHT * TUNING.jump_impulse, Vector3.ONE * 0.05)
 
 
@@ -248,7 +259,7 @@ func _hear(kind: StringName, _strength: float, _at: Vector3) -> void:
 
 
 ## Returns a MarbleInput that holds jump.
-func jumping() -> MarbleInput:
+func _jumping() -> MarbleInput:
 	var input: MarbleInput = MarbleInput.new()
 	input.jump = true
 	return input

@@ -124,6 +124,10 @@ func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 			_jump(ground)
 	else:
 		_steer(input, h)
+	# Support again: input must not push into a surface either, or the sweep would stop the
+	# whole move there, also the part along the surface.
+	for contact: Contact in contacts:
+		_meet(contact, h)
 	# 6. Sweep. An impulse in this sub-step (a jump, a hit by a mover, friction at a bounce)
 	# can make this one move longer than max_substep_move radii; the sweep still stops it at
 	# the first surface.
