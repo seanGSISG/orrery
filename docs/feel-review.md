@@ -47,7 +47,7 @@ The loop goes counter-clockwise. A yellow sign shows the number and the name of 
 Do these checks on all of the course:
 
 - **Camera.** Is the distance correct? Is the camera too fast or too slow when it moves back after a wall? Does the camera shake too much on a hard landing?
-- **Field of view.** The camera uses 75 degrees. `docs/design/visual-quality.md` uses 70. Try `fov` from 65 to 85 and report the best value.
+- **Field of view.** The camera uses 75 degrees. `docs/design/visual-quality.md` uses 70. Try `fov` from 65 to 85 and save the best value.
 - **Input.** Is the stick dead zone too large or too small? Is the camera turn speed correct? Is the rumble on a landing too strong?
 
 ## Save
@@ -55,12 +55,11 @@ Do these checks on all of the course:
 1. Press RB (or F5). The overlay shows how many values it saved.
 2. Save writes each changed value into the file that holds its default. It changes only the line of that value:
    - marble values: `game/core/marble_tuning.tres`
-   - camera values: `game/core/camera/follow_camera.gd`
+   - camera values: `game/core/camera/follow_camera.gd` (`fov` is the line `field_of_view`)
    - `dead_zone`: `game/core/input/input_hub.gd`
    - `look_sensitivity`, `invert_y`: `game/core/input/player_source.gd`
    - `rumble`: `game/core/input/rumble.gd`
-3. Save does not write `fov`. Write its best value in your report.
-4. Run `git diff` to see the changes. Commit them, or tell the agent to commit them.
+3. Run `git diff` to see the changes. Commit them, or tell the agent to commit them.
 
 ## Report
 
@@ -75,5 +74,5 @@ When the feel is correct, commit the saved values and write "Signed off" in #19.
 ## Limits
 
 - The course has one surface type (`default`), because M1 has no other surface type yet.
-- The overlay does not show `radius`, `mass` or the solver limits. They are not feel values. It does not show the camera `clearance`, because the camera reads that value only when it starts.
+- The overlay does not show `radius`, `mass` or the solver limits. They are not feel values.
 - The overlay is in debug builds only. The release exports do not contain `game/debug/`.
