@@ -26,6 +26,14 @@ _Avoid_: session, game
 The one observable snapshot of the game. Tests and the harness read it; nothing else is the test boundary.
 _Avoid_: status, telemetry
 
+**Screen**:
+What the player sees as one whole: `title`, `level_select`, `settings`, `play`, `pause` or `results`. `Game.screen` names the one that shows, and `GameState.screen` reports it. `docs/design/ui.md` has the flow.
+_Avoid_: menu (a menu is the list of items on a screen), page, view
+
+**Look**:
+Every font, colour and size of the HUD and the menus, in `UiLook`. `UiTheme` builds the Godot `Theme` from it.
+_Avoid_: skin, style sheet
+
 **Solid**:
 A collider that the marble can touch: level geometry or the solid part of an object. A mover moves it from code with `Solid.move()`.
 _Avoid_: collider, body
