@@ -4,9 +4,18 @@ extends Resource
 ## four presets are res://settings/presets/<name>.tres. The Graphics autoload applies the
 ## current one; call apply() yourself only for a viewport that is not the game window.
 ##
-## A preset changes only real-time cost. The level's environment keeps its sky, fog, tonemap
-## and exposure. Not here yet: SDFGI (Ascent and Planetarium only), the marble reflection
-## probe and the lower distance fog under volumetric fog. They come with #23 and #24.
+## A preset changes only real-time cost. The level's environment keeps its sky, tonemap and
+## exposure, and the level's lightmap, static reflection probes and shadowmask are the same in
+## every preset. Texture quality is the anisotropic level and the mipmap bias: Godot has no
+## texture streaming, so no preset changes a texture's resolution. Not here: SDFGI comes with
+## the Ascent mode, and the marble reflection probe comes with the marble look.
+
+## An Environment with this metadata (a haze density, 1/m) gets its fog from the preset: the
+## distance fog alone, or the distance fog and the volumetric fog with a share each, so that
+## the haze does not double. SkyPreset sets it.
+const HAZE: StringName = &"haze"
+## The share of the haze that the volumetric fog shows when it is on.
+const VOLUMETRIC_FOG_SHARE: float = 0.5
 
 @export_group("Viewport")
 @export var screen_space_aa: Viewport.ScreenSpaceAA = Viewport.SCREEN_SPACE_AA_DISABLED
@@ -84,10 +93,16 @@ func apply(viewport: Viewport) -> void:
 		sun.light_angular_distance = sun_angular_size
 
 
-## Turns the environment's real-time effects on or off.
+## Turns the environment's real-time effects on or off, and shares its haze between the
+## distance fog and the volumetric fog.
 func _apply_environment(environment: Environment) -> void:
 	environment.glow_enabled = glow
 	environment.ssao_enabled = ssao
 	environment.ssil_enabled = ssil
 	environment.ssr_enabled = ssr
 	environment.volumetric_fog_enabled = volumetric_fog
+	if environment.has_meta(HAZE):
+		var haze: float = environment.get_meta(HAZE)
+		var volumetric: float = haze * VOLUMETRIC_FOG_SHARE
+		environment.volumetric_fog_density = volumetric
+		environment.fog_density = haze - volumetric if volumetric_fog else haze

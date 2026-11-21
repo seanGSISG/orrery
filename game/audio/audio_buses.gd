@@ -4,9 +4,7 @@ extends RefCounted
 ## send to Master; a hard limiter on Master keeps the mix from clipping.
 ##
 ## Volumes are linear, 0..1, and Settings stores them (master_volume, music_volume,
-## sfx_volume, ui_volume). The Music autoload calls apply(Save.settings) at start. The
-## settings menu (#23) reads volume(bus), calls set_volume(bus, value, Save.settings), and
-## then Save.write() to keep the change.
+## sfx_volume, ui_volume). Settings.apply() calls apply(), at start and after each change.
 
 const MASTER: StringName = &"Master"
 const MUSIC: StringName = &"Music"
@@ -31,13 +29,6 @@ static func apply(settings: Settings) -> void:
 ## Returns the volume of bus, linear 0..1.
 static func volume(bus: StringName) -> float:
 	return AudioServer.get_bus_volume_linear(_index(bus))
-
-
-## Sets the volume of bus, clamped to 0..1 (0 is silent), and stores it in settings.
-static func set_volume(bus: StringName, value: float, settings: Settings) -> void:
-	var clamped: float = clampf(value, 0.0, 1.0)
-	AudioServer.set_bus_volume_linear(_index(bus), clamped)
-	settings.set(FIELDS[bus], clamped)
 
 
 ## Returns the index of bus; fails loudly when the layout lacks it.

@@ -39,7 +39,21 @@ func _ready() -> void:
 	await _save("level_select")
 	Game.screen = &"title"
 	Game.screen = &"settings"
-	await _save("settings")
+	for tab: String in ["graphics", "display", "audio", "controls", "accessibility"]:
+		if tab != "graphics":
+			_press(&"tab_next")
+		await _save("settings_" + tab)
+	_press(&"tab_prev")
+	# D-pad events, not actions: the focus moves only for a real button.
+	for _i: int in 9:
+		for pressed: bool in [true, false]:
+			var down: InputEventJoypadButton = InputEventJoypadButton.new()
+			down.button_index = JOY_BUTTON_DPAD_DOWN
+			down.pressed = pressed
+			Input.parse_input_event(down)
+		Input.flush_buffered_events()
+		await get_tree().process_frame
+	await _save("settings_controls_buttons")
 	var run: LevelRun = Game.load_level(LEVEL)
 	run.auto_step = false
 	_play(run, 12.4)
@@ -66,6 +80,7 @@ func _load_demo_save() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_DIR).path_join(SaveGame.FILE))
 	Save.dir = SAVE_DIR
 	Save.read()
+	Save.settings.apply()
 	Save.finish(LEVEL, 21.84, &"qualified", null)
 	Save.find_egg(LEVEL)
 	Save.finish(&"feel", 46.82, &"gold", null)

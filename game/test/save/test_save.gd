@@ -79,7 +79,13 @@ func test_wrong_types_keep_defaults() -> void:
 		{
 			"version": 1,
 			"levels": {"b01": {"best_time": "fast", "medal": "gold", "egg": 1}},
-			"settings": {"dead_zone": [0.3], "invert_y": true},
+			"settings":
+			{
+				"dead_zone": [0.3],
+				"invert_y": true,
+				"resolution": [1280],
+				"bindings": {"jump.pad": 3},
+			},
 			"ascent": {"spot_position": [1, 2]},
 		}
 	)
@@ -90,6 +96,8 @@ func test_wrong_types_keep_defaults() -> void:
 	assert_false(save.level(&"b01").egg)
 	assert_eq(save.settings.dead_zone, Settings.new().dead_zone)
 	assert_true(save.settings.invert_y)
+	assert_eq(save.settings.resolution, Vector2i.ZERO)
+	assert_eq(save.settings.bindings.size(), 0, "a binding that is not text")
 	assert_eq(save.ascent.spot_position, Vector3.ZERO)
 
 

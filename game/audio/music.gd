@@ -37,11 +37,10 @@ var _ui: Dictionary[StringName, AudioStreamPlayer] = {}
 var _run: LevelRun
 
 
-## Sets the bus volumes from the saved settings, and makes the music players, the menu
-## sound players and the SfxPlayer. Music plays on in pause.
+## Makes the music players, the menu sound players and the SfxPlayer. Music plays on in
+## pause. Save sets the bus volumes at start (Settings.apply()).
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	AudioBuses.apply(Save.settings)
 	for i: int in 2:
 		var music: AudioStreamPlayer = AudioStreamPlayer.new()
 		music.bus = AudioBuses.MUSIC

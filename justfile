@@ -56,8 +56,21 @@ fresh-marble:
     glb=game/core/marble/built/orrery_core.glb
     if [[ ! -f $glb || tools/blender/marble_core.py -nt $glb ]]; then just build-marble; fi
 
+# Copy the kit textures that the game uses from assets/textures/ into the Godot project, which
+# reads only res://. A committed game/materials/textures/<file>.import adopts <file>
+[private]
+[script("bash")]
+kit-textures:
+    set -euo pipefail
+    for import in game/materials/textures/*.import; do
+        name=$(basename "$import" .import)
+        sources=(assets/textures/*/"$name")
+        if [[ ! -f ${sources[0]} ]]; then echo "just kit-textures: assets/textures/ has no $name" >&2; exit 1; fi
+        cp -u "${sources[0]}" "game/materials/textures/$name"
+    done
+
 # Import the Godot project headless (fills game/.godot)
-import: fresh-marble
+import: fresh-marble kit-textures
     "{{ godot }}" --headless --path game --import
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
@@ -67,19 +80,20 @@ run level="flat": import
 
 # Build level scripts (all, or the given ids) into game/levels/built/ and check that they import
 [positional-arguments]
-build-levels *ids: fresh-marble
+build-levels *ids: fresh-marble kit-textures
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
 # Build the feel-review course and play it in a window with the tuning overlay (LB+Y or F1)
 feel: (build-levels "feel")
     "{{ godot }}" --path game res://debug/feel.tscn
 
-# Build the levels whose .glb is missing or older than its script, the kit or the importer
+# Build the levels whose .glb is missing or older than its script, the kit, the importer, the
+# material set or a sky preset (the importer writes the sky and the sun into the level)
 [private]
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd)
+    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd game/skies/sky_preset.gd game/skies/*.tres)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)
@@ -326,3 +340,10 @@ ui-shots: fresh-levels import
         fi
         grep '^ui-shots: /' "$log"
     done
+
+# --- Skies (#24) ---
+
+# Bake the tier skies (all, or dawn, noon, dusk) into game/skies/<name>.hdr with Cycles on this GPU
+[positional-arguments]
+bake-skies *args:
+    blender-5.2 -b --factory-startup -noaudio --python-exit-code 1 --python tools/blender/bake_skies.py -- "$@"

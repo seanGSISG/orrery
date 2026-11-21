@@ -7,7 +7,8 @@ const UI_DIR: String = "res://ui"
 const KEY_PATTERN: String = '"([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)"'
 
 
-## Every text key in the UI scripts, and the key of each tier and medal, has a translation.
+## Every text key in the UI scripts, and the key of each tier, medal and bound action, has a
+## translation.
 func test_every_text_key_has_english() -> void:
 	var keys: Array[String] = []
 	_collect_keys(UI_DIR, keys)
@@ -17,6 +18,8 @@ func test_every_text_key_has_english() -> void:
 		keys.append("TIER_" + String(tier).to_upper())
 	for medal: StringName in SaveGame.MEDALS:
 		keys.append("MEDAL_" + String(medal).to_upper())
+	for action: StringName in Bindings.ACTIONS:
+		keys.append("ACTION_" + String(action).to_upper())
 	assert_gt(keys.size(), 30, "the scan found the keys")
 	for key: String in keys:
 		assert_ne(tr(key), key, key)

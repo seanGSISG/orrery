@@ -15,13 +15,13 @@ Terms used in this file:
 | `game/audio/audio_buses.gd` | `AudioBuses`: the bus names and the volume accessors. |
 | `game/audio/music.gd` | The autoload `Music`: music groups, Ascent zones, menu sounds. It owns the `SfxPlayer`. |
 | `game/audio/sfx_player.gd` | `SfxPlayer`: plays the sounds of one `LevelRun`. |
-| `game/audio/sfx/` | The sounds, made by `tools/audio/sfx/synth_sfx.py`. They are small (about 220 KB in total), so git keeps them, not LFS. |
-| `game/audio/music/` | The music groups. It is empty until the real tracks are imported. |
+| `game/audio/sfx/` | The sounds, made by `tools/audio/sfx/synth_sfx.py` (`just build-sfx`). They are small (about 220 KB in total), so git keeps them, not LFS. |
+| `game/audio/music/` | The music groups. M1 has three tracks (#26, #67), made by `tools/audio/music/`: `title/wind_up.ogg` ("Wind-up"), `beginner/roll_call.ogg` ("Roll call") and `ascent/1_spiral_stair.ogg` ("Spiral stair"). The `.ogg` files of the music are in Git LFS (`game/audio/music/**/*.ogg`). The other groups have no track yet, so they play silence. Ascent zones 2 and 3 keep playing the last clip (zone 1) until `2_*.ogg` and `3_*.ogg` exist. |
 | `game/test/audio/loops/` | Two placeholder loops for the music tests (120 BPM, 4/4, 2 bars). |
 
 ## 2. Volumes
 
-`Settings` (#21) stores the four volumes as linear values 0..1: `master_volume`, `music_volume`, `sfx_volume` and `ui_volume`. 0 is silent. At start, `Music` calls `AudioBuses.apply(Save.settings)`, which sets every bus. The settings menu (#23) reads `AudioBuses.volume(bus) -> float` and writes `AudioBuses.set_volume(bus, value, Save.settings)`, which sets the bus and the settings var. Then it calls `Save.write()` to keep the change. Use the constants `AudioBuses.MASTER`, `MUSIC`, `SFX` and `UI`.
+`Settings` (#21) stores the four volumes as linear values 0..1: `master_volume`, `music_volume`, `sfx_volume` and `ui_volume`. 0 is silent. `Settings.apply()` calls `AudioBuses.apply(settings)`, which sets every bus: `Save` applies the settings at start, and the settings menu applies them after each change through `Save.change_settings()`. `AudioBuses.volume(bus) -> float` reads the volume of a bus. Use the constants `AudioBuses.MASTER`, `MUSIC`, `SFX` and `UI`.
 
 ## 3. Music
 

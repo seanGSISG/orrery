@@ -3,8 +3,8 @@ extends LevelObject
 ## The `gem` marker: a cut jewel, 0.5 m tall, that floats LIFT m above the marker and spins
 ## slowly. Put the marker on the floor. The marble collects the gem when it grazes the
 ## trigger; then the gem hides until a restart, and a checkpoint respawn keeps it collected.
-## A faint beam above the gem shows it across the level. Each cut has its own colour from a
-## colourblind-safe set (Okabe-Ito) and its own shape.
+## A faint beam above the gem shows it across the level. Each cut has its own shape and its
+## own colour from Palette, which the colourblind setting changes.
 
 ## Gap between the floor and the gem's lowest point, m.
 const LIFT: float = 0.3
@@ -13,13 +13,6 @@ const HEIGHT: float = 0.5
 const RADIUS: float = 0.25
 ## Turn rate of the jewel, rad/s.
 const SPIN: float = 1.2
-## The colour of each cut.
-const COLOURS: Array[Color] = [
-	Color(0.90, 0.62, 0.0),  # orange
-	Color(0.34, 0.71, 0.91),  # sky blue
-	Color(0.0, 0.62, 0.45),  # bluish green
-	Color(0.80, 0.47, 0.65),  # reddish purple
-]
 ## The number of sides of each cut: trillion, princess, hexagon, octagon.
 const SIDES: Array[int] = [3, 4, 6, 8]
 
@@ -28,19 +21,26 @@ const SIDES: Array[int] = [3, 4, 6, 8]
 @export var cut: int = -1
 
 var _collected: bool = false
+## The cut in use, 0 to 3.
+var _cut: int = 0
 
 @onready var _jewel: MeshInstance3D = $Jewel
 @onready var _glow: OmniLight3D = $Glow
 @onready var _beam: GeometryInstance3D = $Beam
 
 
-## Builds the jewel of this cut and colours the glow and the beam.
+## Picks the cut, builds its jewel and follows the palette.
 func _ready() -> void:
-	var index: int = cut if cut >= 0 else absi(hash(String(name)))
-	index %= SIDES.size()
-	var colour: Color = COLOURS[index]
-	_jewel.mesh = _jewel_mesh(SIDES[index], colour)
+	_cut = (cut if cut >= 0 else absi(hash(String(name)))) % SIDES.size()
 	_jewel.position.y = LIFT + HEIGHT * 0.6
+	add_to_group(Palette.GROUP)
+	apply_palette()
+
+
+## Builds the jewel of the cut in its palette colour, and colours the glow and the beam.
+func apply_palette() -> void:
+	var colour: Color = Palette.gem(_cut)
+	_jewel.mesh = _jewel_mesh(SIDES[_cut], colour)
 	_glow.light_color = colour
 	_beam.set_instance_shader_parameter(&"colour", colour)
 
