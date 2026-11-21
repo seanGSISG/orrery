@@ -116,7 +116,7 @@ smoke-wine: export
 
 # Drive a debug build through the harness CLI, for example `just harness launch --level flat`
 [positional-arguments]
-harness *args: import
+harness *args:
     uv run --quiet --project tools/harness orrery-harness "$@"
 
 # Run the harness contract tests on a headless debug build. `-m gpu` runs the GPU screenshot test

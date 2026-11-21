@@ -153,8 +153,8 @@ def end(session: Session) -> None:
             game.quit()
     except OSError:
         pass
-    if not _wait_exit(session.pid, 10.0):
-        _kill(session.pid)
+    if not _wait_exit(session, 10.0):
+        _kill(session)
 
 
 def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
@@ -202,7 +202,7 @@ def _start(binary: str, display: Display, options: LaunchOptions) -> Session:
             return session
         except OSError:
             time.sleep(0.2)
-    _kill(process.pid)
+    _kill(session)
     raise LaunchError(f"no harness answer in {options.timeout:.0f} s; see {log}")
 
 
@@ -220,36 +220,38 @@ def _free_port() -> int:
         return probe.getsockname()[1]
 
 
-def _alive(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
+def running(session: Session) -> bool:
+    """True while the session's process runs and is still that game: its command line has
+    the session's harness port. A reused process id is not the game."""
     # A child that exited stays a zombie until it is reaped; reap it when it is ours.
     try:
-        done, _ = os.waitpid(pid, os.WNOHANG)
+        os.waitpid(session.pid, os.WNOHANG)
     except ChildProcessError:
-        return True
-    return done == 0
+        pass
+    try:
+        command = Path(f"/proc/{session.pid}/cmdline").read_bytes()
+    except OSError:
+        return False
+    return f"--harness-port={session.port}".encode() in command
 
 
-def _wait_exit(pid: int, seconds: float) -> bool:
+def _wait_exit(session: Session, seconds: float) -> bool:
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        if not _alive(pid):
+        if not running(session):
             return True
         time.sleep(0.1)
     return False
 
 
-def _kill(pid: int) -> None:
-    """Kills the game's process group (gamescope and Godot)."""
+def _kill(session: Session) -> None:
+    """Kills the game's process group (gamescope and Godot) while it is still the game."""
     for sig in (signal.SIGTERM, signal.SIGKILL):
+        if not running(session):
+            return
         try:
-            os.killpg(pid, sig)
+            os.killpg(session.pid, sig)
         except ProcessLookupError:
             return
-        if _wait_exit(pid, 5.0):
+        if _wait_exit(session, 5.0):
             return

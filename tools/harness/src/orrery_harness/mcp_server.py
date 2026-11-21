@@ -25,7 +25,8 @@ server = MCPServer(
     ),
 )
 SHOTS = game.RUNS / "shots"
-_launched = False
+# The game that this server launched, if any.
+_launched: game.Session | None = None
 
 
 @contextmanager
@@ -56,8 +57,7 @@ def game_launch(
     none renders nothing (no screenshots)."""
     global _launched
     with _errors():
-        game.launch(game.LaunchOptions(level, display, (width, height)))
-    _launched = True
+        _launched = game.launch(game.LaunchOptions(level, display, (width, height)))
     with _game() as harness:
         return harness.state()
 
@@ -118,7 +118,8 @@ def game_quit() -> str:
 
 
 def _stop_launched() -> None:
-    if _launched:
+    """Stops the game this server launched, unless another launch replaced it."""
+    if _launched is not None and game.SESSION.exists() and game.current() == _launched:
         game.stop()
 
 

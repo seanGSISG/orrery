@@ -11,8 +11,10 @@ extends Node
 
 const HOST: String = "127.0.0.1"
 const PORT_ARG: String = "--harness-port="
-## A request line longer than this closes the connection.
+## Unread request bytes above this close the connection.
 const MAX_LINE: int = 1 << 20
+## The most ticks that one step request runs: 5 minutes of game time.
+const MAX_STEP: int = 120 * 300
 
 const PARSE_ERROR: int = -32700
 const INVALID_REQUEST: int = -32600
@@ -216,11 +218,11 @@ func _input_command(params: Params) -> Variant:
 	return {"frames": frames}
 
 
-## Steps the run frames ticks at once and pauses it.
+## Steps the run frames ticks (at most MAX_STEP) at once and pauses it.
 func _step(params: Params) -> Variant:
 	var frames: int = params.integer("frames", 1)
-	if frames < 1:
-		params.fail("frames must be at least 1")
+	if frames < 1 or frames > MAX_STEP:
+		params.fail("frames must be in 1..%d; step longer in several requests" % MAX_STEP)
 	if params.failed():
 		return params.failure
 	var run: LevelRun = Game.run
@@ -468,8 +470,8 @@ class Client:
 	func _init(peer: StreamPeerTCP) -> void:
 		_peer = peer
 
-	## Reads the waiting bytes. Returns false when the connection is gone or sent a line
-	## longer than MAX_LINE.
+	## Reads the waiting bytes. Returns false when the connection is gone or has more than
+	## MAX_LINE unread bytes.
 	func receive() -> bool:
 		_peer.poll()
 		if _peer.get_status() != StreamPeerTCP.STATUS_CONNECTED:
@@ -479,7 +481,7 @@ class Client:
 			var got: Array = _peer.get_data(count)
 			var bytes: PackedByteArray = got[1]
 			_buffer.append_array(bytes)
-		if _buffer.size() > MAX_LINE and _buffer.find(10) < 0:
+		if _buffer.size() > MAX_LINE:
 			_peer.disconnect_from_host()
 			return false
 		return true

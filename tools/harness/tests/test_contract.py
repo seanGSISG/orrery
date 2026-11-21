@@ -143,7 +143,7 @@ def test_quit() -> None:
     session = game.start(game.LaunchOptions(display="none"))
     with session.connect() as harness:
         harness.quit()
-    assert game._wait_exit(session.pid, 10.0)
+    assert game._wait_exit(session, 10.0)
 
 
 @pytest.mark.gpu
