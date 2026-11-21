@@ -27,8 +27,34 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.3
       - run: just lint
 
+  # Builds every level script with Blender and checks the import; the test jobs get the files.
+  levels:
+    name: Build levels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: Read the Blender and glTF-Validator pins
+        id: pins
+        run: |
+          source tools/setup/pins.env
+          echo "key=blender-$BLENDER_VERSION-gltf-validator-$GLTF_VALIDATOR_VERSION" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.local/opt
+          key: ${{ steps.pins.outputs.key }}
+      - run: tools/blender/install-ci.sh
+      - run: just build-levels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
+          if-no-files-found: error
+
   test:
     name: Import and GUT (${{ matrix.os }})
+    needs: levels
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +63,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
       - run: just test
 
   export:

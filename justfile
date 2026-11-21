@@ -31,8 +31,14 @@ import:
     "{{ godot }}" --headless --path game --import
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
+[positional-arguments]
 run level="flat": import
-    "{{ godot }}" --path game -- --level {{ level }}
+    "{{ godot }}" --path game -- --level "$1"
+
+# Build level scripts (all, or the given ids) into game/levels/built/ and check that they import
+[positional-arguments]
+build-levels *ids:
+    GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
 # Run the GUT tests headless. Fails when a test fails, a script does not load, or zero tests ran
 [script("bash")]

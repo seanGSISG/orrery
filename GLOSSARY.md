@@ -33,3 +33,11 @@ _Avoid_: collider, body
 **LevelObject**:
 An object that a level marker places, such as a gem or a moving platform. It is a scene whose root script extends `LevelObject`, and the run calls its hooks.
 _Avoid_: entity, prop
+
+**Level script**:
+The Python file `levels/<tier>/<id>.py` that builds one level with the kit (`kit/`). It is the source of truth; `just build-levels` turns it into `game/levels/built/<id>.glb`.
+_Avoid_: map, level file
+
+**Marker**:
+A Blender empty that a level script places with `kit.marker(type, ...)`. Its custom property `orrery` holds the type and the settings. The importer puts an instance of `game/objects/<type>/<type>.tscn` in its place.
+_Avoid_: spawn point, placeholder
