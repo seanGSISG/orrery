@@ -72,3 +72,10 @@ def level(
         music=music,
         sky=sky,
     )
+
+
+def shot(name: str, at: Vec3, rotation: Vec3 = (0.0, 0.0, 0.0)) -> bpy.types.Object:
+    """Places a named camera view (for example overview, start, finish, egg) for the gallery
+    and the harness `screenshot {shot}` command. With rotation (0, 0, 0) it looks along +y;
+    a positive x angle tilts it up."""
+    return marker("shot", at=at, rotation=rotation, name=name)

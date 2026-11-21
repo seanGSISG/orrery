@@ -7,8 +7,8 @@ Units and axes are Blender's: metres, x right, y forward, z up. Angles are in de
 export turns positions into Godot's y-up axes: Blender (x, y, z) is Godot (x, z, -y).
 """
 
-from kit.markers import level, marker
+from kit.markers import level, marker, shot
 from kit.pieces import ramp, track
 from kit.surfaces import surface
 
-__all__ = ["level", "marker", "ramp", "surface", "track"]
+__all__ = ["level", "marker", "ramp", "shot", "surface", "track"]

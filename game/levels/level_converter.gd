@@ -8,10 +8,11 @@ extends RefCounted
 ##
 ## The rules (docs/plan.md §4.3, docs/design/core-runtime.md §5):
 ## - Markers: a node whose "extras" metadata holds `orrery = {"type": T, ...}`. The marker of
-##   type `level` sets the root's Level vars and goes away. A marker of any other type becomes an
-##   instance of res://objects/T/T.tscn with the marker's name and transform. Each other key
-##   sets the @export var of that name on the instance root, and the marker's children become
-##   Marker3D children of the instance, in name order.
+##   type `level` sets the root's Level vars and goes away. A marker of type `shot` becomes a
+##   Camera3D with the marker's name and transform, for the harness `screenshot {shot}` command.
+##   A marker of any other type becomes an instance of res://objects/T/T.tscn with the marker's
+##   name and transform. Each other key sets the @export var of that name on the instance root,
+##   and the marker's children become Marker3D children of the instance, in name order.
 ## - Collision: a mesh named `<name>-col` collides and stays visible as `<name>`; a mesh named
 ##   `<name>-colonly` collides and goes away. Their faces are grouped by the `surface` extra of
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
@@ -57,8 +58,11 @@ func convert(scene: Node3D) -> Level:
 			_fail(scene, "needs exactly one `%s` marker, found %d" % [type, count])
 	for marker: Node3D in markers:
 		var data: Dictionary = _marker_data(marker)
-		if str(data.get("type", "")) == "level":
+		var type: String = str(data.get("type", ""))
+		if type == "level":
 			_remove(marker)
+		elif type == "shot":
+			_place_shot(marker, data)
 		else:
 			_place(marker, data)
 	_build_solids(meshes)
@@ -130,6 +134,23 @@ func _place(marker: Node3D, data: Dictionary) -> void:
 		point.transform = (child as Node3D).transform
 		object.add_child(point)
 		point.owner = _root
+	marker.free()
+
+
+## Puts a Camera3D with the marker's name and transform in the marker's place. It looks along
+## the marker's -z axis in Godot, which is the marker's +y axis in Blender.
+func _place_shot(marker: Node3D, data: Dictionary) -> void:
+	if data.size() > 1:
+		_fail(marker, "a `shot` marker has no settings")
+	var camera: Camera3D = Camera3D.new()
+	var parent: Node = marker.get_parent()
+	var index: int = marker.get_index()
+	parent.remove_child(marker)
+	camera.name = marker.name
+	camera.transform = marker.transform
+	parent.add_child(camera)
+	parent.move_child(camera, index)
+	camera.owner = _root
 	marker.free()
 
 

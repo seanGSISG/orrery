@@ -1,5 +1,6 @@
 """Pipeline fixture for game/test/level/test_level_import.gd: a track, a ramp up to a second
-track, one start, three gems and one finish. The test expects these positions and counts."""
+track, one start, three gems, one finish and an overview shot. The test expects these positions
+and counts."""
 
 import kit
 
@@ -14,3 +15,4 @@ kit.marker("gem", at=(0, 5, 0.3))
 kit.marker("gem", at=(0, 12, 1.3))
 kit.marker("gem", at=(0, 19, 2.3))
 kit.marker("finish", at=(0, 22, 2))
+kit.shot("overview", at=(12, -6, 10), rotation=(-30, 0, 40))

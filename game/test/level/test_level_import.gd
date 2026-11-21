@@ -98,6 +98,19 @@ func test_marker_becomes_its_object_with_points_in_name_order() -> void:
 	assert_eq(names, ["gem_3_p00", "gem_3_p01"])
 
 
+func test_shot_marker_becomes_a_camera_named_after_it() -> void:
+	var scene: Node3D = _scene()
+	var marker: Node3D = Node3D.new()
+	marker.name = "overview"
+	marker.position = Vector3(1, 2, 3)
+	marker.set_meta(&"extras", {"orrery": {"type": "shot"}})
+	scene.add_child(marker)
+	LevelConverter.new().convert(scene)
+	var camera: Camera3D = scene.get_node(^"overview") as Camera3D
+	assert_not_null(camera)
+	assert_eq(camera.position, Vector3(1, 2, 3))
+
+
 func test_wrong_setting_type_fails_with_level_id_and_node_name() -> void:
 	var scene: Node3D = _scene()
 	var data: Dictionary = {"type": "level", "id": "t", "par": "fast"}
