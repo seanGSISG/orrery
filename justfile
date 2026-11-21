@@ -168,6 +168,28 @@ export-debug: import
     mkdir -p build/linux-debug
     "{{ godot }}" --headless --path game --export-debug "Linux Debug" ../build/linux-debug/orrery.x86_64
 
+# --- Route bot (#14) ---
+
+# Run the route bot on built levels (all, or the given ids): first_run under par, expert under gold
+[positional-arguments]
+[script("bash")]
+test-levels *ids: fresh-levels import
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    # --quit-after stops a run whose test script did not load; it would wait forever.
+    status=0
+    "{{ godot }}" --headless --path game --quit-after 100 res://harness/route_bot_levels.tscn \
+        -- "$@" 2>&1 | tee "$log" || status=$?
+    if grep -q 'SCRIPT ERROR' "$log" || ! grep -q '^test-levels: ' "$log"; then
+        echo "just test-levels: the level test did not run to the end" >&2
+        exit 1
+    fi
+    exit "$status"
+
+# Print the par (first_run time × 1.5) and gold (expert time × 1.15) from route bot times
+suggest-times id: (test-levels "--suggest" id)
+
 # --- Controller (#18) ---
 
 # Drive a virtual Xbox pad on /dev/uinput (local only). The pad plugs in while the game runs;
