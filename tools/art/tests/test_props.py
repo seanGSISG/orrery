@@ -157,3 +157,31 @@ def test_kit_prop_places_shared_meshes_and_simple_colliders(
     ]
     assert material["name"] == "brass_default"
     assert validator_errors(out) == 0
+
+
+# A cube mirrored on x (scale -1), and a check that prints how many faces of the cleaned
+# model point inwards.
+MIRRORED = """
+import sys, bpy
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.mesh.primitive_cube_add(size=1, location=(2, 0, 1))
+bpy.context.object.scale = (-1, 1, 1)
+bpy.ops.export_scene.gltf(filepath=sys.argv[-1], export_format="GLB")
+"""
+INWARD = """
+import sys, bpy
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.import_scene.gltf(filepath=sys.argv[-1])
+mesh = next(o for o in bpy.data.objects if o.type == "MESH").data
+centre = sum((v.co for v in mesh.vertices), mesh.vertices[0].co * 0) / len(mesh.vertices)
+inward = sum(1 for p in mesh.polygons if p.normal.dot(p.center - centre) < 0)
+print(f"inward faces: {inward}")
+"""
+
+
+def test_prop_cleanup_keeps_a_mirrored_part_outward(tmp_path: Path) -> None:
+    source, out = tmp_path / "mirrored.glb", tmp_path / "box.glb"
+    blender("--python-expr", MIRRORED, "--", str(source))
+    script = str(ROOT / "tools" / "blender" / "prop_cleanup.py")
+    blender("--python", script, "--", str(source), str(out), "--height", "1")
+    assert "inward faces: 0" in blender("--python-expr", INWARD, "--", str(out))
