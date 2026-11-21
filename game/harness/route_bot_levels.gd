@@ -3,7 +3,8 @@ extends Node
 ## §5.2): the route bot drives the routes of built levels, headless and at full speed. Run the
 ## scene with the level ids as user arguments:
 ##     godot --headless --path game res://harness/route_bot_levels.tscn -- [--suggest] [id ...]
-## With no ids it tests every level in res://levels/built/, and fails when none has a route.
+## With no ids it tests every level in res://levels/built/. It fails when no level it tests
+## has a route.
 ## The first_run route must finish under par and the expert route under gold, with no fall. A
 ## level skips a kind that it has no route of. With --suggest it prints the par and gold that
 ## the bot's times give instead: par = first_run time × 1.5 and gold = expert time × 1.15. It
@@ -45,9 +46,9 @@ func _ready() -> void:
 			print("%-12s suggest kit.level(%s); it has %s" % [id, ", ".join(times), now])
 	var summary: String = "%d passed, %d failed, %d skipped"
 	print("test-levels: " + summary % [counts[&"pass"], counts[&"fail"], counts[&"skip"]])
-	# Like GUT with zero tests: a run of every level that drove no route proves nothing.
-	if every and counts[&"pass"] + counts[&"fail"] == 0:
-		print("test-levels: no built level in %s has a route; run `just build-levels`" % BUILT)
+	# Like GUT with zero tests: a run that drove no route proves nothing.
+	if counts[&"pass"] + counts[&"fail"] == 0:
+		print("test-levels: no tested level in %s has a route; run `just build-levels`" % BUILT)
 		counts[&"fail"] += 1
 	get_tree().quit(1 if counts[&"fail"] > 0 else 0)
 
