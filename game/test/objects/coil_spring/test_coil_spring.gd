@@ -183,12 +183,15 @@ func using() -> MarbleInput:
 
 
 ## Steps with no input while the marble rises, and returns the top height of its lowest
-## point above the floor at y = 0.
+## point above the floor at y = 0. Fails when the marble still rises after 3 s.
 func apex() -> float:
 	var top: float = run.state.position.y
-	while run.state.velocity.y > 0.0:
+	for i: int in seconds(3.0):
+		if run.state.velocity.y <= 0.0:
+			break
 		run.step(MarbleInput.new())
 		top = maxf(top, run.state.position.y)
+	assert_lte(run.state.velocity.y, 0.0, "the marble still rises after 3 s")
 	return top - TUNING.radius
 
 
