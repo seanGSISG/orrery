@@ -20,6 +20,7 @@ defaults:
 jobs:
   lint:
     name: Lint
+    needs: levels
     runs-on: ubuntu-latest
     steps:
       # `just lint` imports the project, with its LFS lightmaps and music.
@@ -28,9 +29,15 @@ jobs:
           lfs: true
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
       - run: just lint
 
-  # Builds every level script with Blender and checks the import; the test jobs get the files.
+  # Builds the marble's core and every level script with Blender and checks the import. Every
+  # other job that runs the game gets the core, because the marble scene needs it; the test
+  # jobs get the levels too.
   levels:
     name: Build levels
     runs-on: ubuntu-latest
@@ -49,6 +56,11 @@ jobs:
           key: ${{ steps.pins.outputs.key }}
       - run: tools/blender/install-ci.sh
       - run: just build-levels
+      - uses: actions/upload-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
           name: levels
@@ -71,6 +83,10 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: actions/download-artifact@v7
         with:
+          name: marble
+          path: game/core/marble/built/
+      - uses: actions/download-artifact@v7
+        with:
           name: levels
           path: game/levels/built/
       - run: just test
@@ -79,6 +95,7 @@ jobs:
   # The harness contract tests against a headless debug build; the GPU screenshot test runs locally.
   harness:
     name: Harness contract tests
+    needs: levels
     runs-on: ubuntu-latest
     steps:
       # The game imports and plays the LFS music.
@@ -87,10 +104,15 @@ jobs:
           lfs: true
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
       - run: just test-harness
 
   export:
     name: Export Linux and Windows
+    needs: levels
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -99,6 +121,10 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           templates: "true"
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
       - run: just export
       - name: Boot the Linux export
         timeout-minutes: 2
