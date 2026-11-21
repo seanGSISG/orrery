@@ -11,6 +11,9 @@ extends Camera3D
 ## A focus move longer than this in one tick is a teleport (restart, respawn): the camera
 ## snaps instead of smoothing, m.
 const SNAP_DISTANCE: float = 1.0
+## Radius of the cast that finds the far face of a thin Solid, m. The camera stops this far
+## inside that face, so it sees the face from behind.
+const INSIDE: float = 0.02
 
 ## Turn camera shake off or on (the accessibility setting of docs/plan.md §2.13). It applies
 ## to every camera, also to cameras made later.
@@ -20,11 +23,15 @@ static var shake_enabled: bool = true
 @export var distance: float = 2.5
 ## Closest distance from the marble centre, m, so the camera never goes into the marble. When
 ## a Solid is nearer (the marble rests against a wall behind it), the camera goes into the
-## Solid: faces seen from behind are not drawn, so the marble stays in view.
+## Solid: faces seen from behind are not drawn, so the marble stays in view. When the Solid is
+## thinner than that, the camera stops inside it, not past it.
 @export var min_distance: float = 0.5
 ## Radius of the sphere that keeps the camera away from Solids, m. Keep it below the marble
 ## radius: the cast starts at the marble centre and ignores a Solid that it already overlaps.
+## The camera reads it each tick.
 @export var clearance: float = 0.15
+## Vertical field of view, degrees. The camera sets Camera3D.fov from it each tick.
+@export var field_of_view: float = 75.0
 ## How fast the camera's up turns to a new up, 1/s. 6 turns 95% of the way in 0.5 s.
 @export var up_rate: float = 6.0
 ## How fast the camera moves back out after a pull-in, 1/s. A pull-in is instant.
@@ -42,7 +49,11 @@ var run: LevelRun
 ## The shadow under the marble. The camera places it each tick.
 var shadow: BlobShadow = BlobShadow.new()
 
+## The cast at clearance, made again when clearance changes.
 var _world: WorldQuery
+var _world_radius: float = 0.0
+## The thin cast that finds the far face of a thin Solid.
+var _inside: WorldQuery
 ## Yaw reference, as Marble.frame: y is the marble's up, and it turns by the shortest arc.
 var _frame: Basis = Basis.IDENTITY
 ## The camera's up, which turns toward the marble's up at up_rate.
@@ -60,7 +71,7 @@ var _time: float = 0.0
 func _ready() -> void:
 	process_physics_priority = 1
 	add_child(shadow)
-	_world = WorldQuery.new(get_world_3d().direct_space_state, clearance, 0.0)
+	_inside = WorldQuery.new(get_world_3d().direct_space_state, INSIDE, 0.0)
 	if run != null:
 		run.feedback.connect(_on_feedback)
 
@@ -87,15 +98,34 @@ func follow(state: GameState, input: MarbleInput, dt: float) -> void:
 	var tilt: Basis = Basis(Quaternion(_frame.y, _up))
 	var view: Basis = tilt * _frame * Basis(Vector3.UP, input.camera_yaw)
 	view = view * Basis(Vector3.RIGHT, pitch)
-	var open: float = maxf(distance * _world.sweep(_focus, view.z * distance), min_distance)
+	var open: float = _open_distance(view.z)
 	if snap or open < _distance:
 		_distance = open
 	else:
 		_distance = lerpf(_distance, open, _rate(return_rate, dt))
+	fov = field_of_view
 	global_transform = Transform3D(view * _shake_turn(dt), _focus + view.z * _distance)
 	shadow.place(_focus, state.up)
 	if snap:
 		_reset_interpolation()
+
+
+## Returns the camera distance along back (a unit vector) at which no Solid hides the marble.
+## It is where the clearance cast from the focus stops, but at least min_distance. When
+## min_distance puts the camera past the far face of a thin Solid, the camera moves in to just
+## inside that face: from there it sees the Solid's faces from behind, which are not drawn.
+func _open_distance(back: Vector3) -> float:
+	if _world == null or _world_radius != clearance:
+		_world = WorldQuery.new(get_world_3d().direct_space_state, clearance, 0.0)
+		_world_radius = clearance
+	var open: float = distance * _world.sweep(_focus, back * distance)
+	if open >= min_distance:
+		return open
+	# The thin cast ignores a Solid that the camera is already in, and the back faces of
+	# a Solid around it, so it stops only at a far face that the camera sees from the front.
+	var eye: Vector3 = _focus + back * min_distance
+	var past: float = min_distance * _inside.sweep(eye, -back * min_distance)
+	return min_distance if past >= min_distance else min_distance - past - 2.0 * INSIDE
 
 
 ## Returns the small turn of the camera for the shake left, and lets the shake decay.

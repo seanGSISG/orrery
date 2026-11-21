@@ -86,6 +86,39 @@ func test_up_follows_a_change_smoothly() -> void:
 		assert_gt((camera.global_position - state.position).dot(up), 0.5, "above the marble")
 
 
+## With the marble against a 0.2 m wall and the camera on its far side, min_distance would put
+## the camera past the wall. The camera stops inside the wall, so a ray from the camera to the
+## marble meets no face that the camera sees from the front.
+func test_marble_stays_in_sight_behind_a_thin_wall() -> void:
+	_start(FLAT, [_thin_wall()])
+	run.marble.teleport(Vector3(0, 0.2, 0.4 - 0.2 - Marble.SKIN), Vector3.ZERO)
+	_play(_looking(0.0, PlayerSource.START_PITCH), 0.2)
+	var ray: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+		camera.global_position, run.state.position, WorldQuery.SOLID_MASK
+	)
+	ray.hit_back_faces = false
+	var hit: Dictionary = camera.get_world_3d().direct_space_state.intersect_ray(ray)
+	assert_true(hit.is_empty(), "a front face hides the marble: %s" % [hit])
+	assert_gt(camera.global_position.z, 0.4, "the camera went into the wall")
+
+
+## The camera reads clearance and field_of_view each tick, so the tuning overlay changes them
+## live: a larger clearance pulls the camera in from the wall at once.
+func test_reads_clearance_and_field_of_view_each_tick() -> void:
+	_start(WALL)
+	run.marble.teleport(Vector3(4, 0.2, -0.5), Vector3.ZERO)
+	var input: MarbleInput = _looking(0.0, PlayerSource.START_PITCH)
+	_play(input, 0.5)
+	var before: float = camera.global_position.distance_to(run.state.position)
+	assert_lt(before, camera.distance, "the wall pulled the camera in")
+	camera.clearance += 0.1
+	camera.field_of_view = 70.0
+	_play(input, DT)
+	var after: float = camera.global_position.distance_to(run.state.position)
+	assert_almost_eq(after, before - 0.1 / cos(PlayerSource.START_PITCH), 0.005)
+	assert_eq(camera.fov, 70.0)
+
+
 ## A hard landing shakes the camera for a short time; a soft landing does not.
 func test_hard_landing_shakes_the_camera() -> void:
 	_start(FLAT)
@@ -129,9 +162,10 @@ func test_blob_shadow_sits_straight_below() -> void:
 	assert_false(shadow.visible, "no floor below")
 
 
-## Starts a run of level with a follow camera in it, as Game.load_level does.
-func _start(level: PackedScene) -> void:
-	start_run(level)
+## Starts a run of level and the extra nodes with a follow camera in it, as Game.load_level
+## does.
+func _start(level: PackedScene, extra: Array[Node3D] = []) -> void:
+	start_run(level, extra)
 	camera = FollowCamera.new()
 	camera.run = run
 	run.add_child(camera)
@@ -159,6 +193,21 @@ func _largest_turn(input: MarbleInput, rest: Basis, seconds: float) -> float:
 ## Returns the camera's up without the pitch of input.
 func _camera_up(input: MarbleInput) -> Vector3:
 	return (camera.global_basis * Basis(Vector3.RIGHT, -input.camera_pitch)).y
+
+
+## Returns a Solid wall 0.2 m thick from z = 0.4 to 0.6, with a one-sided triangle mesh as
+## the level converter makes.
+func _thin_wall() -> Solid:
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3(4, 2, 0.2)
+	var mesh: ConcavePolygonShape3D = ConcavePolygonShape3D.new()
+	mesh.set_faces(box.get_faces())
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	shape.shape = mesh
+	var wall: Solid = Solid.new()
+	wall.position = Vector3(0, 1, 0.5)
+	wall.add_child(shape)
+	return wall
 
 
 ## Returns a MarbleInput with no move and the camera at yaw and pitch.

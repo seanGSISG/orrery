@@ -8,8 +8,7 @@ extends CanvasLayer
 ##
 ## Controller: hold LB and press Y to open or close. D-pad up and down pick a value, left
 ## and right change it (hold to repeat), RB saves. Keyboard: F1, the arrow keys and F5.
-## Not listed: radius, mass and the solver limits (not feel values), and the camera
-## clearance (the camera reads it only once, when it starts).
+## Not listed: radius, mass and the solver limits (not feel values).
 
 const MARBLE_FILE: String = "res://core/marble_tuning.tres"
 const CAMERA_FILE: String = "res://core/camera/follow_camera.gd"
@@ -191,13 +190,15 @@ func build(run: LevelRun, camera: FollowCamera) -> void:
 		_heading("Camera")
 		_add(camera, &"distance", 0.1, 1.0, 8.0, CAMERA_FILE)
 		_add(camera, &"min_distance", 0.05, 0.2, 3.0, CAMERA_FILE)
+		# Below the marble radius (0.2 m): see FollowCamera.clearance.
+		_add(camera, &"clearance", 0.01, 0.05, 0.19, CAMERA_FILE)
 		_add(camera, &"up_rate", 0.5, 0.5, 30.0, CAMERA_FILE)
 		_add(camera, &"return_rate", 0.5, 0.5, 30.0, CAMERA_FILE)
 		_add(camera, &"hard_landing", 0.05, 0.0, 1.0, CAMERA_FILE)
 		_add(camera, &"shake_angle", 0.005, 0.0, 0.2, CAMERA_FILE)
 		_add(camera, &"shake_decay", 0.25, 0.25, 10.0, CAMERA_FILE)
 		_add(load(CAMERA_FILE), &"shake_enabled", 0.0, 0.0, 0.0, CAMERA_FILE)
-		_add(camera, &"fov", 1.0, 50.0, 100.0, "", "fov (not saved)")
+		_add(camera, &"field_of_view", 1.0, 50.0, 100.0, CAMERA_FILE, "fov")
 	_heading("Input")
 	_add(InputHub, &"dead_zone", 0.01, 0.0, 0.5, HUB_FILE)
 	_add(load(PLAYER_FILE), &"look_sensitivity", 0.05, 0.1, 3.0, PLAYER_FILE)
