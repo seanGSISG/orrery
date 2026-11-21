@@ -366,3 +366,53 @@ def test_bad_inputs_are_refused(settings: Config, image: Path) -> None:
         tripo.model(settings.model, "x.glb", image=image, face_limit=30_000)
     with pytest.raises(ValueError, match="1 to 4 views"):
         tripo.edit_multiview(settings.model, "t", {}, "v")
+
+
+def test_views_without_all_four_views_fail_and_keep_the_task(
+    monkeypatch: pytest.MonkeyPatch,
+    image: Path,
+    settings: Config,
+    isolated: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    three = {k: v for k, v in VIEWS.items() if not k.startswith("back")}
+    use(monkeypatch, Mock(["success"], {"generate_multiview_image": three}))
+    with pytest.raises(SystemExit):
+        cli.main(["views", str(image), "-o", "v", "--yes"], settings)
+    assert "no back_view_url" in json.loads(capsys.readouterr().out)["error"]
+    assert (isolated / "models" / "v.task.json").exists()
+
+
+def test_model_refuses_views_and_local_images_together(
+    monkeypatch: pytest.MonkeyPatch,
+    image: Path,
+    settings: Config,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    use(monkeypatch, Mock(["success"]))
+    with pytest.raises(SystemExit):
+        cli.main(
+            ["model", str(image), "--views", "t", "-o", "x.glb", "--dry-run"], settings
+        )
+    assert "not both" in json.loads(capsys.readouterr().out)["error"]
+
+
+def test_a_task_is_counted_once_when_its_download_is_retried(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: Config,
+    isolated: Path,
+) -> None:
+    use(monkeypatch, Mock(["success"]))
+    record = {
+        "service": "s",
+        "model": "m",
+        "prompt": "p",
+        "settings": {},
+        "estimated_usd": 0.4,
+    }
+    task_file = isolated / "models" / "lamp.glb.task.json"
+    task_file.parent.mkdir(parents=True)
+    for _ in range(2):
+        task_file.write_text(json.dumps({"task_id": "task-1", "record": record}))
+        cli.main(["model", "x.png", "-o", "lamp.glb"], settings)
+    assert len((isolated / "spend.jsonl").read_text().splitlines()) == 1

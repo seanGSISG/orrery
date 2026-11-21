@@ -136,12 +136,11 @@ def cmd_set(args: argparse.Namespace, config: Config) -> None:
     if args.batch:
         run_batch(args, config, jobs)
         return
-    todo = [job for job in jobs if not manifest.manifest_path(job.path).exists()]
+    todo = [job for job in jobs if not made(job)]
     for job in jobs:
         if job not in todo:
             print(
-                f"{job.out}: made before; delete it and its .json to make it again",
-                file=sys.stderr,
+                f"{job.out}: made before; delete it to make it again", file=sys.stderr
             )
     estimate = sum(images.estimate_usd(job, config.image, batch=False) for job in todo)
     if not todo or not gate(
@@ -152,6 +151,13 @@ def cmd_set(args: argparse.Namespace, config: Config) -> None:
         return
     client = openai_client(config)
     emit_results([run_live(client, job, config) for job in todo])
+
+
+def made(job: images.ImageJob) -> bool:
+    """True when a job's image and recipe exist and a transparent image has clear pixels."""
+    if not job.path.is_file() or not manifest.manifest_path(job.path).is_file():
+        return False
+    return not job.transparent or not images.alpha_problem(job.path)
 
 
 def run_batch(
@@ -190,6 +196,8 @@ def run_batch(
             )
         state = None
     if state is None:
+        if any(job.refs for job in jobs):
+            raise UsageError("a batch takes no reference images; run the set live")
         estimate = sum(
             images.estimate_usd(job, config.image, batch=True) for job in jobs
         )
@@ -216,9 +224,13 @@ def run_batch(
         return
     state.results = images.collect(client, batch, jobs, config.image)
     state.write(state_file)
-    for result in state.results:
-        if result.ok:
-            record_spend("openai", result.billed_usd or 0.0, state.batch_id, result.out)
+    for job, result in zip(jobs, state.results, strict=True):
+        # A returned image is billed even when it fails the alpha check.
+        usd = result.billed_usd
+        if usd is None and job.path.is_file():
+            usd = images.estimate_usd(job, config.image, batch=True)
+        if usd is not None:
+            record_spend("openai", usd, f"{state.batch_id}/{job.out}", result.out)
     emit_results(state.results)
 
 
@@ -261,6 +273,8 @@ def cmd_model(args: argparse.Namespace, config: Config) -> None:
     the image as the front plus --left, --back or --right."""
     side_views = views_of(args, "left", "back", "right")
     image = Path(args.image) if args.image else None
+    if args.views and (image or side_views):
+        raise UsageError("give --views or local images, not both")
 
     def make() -> tripo.Task:
         options: dict[str, Any] = {
@@ -328,7 +342,7 @@ def run_task(
             f"Resuming task {task_id}; delete {task_file} to start a new one",
             file=sys.stderr,
         )
-        model_task = bool(started.get("model_task", out.endswith(".glb")))
+        expects = started.get("expects", ["model_url"])
     else:
         task = make()
         usd = task.credits * settings.usd_per_credit
@@ -347,38 +361,37 @@ def run_task(
             "estimated_usd": round(usd, 4),
             "seed": getattr(args, "seed", None),
         }
-        model_task = out.endswith(".glb")
+        expects = list(task.expects)
     client = tripo_client(config)
     if task is not None:
         task_id = client.start(task)
         task_file.parent.mkdir(parents=True, exist_ok=True)
         task_file.write_text(
-            json.dumps({"task_id": task_id, "record": record, "model_task": model_task})
+            json.dumps({"task_id": task_id, "record": record, "expects": expects})
             + "\n"
         )
         print(f"Started task {task_id}", file=sys.stderr)
     data = client.wait(task_id, settings.poll_seconds, settings.timeout_minutes * 60)
     output = data.get("output") or {}
-    model_url = output.get("model_url")
-    if model_task and not (
-        isinstance(model_url, str) and model_url.startswith(("http://", "https://"))
-    ):
-        raise tripo.TripoError(f"task {task_id} succeeded but returned no model_url")
-    files = client.download(output, path)
-    if not files:
-        raise tripo.TripoError(f"task {task_id} succeeded but returned no file")
+    absent = tripo.missing(output, expects)
+    if absent:
+        raise tripo.TripoError(
+            f"task {task_id} succeeded but returned no {', '.join(absent)}"
+        )
     consumed = data.get("credits_consumed")
     billed = (
         None
         if consumed is None
         else round(float(consumed) * settings.usd_per_credit, 4)
     )
+    # Count the charge before the download, which can fail; the ledger keeps one per task.
+    record_spend(
+        "tripo", billed if billed is not None else record["estimated_usd"], task_id, out
+    )
+    files = client.download(output, path)
     manifest.write(
         path,
         manifest.Manifest(**record, mode="task", billed_usd=billed, request_id=task_id),
-    )
-    record_spend(
-        "tripo", billed if billed is not None else record["estimated_usd"], task_id, out
     )
     task_file.unlink()
     emit(ok=True, files=[str(f) for f in files], task_id=task_id, billed_usd=billed)

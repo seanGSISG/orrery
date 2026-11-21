@@ -107,8 +107,13 @@ def spent(service: str) -> float:
 
 
 def record_spend(service: str, usd: float, request_id: str, out: str) -> None:
-    """Adds a paid call to the ledger."""
+    """Adds a paid call to the ledger, once per request id (a resumed task is not counted
+    again)."""
     ledger().parent.mkdir(parents=True, exist_ok=True)
+    if request_id and ledger().exists():
+        for line in ledger().read_text().splitlines():
+            if line.strip() and json.loads(line).get("id") == request_id:
+                return
     row = {
         "date": date.today().isoformat(),
         "service": service,

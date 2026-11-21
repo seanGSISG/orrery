@@ -471,3 +471,49 @@ def test_batch_submits_polls_collects_and_resumes(
     assert "collected files are gone: sign.png" in failed(
         ["set", str(jobs), "--batch"], settings, capsys
     )
+
+
+def test_a_live_set_redoes_a_job_whose_alpha_failed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    settings: Config,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    bodies = iter([image_body(OPAQUE), image_body(CLEAR)])
+    seen = mock_openai(
+        monkeypatch, lambda request: httpx2.Response(200, json=next(bodies))
+    )
+    jobs = tmp_path / "set.jsonl"
+    jobs.write_text(
+        json.dumps({"prompt": "a decal", "out": "d.png", "transparent": True}) + "\n"
+    )
+    with pytest.raises(SystemExit):
+        cli.main(["set", str(jobs), "--yes"], settings)
+    capsys.readouterr()
+    assert run(["set", str(jobs), "--yes"], settings, capsys)["ok"] and len(seen) == 2
+
+
+def test_a_batch_refuses_references_before_the_preview(
+    tmp_path: Path, settings: Config, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ref = tmp_path / "ref.png"
+    ref.write_bytes(OPAQUE)
+    jobs = tmp_path / "set.jsonl"
+    jobs.write_text(
+        json.dumps({"prompt": "a", "out": "a.png", "refs": [str(ref)]}) + "\n"
+    )
+    error = failed(["set", str(jobs), "--batch", "--dry-run"], settings, capsys)
+    assert "no reference images" in error
+
+
+def test_an_output_inside_another_recipe_is_refused(
+    tmp_path: Path, settings: Config
+) -> None:
+    jobs = tmp_path / "set.jsonl"
+    lines = [
+        {"prompt": "a", "out": "clock.png"},
+        {"prompt": "b", "out": "clock.png.json/b.png"},
+    ]
+    jobs.write_text("".join(json.dumps(line) + "\n" for line in lines))
+    with pytest.raises(ValueError, match="a file and its folder"):
+        images.read_jobs(jobs, settings.image)

@@ -201,13 +201,17 @@ def read_jobs(path: Path, settings: ImageSettings) -> list[ImageJob]:
             jobs.append(job_from_line(json.loads(text), settings))
         except (ValueError, KeyError, TypeError, AttributeError) as error:
             problems.append(f"line {number}: {error}")
+    # Each job writes its image and its recipe; no two may be one path, or a file and a
+    # folder of each other.
     seen: set[Path] = set()
     for job in jobs:
+        mine = {job.path, manifest.manifest_path(job.path)}
+        parents = {parent for p in mine for parent in p.parents}
         if job.path in seen:
             problems.append(f"two jobs write {job.out}")
-        elif seen & set(job.path.parents) or any(job.path in p.parents for p in seen):
+        elif seen & (mine | parents) or any(p in o.parents for p in mine for o in seen):
             problems.append(f"{job.out} and another output are a file and its folder")
-        seen.add(job.path)
+        seen |= mine
     if problems:
         raise ValueError(f"{path}: " + "; ".join(problems))
     if not jobs:

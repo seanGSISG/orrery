@@ -28,6 +28,7 @@ TEXTURE_QUALITIES = ("standard", "detailed")
 TEXTURE_TASK_QUALITIES = ("fast", "standard", "detailed", "extreme")
 SERIES = ("p1", "p2", "h")
 VIEWS = ("front", "left", "back", "right")
+VIEW_KEYS = tuple(f"{view}_view_url" for view in VIEWS)
 UPLOAD_TYPES = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
@@ -48,13 +49,15 @@ class Task:
     """One Tripo task. endpoint: the path under the API, for example
     `/generation/image-to-model`. body: its JSON options, with a Path for each local file.
     out: the output name under build/art/models/ (a .glb for a model task). credits: the
-    estimated cost. model: the model id for the recipe."""
+    estimated cost. model: the model id for the recipe. expects: the output keys that a
+    successful task must return."""
 
     endpoint: str
     body: dict[str, Any]
     out: str
     credits: float
     model: str = ""
+    expects: tuple[str, ...] = ("model_url",)
 
     @property
     def path(self) -> Path:
@@ -108,7 +111,8 @@ def image_to_multiview(settings: ModelSettings, image: Path, out: str) -> Task:
     a time). The views are saved as `<out>.front.png` ..."""
     credits = settings.credits["image-to-multiview"]
     body = {"input": _file(image)}
-    return Task("/generation/image-to-multiview", body, _out(out, False), credits)
+    out = _out(out, False)
+    return Task("/generation/image-to-multiview", body, out, credits, "", VIEW_KEYS)
 
 
 def edit_multiview(
@@ -124,7 +128,8 @@ def edit_multiview(
     prompts = [{"view": view, "prompt": edits[view]} for view in VIEWS if view in edits]
     credits = settings.credits["edit-multiview"] * len(prompts)
     body = {"input": task_id, "prompts": prompts}
-    return Task("/generation/edit-multiview", body, _out(out, False), credits)
+    out = _out(out, False)
+    return Task("/generation/edit-multiview", body, out, credits, "", VIEW_KEYS)
 
 
 def model(
@@ -227,6 +232,12 @@ def _urls(output: Any, key: str = "") -> Iterator[tuple[str, str]]:
             yield from _urls(value, f"{key}{i}")
     elif isinstance(output, str) and output.startswith(("http://", "https://")):
         yield key, output
+
+
+def missing(output: dict[str, Any], expects: list[str] | tuple[str, ...]) -> list[str]:
+    """The expected output keys that hold no URL in a task output."""
+    found = {key for key, _ in _urls(output)}
+    return [key for key in expects if key not in found]
 
 
 def _label(key: str) -> str:
@@ -334,14 +345,21 @@ class Tripo:
         to the CDN. Returns the files."""
         saved: list[Path] = []
         path.parent.mkdir(parents=True, exist_ok=True)
+        primary = output.get("model_url")
         client = httpx2.Client(
             timeout=300, follow_redirects=True, transport=self.transport
         )
         with client as cdn:
             for key, url in _urls(output):
                 ext = PurePosixPath(urlparse(url).path).suffix
-                name = f"{path.stem}.{_label(key)}{ext}"
-                target = path if key == "model_url" else path.with_name(name)
+                if key == "model_url" and url == primary and path not in saved:
+                    target = path
+                else:
+                    # Two results with one key name never overwrite each other.
+                    target, n = path.with_name(f"{path.stem}.{_label(key)}{ext}"), 1
+                    while target in saved or target == path:
+                        n += 1
+                        target = path.with_name(f"{path.stem}.{_label(key)}{n}{ext}")
                 response = cdn.get(url)
                 response.raise_for_status()
                 target.write_bytes(response.content)
