@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1088" role="img" aria-labelledby="ascentz1title">
+<title id="ascentz1title">Ascent 1 Clockmaker's Square: side elevation with top-down inset</title>
+<style>
+.m-bg{fill:#0f1218}
+.m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
+.m-h{font-size:27px;font-weight:700}
+.m-s{font-size:18px;fill:#ffe9a8}
+.m-n{font:700 17px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#0f1218;text-anchor:middle}
+.m-mid{text-anchor:middle}
+.m-end{text-anchor:end}
+.m-grid{stroke:#ffffff;stroke-opacity:.07;stroke-width:1;fill:none}
+.m-axis{stroke:#8f9bb0;stroke-width:2;fill:none}
+.m-edge{stroke:#8fa0ba;stroke-opacity:.55;stroke-width:1.5}
+.e-2{fill:#1b3152}
+.e0{fill:#27466a}
+.e2{fill:#2a7183}
+.e4{fill:#4c8a62}
+.e6{fill:#9a8d3c}
+.e8{fill:#c98f2b}
+.m-dish{fill:#1f3a5a;stroke:#d8a737;stroke-width:2;stroke-dasharray:3 5}
+.m-inlay{fill:none;stroke:#d8a737;stroke-width:2;stroke-opacity:.7}
+.m-chev{fill:none;stroke:#f4efe4;stroke-opacity:.6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.m-wall{stroke:#aab4c4;stroke-width:5;stroke-linecap:round;fill:none}
+.m-pillar{fill:#0b0d12;stroke:#8f9bb0;stroke-width:2}
+.m-beam{stroke:#e9c46a;stroke-width:11;stroke-linecap:round;fill:none}
+.m-under{fill:#172a44;fill-opacity:.55;stroke:#ffe9a8;stroke-width:2;stroke-dasharray:6 5}
+.m-trap{fill:#6d4a1e;stroke:#ffb347;stroke-width:2.5}
+.m-trapx{stroke:#ffb347;stroke-width:2.5;fill:none}
+.m-crum{fill:#3b3f52;stroke:#d7dbe8;stroke-width:2.5;stroke-dasharray:5 5}
+.m-crack{stroke:#d7dbe8;stroke-width:2;fill:none}
+.m-mp{fill:#8b5cf6;stroke:#efe7ff;stroke-width:2.5}
+.m-mpp{stroke:#c4b5fd;stroke-width:3;stroke-dasharray:3 7;stroke-linecap:round;fill:none}
+.m-gear{fill:#5b6478;stroke:#e9c46a;stroke-width:7;stroke-dasharray:7 6}
+.m-pend{stroke:#fb7185;stroke-width:4;stroke-linecap:round;fill:none}
+.m-pendarc{stroke:#fb7185;stroke-width:2.5;stroke-dasharray:4 5;fill:none}
+.m-bob{fill:#fb7185;stroke:#fff;stroke-width:2}
+.m-case{fill:none;stroke:#0f1218;stroke-width:9;stroke-opacity:.6;stroke-linejoin:round;stroke-linecap:round}
+.m-r1{fill:none;stroke:#ffffff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#ascentz1a1)}
+.m-r2{fill:none;stroke:#ff5cf4;stroke-width:4;stroke-dasharray:11 8;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#ascentz1a2)}
+.m-sil{fill:#1a2230;stroke:#2d3a4f;stroke-width:1.5}
+.m-solid{fill:#33415a;stroke:#2d3a4f;stroke-width:1.5}
+.m-walk{fill:none;stroke:#e9c46a;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.m-ship{fill:#4a3550;stroke:#7a5b83;stroke-width:1.5}
+.m-zone{stroke:#8f9bb0;stroke-width:2;stroke-dasharray:10 8;fill:none}
+.m-fall{fill:none;stroke:#8f9bb0;stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round;marker-end:url(#ascentz1a3)}
+.m-box{fill:#141925;stroke:#2d3a4f;stroke-width:2}
+</style>
+<defs>
+<marker id="ascentz1a1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffffff"/></marker>
+<marker id="ascentz1a2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff5cf4"/></marker>
+<marker id="ascentz1a3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8f9bb0"/></marker>
+<g id="ascentz1gem"><path d="M0-12L10 0L0 12L-10 0z" fill="#ff3b5f" stroke="#fff" stroke-width="2.5"/></g>
+<g id="ascentz1egg"><circle r="19" fill="none" stroke="#ffd84a" stroke-width="2.5" stroke-dasharray="4 4"/><ellipse rx="9" ry="12" fill="#ffd84a" stroke="#0f1218" stroke-width="2"/><path d="M-8-2H8" stroke="#0f1218" stroke-width="2"/></g>
+<g id="ascentz1start"><circle r="15" fill="#0f1218" stroke="#fff" stroke-width="3.5"/><text class="m-n" y="6" style="fill:#fff">S</text></g>
+<g id="ascentz1finish"><circle r="15" fill="#fff" stroke="#0f1218" stroke-width="2.5"/><text class="m-n" y="6">F</text></g>
+<g id="ascentz1cp"><path d="M-6 13V-14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M-5-14L13-7L-5 0z" fill="#3ee07f" stroke="#fff" stroke-width="2"/></g>
+<g id="ascentz1bump"><circle r="11" fill="#ff8a3d" stroke="#fff" stroke-width="2.5"/><circle r="4" fill="#0f1218"/></g>
+<g id="ascentz1vent"><circle r="11" fill="#0f1218" stroke="#7dd3fc" stroke-width="3"/><path d="M-5 2L0-4L5 2M-5 7L0 1L5 7" fill="none" stroke="#7dd3fc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="ascentz1spring"><circle r="12" fill="#b6f03c" stroke="#0f1218" stroke-width="2"/><path d="M-6 6L6 3L-6-1L6-4L-2-8" fill="none" stroke="#0f1218" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="ascentz1rest"><rect x="-10" y="-10" width="20" height="20" rx="4" fill="#0f1218" stroke="#3ee07f" stroke-width="2.5"/><path d="M-5 0H5" stroke="#3ee07f" stroke-width="3" stroke-linecap="round"/></g>
+<g id="ascentz1gate"><path d="M-12 14V-6A12 12 0 0 1 12-6V14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M-5 14V-4M5 14V-4M0 14V-8" stroke="#fff" stroke-width="2"/></g>
+</defs>
+<rect class="m-bg" width="720" height="1088"/>
+<text class="m-t m-h" x="30" y="44">Ascent 1 Clockmaker's Square</text>
+<text class="m-t m-s m-end" x="690" y="44">side view, height in m</text>
+<g transform="translate(0,70)">
+<!-- side view from the south. 10 px = 1 m. x east; y = -10 x height in m -->
+<g transform="translate(76,600)">
+<path class="m-grid" d="M0 0H624M0-100H624M0-200H624M0-300H624M0-400H624M0-500H624"/>
+<path class="m-axis" d="M-12 0V-545M-20 0H-12M-20-100H-12M-20-200H-12M-20-300H-12M-20-400H-12M-20-500H-12"/>
+<text class="m-t m-s m-end" x="-24" y="6">0</text><text class="m-t m-s m-end" x="-24" y="-94">10</text><text class="m-t m-s m-end" x="-24" y="-194">20</text><text class="m-t m-s m-end" x="-24" y="-294">30</text><text class="m-t m-s m-end" x="-24" y="-394">40</text><text class="m-t m-s m-end" x="-24" y="-494">50</text>
+<!-- buildings (backdrop) -->
+<path class="m-sil" d="M0 0V-100L20-140H30L100-100V0z"/>
+<rect class="m-sil" x="70" y="-40" width="70" height="40"/>
+<rect class="m-sil" x="455" y="-90" width="80" height="90"/>
+<path class="m-sil" d="M270 0V-535L280-520L286-528L292-505H330L338-522L344-512L350-530V0z"/>
+<!-- the square, 0 m -->
+<path class="m-walk" d="M0 0H624"/>
+<!-- route A, west: stalls +1 +2 +3, bakery roof +4, guildhall roof +10 to +14 -->
+<rect class="m-solid" x="215" y="-10" width="30" height="10"/><rect class="m-solid" x="180" y="-20" width="30" height="20"/><rect class="m-solid" x="145" y="-30" width="30" height="30"/>
+<path class="m-walk" d="M215-10H245M180-20H210M145-30H175M70-40H140M100-100L30-140H2"/>
+<!-- egg room inside the guildhall, entered down the dry chimney -->
+<rect class="m-under" x="8" y="-30" width="48" height="27"/>
+<path class="m-fall" d="M24-138V-36"/>
+<!-- hoist +19.5 to +27 (period 12 s) and crane beam +21 to +27 -->
+<path class="m-mpp" d="M60-195L232-270"/><rect class="m-mp" x="46" y="-199" width="30" height="8" rx="2"/>
+<path class="m-beam" d="M30-212L240-272" style="stroke-width:5"/>
+<!-- tower: west scaffold +26, belfry floor +26, east ledge +14, lower ramps -->
+<path class="m-walk" d="M236-260H270M272-260H348M350-140H372M350-140L275-180L345-220L275-260"/>
+<!-- route B, east: crates +1 +2, balcony +3, gear 1, workshop roof +9, gear 2, plank bridge +14 -->
+<rect class="m-solid" x="385" y="-10" width="30" height="10"/><rect class="m-solid" x="420" y="-20" width="30" height="20"/>
+<path class="m-walk" d="M385-10H415M420-20H450M455-30H528M455-90H535"/>
+<circle class="m-gear" cx="566" cy="-62" r="31"/><circle class="m-gear" cx="424" cy="-122" r="27"/>
+<rect class="m-crum" x="374" y="-144" width="22" height="8"/>
+<!-- upper tower, inside: spiral ramp (side view), two pendulums, counterweight +31 to +47 (period 8 s) -->
+<path class="m-walk" d="M275-260L345-310L275-360L345-410L275-460L330-500M272-500H348"/>
+<path class="m-pend" d="M310-385L296-338"/><circle class="m-bob" cx="295" cy="-334" r="7"/><path class="m-pendarc" d="M286-336Q310-322 334-336"/>
+<path class="m-pend" d="M310-485L324-438"/><circle class="m-bob" cx="325" cy="-434" r="7"/><path class="m-pendarc" d="M286-436Q310-422 334-436"/>
+<path class="m-mpp" d="M310-314V-470"/><rect class="m-mp" x="298" y="-318" width="24" height="8" rx="2"/>
+<!-- upper tower, outside: scaffold stairs, two vents, bumpers -->
+<path class="m-walk" d="M352-270H378M382-280H404M408-290H430M434-300H456M362-370H432M364-400H384M388-390H408M412-380H432M356-470H420M352-490H372M376-480H396"/>
+<!-- fall lines -->
+<path class="m-fall" d="M124-48L150-6"/><path class="m-fall" d="M316-392L326-266"/><path class="m-fall" d="M470-296L500-96"/>
+<!-- routes -->
+<path class="m-case" d="M300-6H250L230-16L195-26L160-36L92-46V-104L24-146L12-200L60-204L226-276L262-266H275"/>
+<path class="m-r1" d="M300-6H250L230-16L195-26L160-36L92-46"/>
+<path class="m-r1" d="M86-52V-104L28-146L14-198"/>
+<path class="m-r1" d="M60-206L226-278L264-266"/>
+<path class="m-r1" d="M280-268L340-312L282-358L340-406L282-456L322-492"/>
+<path class="m-r2" d="M22-204L32-222L238-282L262-272"/>
+<path class="m-r2" d="M290-282L338-316L314-322V-464L296-470L326-494"/>
+<!-- objects -->
+<use href="#ascentz1start" x="318" y="-22"/>
+<use href="#ascentz1vent" x="80" y="-56"/><use href="#ascentz1vent" x="10" y="-156"/><use href="#ascentz1vent" x="446" y="-316"/><use href="#ascentz1vent" x="372" y="-416"/>
+<use href="#ascentz1bump" x="436" y="-384"/><use href="#ascentz1bump" x="424" y="-484"/>
+<use href="#ascentz1egg" x="34" y="-18"/>
+<use href="#ascentz1rest" x="124" y="-56"/><use href="#ascentz1rest" x="500" y="-106"/><use href="#ascentz1rest" x="328" y="-246"/><use href="#ascentz1rest" x="398" y="-354"/><use href="#ascentz1rest" x="340" y="-516"/>
+<!-- labels -->
+<text class="m-t m-s" x="150" y="-70">Bakery +4</text>
+<text class="m-t m-s" x="112" y="-120">Guildhall +14</text>
+<text class="m-t m-s" x="100" y="-236">hoist</text><text class="m-t m-s" x="96" y="-272">crane beam</text>
+<text class="m-t m-s" x="544" y="-134">Workshop</text><text class="m-t m-s" x="544" y="-110">+9</text>
+<text class="m-t m-s" x="380" y="-160">planks +14</text>
+<text class="m-t m-s" x="380" y="-232">Belfry floor +26</text>
+<text class="m-t m-s" x="464" y="-330">outside way</text>
+<text class="m-t m-s" x="440" y="-500">Rim +50, to zone 2</text>
+<text class="m-t m-s" x="322" y="20">Square 0</text><path class="m-axis" d="M524 14H624M524 6V22M624 6V22"/><text class="m-t m-s m-end" x="516" y="38">10 m</text>
+<text class="m-t" x="160" y="20">A</text><text class="m-t" x="440" y="20">B</text>
+<!-- top-down inset of the square, 3.5 px = 1 m, north up -->
+<g transform="translate(0,-530)">
+<rect class="m-box" x="-2" y="-2" width="222" height="176"/>
+<rect class="e0 m-edge" x="49" y="49" width="119" height="112"/>
+<rect class="m-solid" x="0" y="21" width="38" height="70"/><rect class="m-solid" x="14" y="98" width="35" height="42"/>
+<rect class="m-solid" x="168" y="63" width="42" height="63"/>
+<rect class="m-solid" x="94" y="14" width="28" height="28" style="stroke:#e9c46a;stroke-width:2.5"/>
+<rect class="m-solid" x="56" y="116" width="10" height="10"/><rect class="m-solid" x="70" y="116" width="10" height="10"/><rect class="m-solid" x="84" y="116" width="10" height="10"/>
+<circle cx="108" cy="104" r="10" fill="none" stroke="#7dd3fc" stroke-width="2.5"/>
+<circle cx="108" cy="58" r="6" fill="#0f1218" stroke="#fff" stroke-width="2.5"/>
+<path class="m-r1" d="M104 62L92 108L56 122L34 112L22 84" style="stroke-width:3"/>
+<path class="m-r1" d="M114 62L150 104L176 100" style="stroke-width:3;stroke-dasharray:2 6"/>
+<text class="m-t m-s" x="128" y="34">Tower</text><text class="m-t m-s" x="60" y="150">A</text><text class="m-t m-s" x="146" y="132">B</text><text class="m-t m-s" x="4" y="166">plan, 62 m wide</text>
+</g>
+</g>
+</g>
+<path d="M20 720H700" stroke="#2d3a4f" stroke-width="2"/>
+<g transform="translate(52,747)"><use href="#ascentz1start"/></g>
+<text class="m-t" x="86" y="754">Start pad</text>
+<g transform="translate(397,747)"><use href="#ascentz1egg"/></g>
+<text class="m-t" x="431" y="754">Clockwork Egg</text>
+<g transform="translate(52,791)"><use href="#ascentz1rest"/></g>
+<text class="m-t" x="86" y="798">Rest ledge</text>
+<g transform="translate(397,791)"><path class="m-r1" d="M-20 0H16"/></g>
+<text class="m-t" x="431" y="798">First-run route</text>
+<g transform="translate(52,835)"><path class="m-r2" d="M-20 0H16"/></g>
+<text class="m-t" x="86" y="842">Expert route</text>
+<g transform="translate(397,835)"><path class="m-fall" d="M-14-12L10 10"/></g>
+<text class="m-t" x="431" y="842">Where a fall lands</text>
+<g transform="translate(52,879)"><path class="m-walk" d="M-18 0H18"/></g>
+<text class="m-t" x="86" y="886">Surface you can roll on</text>
+<g transform="translate(397,879)"><use href="#ascentz1vent"/></g>
+<text class="m-t" x="431" y="886">Steam Vent</text>
+<g transform="translate(52,923)"><use href="#ascentz1bump"/></g>
+<text class="m-t" x="86" y="930">Bumper</text>
+<g transform="translate(397,923)"><path class="m-pend" d="M-14-12L6 8"/><circle class="m-bob" cx="8" cy="10" r="6"/></g>
+<text class="m-t" x="431" y="930">Pendulum</text>
+<g transform="translate(52,967)"><path class="m-mpp" d="M-22 0H22"/><rect class="m-mp" x="-12" y="-8" width="24" height="16" rx="2"/></g>
+<text class="m-t" x="86" y="974">Moving platform, path</text>
+<g transform="translate(397,967)"><circle class="m-gear" r="10"/></g>
+<text class="m-t" x="431" y="974">Turning gear</text>
+<g transform="translate(52,1011)"><rect class="m-crum" x="-13" y="-13" width="26" height="26"/><path class="m-crack" d="M-9-6L-1 0L-6 8M2-10L6-2"/></g>
+<text class="m-t" x="86" y="1018">Crumbling Tiles</text>
+<text class="m-t m-s" x="30" y="1066">Symbols are larger than life. Grid and scale: 10 m.</text>
+</svg>

@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1448" role="img" aria-labelledby="ascentz3title">
+<title id="ascentz3title">Ascent 3 Sky Harbour: side elevation with top-down inset</title>
+<style>
+.m-bg{fill:#0f1218}
+.m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
+.m-h{font-size:27px;font-weight:700}
+.m-s{font-size:18px;fill:#ffe9a8}
+.m-n{font:700 17px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#0f1218;text-anchor:middle}
+.m-mid{text-anchor:middle}
+.m-end{text-anchor:end}
+.m-grid{stroke:#ffffff;stroke-opacity:.07;stroke-width:1;fill:none}
+.m-axis{stroke:#8f9bb0;stroke-width:2;fill:none}
+.m-edge{stroke:#8fa0ba;stroke-opacity:.55;stroke-width:1.5}
+.e-2{fill:#1b3152}
+.e0{fill:#27466a}
+.e2{fill:#2a7183}
+.e4{fill:#4c8a62}
+.e6{fill:#9a8d3c}
+.e8{fill:#c98f2b}
+.m-dish{fill:#1f3a5a;stroke:#d8a737;stroke-width:2;stroke-dasharray:3 5}
+.m-inlay{fill:none;stroke:#d8a737;stroke-width:2;stroke-opacity:.7}
+.m-chev{fill:none;stroke:#f4efe4;stroke-opacity:.6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.m-wall{stroke:#aab4c4;stroke-width:5;stroke-linecap:round;fill:none}
+.m-pillar{fill:#0b0d12;stroke:#8f9bb0;stroke-width:2}
+.m-beam{stroke:#e9c46a;stroke-width:11;stroke-linecap:round;fill:none}
+.m-under{fill:#172a44;fill-opacity:.55;stroke:#ffe9a8;stroke-width:2;stroke-dasharray:6 5}
+.m-trap{fill:#6d4a1e;stroke:#ffb347;stroke-width:2.5}
+.m-trapx{stroke:#ffb347;stroke-width:2.5;fill:none}
+.m-crum{fill:#3b3f52;stroke:#d7dbe8;stroke-width:2.5;stroke-dasharray:5 5}
+.m-crack{stroke:#d7dbe8;stroke-width:2;fill:none}
+.m-mp{fill:#8b5cf6;stroke:#efe7ff;stroke-width:2.5}
+.m-mpp{stroke:#c4b5fd;stroke-width:3;stroke-dasharray:3 7;stroke-linecap:round;fill:none}
+.m-gear{fill:#5b6478;stroke:#e9c46a;stroke-width:7;stroke-dasharray:7 6}
+.m-pend{stroke:#fb7185;stroke-width:4;stroke-linecap:round;fill:none}
+.m-pendarc{stroke:#fb7185;stroke-width:2.5;stroke-dasharray:4 5;fill:none}
+.m-bob{fill:#fb7185;stroke:#fff;stroke-width:2}
+.m-case{fill:none;stroke:#0f1218;stroke-width:9;stroke-opacity:.6;stroke-linejoin:round;stroke-linecap:round}
+.m-r1{fill:none;stroke:#ffffff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#ascentz3a1)}
+.m-r2{fill:none;stroke:#ff5cf4;stroke-width:4;stroke-dasharray:11 8;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#ascentz3a2)}
+.m-sil{fill:#1a2230;stroke:#2d3a4f;stroke-width:1.5}
+.m-solid{fill:#33415a;stroke:#2d3a4f;stroke-width:1.5}
+.m-walk{fill:none;stroke:#e9c46a;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.m-ship{fill:#4a3550;stroke:#7a5b83;stroke-width:1.5}
+.m-zone{stroke:#8f9bb0;stroke-width:2;stroke-dasharray:10 8;fill:none}
+.m-fall{fill:none;stroke:#8f9bb0;stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round;marker-end:url(#ascentz3a3)}
+.m-box{fill:#141925;stroke:#2d3a4f;stroke-width:2}
+</style>
+<defs>
+<marker id="ascentz3a1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffffff"/></marker>
+<marker id="ascentz3a2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff5cf4"/></marker>
+<marker id="ascentz3a3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8f9bb0"/></marker>
+<g id="ascentz3gem"><path d="M0-12L10 0L0 12L-10 0z" fill="#ff3b5f" stroke="#fff" stroke-width="2.5"/></g>
+<g id="ascentz3egg"><circle r="19" fill="none" stroke="#ffd84a" stroke-width="2.5" stroke-dasharray="4 4"/><ellipse rx="9" ry="12" fill="#ffd84a" stroke="#0f1218" stroke-width="2"/><path d="M-8-2H8" stroke="#0f1218" stroke-width="2"/></g>
+<g id="ascentz3start"><circle r="15" fill="#0f1218" stroke="#fff" stroke-width="3.5"/><text class="m-n" y="6" style="fill:#fff">S</text></g>
+<g id="ascentz3finish"><circle r="15" fill="#fff" stroke="#0f1218" stroke-width="2.5"/><text class="m-n" y="6">F</text></g>
+<g id="ascentz3cp"><path d="M-6 13V-14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M-5-14L13-7L-5 0z" fill="#3ee07f" stroke="#fff" stroke-width="2"/></g>
+<g id="ascentz3bump"><circle r="11" fill="#ff8a3d" stroke="#fff" stroke-width="2.5"/><circle r="4" fill="#0f1218"/></g>
+<g id="ascentz3vent"><circle r="11" fill="#0f1218" stroke="#7dd3fc" stroke-width="3"/><path d="M-5 2L0-4L5 2M-5 7L0 1L5 7" fill="none" stroke="#7dd3fc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="ascentz3spring"><circle r="12" fill="#b6f03c" stroke="#0f1218" stroke-width="2"/><path d="M-6 6L6 3L-6-1L6-4L-2-8" fill="none" stroke="#0f1218" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="ascentz3rest"><rect x="-10" y="-10" width="20" height="20" rx="4" fill="#0f1218" stroke="#3ee07f" stroke-width="2.5"/><path d="M-5 0H5" stroke="#3ee07f" stroke-width="3" stroke-linecap="round"/></g>
+<g id="ascentz3gate"><path d="M-12 14V-6A12 12 0 0 1 12-6V14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M-5 14V-4M5 14V-4M0 14V-8" stroke="#fff" stroke-width="2"/></g>
+</defs>
+<rect class="m-bg" width="720" height="1448"/>
+<text class="m-t m-h" x="30" y="44">Ascent 3 Sky Harbour</text>
+<text class="m-t m-s m-end" x="690" y="44">side view, height in m</text>
+<g transform="translate(0,70)">
+<!-- side view from the south. 10 px = 1 m. x east; y = -10 x (height - 100 m) -->
+<g transform="translate(76,770)">
+<path class="m-grid" d="M0 0H624M0-100H624M0-200H624M0-300H624M0-400H624M0-500H624M0-600H624M0-700H624"/>
+<path class="m-axis" d="M-12 36V-730M-20 0H-12M-20-100H-12M-20-200H-12M-20-300H-12M-20-400H-12M-20-500H-12M-20-600H-12M-20-700H-12"/>
+<text class="m-t m-s m-end" x="-24" y="6">100</text><text class="m-t m-s m-end" x="-24" y="-94">110</text><text class="m-t m-s m-end" x="-24" y="-194">120</text><text class="m-t m-s m-end" x="-24" y="-294">130</text><text class="m-t m-s m-end" x="-24" y="-394">140</text><text class="m-t m-s m-end" x="-24" y="-494">150</text><text class="m-t m-s m-end" x="-24" y="-594">160</text><text class="m-t m-s m-end" x="-24" y="-694">170</text>
+<!-- spire cap +100 (top of zone 2) -->
+<path class="m-sil" d="M278 0H372L325-88z"/><path class="m-walk" d="M270 0H370"/>
+<!-- first third, west: steps +101 +102, roof 1 +103 to +108, roof 2 +115, dormer steps +116 +117 +118, gangway A (period 8 s) -->
+<path class="m-sil" d="M190-30L110-80H80V-30z"/><rect class="m-sil" x="20" y="-150" width="80" height="20"/>
+<path class="m-walk" d="M236-10H262M202-20H228M190-30L110-80H80M20-150H100M104-160H128M132-170H156M160-180H184"/>
+<path class="m-mpp" d="M200-184L240-222"/><rect class="m-mp" x="186" y="-188" width="30" height="8" rx="2"/>
+<!-- mooring rope, +115 to +122 (narrow beam) -->
+<path class="m-beam" d="M100-152L250-222" style="stroke-width:5"/>
+<!-- harbourmaster roof +122 -->
+<rect class="m-sil" x="250" y="-220" width="100" height="26"/><path class="m-walk" d="M250-220H350"/>
+<!-- first third, east: planks, Tender gondola +101, vent to fin +108.5, envelope top +113, gangway B (period 10 s) -->
+<rect class="m-crum" x="374" y="-9" width="44" height="8"/>
+<ellipse class="m-ship" cx="490" cy="-85" rx="70" ry="48"/><rect class="m-ship" x="420" y="-10" width="140" height="20"/>
+<path class="m-walk" d="M420-10H560M566-85H616M570-85L544-116M436-116Q490-150 544-116"/>
+<path class="m-mpp" d="M430-132L358-220"/><rect class="m-mp" x="414" y="-138" width="30" height="8" rx="2"/>
+<!-- egg 1: cargo crate under the Tender, +97.8 -->
+<rect class="m-solid" x="468" y="22" width="44" height="12"/><path class="m-walk" d="M468 22H512"/>
+<path class="m-fall" d="M412 0L466 16"/>
+<!-- second third, west: tile steps +123 +124 +125, Courier gondola +126, hull ramps, top +140, gangplank C (period 10 s) -->
+<ellipse class="m-ship" cx="110" cy="-345" rx="100" ry="58"/><rect class="m-ship" x="40" y="-260" width="110" height="18"/>
+<path class="m-walk" d="M220-230H246M190-240H216M160-250H186M40-260H150M150-260L44-310L150-360L96-402M40-386Q110-420 180-386"/>
+<path class="m-pend" d="M100-378L84-326"/><circle class="m-bob" cx="83" cy="-322" r="7"/>
+<path class="m-mpp" d="M190-392L296-440"/><rect class="m-mp" x="172" y="-398" width="30" height="8" rx="2"/>
+<!-- second third, east: vent, loose shingles +128.5, steps, propeller gear +131.5, vent pad +132, mast platform +139.5, steps -->
+<rect class="m-crum" x="356" y="-285" width="54" height="8"/>
+<path class="m-walk" d="M420-295H446M456-305H482M570-320H612M556-395H616M524-407H550M494-419H520M524-431H550"/>
+<rect class="m-gear" x="490" y="-316" width="60" height="7" style="stroke-width:4"/>
+<!-- last third: Flagship gondola +144, hull ramps, vent to top hatch, envelope top +162, fin outside, mast to the gate +170 -->
+<ellipse class="m-ship" cx="410" cy="-550" rx="150" ry="75"/><rect class="m-ship" x="300" y="-440" width="220" height="20"/>
+<path class="m-walk" d="M300-440H520M320-440L500-490L330-540M300-601Q410-649 520-601M616-493L530-546H562M430-622L470-660L420-700M398-700H452"/>
+<path class="m-walk" d="M520-440L616-493" style="stroke:#d7dbe8;stroke-dasharray:6 5"/>
+<!-- egg 2: fin tip +164, by three steps from the top -->
+<path class="m-walk" d="M536-613H558M562-626H584M590-639H620"/>
+<!-- fall lines -->
+<path class="m-fall" d="M146-164L140-70"/><path class="m-fall" d="M188-376L262-228"/><path class="m-fall" d="M618-480L608-402"/><path class="m-fall" d="M56-144V-20"/>
+<!-- routes -->
+<path class="m-case" d="M278-8L249-18L215-28L188-38L112-88H94L90-156L116-168L144-178L172-188L200-190L240-228L233-238L203-248L173-258L148-266L50-312L146-360L100-404L180-394L296-446L322-446L496-494L338-540L344-628L430-628L466-660L426-698"/>
+<path class="m-r1" d="M278-8L249-18L215-28L188-38L112-88H96"/>
+<path class="m-r1" d="M92-94L90-156L116-168L144-178L172-188"/>
+<path class="m-r1" d="M200-192L240-228"/>
+<path class="m-r1" d="M236-238L203-248L173-258L148-266L50-312L146-360L102-402"/>
+<path class="m-r1" d="M190-398L292-444"/>
+<path class="m-r1" d="M322-446L496-494L342-538"/>
+<path class="m-r1" d="M344-550V-626H426L462-660L428-694"/>
+<path class="m-r2" d="M104-160L246-228"/>
+<path class="m-r2" d="M262-230H332L348-290L384-294L433-304L469-314L520-324L582-328"/>
+<path class="m-r2" d="M594-336L590-402L540-414L510-426L538-438L522-446"/>
+<path class="m-r2" d="M530-452L610-500L540-548"/><path class="m-r2" d="M546-566L536-606L448-634L478-664L436-702"/>
+<!-- objects -->
+<use href="#ascentz3vent" x="90" y="-92"/><use href="#ascentz3vent" x="548" y="-22"/><use href="#ascentz3vent" x="340" y="-232"/><use href="#ascentz3vent" x="592" y="-332"/><use href="#ascentz3vent" x="340" y="-552"/><use href="#ascentz3vent" x="548" y="-558"/>
+<use href="#ascentz3bump" x="28" y="-162"/><use href="#ascentz3bump" x="62" y="-162"/><use href="#ascentz3bump" x="556" y="-470"/><use href="#ascentz3bump" x="606" y="-512"/>
+<use href="#ascentz3egg" x="490" y="6"/><use href="#ascentz3egg" x="606" y="-656"/>
+<use href="#ascentz3rest" x="300" y="-234"/><use href="#ascentz3rest" x="604" y="-409"/><use href="#ascentz3rest" x="410" y="-454"/><use href="#ascentz3rest" x="330" y="14"/><use href="#ascentz3rest" x="60" y="-412"/>
+<use href="#ascentz3gate" x="424" y="-716"/>
+<!-- labels -->
+<text class="m-t m-s" x="96" y="-36">Roof 1</text><text class="m-t m-s" x="0" y="-184">Roof 2</text>
+<text class="m-t m-s" x="122" y="-212">rope</text>
+<text class="m-t m-s" x="252" y="-176">Harbourmaster +122</text>
+<text class="m-t m-s m-mid" x="490" y="-70">Tender</text>
+<text class="m-t m-s m-mid" x="110" y="-434">Courier +140</text>
+<text class="m-t m-s" x="476" y="-372">mast</text>
+<text class="m-t m-s m-mid" x="410" y="-575">Flagship</text>
+<text class="m-t m-s" x="310" y="-398">deck +144</text>
+<text class="m-t m-s" x="212" y="-640">top +162</text>
+<text class="m-t m-s" x="592" y="-452">fin</text>
+<text class="m-t m-s m-end" x="388" y="-708">Gate +170</text>
+<text class="m-t" x="150" y="24">A</text><text class="m-t" x="590" y="24">B</text>
+<path class="m-axis" d="M0 54H100M0 46V62M100 46V62"/><text class="m-t m-s" x="112" y="61">10 m</text>
+</g>
+<!-- top-down inset, 3.5 px = 1 m, north up -->
+<g transform="translate(250,856)">
+<rect class="m-box" x="-2" y="-2" width="222" height="144"/>
+<ellipse class="m-ship" cx="143" cy="21" rx="52" ry="17"/><ellipse class="m-ship" cx="38" cy="42" rx="35" ry="14"/><ellipse class="m-ship" cx="175" cy="114" rx="33" ry="14"/>
+<rect class="m-solid" x="87" y="63" width="35" height="28" style="stroke:#e9c46a;stroke-width:2.5"/>
+<rect class="m-solid" x="94" y="107" width="35" height="28"/><rect class="m-solid" x="28" y="105" width="38" height="28"/><rect class="m-solid" x="7" y="70" width="28" height="28"/>
+<circle cx="200" cy="58" r="5" fill="#e9c46a"/>
+<path class="m-r1" d="M96 118H64L24 86L84 78L52 50L98 28" style="stroke-width:3"/>
+<path class="m-r2" d="M30 82L100 76L196 60L172 30" style="stroke-width:3"/>
+</g>
+<text class="m-t m-s" x="30" y="884">Plan, 62 m wide.</text><text class="m-t m-s" x="30" y="910">Gold box: the</text><text class="m-t m-s" x="30" y="934">Harbourmaster</text><text class="m-t m-s" x="30" y="958">roof.</text>
+<text class="m-t m-s" x="484" y="884">Top ship: the</text><text class="m-t m-s" x="484" y="910">Flagship.</text>
+</g>
+<path d="M20 1080H700" stroke="#2d3a4f" stroke-width="2"/>
+<g transform="translate(52,1107)"><use href="#ascentz3gate"/></g>
+<text class="m-t" x="86" y="1114">Gate (zone end)</text>
+<g transform="translate(397,1107)"><use href="#ascentz3egg"/></g>
+<text class="m-t" x="431" y="1114">Clockwork Egg</text>
+<g transform="translate(52,1151)"><use href="#ascentz3rest"/></g>
+<text class="m-t" x="86" y="1158">Rest ledge</text>
+<g transform="translate(397,1151)"><path class="m-r1" d="M-20 0H16"/></g>
+<text class="m-t" x="431" y="1158">First-run route</text>
+<g transform="translate(52,1195)"><path class="m-r2" d="M-20 0H16"/></g>
+<text class="m-t" x="86" y="1202">Expert route</text>
+<g transform="translate(397,1195)"><path class="m-fall" d="M-14-12L10 10"/></g>
+<text class="m-t" x="431" y="1202">Where a fall lands</text>
+<g transform="translate(52,1239)"><path class="m-walk" d="M-18 0H18"/></g>
+<text class="m-t" x="86" y="1246">Surface you can roll on</text>
+<g transform="translate(397,1239)"><use href="#ascentz3vent"/></g>
+<text class="m-t" x="431" y="1246">Steam Vent</text>
+<g transform="translate(52,1283)"><use href="#ascentz3bump"/></g>
+<text class="m-t" x="86" y="1290">Bumper</text>
+<g transform="translate(397,1283)"><path class="m-pend" d="M-14-12L6 8"/><circle class="m-bob" cx="8" cy="10" r="6"/></g>
+<text class="m-t" x="431" y="1290">Pendulum</text>
+<g transform="translate(52,1327)"><path class="m-mpp" d="M-22 0H22"/><rect class="m-mp" x="-12" y="-8" width="24" height="16" rx="2"/></g>
+<text class="m-t" x="86" y="1334">Moving platform, path</text>
+<g transform="translate(397,1327)"><circle class="m-gear" r="10"/></g>
+<text class="m-t" x="431" y="1334">Turning gear</text>
+<g transform="translate(52,1371)"><rect class="m-crum" x="-13" y="-13" width="26" height="26"/><path class="m-crack" d="M-9-6L-1 0L-6 8M2-10L6-2"/></g>
+<text class="m-t" x="86" y="1378">Crumbling Tiles</text>
+<text class="m-t m-s" x="30" y="1426">Symbols are larger than life. Grid and scale: 10 m.</text>
+</svg>

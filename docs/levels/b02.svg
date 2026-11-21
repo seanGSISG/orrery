@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1262" role="img" aria-labelledby="b02title">
+<title id="b02title">B2 Loose Hours: top-down plan</title>
+<style>
+.m-bg{fill:#0f1218}
+.m-t{font:600 20px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#f4efe4;paint-order:stroke;stroke:#0f1218;stroke-width:4px;stroke-linejoin:round}
+.m-h{font-size:27px;font-weight:700}
+.m-s{font-size:18px;fill:#ffe9a8}
+.m-n{font:700 17px system-ui,'Noto Sans','DejaVu Sans',sans-serif;fill:#0f1218;text-anchor:middle}
+.m-mid{text-anchor:middle}
+.m-end{text-anchor:end}
+.m-grid{stroke:#ffffff;stroke-opacity:.07;stroke-width:1;fill:none}
+.m-axis{stroke:#8f9bb0;stroke-width:2;fill:none}
+.m-edge{stroke:#8fa0ba;stroke-opacity:.55;stroke-width:1.5}
+.e-2{fill:#1b3152}
+.e0{fill:#27466a}
+.e2{fill:#2a7183}
+.e4{fill:#4c8a62}
+.e6{fill:#9a8d3c}
+.e8{fill:#c98f2b}
+.m-dish{fill:#1f3a5a;stroke:#d8a737;stroke-width:2;stroke-dasharray:3 5}
+.m-inlay{fill:none;stroke:#d8a737;stroke-width:2;stroke-opacity:.7}
+.m-chev{fill:none;stroke:#f4efe4;stroke-opacity:.6;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.m-wall{stroke:#aab4c4;stroke-width:5;stroke-linecap:round;fill:none}
+.m-pillar{fill:#0b0d12;stroke:#8f9bb0;stroke-width:2}
+.m-beam{stroke:#e9c46a;stroke-width:11;stroke-linecap:round;fill:none}
+.m-under{fill:#172a44;fill-opacity:.55;stroke:#ffe9a8;stroke-width:2;stroke-dasharray:6 5}
+.m-trap{fill:#6d4a1e;stroke:#ffb347;stroke-width:2.5}
+.m-trapx{stroke:#ffb347;stroke-width:2.5;fill:none}
+.m-crum{fill:#3b3f52;stroke:#d7dbe8;stroke-width:2.5;stroke-dasharray:5 5}
+.m-crack{stroke:#d7dbe8;stroke-width:2;fill:none}
+.m-mp{fill:#8b5cf6;stroke:#efe7ff;stroke-width:2.5}
+.m-mpp{stroke:#c4b5fd;stroke-width:3;stroke-dasharray:3 7;stroke-linecap:round;fill:none}
+.m-gear{fill:#5b6478;stroke:#e9c46a;stroke-width:7;stroke-dasharray:7 6}
+.m-pend{stroke:#fb7185;stroke-width:4;stroke-linecap:round;fill:none}
+.m-pendarc{stroke:#fb7185;stroke-width:2.5;stroke-dasharray:4 5;fill:none}
+.m-bob{fill:#fb7185;stroke:#fff;stroke-width:2}
+.m-case{fill:none;stroke:#0f1218;stroke-width:9;stroke-opacity:.6;stroke-linejoin:round;stroke-linecap:round}
+.m-r1{fill:none;stroke:#ffffff;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#b02a1)}
+.m-r2{fill:none;stroke:#ff5cf4;stroke-width:4;stroke-dasharray:11 8;stroke-linejoin:round;stroke-linecap:round;marker-end:url(#b02a2)}
+.m-sil{fill:#1a2230;stroke:#2d3a4f;stroke-width:1.5}
+.m-solid{fill:#33415a;stroke:#2d3a4f;stroke-width:1.5}
+.m-walk{fill:none;stroke:#e9c46a;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.m-ship{fill:#4a3550;stroke:#7a5b83;stroke-width:1.5}
+.m-zone{stroke:#8f9bb0;stroke-width:2;stroke-dasharray:10 8;fill:none}
+.m-fall{fill:none;stroke:#8f9bb0;stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round;marker-end:url(#b02a3)}
+.m-box{fill:#141925;stroke:#2d3a4f;stroke-width:2}
+</style>
+<defs>
+<marker id="b02a1" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffffff"/></marker>
+<marker id="b02a2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff5cf4"/></marker>
+<marker id="b02a3" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8f9bb0"/></marker>
+<g id="b02gem"><path d="M0-12L10 0L0 12L-10 0z" fill="#ff3b5f" stroke="#fff" stroke-width="2.5"/></g>
+<g id="b02egg"><circle r="19" fill="none" stroke="#ffd84a" stroke-width="2.5" stroke-dasharray="4 4"/><ellipse rx="9" ry="12" fill="#ffd84a" stroke="#0f1218" stroke-width="2"/><path d="M-8-2H8" stroke="#0f1218" stroke-width="2"/></g>
+<g id="b02start"><circle r="15" fill="#0f1218" stroke="#fff" stroke-width="3.5"/><text class="m-n" y="6" style="fill:#fff">S</text></g>
+<g id="b02finish"><circle r="15" fill="#fff" stroke="#0f1218" stroke-width="2.5"/><text class="m-n" y="6">F</text></g>
+<g id="b02cp"><path d="M-6 13V-14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M-5-14L13-7L-5 0z" fill="#3ee07f" stroke="#fff" stroke-width="2"/></g>
+<g id="b02bump"><circle r="11" fill="#ff8a3d" stroke="#fff" stroke-width="2.5"/><circle r="4" fill="#0f1218"/></g>
+<g id="b02vent"><circle r="11" fill="#0f1218" stroke="#7dd3fc" stroke-width="3"/><path d="M-5 2L0-4L5 2M-5 7L0 1L5 7" fill="none" stroke="#7dd3fc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="b02spring"><circle r="12" fill="#b6f03c" stroke="#0f1218" stroke-width="2"/><path d="M-6 6L6 3L-6-1L6-4L-2-8" fill="none" stroke="#0f1218" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="b02rest"><rect x="-10" y="-10" width="20" height="20" rx="4" fill="#0f1218" stroke="#3ee07f" stroke-width="2.5"/><path d="M-5 0H5" stroke="#3ee07f" stroke-width="3" stroke-linecap="round"/></g>
+<g id="b02gate"><path d="M-12 14V-6A12 12 0 0 1 12-6V14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M-5 14V-4M5 14V-4M0 14V-8" stroke="#fff" stroke-width="2"/></g>
+</defs>
+<rect class="m-bg" width="720" height="1262"/>
+<text class="m-t m-h" x="30" y="44">B2 Loose Hours</text>
+<text class="m-t m-s m-end" x="690" y="44">plan, north up</text>
+<g transform="translate(0,70)">
+<defs>
+<g id="b02T"><rect class="m-trap" width="40" height="40"/><path class="m-trapx" d="M0 0L40 40M40 0L0 40"/></g>
+<g id="b02C"><rect class="m-crum" width="40" height="40"/><path class="m-crack" d="M8 10L18 20L12 32M24 6L30 18"/></g>
+</defs>
+<g transform="translate(60,-40)">
+<path class="m-grid" d="M0 100V800M100 100V800M200 100V800M300 100V800M400 100V800M500 100V800M600 100V800M0 100H600M0 200H600M0 300H600M0 400H600M0 500H600M0 600H600M0 700H600M0 800H600"/>
+<!-- 10 px = 1 m. x east, y south. Hall cells are 4 m: x = 100 + 40c, rows y = 340, 380, 420, 460 -->
+<!-- start court and jump yard, 0 m; channel -1 m; block +1 m -->
+<rect class="e0 m-edge" x="200" y="700" width="200" height="80"/>
+<rect class="e0 m-edge" x="110" y="530" width="380" height="170"/>
+<rect class="e0" x="202" y="692" width="196" height="16"/>
+<rect class="e-2 m-edge" x="110" y="600" width="380" height="30"/>
+<rect class="e0 m-edge" x="170" y="545" width="40" height="40" style="fill:#3a6291"/>
+<rect class="e0 m-edge" x="220" y="500" width="160" height="30"/>
+<!-- undercroft steps, -3 to -1 m -->
+<rect class="e-2 m-edge" x="48" y="395" width="46" height="40"/><rect class="e-2 m-edge" x="48" y="447" width="46" height="40"/><rect class="e-2 m-edge" x="60" y="499" width="50" height="40"/>
+<!-- trapdoor hall, 0 m: solid cells -->
+<rect class="e0 m-edge" x="100" y="460" width="400" height="40"/>
+<rect class="e0 m-edge" x="140" y="340" width="320" height="40"/>
+<rect class="e0 m-edge" x="100" y="380" width="40" height="80"/><rect class="e0 m-edge" x="140" y="380" width="40" height="40"/>
+<rect class="e0 m-edge" x="180" y="420" width="40" height="40"/><rect class="e0 m-edge" x="220" y="380" width="40" height="40"/>
+<rect class="e0 m-edge" x="380" y="380" width="40" height="80"/><rect class="e0 m-edge" x="420" y="380" width="40" height="40"/><rect class="e0 m-edge" x="460" y="420" width="40" height="40"/>
+<!-- trapdoors -->
+<use href="#b02T" x="100" y="340"/><use href="#b02T" x="140" y="420"/><use href="#b02T" x="180" y="380"/><use href="#b02T" x="260" y="420"/><use href="#b02T" x="300" y="380"/><use href="#b02T" x="420" y="420"/><use href="#b02T" x="460" y="380"/>
+<!-- crumbling tiles -->
+<use href="#b02C" x="220" y="420"/><use href="#b02C" x="260" y="380"/><use href="#b02C" x="340" y="420"/>
+<!-- undercroft -4 m, under columns 0 to 4 -->
+<rect class="m-under" x="97" y="377" width="206" height="86" style="fill:none"/>
+<!-- terrace +1 m -->
+<rect class="e0 m-edge" x="180" y="290" width="240" height="50" style="fill:#3a6291"/>
+<!-- west stair pads +2, +3, +4 and bridge -->
+<rect class="e2 m-edge" x="120" y="245" width="40" height="40"/><rect class="e2 m-edge" x="90" y="180" width="40" height="40"/>
+<rect class="e4 m-edge" x="140" y="120" width="40" height="40"/><rect class="e4 m-edge" x="180" y="150" width="60" height="22"/>
+<!-- centre pillars +2.2, +3.3 -->
+<circle class="e2 m-edge" cx="300" cy="264" r="12"/><circle class="e2 m-edge" cx="300" cy="228" r="12"/>
+<!-- east crumbling sheet +1 to +4 and crumbling bridge +4 -->
+<rect class="m-crum" x="400" y="190" width="60" height="100"/><rect class="m-crum" x="360" y="162" width="100" height="28"/>
+<path class="m-chev" d="M416 262L430 248L444 262M416 232L430 218L444 232"/>
+<!-- landing +4 and finish deck +5 -->
+<rect class="e4 m-edge" x="240" y="160" width="120" height="40"/>
+<rect class="e4 m-edge" x="230" y="90" width="140" height="70" style="fill:#5fa477"/>
+<!-- routes -->
+<path class="m-case" d="M306 735L356 628L200 570L296 530"/>
+<path class="m-r1" d="M306 735L356 628L200 570L296 530"/>
+<path class="m-r1" d="M290 506L164 484V364H240V398H270"/>
+<path class="m-r1" d="M250 356H400V400H428"/>
+<path class="m-r1" d="M410 366L310 322L196 316L146 270L114 206L156 146L226 160L288 176"/>
+<path class="m-r1" d="M300 166V132"/>
+<path class="m-case" d="M316 742L366 632L210 562L308 518L170 446L240 406H436"/>
+<path class="m-r2" d="M316 742L366 632L210 562L308 518L170 446L240 406H436"/>
+<path class="m-r2" d="M446 392L404 356V322L432 284V180L316 184"/>
+<!-- objects -->
+<use href="#b02start" x="300" y="752"/><use href="#b02finish" x="300" y="116"/>
+<use href="#b02gem" x="360" y="615"/><use href="#b02gem" x="190" y="565"/>
+<use href="#b02gem" x="160" y="440"/><use href="#b02gem" x="280" y="400"/><use href="#b02gem" x="440" y="400"/>
+<use href="#b02gem" x="300" y="184"/>
+<use href="#b02cp" x="340" y="516"/><use href="#b02cp" x="340" y="312"/>
+<use href="#b02egg" x="280" y="440"/>
+<!-- labels and spot heights -->
+<text class="m-t" x="406" y="672">Jump yard</text><text class="m-t m-s" x="118" y="690">0</text>
+<text class="m-t m-s" x="424" y="622">channel −1</text><text class="m-t m-s m-end" x="164" y="560">+1</text>
+<text class="m-t" x="506" y="446">Trapdoor</text><text class="m-t" x="506" y="470">hall</text><text class="m-t m-s" x="506" y="494">0</text>
+<text class="m-t m-s m-end" x="42" y="372">under</text><text class="m-t m-s m-end" x="42" y="394">−4</text>
+<text class="m-t m-s m-end" x="42" y="422">−3</text><text class="m-t m-s m-end" x="42" y="474">−2</text><text class="m-t m-s m-end" x="54" y="526">−1</text>
+<text class="m-t m-s" x="426" y="322">terrace +1</text>
+<text class="m-t m-s m-end" x="114" y="262">+2</text><text class="m-t m-s m-end" x="84" y="204">+3</text><text class="m-t m-s m-end" x="134" y="134">+4</text>
+<text class="m-t m-s" x="318" y="252">pillars</text>
+<text class="m-t m-s" x="468" y="244">+1 to +4</text>
+<text class="m-t" x="378" y="118">Finish deck</text><text class="m-t m-s" x="378" y="142">+5</text>
+<text class="m-t m-s" x="-50" y="800">Black cells in the hall are holes.</text>
+<!-- scale bar and north -->
+<path class="m-axis" d="M0 830H100M0 822V838M100 822V838"/><text class="m-t m-s" x="112" y="837">10 m</text>
+<path d="M570 160L580 120L590 160L580 152z" fill="#f4efe4"/><text class="m-t m-s m-mid" x="580" y="184">N</text>
+</g>
+</g>
+<path d="M20 890H700" stroke="#2d3a4f" stroke-width="2"/>
+<text class="m-t" x="30" y="924">Height</text>
+<rect class="e-2 m-edge" x="112" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="152" y="924">below 0</text>
+<rect class="e0 m-edge" x="243" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="283" y="924">0</text>
+<rect class="e2 m-edge" x="308" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="348" y="924">+2</text>
+<rect class="e4 m-edge" x="384" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="424" y="924">+4</text>
+<rect class="e6 m-edge" x="460" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="500" y="924">+6</text>
+<rect class="e8 m-edge" x="536" y="902" width="34" height="28"/>
+<text class="m-t m-s" x="576" y="924">+8 m</text>
+<g transform="translate(52,965)"><use href="#b02start"/></g>
+<text class="m-t" x="86" y="972">Start pad</text>
+<g transform="translate(397,965)"><use href="#b02finish"/></g>
+<text class="m-t" x="431" y="972">Finish pad</text>
+<g transform="translate(52,1009)"><use href="#b02gem"/></g>
+<text class="m-t" x="86" y="1016">Gem</text>
+<g transform="translate(397,1009)"><use href="#b02egg"/></g>
+<text class="m-t" x="431" y="1016">Clockwork Egg</text>
+<g transform="translate(52,1053)"><use href="#b02cp"/></g>
+<text class="m-t" x="86" y="1060">Checkpoint</text>
+<g transform="translate(397,1053)"><path class="m-r1" d="M-20 0H16"/></g>
+<text class="m-t" x="431" y="1060">First-run route</text>
+<g transform="translate(52,1097)"><path class="m-r2" d="M-20 0H16"/></g>
+<text class="m-t" x="86" y="1104">Expert route</text>
+<g transform="translate(397,1097)"><rect class="m-trap" x="-13" y="-13" width="26" height="26"/><path class="m-trapx" d="M-13-13L13 13M13-13L-13 13"/></g>
+<text class="m-t" x="431" y="1104">Trapdoor</text>
+<g transform="translate(52,1141)"><rect class="m-crum" x="-13" y="-13" width="26" height="26"/><path class="m-crack" d="M-9-6L-1 0L-6 8M2-10L6-2"/></g>
+<text class="m-t" x="86" y="1148">Crumbling Tiles</text>
+<g transform="translate(397,1141)"><rect class="e2 m-edge" x="-16" y="-11" width="32" height="22"/><path class="m-chev" d="M-8 5L0-3L8 5"/></g>
+<text class="m-t" x="431" y="1148">Ramp, arrows point up</text>
+<g transform="translate(52,1185)"><rect class="m-under" x="-15" y="-11" width="30" height="22"/></g>
+<text class="m-t" x="86" y="1192">Room below a floor</text>
+<text class="m-t m-s" x="30" y="1240">Symbols are larger than life. Grid and scale: 10 m.</text>
+</svg>
