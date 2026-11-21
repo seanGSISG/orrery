@@ -52,7 +52,7 @@ var _standing: bool = false
 
 ## Advances the marble by one tick of dt seconds. Each sub-step lasts until the marble has
 ## moved max_substep_move radii at its speed in that sub-step, or until the tick ends. The
-## last of max_substeps sub-steps takes the rest of the tick, and the sweep still stops it at
+## last of max_substeps sub-steps takes the rest of the tick. The sweep stops every move at
 ## the first surface.
 func step(dt: float, input: MarbleInput, world: WorldQuery) -> void:
 	touches.clear()
@@ -60,10 +60,11 @@ func step(dt: float, input: MarbleInput, world: WorldQuery) -> void:
 	_feel_gravity(world.overlaps(position))
 	var left: float = dt
 	for i: int in tuning.max_substeps:
-		var reach: float = tuning.max_substep_move * tuning.radius
-		if i == tuning.max_substeps - 1:
-			reach = INF
-		left -= _substep(left, reach, input, world)
+		var h: float = left
+		if i < tuning.max_substeps - 1:
+			h = minf(left, _span(tuning.max_substep_move * tuning.radius))
+		_substep(h, input, world)
+		left -= h
 		if left <= 0.0:
 			break
 	_turn_ball(dt)
@@ -87,12 +88,8 @@ func teleport(at: Vector3, new_velocity: Vector3) -> void:
 	reset_physics_interpolation()
 
 
-## One sub-step of at most `left` seconds that moves the marble at most reach. Returns its
-## length in seconds.
-func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) -> float:
-	var h: float = left
-	if reach < INF:
-		h = minf(left, _span(reach))
+## One sub-step of h seconds.
+func _substep(h: float, input: MarbleInput, world: WorldQuery) -> void:
 	# 1. Contacts.
 	var contacts: Array[Contact] = world.contacts(position)
 	var landing: bool = not _standing
@@ -102,6 +99,8 @@ func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) 
 	for contact: Contact in contacts:
 		if _hit(contact, h, landing):
 			hits.append(contact)
+			# The first hit on a floor ends the flight.
+			landing = landing and contact.normal.dot(up) < tuning.floor_min_up
 	# 3. Gravity.
 	velocity += _gravity * h
 	# 4. Support. The ground is the most upward floor that the marble hit, or touched (within
@@ -126,15 +125,12 @@ func _substep(left: float, reach: float, input: MarbleInput, world: WorldQuery) 
 	else:
 		_steer(input, h)
 	# 6. Sweep. An impulse in this sub-step (a jump, a hit by a mover, friction at a bounce)
-	# can make the move longer than reach. Then the sub-step ends early.
+	# can make this one move longer than max_substep_move radii; the sweep still stops it at
+	# the first surface.
 	var motion: Vector3 = velocity * h
-	if motion.length() > reach:
-		h *= reach / motion.length()
-		motion = velocity * h
 	position += motion * world.sweep(position, motion)
 	# 7. Touched objects, triggers, and the gravity at the new position.
 	_note(contacts, world)
-	return h
 
 
 ## Handles a hit on contact's surface when the marble reaches it in this sub-step of h

@@ -97,6 +97,18 @@ func test_landing_from_inside_margin_is_a_landing() -> void:
 		assert_eq(heard[0], &"marble.land")
 
 
+## A drop into a 90° V hits both slopes at once, and lands once.
+func test_one_landing_per_flight() -> void:
+	var bottom: Vector3 = Vector3(0, 2, 20)
+	_start(FLAT, [_slab(PI / 4, bottom), _slab(-PI / 4, bottom)])
+	run.marble.teleport(bottom + Vector3.UP * (TUNING.radius * sqrt(2.0) + 1.0), Vector3.ZERO)
+	for _i: int in 120:
+		run.step(MarbleInput.new())
+		if not heard.is_empty():
+			break
+	assert_eq(heard.count(&"marble.land"), 1)
+
+
 ## A fast fall gains exactly gravity × time, also when the sub-steps are short.
 func test_fast_fall_gains_gravity_times_time() -> void:
 	_start(FLAT)
@@ -251,6 +263,21 @@ func _apex() -> float:
 		run.step(MarbleInput.new())
 		top = maxf(top, run.state.position.y)
 	return top
+
+
+## Returns a 4 m slab Solid turned by angle around +Z, whose top face ends at bottom: on the
+## +X side for a positive angle.
+func _slab(angle: float, bottom: Vector3) -> Solid:
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(4, 0.2, 4)
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	shape.shape = box
+	var solid: Solid = Solid.new()
+	solid.add_child(shape)
+	var turn: Basis = Basis(Vector3.BACK, angle)
+	var side: float = signf(angle) * 2.0
+	solid.transform = Transform3D(turn, bottom + turn.x * side - turn.y * 0.1)
+	return solid
 
 
 ## Returns a velocity of speed toward Wall at angle radians from its face, along +X.
