@@ -57,13 +57,12 @@ func advance(_run: LevelRun, t: float) -> void:
 	_jewel.rotation.y = t * SPIN
 
 
-## Collects the gem once: hides it and tells the rules.
+## Collects the gem once, if the rules count it, and hides it.
 func on_overlap(run: LevelRun, _first: bool) -> void:
-	if _collected:
+	if _collected or not run.rules.collect_gem():
 		return
 	_collected = true
 	visible = false
-	run.rules.collect_gem()
 	feedback.emit(&"gem.collect", 1.0, _jewel.global_position)
 
 

@@ -6,6 +6,7 @@ extends LevelObject
 const COLOUR: Color = Color(0.0, 0.62, 0.45)
 
 var _open: bool = false
+var _reached: bool = false
 var _look: StandardMaterial3D = StandardMaterial3D.new()
 
 @onready var _pad: MeshInstance3D = $Mesh
@@ -22,11 +23,16 @@ func _ready() -> void:
 ## Closes the finish again at a restart.
 func reset(restart: bool) -> void:
 	if restart:
+		_reached = false
 		_show(false)
 
 
-## Opens the finish on the tick after the last gem.
+## Opens the finish on the tick after the last gem, and sounds on the tick after the run
+## finished.
 func advance(run: LevelRun, _t: float) -> void:
+	if run.state.status == &"finished" and not _reached:
+		_reached = true
+		feedback.emit(&"finish.reach", 1.0, global_position)
 	var open: bool = run.state.gems_collected >= run.state.gems_total
 	if open == _open:
 		return
@@ -35,10 +41,9 @@ func advance(run: LevelRun, _t: float) -> void:
 		feedback.emit(&"finish.open", 1.0, global_position)
 
 
-## Ends the run while the marble is on the open finish.
+## Tells the rules that the marble is on the finish in this tick.
 func on_overlap(run: LevelRun, _first: bool) -> void:
-	if run.rules.reach_finish():
-		feedback.emit(&"finish.reach", 1.0, global_position)
+	run.rules.reach_finish()
 
 
 ## Lights the pad and shows the beam when open; dims both when closed.

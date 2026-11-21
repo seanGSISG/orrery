@@ -17,19 +17,16 @@ func _ready() -> void:
 	_light(false)
 
 
-## Lights the pad while the rules name it as the last checkpoint.
+## Lights the pad while it is the rules' last checkpoint.
 func advance(run: LevelRun, _t: float) -> void:
-	var lit: bool = run.state.checkpoint == name
+	var lit: bool = run.rules.checkpoint == self
 	if lit != _lit:
 		_light(lit)
 
 
-## Tells the rules when the marble enters a checkpoint that is not the last one.
+## Tells the rules when the marble enters the checkpoint.
 func on_overlap(run: LevelRun, first: bool) -> void:
-	if not first or run.state.checkpoint == name:
-		return
-	run.rules.reach_checkpoint(self)
-	if run.state.checkpoint == name:
+	if first and run.rules.reach_checkpoint(self):
 		feedback.emit(&"checkpoint.reach", 1.0, global_position)
 
 

@@ -51,12 +51,11 @@ func advance(_run: LevelRun, t: float) -> void:
 	_pose(clampf((t - _found_at) / OPEN_TIME, 0.0, 1.0), t)
 
 
-## Finds the egg once: tells the rules and starts the opening.
+## Finds the egg once, if the rules count it, and starts the opening.
 func on_overlap(run: LevelRun, _first: bool) -> void:
-	if _found:
+	if _found or not run.rules.find_egg():
 		return
 	_found = true
-	run.rules.find_egg()
 	feedback.emit(&"egg.open", 1.0, _hinge.global_position)
 
 
