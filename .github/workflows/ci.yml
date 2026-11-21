@@ -67,7 +67,7 @@ jobs:
             if [[ $picked != *=true* ]]; then
               echo 'Docs-only change: no job runs beyond this one.'
             else
-              echo "Jobs that run: $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
+              echo "Outputs set to true (windows-boot follows export; the tools job runs music and art): $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
