@@ -389,7 +389,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just blender` / `just blender-agent` | Opens Blender 5.2 with the MCP bridge on `localhost:9876`: in a window, or hidden in gamescope |
 | `just import` | `godot --headless --path game --import` |
 | `just build-levels [id…]` | Builds level scripts into `game/levels/built/*.glb` and checks that they import |
-| `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff (check and format), ty, shellcheck. Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
+| `just lint` | `just lint-game` (`gdlint` from gdtoolkit, and a Godot compile check of every game script) and `just lint-scripts` (Ruff check and format, ty, shellcheck; no Godot). Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
 | `just test` | GUT unit tests, headless. Fails if a test fails, a test script does not load, or zero tests ran. It runs with an empty `user://` that it deletes, so tests never touch the player's save (#73) |
 | `just test-levels [id…]` | Runs the route bot on each built level, headless (4.6). Fails if `first_run` is not under par or `expert` not under gold. Like `just test`, it uses an empty `user://` (#73) |
 | `just suggest-times <id>` | Prints par and gold from the route bot's times (4.6) |
@@ -426,15 +426,16 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 ### 5.3 CI (GitHub Actions)
 
-CI runs only the jobs that a change needs, on pull requests and on pushes to `main` and `plan-*`. The `changes` job lists the changed files and `.github/pick-jobs.sh` maps them to jobs: docs (`*.md`, `docs/`) run no job; `game/`, `assets/` and the marble's core script run everything except the tool tests; `levels/`, `kit/` and `tools/blender/` run lint and the tests; each tool project under `tools/` runs lint and its own tests (`tools/harness` the harness job, `tools/audio/music` and `tools/art` the tool tests); `.github/`, `justfile`, `mise.toml`, `tools/setup/pins.env`, `.gitattributes` and any path that no rule names run every job. A manual run (`workflow_dispatch`) or a new branch also runs every job.
+CI runs only the jobs that a change needs, on pull requests and on pushes to `main` and `plan-*`. The `changes` job lists the changed files and `.github/pick-jobs.sh` maps them to jobs: docs (`*.md`, `docs/`) run no job; `game/`, `assets/` and the marble's core script run both lints, the tests, the harness and the export; `levels/`, `kit/` and `tools/blender/` run the script lint, the tests and the export; each tool project under `tools/` runs the script lint and its own tests (`tools/harness` the harness job, `tools/audio/music` and `tools/art` the tool tests), and other `tools/` files run only the script lint; `.github/`, `justfile`, `mise.toml`, `tools/setup/pins.env`, `.gitattributes` and any path that no rule names run every job. A manual run (`workflow_dispatch`) or a new branch also runs every job.
 
 - **`changes` job** (ubuntu): picks the jobs, and writes the changed files and the picked jobs to the run summary.
-- **`lint` job** (ubuntu): runs `just lint`.
-- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` (only `just build-marble` when no test job runs), uploads the built files.
+- **`lint-game` job** (ubuntu): runs `just lint-game`, which imports the game.
+- **`lint-scripts` job** (ubuntu): runs `just lint-scripts`. It has no Godot and no LFS files, so a tool change lints in about a minute.
+- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` when the tests or the export run (else only `just build-marble`), uploads the built files.
 - **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
 - **`harness` job** (ubuntu): `just test-harness`, the harness contract tests on a headless debug build.
-- **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
-- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless and checks its boot marker.
+- **`export` job** (ubuntu): `setup-godot@v2` with export templates, downloads the built levels, `just export`, boots the Linux export, plays every level in it (`.github/check-export.sh`), uploads both exports as artifacts. The check fails when the export does not load a built level or a file of its baked lightmap.
+- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless, checks its boot marker, and plays every level in it with the same check.
 - **`tools` job** (ubuntu): `just test-music` and `just test-art`, each when its tool changed.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
