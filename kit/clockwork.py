@@ -221,6 +221,23 @@ def union(
     return sorted(points, key=lambda p: math.atan2(p[1] - hub[1], p[0] - hub[0]))
 
 
+def retop(obj: bpy.types.Object, material: str) -> bpy.types.Object:
+    """Gives the faces of obj that look up (within 60 degrees of +z in its own space) the look
+    `material`, as refinish() names it. A beam keeps metal sides under a stone top: a long flat
+    of metal that faces the sky mirrors the sun. Returns obj."""
+    look = (
+        kit.surface("default", material)
+        if material in MATERIALS
+        else town.material(material)  # type: ignore[arg-type]
+    )
+    mesh = obj.data
+    mesh.materials.append(look)
+    for poly in mesh.polygons:
+        if poly.normal.z > 0.5:
+            poly.material_index = len(mesh.materials) - 1
+    return obj
+
+
 def refinish(obj: bpy.types.Object, material: str) -> bpy.types.Object:
     """Gives every face of obj the look `material`: a kit material (kit/surfaces.py) or a
     town.Finish. It dresses a piece made for another look, such as town.helix() (town finishes

@@ -47,6 +47,7 @@ These are the `@export` defaults in `game/objects/<type>/<type>.gd`. A marker ca
 | Moving platform | `period` 8 s for one cycle with the stops included, `stop` 1 s at each point of the path, `loop` false (there and back; true goes on from the last point to the first), `offset` 0 s (give a second deck on one loop `period` ÷ 2). Deck `width` 4 × `depth` 4 × `thickness` 0.5 m; its top face is at the marker and at each path point. Only `period` sets the speed: each leg eases out and in, so its top speed is π/2 × its average speed | A straight leg cannot go round a building, so a loop round a tower needs a stop at each corner (B3). The briefs set the path, period and stop of each platform |
 | Pendulum | `period` 4 s, `swing` 60° to each side, `length` 4 m, bob `radius` 0.6 m, `offset` 0 s | The bob sweeps the track when the pivot is about `length` + `radius` above it |
 | Turning gear | `period` 8 s for one turn, `radius` 2.1 m to the tooth tips, `teeth` 12, `thickness` 0.5 m, `clockwise` false. The top face is at the marker | B3's stair gears turn once in 10 s, every second one clockwise |
+| Turning arm | `period` 8 s for one turn, `clockwise` false, `height` 0.25 m, `finish` brass (a kit material). The marker's points give the bar's outline in the marker's plane; the bar stands `height` up from it | Ascent 2's clock hands: 20 s, clockwise, blued steel, 0.05 m above the dial |
 
 ## Time estimates
 

@@ -88,7 +88,7 @@ There is no charge-meter "blast" ability. Gravity changes come from objects in t
 | Floors | Trapdoor (drops, resets after 5 s), Crumbling Tiles | M1 |
 | | Conveyor; surfaces: oil, glass-ice | M2 |
 | | Surfaces: sand, rubber | M3 |
-| Movers | Platforms on paths, turning gears | M1 |
+| Movers | Platforms on paths, turning gears, turning arms | M1 |
 | | Turntables | M3 |
 | Travel | Cannon (fires the marble on an arc) | M2 |
 | | Pneumatic Tube, Gravity Arrow (changes which way is down) | M3 |
@@ -96,6 +96,8 @@ There is no charge-meter "blast" ability. Gravity changes come from objects in t
 | | Point gravity (planets) | M3 |
 
 Each object and power-up is introduced in a level that focuses on it, before any level combines it with others.
+
+The turning arm (`turning_arm`, a flat bar that turns round its marker's axis and pushes the marble) came into M1 for the turning clock hands of Ascent 2 (#32). It is the base of the M3 Clock Hands.
 
 ### 2.7 Clockwork Eggs and secrets
 

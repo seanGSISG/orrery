@@ -423,6 +423,22 @@ def build_chamber() -> None:
 
 
 build_chamber()
+# Two wheels of the movement on the chamber's side walls, above the marble's reach. A wheel
+# faces -y before its yaw, so this yaw turns its face away from the wall at v = +2.2 m.
+_wall_yaw = math.degrees(math.atan2(-_cv[0], _cv[1]))
+for _name, (_u, _v, _up, _r, _teeth, _yaw) in {
+    "chamber_wheel_1": (1.4, CHAMBER[3] - 0.05, 1.7, 0.9, 18, _wall_yaw),
+    "chamber_wheel_2": (3.1, CHAMBER[2] + 0.05, 1.5, 0.65, 14, _wall_yaw + 180.0),
+}.items():
+    kit.gear(
+        (*chamber_point(_u, _v), CHAMBER_FLOOR + _up),
+        _r,
+        teeth=_teeth,
+        depth=0.25,
+        yaw=_yaw,
+        name=_name,
+        material="brass_polished",
+    )
 EGG: Place = (*chamber_point(-0.9, 0.0), CHAMBER_FLOOR)
 kit.marker("egg", at=EGG)
 CHAMBER_VENT: Place = (WIND[0], WIND[1], CHAMBER_FLOOR)
@@ -714,8 +730,8 @@ for i in range(6):
     )
     SHARDS_3.append(a0 - _s3_step / 2)
 
-# The east way: the fallen pendulum rod, a stone beam with polished brass edges from the lid's
-# rim up to its bob (a stone top: a long flat of polished brass mirrors the sun), then a
+# The east way: the fallen pendulum rod, a beam of the kit's brass with a stone top (a long flat
+# of brass that faces the sky mirrors the sun), from the lid's rim up to its bob, then a
 # straight chain of three vents and three steps round the ring's inside to RING_EAST.
 BOB_CENTRE: Place = (17.46, 49.0, LID + 7.0)
 _rod_u = (BOB_CENTRE[0] - LID_CENTRE[0], BOB_CENTRE[1] - LID_CENTRE[1])
@@ -733,14 +749,18 @@ ROD_FOOT: Place = (
 BOB_R = 3.0
 _bob = along(ROD_FOOT[:2], ROD_HEADING, ROD_RUN + BOB_R)
 BOB: Place = (*_bob, BOB_CENTRE[2])
-kit.ramp(
-    at=ROD_FOOT,
-    width=1.2,
-    length=ROD_RUN,
-    rise=ROD_RISE,
-    yaw=ROD_HEADING - 90.0,
-    name="pendulum_rod",
-    trim="brass_polished",
+clockwork.retop(
+    kit.ramp(
+        at=ROD_FOOT,
+        width=1.2,
+        length=ROD_RUN,
+        rise=ROD_RISE,
+        yaw=ROD_HEADING - 90.0,
+        name="pendulum_rod",
+        material="brass",
+        trim="",
+    ),
+    "limestone",
 )
 clockwork.disc("pendulum_bob", BOB, BOB_R, depth=0.9)
 clockwork.rim("pendulum_bob_rim", BOB, BOB_R, 0.9, width=0.1)
@@ -868,6 +888,8 @@ for i, (x, y, z, lift) in enumerate(CHAIN2):
 
 # The east way: four roof slabs of slate that climb clockwise round above the ring from
 # RING_EAST, with a flat ridge stone after each, and two bells that swing along the middle two.
+# The slabs have no trim, so each reads as a piece of roof; the slate's courses run across the
+# slope (along the ramp's x).
 SLAB_R = 25.2
 SLAB_RUN = 11.0
 SLAB_RISE = 4.0
@@ -1076,14 +1098,18 @@ clockwork.fragment(
     kit.rect(BOLT_2[0] + 1.9, BOLT_LAND[1] - 2.9, _rod[0] + 0.6, BOLT_LAND[1] + 2.1),
     BALCONY,
 )
-kit.ramp(
-    at=ROD_FOOT_2,
-    width=0.8,
-    length=19.0,
-    rise=CAP - BALCONY,
-    yaw=ROD_ANGLE + 180.0 - 90.0,
-    name="lightning_rod",
-    trim="brass_polished",
+clockwork.retop(
+    kit.ramp(
+        at=ROD_FOOT_2,
+        width=0.8,
+        length=19.0,
+        rise=CAP - BALCONY,
+        yaw=ROD_ANGLE + 180.0 - 90.0,
+        name="lightning_rod",
+        material="brass",
+        trim="",
+    ),
+    "limestone",
 )
 
 # A brass kerb round the balcony's outer edge.
@@ -1419,8 +1445,8 @@ kit.shot(
     at=(FINISH[0] + 12.0, FINISH[1] - 15.0, CAP + 6.0),
     rotation=(-16.0, 0.0, 38.7),
 )
-# The egg shot stands 1.1 m to the side of the chamber's vent and looks at the egg past it.
-_egg_eye = chamber_point(CHAMBER[1] - 0.6, 1.1)
+# The egg shot stands between the chamber's vent and the egg, so the vent is behind it.
+_egg_eye = chamber_point(_cl - 0.8, -1.0)
 kit.shot(
     "egg",
     at=(*_egg_eye, CHAMBER_FLOOR + 1.3),
