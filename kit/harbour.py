@@ -44,13 +44,17 @@ TAIL = 0.07
 # The fabric gores round an envelope, and how far the middle of a gore stands out of the
 # polygon of its girders (a share of the radius): gas pressure.
 GORES = 24
-BULGE = 0.006
+BULGE = 0.025
 # The ring frames along an envelope: their spacing, m, and how far the fabric sags between two
-# frames, as a share of the radius.
+# frames, as a share of the radius. The fabric is taut over each frame, so it creases there.
 BAY = 3.2
-SAG = 0.006
-# The two skins of a hollow envelope are this far apart, m.
-SKIN = 0.25
+SAG = 0.02
+# A seam of tarred cord runs along each girder and round each ring frame: SEAM m wide, but at
+# most SEAM_SHARE of a gore's width where the gores narrow to the nose and the tail.
+SEAM = 0.1
+SEAM_SHARE = 0.3
+# The spacing of the iron posts under a deck on the back of a ship, m.
+TRESTLE = 4.8
 # A deck plank, a kerb and a rope beam: thickness, kerb height and width, m.
 PLANK = 0.3
 KERB = 0.3
@@ -138,8 +142,8 @@ def rope(
         t = k / int(length / 1.5)
         p = Vector(a).lerp(Vector(b), t)
         side = Vector((-uy, ux, 0.0)) * (width / 2 + 0.02)
-        under.bar(p - side - sink * 1.3, p - side + Vector((0, 0, 0.02)), 0.05, "iron")
-        under.bar(p + side - sink * 1.3, p + side + Vector((0, 0, 0.02)), 0.05, "iron")
+        under.bar(p - side - sink * 1.3, p - side + Vector((0, 0, 0.02)), 0.07, "iron")
+        under.bar(p + side - sink * 1.3, p + side + Vector((0, 0, 0.02)), 0.07, "iron")
     under.add(f"{name}_hawser", collide=False)
     return [foot, top]
 
@@ -188,11 +192,15 @@ class Ship:
         return self.nose[0] + NOSE * self.length
 
     def r(self, x: float) -> float:
-        """The radius of the envelope at x (0 beyond its ends)."""
-        u = (x - self.nose[0]) / self.length
+        """The radius of the envelope at its girders at x (0 beyond its ends): the shape of the
+        hull, less the sag of the fabric between two ring frames. A point at this radius is on
+        the fabric or just inside it."""
+        along = x - self.nose[0]
+        u = along / self.length
         if u < 0.0 or u > 1.0:
             return 0.0
-        return self.radius * _shape(u)
+        sag = SAG * abs(math.sin(math.pi * along / BAY))
+        return self.radius * _shape(u) * (1.0 - sag)
 
     def top(self, x: float) -> float:
         """The height of the top of the envelope at x."""
@@ -222,128 +230,90 @@ def _shape(u: float) -> float:
     return 1.0 - (1.0 - TAIL) * t * t
 
 
-Hatch = tuple[float, float, float, float]
-
-
-def envelope(
-    ship: Ship,
-    hollow: bool = False,
-    hatches: Sequence[Hatch] = (),
-    gores: int = GORES,
-) -> bpy.types.Object:
-    """Adds the envelope of a ship: fabric gores between longitudinal girders, a slight sag
-    between the ring frames, a brass mooring cone on the nose and a brass cap on the tail. It
-    collides. hollow: it has an inner skin SKIN m inside, so the marble can be inside it.
-    hatches: openings through both skins, each (x0, x1, angle0, angle1) with the angles of
-    Ship.point(); the open edge gets a brass coaming."""
-    xs = _stations(ship)
-    around = 2 * gores
+def envelope(ship: Ship) -> bpy.types.Object:
+    """Adds the envelope of a ship: fabric gores that stand out between longitudinal girders
+    and sag between the ring frames, a seam of tarred cord along each girder and round each
+    frame, a brass mooring cone on the nose and a brass cap on the tail. It collides."""
+    xs, frames = _stations(ship)
     parts = town.Parts()
     bm = parts.bm
-    envelope_i = parts.index("envelope")  # ty: ignore[invalid-argument-type]
-    brass_i = parts.index("brass_polished")
+    fabric = parts.index("envelope")  # ty: ignore[invalid-argument-type]
+    seam = parts.index("rope")  # ty: ignore[invalid-argument-type]
+    gore = math.tau / GORES
 
-    def ring(x: float, inset: float) -> list[bmesh.types.BMVert]:
-        r = ship.r(x) * (1.0 - SAG * math.sin(math.pi * (x - ship.nose[0]) / BAY) ** 2)
+    def ring(x: float) -> list[bmesh.types.BMVert]:
+        # Three points a gore: the two edges of the seam on its first girder, then its middle.
+        r = ship.r(x)
+        half = min(SEAM / 2 / max(r, 0.01), SEAM_SHARE * gore / 2)
+        middle = r * math.cos(gore / 2) * (1.0 + BULGE)
         verts = []
-        for k in range(around):
-            # A girder at every even k; the middle of a gore at every odd k.
-            angle = 360.0 * k / around
-            bulge = 1.0 if k % 2 == 0 else math.cos(math.pi / gores) * (1.0 + BULGE)
-            reach = max(0.0, r * bulge - inset)
-            a = math.radians(angle)
-            verts.append(
-                bm.verts.new(
-                    (
-                        x,
-                        ship.nose[1] + reach * math.cos(a),
-                        ship.nose[2] + reach * math.sin(a),
+        for k in range(GORES):
+            for angle, reach in (
+                (gore * k - half, r),
+                (gore * k + half, r),
+                (gore * (k + 0.5), middle),
+            ):
+                verts.append(
+                    bm.verts.new(
+                        (
+                            x,
+                            ship.nose[1] + reach * math.cos(angle),
+                            ship.nose[2] + reach * math.sin(angle),
+                        )
                     )
                 )
-            )
         return verts
 
-    def open_at(i: int, k: int) -> bool:
-        x = (xs[i] + xs[i + 1]) / 2
-        angle = 360.0 * (k + 0.5) / around
-        return any(
-            x0 <= x <= x1 and _within(angle, a0, a1) for x0, x1, a0, a1 in hatches
-        )
+    def face(verts: list[bmesh.types.BMVert], finish: int) -> None:
+        made = bm.faces.new(verts)
+        made.material_index = finish
+        made.smooth = True
 
-    skins = [(0.0, True)] + ([(SKIN, False)] if hollow else [])
-    rings_of: list[list[list[bmesh.types.BMVert]]] = []
-    for inset, outward in skins:
-        rings = [ring(x, inset) for x in xs]
-        rings_of.append(rings)
-        nose = bm.verts.new(ship.nose)
-        tail = bm.verts.new((ship.tail + 0.02, ship.nose[1], ship.nose[2]))
+    rings = [ring(x) for x in xs]
+    around = len(rings[0])
+    nose = bm.verts.new(ship.nose)
+    tail = bm.verts.new((ship.tail + 0.02, ship.nose[1], ship.nose[2]))
+    for k in range(around):
+        j = (k + 1) % around
+        finish = seam if k % 3 == 0 else fabric
+        face([nose, rings[0][j], rings[0][k]], finish)
+        face([tail, rings[-1][k], rings[-1][j]], finish)
+    for i, (a, b) in enumerate(pairwise(rings)):
         for k in range(around):
             j = (k + 1) % around
-            fan = [nose, rings[0][j], rings[0][k]]
-            end = [tail, rings[-1][k], rings[-1][j]]
-            for tri in (fan, end):
-                face = bm.faces.new(tri if outward else tri[::-1])
-                face.material_index = envelope_i
-                face.smooth = True
-        for i, (a, b) in enumerate(pairwise(rings)):
-            for k in range(around):
-                if open_at(i, k):
-                    continue
-                j = (k + 1) % around
-                quad = [a[k], a[j], b[j], b[k]]
-                face = bm.faces.new(quad if outward else quad[::-1])
-                face.material_index = envelope_i
-                face.smooth = True
-    # The coaming of each hatch joins the two skins round the opening.
-    if hollow:
-        outer, inner = rings_of
-        for i in range(len(xs) - 1):
-            for k in range(around):
-                if not open_at(i, k):
-                    continue
-                j = (k + 1) % around
-                edges = []
-                if i == 0 or not open_at(i - 1, k):
-                    edges.append((i, k, i, j))
-                if i == len(xs) - 2 or not open_at(i + 1, k):
-                    edges.append((i + 1, j, i + 1, k))
-                if not open_at(i, (k - 1) % around):
-                    edges.append((i + 1, k, i, k))
-                if not open_at(i, j):
-                    edges.append((i, j, i + 1, j))
-                for i0, k0, i1, k1 in edges:
-                    quad = [outer[i0][k0], outer[i1][k1], inner[i1][k1], inner[i0][k0]]
-                    bm.faces.new(quad).material_index = brass_i
-    # The girders stay sharp; the fabric of a gore shades round.
-    for rings in rings_of:
-        for a, b in pairwise(rings):
-            for k in range(0, around, 2):
-                edge = bm.edges.get((a[k], b[k]))
-                if edge is not None:
-                    edge.smooth = False
+            finish = seam if i in frames or k % 3 == 0 else fabric
+            face([a[k], a[j], b[j], b[k]], finish)
+    # The edges of the seams stay sharp, so each gore and each bay shades round on its own.
+    for i, (a, b) in enumerate(pairwise(rings)):
+        for k in range(around):
+            if k % 3 != 2:
+                bm.edges.get((a[k], b[k])).smooth = False
+            if i in frames:
+                for verts in (a, b):
+                    bm.edges.get((verts[k], verts[(k + 1) % around])).smooth = False
     obj = parts.add(ship.name)
     _caps(ship)
     return obj
 
 
-def _within(angle: float, a0: float, a1: float) -> bool:
-    """True when angle lies on the arc from a0 counter-clockwise to a1, degrees."""
-    span = (a1 - a0) % 360.0
-    return (angle - a0) % 360.0 <= span
-
-
-def _stations(ship: Ship) -> list[float]:
-    """Returns the x of the rings of an envelope: close together round the nose, then about a
-    quarter BAY apart, and never at the nose tip itself."""
+def _stations(ship: Ship) -> tuple[list[float], set[int]]:
+    """Returns the x of the rings of an envelope, and the indices of the rings from which a
+    ring frame's seam runs to the next ring. A frame stands every BAY m from the nose tip.
+    The rings stand close together round the nose, a quarter BAY apart along the rest and on
+    both edges of each frame's seam, and never at the nose tip itself."""
     x0, length = ship.nose[0], ship.length
+    frames = [x0 + BAY * j for j in range(1, math.ceil(length / BAY))]
+    frames = [x for x in frames if x < ship.tail - BAY / 2]
+    marks = [(x + side * SEAM / 2, side < 0) for x in frames for side in (-1, 1)]
     nose = [
         x0 + NOSE * length * (1.0 - math.cos(math.pi / 2 * k / 9)) for k in range(1, 10)
     ]
-    body = math.ceil((1.0 - NOSE) * length / (BAY / 4))
-    tail = [
-        x0 + NOSE * length + (1.0 - NOSE) * length * k / body for k in range(body + 1)
-    ]
-    return nose + tail
+    quarters = [x0 + BAY * q / 4 for q in range(1, math.ceil(4 * length / BAY))]
+    for x in nose + quarters:
+        if x < ship.tail - 0.2 and all(abs(x - m) > 0.2 for m, _ in marks):
+            marks.append((x, False))
+    marks.sort()
+    return [x for x, _ in marks], {i for i, (_, starts) in enumerate(marks) if starts}
 
 
 def _caps(ship: Ship) -> None:
@@ -388,7 +358,7 @@ def promenade(
     kerbs: Sequence[tuple[str, float, float]] = (),
     name: str = "",
 ) -> bpy.types.Object:
-    """Adds a timber deck along the back of a ship, on iron trestles: its top face follows
+    """Adds a timber deck along the back of a ship, on iron posts: its top face follows
     the profile of (x, height) points along the axis and is `width` m wide. kerbs: the brass
     kerbs along its edges, each (side n or s, x0, x1). Keep the profile above the envelope."""
     name = name or f"{ship.name}_deck"
@@ -402,26 +372,25 @@ def promenade(
         edge = y + (half if side == "n" else -half)
         path = [(x, edge, _height(profile, x)) for x in _cuts(profile, x0, x1)]
         kerb(f"{name}_kerb_{i}", path, side="right" if side == "n" else "left")
-    # Trestles: an iron post down to the envelope under each edge every 2.4 m, with a
-    # stringer under the deck.
+    # Trestles: an iron post from under each edge of the deck down to the envelope every
+    # TRESTLE m. Where the envelope is narrower than the deck, the posts stand further in, so
+    # that each one ends in the fabric; where it is much narrower, the deck has no post.
     legs = town.Parts()
     x_first, x_last = profile[0][0], profile[-1][0]
-    count = max(1, round((x_last - x_first) / 2.4))
+    count = max(1, round((x_last - x_first) / TRESTLE))
     for k in range(count + 1):
         x = x_first + (x_last - x_first) * k / count
+        r = ship.r(x)
+        if r < half * 0.6:
+            continue
+        reach = min(half - 0.25, 0.85 * r)
+        foot = ship.nose[2] + math.sqrt(r * r - reach * reach) - 0.1
         deck = _height(profile, x) - PLANK
+        if deck - foot < 0.25:
+            continue
         for side in (-1.0, 1.0):
-            foot = ship.point(
-                x, 90.0 - side * 90.0 * min(1.0, half / max(ship.r(x), 0.1))
-            )
-            y_leg = y + side * (half - 0.25)
-            if deck - foot.z > 0.15 and ship.r(x) > half * 0.6:
-                legs.bar(
-                    Vector((x, y_leg, deck)),
-                    Vector((x, y_leg, foot.z - 0.1)),
-                    0.1,
-                    "iron",
-                )
+            y_leg = y + side * reach
+            legs.bar(Vector((x, y_leg, deck)), Vector((x, y_leg, foot)), 0.1, "iron")
     if legs.bm.faces:
         legs.add(f"{name}_trestles", collide=False)
     else:
@@ -635,6 +604,7 @@ def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
     ]
     parts.bm.free()
     parts = town.Parts(town._loft(hub), "brass_polished")
+    timber = parts.index("varnish")  # ty: ignore[invalid-argument-type]
     for b in range(blades):
         a0 = math.tau * b / blades + 0.3
         sections = []
@@ -658,6 +628,8 @@ def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
                 ]
             )
         blade = town._loft(sections)
+        for face in blade.faces:
+            face.material_index = timber
         tmp = bpy.data.meshes.new("tmp_blade")
         blade.to_mesh(tmp)
         blade.free()
@@ -672,9 +644,10 @@ def _ring(count: int) -> list[float]:
 
 
 def line(
-    parts: town.Parts, a: Vec3, b: Vec3, width: float = 0.05, finish: Finish = "rope"
+    parts: town.Parts, a: Vec3, b: Vec3, width: float = 0.07, finish: Finish = "rope"
 ) -> None:
-    """Adds a straight rope or cable from a to b to parts."""
+    """Adds a straight rope or cable from a to b to parts. Keep it 0.07 m or wider: a thinner
+    line breaks into dots at range."""
     parts.bar(Vector(a), Vector(b), width, finish)  # ty: ignore[invalid-argument-type]
 
 
@@ -708,22 +681,25 @@ def storey(
         if eave - floor > 2.4:
             town.windows(parts, face, eave - 0.55, bottom=floor - 0.8)
     obj = parts.add(name)
+    # The stubs: the break runs up and down along each wall in a jagged line.
     broken = town.Parts()
     rng = random.Random(seed)
-    course = 0.42
     for face in sides.values():
-        s = 0.0
+        s, drop = 0.0, rng.uniform(0.3, 2.1)
         while s < face.length - 0.05:
             step = min(face.length - s, rng.uniform(0.7, 1.6))
-            drop = course * rng.randint(1, 5)
-            a = face.at(s, 0.0)
-            b = face.at(s + step, 0.0)
-            c = face.at(s + step, -0.5)
-            d = face.at(s, -0.5)
-            broken.solid(
-                town._counter_clockwise([a, b, c, d]), floor - drop, floor, "wall"
-            )
-            s += step
+            after = rng.uniform(0.3, 2.1)
+            corners = [face.at(s, 0.0), face.at(s + step, 0.0)]
+            corners += [face.at(s + step, -0.5), face.at(s, -0.5)]
+            drops = [drop, after, after * 0.8, drop * 0.8]
+            bm = broken.bm
+            low = [
+                bm.verts.new((*c, floor - d))
+                for c, d in zip(corners, drops, strict=True)
+            ]
+            high = [bm.verts.new((*c, floor)) for c in corners]
+            broken.faces([low, high, *town._sides(low, high)], "wall")
+            s, drop = s + step, after
     # The broken floor: a slab of rough stone under the storey.
     broken.box(
         (x0 + 0.5, y0 + 0.5, floor - 0.45), (x1 - 0.5, y1 - 0.5, floor), "dressed"
@@ -817,10 +793,12 @@ def mast(
     width: float = 1.6,
     head: float = 0.9,
     bay: float = 2.4,
+    hanging: bool = False,
 ) -> None:
     """Adds a lattice mast of iron from the foot point up to the height `top`: four corner
     posts that taper from `width` to `head` m apart, with a cross brace in each bay of about
-    `bay` m. It collides."""
+    `bay` m. hanging: the mast hangs in the air, so a frame closes its foot and its posts meet
+    in a point `width` m below it. It collides."""
     x, y, z = foot
     parts = town.Parts()
     count = max(1, round((top - z) / bay))
@@ -834,13 +812,16 @@ def mast(
 
     for k in range(4):
         parts.bar(corner(k, z), corner(k, top), 0.12, "iron")
+        if hanging:
+            parts.bar(corner(k, z), corner((k + 1) % 4, z), 0.07, "iron")
+            parts.bar(corner(k, z), Vector((x, y, z - width)), 0.12, "iron")
     for i in range(count):
         h0 = z + (top - z) * i / count
         h1 = z + (top - z) * (i + 1) / count
         for k in range(4):
             j = (k + 1) % 4
-            parts.bar(corner(k, h0), corner(j, h1), 0.05, "iron")
-            parts.bar(corner(j, h0), corner(k, h1), 0.05, "iron")
+            parts.bar(corner(k, h0), corner(j, h1), 0.07, "iron")
+            parts.bar(corner(j, h0), corner(k, h1), 0.07, "iron")
             parts.bar(corner(k, h1), corner(j, h1), 0.07, "iron")
     parts.add(name)
 

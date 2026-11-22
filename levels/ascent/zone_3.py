@@ -42,7 +42,7 @@ TERRACE = 0.25
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
 
-kit.level(title="Sky Harbour", par=321.0, gold=148.2, sky="ground_dawn")
+kit.level(title="Sky Harbour", par=321.2, gold=147.3, sky="ground_dawn")
 
 
 def house(
@@ -130,20 +130,38 @@ def vent(name: str, at: Place, lift: float, radius: float = 1.0) -> None:
 
 # --- Part 1: first roofs, +300 to +322 ----------------------------------------------------------
 
-# The quay: the zone start, flush with the south edge of the cap. A jetty runs west from it to
-# the wall of Roof 1.
+# The quay: the zone start, flush with the south edge of the cap. It meets the cap's edge on
+# the arc x -3 to 3, from ARC degrees round the cap to -180 - ARC. Beside the arc its floor
+# wraps round the cap's south half as far as WRAP degrees below the cap's east and west points,
+# so that no gap opens between the two: there it stays outside zone 2's brass rim round the cap
+# (radius 5.0 to 5.12), and its edge runs straight out from the cap. A jetty runs west from the
+# quay to the wall of Roof 1.
 QUAY = (-7.0, 25.0, 5.5, 35.0)
 qx0, qy0, qx1, qy1 = QUAY
 START: Place = (0.0, 29.0, 300.0)
-_rim = math.degrees(math.atan2(qy1 - CAP[1], 3.0))
+ARC = math.degrees(math.atan2(qy1 - CAP[1], 3.0))
+WRAP = 20.0
+RIM_CLEAR = CAP_RADIUS + 0.14
+
+
+def wrap_corner(angle: float, x: float) -> Point:
+    """Returns the point on the side x of the quay that the line straight out from the cap at
+    `angle` degrees meets."""
+    a = math.radians(angle)
+    out = (x - CAP[0] - RIM_CLEAR * math.cos(a)) / math.cos(a)
+    return (x, CAP[1] + (RIM_CLEAR + out) * math.sin(a))
+
+
 town.floor(
     "quay",
     [
         (qx0, qy0),
         (qx1, qy0),
-        (qx1, qy1),
-        *kit.arc(CAP, CAP_RADIUS, _rim, -180.0 - _rim),
-        (qx0, qy1),
+        wrap_corner(-WRAP, qx1),
+        *kit.arc(CAP, RIM_CLEAR, -WRAP, ARC),
+        *kit.arc(CAP, CAP_RADIUS, ARC, -180.0 - ARC),
+        *kit.arc(CAP, RIM_CLEAR, -180.0 - ARC, -180.0 + WRAP),
+        wrap_corner(-180.0 + WRAP, qx0),
     ],
     300.0,
     0.6,
@@ -152,17 +170,19 @@ town.floor(
 JETTY_Y = (28.3, 31.7)
 JETTY_ROW = (JETTY_Y[0] + JETTY_Y[1]) / 2
 harbour.slab("jetty", (-12.65, JETTY_Y[0], 299.4), (qx0, JETTY_Y[1], 300.0), "wood")
-# The planks to the Tender leave the east side; the crate steps leave the jetty.
+# The planks to the Tender leave the east side; the crate steps leave the jetty. The parapet
+# runs on along the west side of the wrap; the side that meets the cap stays open.
 PLANKS_Y = (32.8, 34.8)
+_qy = wrap_corner(-180.0 + WRAP, qx0)[1]
 harbour.parapet(
     "quay_parapet",
     (qx0, qy0),
-    (qx1, qy1),
+    (qx1, _qy),
     300.0,
     along(
         (qx0, qy0),
-        (qx1, qy1),
-        [("n", qx0, qx1), ("w", *JETTY_Y), ("e", PLANKS_Y[0] - 0.3, qy1)],
+        (qx1, _qy),
+        [("n", qx0, qx1), ("w", *JETTY_Y), ("e", PLANKS_Y[0] - 0.3, _qy)],
     ),
 )
 # Iron girders under the quay: it hangs from the harbour like the houses.
@@ -389,7 +409,7 @@ town.crate(
 )
 _davit = town.Parts()
 for _x in (CRATE[0] + 0.4, CRATE[2] - 0.4):
-    harbour.line(_davit, (_x, 30.7, CRATE[4]), (_x, 32.4, 300.6), 0.06)
+    harbour.line(_davit, (_x, 30.7, CRATE[4]), (_x, 32.4, 300.6))
 _davit.bar((CRATE[0] + 0.2, 32.5, 300.6), (CRATE[2] + 0.4, 32.5, 300.6), 0.12, "iron")
 _davit.add("cargo_crate_davit", collide=False)
 EGG_CRATE: Place = (8.4, 30.6, CRATE[4])
@@ -562,20 +582,26 @@ town.block(
     "iron",
     collide=False,
 )
-MAST_LEDGE = (17.15, 20.0)
+# The mast ledge lies a step below the gear and reaches in under its teeth (the gear's disc
+# has a radius of 1.7 m, its teeth 2.1 m): a marble that leaves the gear between two teeth
+# drops onto the ledge, not through the gap.
+LEDGE_TOP = GEAR[2] - 0.55
+MAST_LEDGE = (GEAR[0] + 1.75, 20.0)
 deck(
     "mast_ledge",
     (MAST_LEDGE[0], MAST_ROW - 1.5),
     (MAST_LEDGE[1], MAST_ROW + 1.5),
-    GEAR[2],
+    LEDGE_TOP,
     "sn",
 )
 MAST_VENT = (18.6, MAST_ROW)
-vent("vent_mast", (*MAST_VENT, GEAR[2]), 11.0)
+vent("vent_mast", (*MAST_VENT, LEDGE_TOP), 11.55)
 MAST_TOP = 340.0
 MAST_DECK = (21.8, 48.5, 26.8, 53.5)
 deck("mast_platform", MAST_DECK[:2], MAST_DECK[2:], MAST_TOP, "se")
-harbour.mast("mast", (24.3, MAST_ROW, 316.0), MAST_TOP - 0.3, width=2.4, head=1.4)
+harbour.mast(
+    "mast", (24.3, MAST_ROW, 316.0), MAST_TOP - 0.3, width=2.4, head=1.4, hanging=True
+)
 MAST_STEPS_X = (22.4, 25.4)
 MAST_COL = (MAST_STEPS_X[0] + MAST_STEPS_X[1]) / 2
 MAST_STEPS = [(53.8, 56.1, 341.0), (56.4, 58.7, 342.0), (59.0, 61.3, 343.0)]
@@ -759,14 +785,16 @@ for x in (31.0, 25.0, 19.0, 13.0, 10.0):
         BOW_TOP - GALLERY_TOP
     ) / (STERN_GALLERY[0] - BOW_GALLERY[2])
     for y in (FLYING_ROW - 1.1, FLYING_ROW + 1.1):
-        harbour.line(_hangers, (x, y, z), (hull.x, hull.y, hull.z), 0.05)
+        harbour.line(_hangers, (x, y, z), (hull.x, hull.y, hull.z))
 _hangers.add("flying_gangway_hangers", collide=False)
 BOW_VENT = (10.25, 97.6)
 vent("vent_bow", (*BOW_VENT, BOW_TOP), 11.0)
 LAMP_PLATFORM = (7.5, 100.8, 15.0, 106.8)
 LAMP_PLATFORM_TOP = 374.0
 deck("lamp_platform", LAMP_PLATFORM[:2], LAMP_PLATFORM[2:], LAMP_PLATFORM_TOP, "wn")
-harbour.mast("lamp_platform_mast", (11.25, 103.8, 352.0), LAMP_PLATFORM_TOP - 0.3)
+harbour.mast(
+    "lamp_platform_mast", (11.25, 103.8, 352.0), LAMP_PLATFORM_TOP - 0.3, hanging=True
+)
 PLATFORM_VENT = (13.4, 104.0)
 vent("vent_platform", (*PLATFORM_VENT, LAMP_PLATFORM_TOP), 10.8)
 
@@ -1021,7 +1049,7 @@ for x0, x1, row, half, top in _floors:
     for x in (x0 + 0.3, x1 - 0.3):
         keel = FLAGSHIP.point(x, 270.0)
         for y in (row - half + 0.1, row + half - 0.1):
-            harbour.line(_gantry, (x, y, top - 0.3), (x, keel.y, keel.z + 0.2), 0.04)
+            harbour.line(_gantry, (x, y, top - 0.3), (x, keel.y, keel.z + 0.2))
 _gantry.add("rigging", collide=False)
 
 # --- Part 6: the Flagship, +460 to +500 ---------------------------------------------------------
@@ -1152,7 +1180,7 @@ for x, y, z in [
     (SLATES_TOP[0], NEST_ROW - 1.3, SLATES_TOP[2]),
     (SLATES_TOP[0], NEST_ROW + 1.3, SLATES_TOP[2]),
 ]:
-    harbour.line(_ropes, (x, y, z - 0.3), _nose, 0.04)
+    harbour.line(_ropes, (x, y, z - 0.3), _nose)
 _ropes.add("flag_bow_ropes", collide=False)
 
 TOP_X = (FBOW_VENT_X + THROW, FLAG_E + 18.0)
@@ -1173,6 +1201,20 @@ kit.marker(
 kit.marker(
     "bumper", at=(FBOW_VENT_X + 12.0, FBOW_ROW - 4.5, FLAG_TOP), name="bumper_top_2"
 )
+# Deck fittings on the east half, off both routes and the way to egg 2: a skylight over the
+# saloon and two capstans by the edges. They collide.
+_fittings = town.Parts()
+_sky = (FLAG_E + 2.0, FLAG_ROW - 3.4, FLAG_E + 6.0, FLAG_ROW - 1.8)
+_fittings.box((_sky[0], _sky[1], FLAG_TOP), (_sky[2], _sky[3], FLAG_TOP + 0.45), "wood")
+_fittings.box(
+    (_sky[0] + 0.12, _sky[1] + 0.12, FLAG_TOP + 0.45),
+    (_sky[2] - 0.12, _sky[3] - 0.12, FLAG_TOP + 0.5),
+    "glass",
+)
+for _at in ((FLAG_E + 12.0, FLAG_ROW + TOP_HALF - 1.4), (FLAG_E - 2.0, FLAG_ROW - 5.6)):
+    _fittings.solid(town._octagon(_at, 0.42), FLAG_TOP, FLAG_TOP + 0.9, "wood")
+    _fittings.solid(town._octagon(_at, 0.55), FLAG_TOP + 0.9, FLAG_TOP + 1.02, "iron")
+_fittings.add("flagship_top_fittings")
 
 # The mast and its spiral ramp: two turns anticlockwise from the south side, 18 m up to the
 # gate deck (+500), the finish.
@@ -1181,7 +1223,8 @@ MAST_AT: Place = (FLAG_E - 10.0, FLAG_ROW, FLAG_TOP)
 HELIX = (MAST_AT, 2.2, 5.4, 270.0, 720.0, GATE_TOP - FLAG_TOP)
 town.helix(*HELIX, name="flag_helix", finish="wood")
 town.helix_kerb(MAST_AT, 5.4, *HELIX[3:], name="flag_helix_kerb")
-harbour.mast("flag_mast", MAST_AT, GATE_TOP + 3.0)
+# The mast ends under the gate deck, so the gate's beam stands clear of it.
+harbour.mast("flag_mast", MAST_AT, GATE_TOP - 0.3)
 GATE_ROW = MAST_AT[1] - 3.8
 deck(
     "gate_deck",
@@ -1250,9 +1293,12 @@ FIRST[1] += [
     (GANGWAY_A_LOW, "speed 3; wait_until gangway_a 4.1 4.9"),
     ((-5.8, GANGWAY_A_HIGH[1], 322.0), "speed 3"),
 ]
-# Expert: from the landing on Roof 2 to the wing, then up the rope.
+# Expert: from the landing on Roof 2 to a stop at the west end of the wing, in line with the
+# rope, then straight up the rope from rest. The stop takes out the turn onto the line, which
+# carried the marble off the 0.6 m rope after a start that differed a little.
 EXPERT[1] += [
-    ((-26.5, ROPE_Y, 315.0), "speed 4"),
+    ((WING[0] + 1.0, ROPE_Y, 315.0), "speed 4; wait 0"),
+    ((WING[0] + 4.0, ROPE_Y, 315.0), ""),
     (ROPE_1[0], ""),
     (ROPE_1[1], ""),
     ((-5.5, ROPE_Y, 322.0), "speed 4"),
@@ -1296,7 +1342,7 @@ EXPERT[2] = [
     ((MAST_STACKS[1][0] + 0.8, MAST_ROW, 330.5), "speed 3"),
     ((GEAR[0] - 3.0, MAST_ROW, 330.5), "jump; speed 3"),
     ((GEAR[0], MAST_ROW, GEAR[2]), "speed 3"),
-    ((MAST_VENT[0] - 1.2, MAST_ROW, GEAR[2]), "speed 3"),
+    ((MAST_VENT[0] - 1.2, MAST_ROW, LEDGE_TOP), "speed 3"),
     ((MAST_VENT[0] + 5.0, MAST_ROW, MAST_TOP), "speed 3"),
     ((MAST_COL, MAST_STEPS[0][0] - 0.9, MAST_TOP), "jump; speed 3"),
 ]
@@ -1477,7 +1523,9 @@ route("expert", [leg for part in sorted(EXPERT) for leg in EXPERT[part]])
 
 # --- Shots ----------------------------------------------------------------------------------------
 
-kit.shot("overview", at=(48.0, -10.0, 352.0), rotation=(-22, 0, 40))
+# The overview looks south-east from the north-west, with the dawn sun (azimuth 135°,
+# north-west) behind it: the Flagship in front, and the parts below it down to the quay.
+kit.shot("overview", at=(-175.0, 215.0, 470.0), rotation=(-12, 0, -128))
 kit.shot("start", at=(0.0, 24.0, 301.6), rotation=(6, 0, 0))
 kit.shot("egg", at=(4.0, 26.0, 299.5), rotation=(-12, 0, -50))
 kit.shot("first_roofs", at=(-4.0, 22.0, 309.0), rotation=(4, 0, 40))
@@ -1490,3 +1538,5 @@ kit.shot("flagship_bow", at=(-150.0, 110.0, 478.0), rotation=(0, 0, -55))
 kit.shot("fin_tip", at=(-88.0, 130.0, 484.5), rotation=(2, 0, -76))
 kit.shot("finish", at=(-90.0, 116.0, 506.0), rotation=(-17, 0, 41))
 kit.shot("overview_top", at=(40.0, 60.0, 470.0), rotation=(-14, 0, 53))
+# The first run's ramps on the north flank of the Flagship, and the slates under its nose.
+kit.shot("flagship_flank", at=(-138.0, 172.0, 480.0), rotation=(-19, 0, -148))
