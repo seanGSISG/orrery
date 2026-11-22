@@ -545,6 +545,8 @@ game/
 ├── modes/ascent/              #27: the Ascent mode (`docs/design/ascent.md`)
 ├── objects/
 │   ├── palette.gd             #23: Palette, the gem and hazard colours
+│   ├── pad_look.gd            #30: PadLook, the look of the checkpoint and the finish
+│   ├── chamfer.gd             #30: Chamfer, box meshes with chamfered edges
 │   ├── start/                 #7
 │   ├── gem/ finish/ checkpoint/ egg/      placeholder scenes from #7, then #13
 │   ├── moving_platform/ turning_gear/     #12
