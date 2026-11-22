@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; The doped cream canvas of an airship envelope (#33): the Fabric036 weave (ambientCG, CC0) at
+; 1.2 m a repeat, with a soft normal, so the gores read as tight fabric.
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/Fabric036_2K-JPG_Color.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/Fabric036_2K-JPG_Roughness.jpg" id="3"]
+[ext_resource type="Texture2D" path="res://materials/textures/Fabric036_2K-PNG_NormalGL.png" id="4"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/normal_map = ExtResource("4")
+shader_parameter/tint = Vector3(1.38, 1.27, 1.05)
+shader_parameter/tile = 1.2
+shader_parameter/roughness_scale = 1.15
+shader_parameter/normal_strength = 0.5

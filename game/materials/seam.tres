@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+; The seams of an airship envelope (#33): tarred cord, sRGB about (150, 128, 98), rough. Lighter
+; than rope.tres, so the seams read as a fine line on the canvas, not as a dark net in shade.
+[resource]
+albedo_color = Color(0.59, 0.5, 0.38, 1)
+roughness = 0.88

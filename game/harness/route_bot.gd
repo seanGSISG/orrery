@@ -16,8 +16,12 @@ extends InputSource
 ## "stuck" (no progress for STUCK_SECONDS), "fell" (MAX_FALLS falls; stuck_at is the last
 ## ground position), "route_end" (the bot reached the last point, but the run did not finish
 ## in STUCK_SECONDS: a gem is missing) or "timeout" (MAX_SECONDS).
+##
+## In a climb, a bot for each zone can follow the last one with no restart: make it the
+## InputHub source and step the run until it is done (test_ascent_spot.gd). Each bot counts
+## MAX_SECONDS from its own first input, so a climb of many zones does not time out.
 
-## The bot gives up after this much run time, s.
+## The bot gives up after it has driven this long, s.
 const MAX_SECONDS: float = 300.0
 ## The bot gives up when the distance to the next point does not shrink by PROGRESS in this
 ## time, s.
@@ -93,6 +97,8 @@ var _yaw: float = 0.0
 var _best: float = INF
 var _since_best: float = 0.0
 var _started: bool = false
+## The run tick of the first input.
+var _start_tick: int = 0
 var _falling: bool = false
 ## True after the marble reached the last point.
 var _at_end: bool = false
@@ -164,6 +170,7 @@ func next_input(state: GameState) -> MarbleInput:
 ## Starts at the first point, with the speed plan from the marble's start position.
 func _start(state: GameState) -> void:
 	waypoint = 0
+	_start_tick = state.tick
 	_from = state.position
 	_ground_at = state.position
 	_plan_speeds(state.position, state.up)
@@ -182,7 +189,7 @@ func _follow(state: GameState) -> bool:
 		done = true
 		finished = true
 		return false
-	if state.tick * _dt >= MAX_SECONDS:
+	if (state.tick - _start_tick) * _dt >= MAX_SECONDS:
 		_give_up(&"timeout", state.position)
 		return false
 	if state.status == &"respawning":
@@ -202,8 +209,9 @@ func _follow(state: GameState) -> bool:
 
 ## Goes along the route: waits at a stop, leaves each point it reached, then steers to the next.
 ## After a point with a press it stops for this tick, so the press goes out before the next
-## point can start a wait. The bot does not leave the last point: it steers back to it until the
-## run finishes, because a jump can fly over the finish.
+## point can start a wait. The bot does not leave the last point: it steers back to it and comes
+## to rest on it until the run finishes, because a jump can fly over the finish. In a climb the
+## next zone's bot then starts from a still marble.
 func _act(state: GameState, input: MarbleInput) -> void:
 	while not _at_end:
 		var point: Route.Waypoint = _points[waypoint]
@@ -302,11 +310,11 @@ func _press(state: GameState, input: MarbleInput) -> void:
 
 
 ## Steers along the line from the last point to the next one. The wished speed along the line
-## is the most from which the marble can still brake to the plan's speed at the point; past the
-## point it turns back. A pull toward the line keeps the marble on it, so it passes each point
-## and its gem. The camera looks along the line. On the ground the move asks for the wished
-## velocity over the ground; in the air it only steers and brakes, so a flight keeps its
-## take-off speed.
+## is the most from which the marble can still brake to the plan's speed at the point (to rest
+## at the last point once it got there); past the point it turns back. A pull toward the line
+## keeps the marble on it, so it passes each point and its gem. The camera looks along the
+## line. On the ground the move asks for the wished velocity over the ground; in the air it
+## only steers and brakes, so a flight keeps its take-off speed.
 func _steer(state: GameState, input: MarbleInput) -> void:
 	var point: Route.Waypoint = _points[waypoint]
 	var up: Vector3 = state.up
@@ -314,10 +322,12 @@ func _steer(state: GameState, input: MarbleInput) -> void:
 	var back: Vector3 = _flat(state.position - point.position, up)
 	var ahead: float = -back.dot(along)
 	var off: Vector3 = back + along * ahead
-	var room: float = maxf(absf(ahead) - (STOP_REACH / 2.0 if point.stops() else REACH), 0.0)
+	var rest: bool = point.stops() or _at_end
+	var room: float = maxf(absf(ahead) - (STOP_REACH / 2.0 if rest else REACH), 0.0)
 	var air: bool = not state.on_ground
 	var brake: float = AIR_BRAKE if air else GROUND_BRAKE
-	var speed: float = minf(_caps[waypoint], sqrt(_limits[waypoint] ** 2 + 2.0 * brake * room))
+	var limit: float = 0.0 if _at_end else _limits[waypoint]
+	var speed: float = minf(_caps[waypoint], sqrt(limit ** 2 + 2.0 * brake * room))
 	var want: Vector3 = along * signf(ahead) * speed - (off * LINE_GAIN).limit_length(MAX_CORRECTION)
 	want = want.limit_length(_caps[waypoint])
 	var velocity: Vector3 = _flat(state.velocity, up)
