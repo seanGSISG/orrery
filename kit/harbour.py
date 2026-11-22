@@ -31,10 +31,10 @@ from kit import town
 from kit.scene import Vec3
 
 Point = tuple[float, float]
-# The finishes of the harbour, besides those of kit/town.py:
+# The finishes of the harbour, besides those of kit/town.py (whose brass_polished, the brass
+# of the lift casings, is also the brass of the big harbour fittings):
 # - envelope: the doped cream canvas of an airship; varnish: the varnished timber of a
-#   gondola, a propeller or a fin frame; brass_polished: polished brass for big fittings;
-#   rope: tarred hemp.
+#   gondola, a propeller or a fin frame; rope: tarred hemp.
 Finish = str
 
 # An envelope: the share of its length that the round nose takes, and the radius of its tail
@@ -241,7 +241,7 @@ def envelope(
     parts = town.Parts()
     bm = parts.bm
     envelope_i = parts.index("envelope")  # ty: ignore[invalid-argument-type]
-    brass_i = parts.index("brass_polished")  # ty: ignore[invalid-argument-type]
+    brass_i = parts.index("brass_polished")
 
     def ring(x: float, inset: float) -> list[bmesh.types.BMVert]:
         r = ship.r(x) * (1.0 - SAG * math.sin(math.pi * (x - ship.nose[0]) / BAY) ** 2)
@@ -508,7 +508,7 @@ def gondola(
             dress.box(
                 (x0 + 0.6, min(yy, yy + side * 0.04), deck - PLANK - 0.12),
                 (x1 - 0.6, max(yy, yy + side * 0.04), deck - PLANK),
-                "brass_polished",  # ty: ignore[invalid-argument-type]
+                "brass_polished",
             )
     # Struts from the hull sides up to the envelope, outside the deck.
     for x in (x0 + 1.2, (x0 + x1) / 2, x1 - 1.2):
@@ -548,7 +548,7 @@ def _window(
         parts.box(
             (ax, min(y, y + side * 0.05), az),
             (bx, max(y, y + side * 0.05), bz),
-            "brass_polished",  # ty: ignore[invalid-argument-type]
+            "brass_polished",
         )
 
 
@@ -634,7 +634,7 @@ def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
         for dx in (-0.12, 0.12)
     ]
     parts.bm.free()
-    parts = town.Parts(town._loft(hub), "brass_polished")  # ty: ignore[invalid-argument-type]
+    parts = town.Parts(town._loft(hub), "brass_polished")
     for b in range(blades):
         a0 = math.tau * b / blades + 0.3
         sections = []
