@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Brass study, lever: a clean base texture. ambientCG Metal048A, the map of the gold and of the
+; polished brass, with almost no blotches. No normal map, as the gold. Metallic 1. Tint gives
+; the albedo of the "bright" variant, about sRGB (222, 186, 108). Median roughness
+; 0.09 x 4.8 = 0.43, as the gold inlay: at or above 0.4, so faces that look up at a blue sky do
+; not turn olive.
+
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Color.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Roughness.jpg" id="3"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/tint = Vector3(0.737, 0.639, 0.451)
+shader_parameter/tile = 2.0
+shader_parameter/roughness_scale = 4.8
+shader_parameter/metallic = 1.0

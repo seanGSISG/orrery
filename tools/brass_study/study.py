@@ -49,6 +49,11 @@ VIEWS: dict[str, list[str]] = {
 }
 # The zone 1 views that show the polished brass of the lift casings.
 POLISHED_VIEWS: dict[str, list[str]] = {"zone_1": ["start", "workshop", "gear_room"]}
+# Close-up corners for the polished views, where the most changed pixels are not the casing.
+POLISHED_CROPS: dict[str, tuple[int, int]] = {
+    "zone_1-start": (1000, 40),
+    "zone_1-workshop": (168, 184),
+}
 MEASURE_ONLY = ("mask", "light")
 # A brass pixel is in shade when the sun-only frame is darker than this (sRGB luma, 0-255).
 SHADE_LUMA = 12.0
@@ -248,6 +253,20 @@ def masks(view: str) -> tuple[np.ndarray, np.ndarray]:
     return inner & (light < SHADE_LUMA), inner & (light > SUN_LUMA)
 
 
+def mottle(frame: np.ndarray, shade: np.ndarray) -> float:
+    """How blotchy the brass in shade is: the spread of its luma after a 6 px blur is taken
+    away, against its median luma. Wood grain and cork pits raise it. The mask loses two more
+    pixels at each edge, so the edges of a bar do not count."""
+    inner = Image.fromarray((shade * 255).astype(np.uint8)).filter(
+        ImageFilter.MinFilter(5)
+    )
+    keep = np.asarray(inner) > 0
+    lum = luma(frame)
+    lum8 = Image.fromarray(np.clip(lum, 0, 255).astype(np.uint8), mode="L")
+    blur = np.asarray(lum8.filter(ImageFilter.GaussianBlur(6)), dtype=np.float64)
+    return round(float(np.std((lum - blur)[keep]) / np.median(lum[keep])), 3)
+
+
 def measure() -> None:
     """Writes build/brass_study/stats.json and prints a table of the shade stats."""
     variants = sorted(
@@ -275,6 +294,7 @@ def measure() -> None:
             entry["variants"][variant] = {
                 "shade": asdict(in_shade) if in_shade else None,
                 "sun": asdict(in_sun) if in_sun else None,
+                "mottle": mottle(frame, shade),
             }
             if in_shade:
                 print(
@@ -333,7 +353,7 @@ def export(out: Path) -> None:
             folders = sorted((OUT / "polished").iterdir())
             frames = [load(folder / f"{view}.png") for folder in folders]
             differs = np.abs(frames[0] - frames[1]).max(axis=-1) > 30
-            crops[f"polished-{view}"] = best_crop(differs)
+            crops[f"polished-{view}"] = POLISHED_CROPS.get(view) or best_crop(differs)
             for folder in folders:
                 save_pair(
                     folder / f"{view}.png",
