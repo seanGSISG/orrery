@@ -247,10 +247,12 @@ func test_restart_of_the_run_starts_a_new_climb() -> void:
 
 
 ## The route bot climbs the whole fixture with the first-run route of each zone in turn, from
-## the climb start through the gate.
+## the climb start through the gate. The climb starts after the bot's time limit, as the top
+## zone of a long climb does, because each bot counts the limit from its own first input.
 func test_route_bot_climbs_to_the_gate() -> void:
 	if not climb():
 		return
+	hold(RouteBot.MAX_SECONDS + 1.0)
 	var routes: Array[LevelObject] = objects(
 		func(o: LevelObject) -> bool: return o is Route and (o as Route).kind == &"first_run"
 	)

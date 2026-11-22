@@ -560,7 +560,7 @@ def fins(
         for p, q in pairwise([*outline[1:], outline[0]]):
             parts.bar(p, q, frame, "varnish")  # ty: ignore[invalid-argument-type]
         parts.add(name, collide=floors or not level)
-    return floor + thickness / 2
+    return floor
 
 
 def engine(name: str, at: Vec3, length: float = 2.2, radius: float = 0.45) -> None:

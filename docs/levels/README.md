@@ -75,7 +75,7 @@ B1, B2, B3 and Ascent 1 are built, so their rows have the bot's times; the other
 | B3 (route bot, 2026-11-21) | 62.4 s | 24.2 s | 93.6 s | 27.8 s |
 | Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
-| Ascent 3 (route bot, 2026-11-21) | 214.1 s | 128.1 s | | |
+| Ascent 3 (route bot, 2026-11-22) | 214.0 s | 128.1 s | | |
 
 ## Rules from B1 and B2
 

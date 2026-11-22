@@ -415,7 +415,7 @@ harbour.kerb(
 harbour.engine("tender_engine_n", (14.5, 40.2, 305.6))
 harbour.engine("tender_engine_s", (14.5, 28.8, 305.6))
 # The stern steps: a deckhouse on the fin, then three decks up over the tail to the top.
-crate_step("tender_deckhouse", (25.0, 30.8), (27.1, 33.2), FIN + 0.86, FIN)
+crate_step("tender_deckhouse", (25.0, 30.8), (27.1, 33.2), FIN + 0.98, FIN)
 TENDER_TOP = 313.4
 STERN = [(24.6, 26.6, 310.45), (22.3, 24.3, 311.45), (19.7, 22.0, 312.45)]
 _legs = town.Parts()
@@ -694,11 +694,13 @@ def slope_roof(
     seed: int,
 ) -> None:
     """Adds a house with a roof that slopes along x: a flat gutter walk from gutter[0] to
-    gutter[1] at gutter[2], a slate slope from gutter[0] to ridge's near end, and a flat ridge
-    walk between ridge[0] and ridge[1] at ridge[2]. The storey under it is 4 m tall."""
+    gutter[1] at gutter[2], a slate slope from the gutter walk's edge on the ridge side to
+    ridge's near end, and a flat ridge walk between ridge[0] and ridge[1] at ridge[2]. The
+    storey under it is 4 m tall."""
     (x0, y0), (x1, y1) = lo, hi
-    g0, _, gz = gutter
     k0, k1, kz = ridge
+    g0 = min(gutter[:2], key=lambda x: abs(x - k0))
+    gz = gutter[2]
     near = k1 if g0 > k1 else k0
     base = gz - 0.25
     harbour.storey(
