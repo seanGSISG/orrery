@@ -43,7 +43,7 @@ Ascent has no gems.
 
 ## Hazards and objects
 
-16 Steam Vents (plus 1 on the crate), 5 bumpers, 3 pendulums, 1 turning gear, 10 moving platforms (4 gangways, 3 gangplanks, 3 cargo lifts), 4 strips of Crumbling Tiles, 5 narrow beams (4 mooring ropes, 1 yardarm), 2 eggs, the gate. No carried power-ups.
+16 Steam Vents (plus 1 on the crate), 5 bumpers, 3 pendulums, 1 turning gear, 10 moving platforms (4 gangways, 3 gangplanks, 3 cargo lifts), 3 strips of Crumbling Tiles, 5 narrow beams (4 mooring ropes, 1 yardarm), 2 eggs, the gate. No carried power-ups.
 
 ## Falls and rest ledges
 
@@ -78,7 +78,7 @@ Ascent has no par time. The level script carries the first-run route and the exp
 | Five crossings | 7.5 s | 5 × 1.5 | 6.5 s | |
 | **Zone** | **152 s** | | **73 s** | |
 
-M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 + 112 + 152), which is 6.4 minutes. The expert routes take about 199 s (67 + 59 + 73), which is 3.3 minutes.
+M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 + 112 + 152), which is 6.4 minutes. The expert routes take about 199 s (67 + 59 + 73), which is 3.3 minutes. These are the estimates. The route bot needs about 559 s (9.3 minutes) for the three first-run routes and about 306 s (5.1 minutes) for the three expert routes (`README.md`, 2026-11-22).
 
 ## Why it is fun
 

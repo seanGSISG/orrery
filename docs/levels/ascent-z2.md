@@ -42,7 +42,7 @@ The hub of the clock face has a hole where the axle was. The hands hide it as th
 
 ## Hazards and objects
 
-15 Steam Vents (plus 1 in the egg chamber), 4 pendulums (walkway, mainspring bell, two slab bells), 4 turning gears and the 2 clock hands (turning arms), 3 moving platforms, 1 strip of Crumbling Tiles (slate slope), 1 narrow beam (lightning rod), 1 egg. No carried power-ups.
+15 Steam Vents (plus 1 in the egg chamber), 4 pendulums (walkway, mainspring bell, two slab bells), 4 turning gears, 4 turning arms (the blade and the tail of each of the 2 clock hands), 3 moving platforms, 1 strip of Crumbling Tiles (slate slope), 1 narrow beam (lightning rod), 1 egg. No carried power-ups.
 
 ## Falls and rest ledges
 
@@ -110,7 +110,7 @@ The script follows the map and the parts above, with the differences below.
 
 ### Routes and times
 
-The route bot drives both routes (`just test-levels zone_2`, 2026-11-22): first run **169.2 s**, expert **73.4 s**. Par 253.8 s and gold 84.1 s come from `just suggest-times zone_2`. The bot is slower than the estimates (112 s and 59 s): it waits for each mover's window, rolls the mainspring at 7 m/s in the outer lane past the bell, and loops round the spire vent at 3 m/s. On the expert route it waits on the last face stair until the hands come round; in the zone on its own it arrives in the window. A route has at most 100 points (`kit.marker`), so the first run has no point of its own on each shard step: the bot jumps where it crosses a step's jump point. Both routes start on the start pad, so the bot reaches the first jump from the same side in the climb as in the zone on its own. Both routes end with a stop on the finish pad (`docs/design/ascent.md` §8.2): in the climb the cap has no finish, so the bot comes to rest there and zone 3's bot starts from rest. The stop costs the expert 0.15 s in the zone on its own.
+The route bot drives both routes (`just test-levels zone_2`, 2026-11-22): first run **169.2 s**, expert **73.4 s**. Par 253.8 s and gold 84.1 s come from `just suggest-times zone_2`. The bot is slower than the estimates (112 s and 59 s): it waits for each mover's window, rolls the mainspring at 7 m/s in the outer lane past the bell, and loops round the spire vent at 3 m/s. On the expert route it waits on the last face stair until the hands come round; in the zone on its own it arrives in the window. When zone 2 was built, a route had at most 100 points (`kit.marker` has no limit now), so the first run has no point of its own on each shard step: the bot jumps where it crosses a step's jump point. Both routes start on the start pad, so the bot reaches the first jump from the same side in the climb as in the zone on its own. Both routes end with a stop on the finish pad (`docs/design/ascent.md` §8.2): in the climb the cap has no finish, so the bot comes to rest there and zone 3's bot starts from rest. The stop costs the expert 0.15 s in the zone on its own.
 
 ### Climb with zone 1
 

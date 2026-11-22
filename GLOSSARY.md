@@ -56,7 +56,7 @@ _Avoid_: collider, body
 
 **LevelObject**:
 An object that a level marker places, such as a gem or a moving platform. It is a scene whose root script extends `LevelObject`, and the run calls its hooks.
-_Avoid_: entity, prop
+_Avoid_: entity, prop (a prop is a decoration model)
 
 **Level script**:
 The Python file `levels/<tier>/<id>.py` that builds one level with the kit (`kit/`). It is the source of truth; `just build-levels` turns it into `game/levels/built/<id>.glb`.
@@ -83,12 +83,24 @@ The `route` of kind `expert`: the fastest line, with shortcuts and skips. The ro
 _Avoid_: speedrun route, fast route
 
 **Kit material**:
-The surface finish of a kit face by name: `limestone`, `brass` or `gold`. A level script names it, and the importer gives the face the material `game/materials/<set>/<name>.tres`. The surface type (friction and bounce) is a separate name.
+The surface finish of a kit face by name: `limestone`, `brass` and `gold`, and the finishes of the Ascent town, clock and harbour (`wall`, `dressed`, `slate`, `wood`, `blued_steel`, `varnish` and others). A level script names it, and the importer gives the face the material `game/materials/<set>/<name>.tres` (or `game/materials/<name>.tres` when every set shares it). An object setting of type `Material`, such as `finish` of a moving platform, takes the same names. The surface type (friction and bounce) is a separate name.
 _Avoid_: texture, skin (a skin is a choice of marble)
 
 **Kit piece**:
 A mesh that a level script adds with the kit: a track, a ramp, a deck, a wall and so on. A piece collides unless its description says that it does not (an inlay, gear teeth, a gear, a hoop, a ball).
-_Avoid_: prop, tile, block (a block is a deep deck)
+_Avoid_: prop (a prop is a decoration model), tile, block (a block is a deep deck)
+
+**Prop**:
+A decoration model, `assets/props/<name>.glb`, that a level script places with `kit.prop(name, at=..., collider=...)`. It is not a `LevelObject`. Only its optional box or cylinder collider collides, so the marble rolls only on kit pieces. `just prop-cleanup` makes it from a generated model (`tools/art`).
+_Avoid_: object (an object is a `LevelObject`), decoration
+
+**Land**:
+The `land` marker: flat open country, 120 km wide, just under the ground of an Ascent town. It holds the marble, and a touch puts the marble out of bounds.
+_Avoid_: terrain, ground (ground is a floor that the marble rolls on)
+
+**Room probe**:
+The `room_probe` marker: the warm ambient light and the reflections of one indoor room, in place of the cold light of the sky. The Ascent mode keeps its probe.
+_Avoid_: light probe (the level has its own reflection probes)
 
 **Kerb**:
 The low brass edge, 0.3 m high, on an outer edge of a floor. It stops a marble that rolls. A **parapet** is a wall of 1 m or more with a brass cap, for an edge that the marble reaches through the air.
