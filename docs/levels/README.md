@@ -65,27 +65,32 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-B1 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+B1, B2 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
 | B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
-| B2 | 32 s | 17 s | 48 s | 20 s |
+| B2 (route bot, 2026-11-21) | 32.8 s | 24.2 s | 49.3 s | 27.9 s |
 | B3 | 49 s | 23 s | 74 s | 26 s |
 | Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
 | Ascent 3 (300 to 500 m) | 152 s | 73 s | | |
 
-## Rules from the first built level
+## Rules from B1 and B2
 
-B1 (`b01.md`, "As built") found these rules. They hold for every level.
+B1 and B2 (`b01.md` and `b02.md`, "As built") found these rules. They hold for every level.
 
 - **North is +y.** The camera looks along +y at the start, and the dawn, noon and dusk suns all stand ahead of the start and on its left. A wall or a ramp that faces the start is in shade.
 - **A kerb stops a marble that rolls.** A marble that comes through the air goes over a 0.3 m kerb: off the top of a ramp, after a drop of 2 m, or after a bounce. Put a parapet of 1 m or more there, or a floor behind the kerb.
 - **A piece that lies across an edge makes a step.** Give a beam or a ramp a level end that follows the edge.
 - **The route bot slows for each turn:** to 6.9 m/s at 30° and to 3.5 m/s at 90° or more (`RouteBot._turn_speed`). A sharp turn costs about half a second. On B1, curve points 2 to 3 m apart made the bot miss a point and turn back. So a fast route has few points, long legs and few turns.
 - **Leave 0.5 m between a route line and a kerb or a pillar.**
-- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines.
+- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines. `deck(..., holes=..., through=True)` makes each hole a shaft through the block, for a trapdoor or a gap to fall through.
+- **An open trapdoor hangs its own length below its hinge**, from the bottom of the panel. Leave that room under it, or give the marker a shorter `depth` and a thinner `thickness`.
+- **A gate needs a wall.** A gap of 3 m or less is a jump, not a barrier. To make one way in, close the sides with a wall higher than any jump reaches: 1.5 m from the floor, 2.5 m from a step of 1 m next to it.
+- **A checkpoint pad catches a marble within 0.95 m of its middle.** Put it in a passage 2.3 to 3 m wide, or put one pad on each line that players take.
+- **Loose tiles and slow turns.** A tile breaks 0.5 s after its first touch, so a marble must cross a tile of `tile` m in less than that: about (`tile` + 0.5) ÷ 0.5 m/s. The route bot slows to 3.5 m/s in a sharp turn, so a turn on loose tiles needs tiles of 1 m.
+- **The route bot reaches a point within 0.45 m.** After a sharp turn it swings up to 0.8 m off its line. Give a gem on a trapdoor a straight run-up of 2 m or more, or a `wait 0` stop before it, so that the bot does not turn back onto the open door. Put a jump through a floating gem on a straight line.
 
 ## Rules from Ascent 1
 

@@ -60,14 +60,16 @@ def deck(
     surface: str = "default",
     name: str | None = None,
     material: str = "limestone",
+    through: bool = False,
 ) -> bpy.types.Object:
     """Adds a floor of any outline: a block `depth` m deep whose flat top face is at the
     height `top`. Its sides are walls, so a deep deck is also the mass under the floor.
     holes: the outlines of openings in the top face, each for a piece that fills it, for
-    example dish(). The block has no faces inside a hole."""
+    example dish(). The block has no faces inside a hole. through: each hole goes down
+    through the block and has walls: a shaft for a trapdoor, or a gap to fall through."""
     name = name or default_name("deck", "-col")
     bm = bmesh.new()
-    _plate(bm, outline, holes, top, top - depth, through=False, closed=True)
+    _plate(bm, outline, holes, top, top - depth, through=through, closed=True)
     return add_mesh(bm, name, surface_material(surface, material), collide=True)
 
 
