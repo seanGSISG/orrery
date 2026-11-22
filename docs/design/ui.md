@@ -14,9 +14,9 @@ Terms used in this file:
 |---|---|
 | `game/ui/ui.gd` | `Ui`, a `CanvasLayer` in `main.tscn`. It shows the screen that `Game.screen` names, and holds the HUD and every `Screen`. |
 | `game/ui/screens/` | `Screen` (the base) and one script per menu: title, level select, settings, pause, results, the Ascent menu and the Ascent stats. |
-| `game/ui/hud/hud.gd` | `Hud`: the gems, the timer and the power-up slot of a level. |
+| `game/ui/hud/` | `Hud`: the gems, the timer and the power-up slot of a level. `HeightMeter`: the height of an Ascent climb. |
 | `game/ui/settings/` | The parts of the settings screen: `SettingsTabs`, `SettingRow`, `OptionRow`, `BindRow`, `ValueMark`. |
-| `game/ui/widgets/` | The parts of the screens: `MenuItem`, `LevelNode`, `Dial`, `OrbitMap`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`. |
+| `game/ui/widgets/` | The parts of the screens: `MenuItem`, `FocusButton`, `LevelNode`, `Dial`, `OrbitMap`, `OrreryDiagram`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`, `ParBar`, `StatTable`, `HeightScale`, and the text helpers `TimeText` and `HeightText`. |
 | `game/ui/draw/` | `Chart` (rings, arcs, tick marks) and `Icons`: shapes drawn in code, so they stay sharp at any size. |
 | `game/ui/look/` | `UiLook` (the look), `UiTheme` (builds the `Theme`), the focus style and the two shaders. |
 | `game/ui/levels/` | `LevelCatalog` (the tiers and levels of the level select) and `LevelInfo` (name and target times of a level). |
@@ -59,7 +59,13 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 
 ### Settings screen (#23)
 
-- `SettingsScreen` builds the rows of one tab at a time from `Save.settings`. `tab_prev` and `tab_next` (LB and RB, Q and E) change the tab, and `settings_defaults` (Y or Backspace) puts the settings of the tab back to their defaults.
+- `SettingsScreen` builds the rows of one tab at a time from `Save.settings`. The tabs and their rows:
+  - graphics: the preset, the ghost;
+  - display: the window mode, the resolution (on only in windowed mode), the frame cap, V-Sync, HDR output (shown only where the display supports it);
+  - audio: the master, music, effects and interface volumes;
+  - controls: look sensitivity, invert Y, the stick dead zone, rumble, and one `BindRow` for each action of `Bindings.ACTIONS`;
+  - accessibility: camera shake, the colourblind palette.
+- `tab_prev` and `tab_next` (LB and RB, Q and E) change the tab, and `settings_defaults` (Y or Backspace) puts the settings of the tab back to their defaults.
 - An `OptionRow` holds one value of a list: a choice, a stepper, a scale or a switch (the four looks of the C chart mockup). `ui_left` and `ui_right` step the value; `ui_accept` goes round a choice or a switch.
 - A `BindRow` binds one gameplay action (`Bindings.ACTIONS`). A or Enter makes it wait; the next key, mouse button, pad button or stick push becomes the button of its device. B or Esc stops the wait, so those buttons cannot be bound. The menu actions stay fixed.
 - Each change goes through `Save.change_settings({key: value})`: it sets the var, calls `Settings.apply()` and writes the file. The harness `set_setting` uses it too.
@@ -113,4 +119,4 @@ All text is a key of `game/ui/text/en.po` (`TITLE_PLAY`). A `Label` translates i
 
 1. **Level catalogue:** `LevelInfo.read()` loads the scene of a level to read its name and times. This is fast for the M1 levels. With 60 levels, the build must write these values into one small file.
 2. **Harness:** agents cannot drive the menus through the harness. A command that presses an input action (`press {action}`) fits the one-input-path rule.
-3. **Backdrop:** `Backdrop.LEVEL` is a test level until the first campaign level is built (#28).
+3. **Backdrop:** `Backdrop.LEVEL` is still the test level `core_loop`, although the first campaign levels (`b01`, `b02`) are built.
