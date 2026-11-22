@@ -4,7 +4,8 @@ extends LevelObject
 ## up axis (Blender z). A marble on its face, or in the notch between two teeth, rides round
 ## with it through friction. The top face is at the marker, and the disc reaches `thickness`
 ## down from it. Turn the marker to tilt the axis: a gear that stands on its rim is a lift, and
-## its notches carry the marble up the rising side.
+## its notches carry the marble up the rising side. The disc and its teeth are the kit's brass
+## (KitMaterials); the kit shader maps it in the gear's own space, so it turns with the gear.
 
 ## Teeth stick out this far from the rim, m.
 const TOOTH_LENGTH: float = 0.4
@@ -49,6 +50,7 @@ func _ready() -> void:
 	mesh.height = thickness
 	look.mesh = mesh
 	look.position = shape.position
+	look.material_override = KitMaterials.find("brass")
 	_add_teeth(look.material_override)
 	if period > 0.0:
 		_spin = global_basis.y.normalized() * (TAU / period) * (-1.0 if clockwise else 1.0)
@@ -69,14 +71,14 @@ func advance(_run: LevelRun, t: float) -> void:
 
 
 ## Adds one box Solid shape and one mesh for each tooth, spaced evenly round the rim. The first
-## tooth points along the marker's x axis.
+## tooth points along the marker's x axis. The mesh has chamfered edges (Chamfer), so the teeth
+## catch a highlight; the shape is the plain box.
 func _add_teeth(material: Material) -> void:
 	var length: float = TOOTH_LENGTH + TOOTH_ROOT
 	var size: Vector3 = Vector3(length, thickness, TOOTH_WIDTH)
 	var box: BoxShape3D = BoxShape3D.new()
 	box.size = size
-	var mesh: BoxMesh = BoxMesh.new()
-	mesh.size = size
+	var mesh: ArrayMesh = Chamfer.box(size)
 	for i: int in teeth:
 		var turn: Basis = Basis(Vector3.UP, TAU * i / teeth)
 		var pose: Transform3D = Transform3D(turn, turn * Vector3(radius - length / 2.0, 0, 0))

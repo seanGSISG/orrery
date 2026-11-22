@@ -63,3 +63,16 @@ func test_gear_on_its_rim_lifts_the_marble_in_a_notch() -> void:
 	# 2 s is 60° of turn, so the notch is now at 75°.
 	assert_gt(run.state.position.y, 4.0 + rim * 0.9, "the marble rose with the notch")
 	assert_lt(absf(run.state.position.z), 0.25, "it stays on the gear")
+
+
+func test_disc_and_teeth_are_the_kit_brass() -> void:
+	var gear: TurningGear = _gear(TOP, 8.0, false)
+	add_child_autofree(gear)
+	var brass: Material = KitMaterials.find("brass")
+	var looks: int = 0
+	for node: Node in gear.get_node("Solid").get_children():
+		var look: MeshInstance3D = node as MeshInstance3D
+		if look != null:
+			assert_eq(look.material_override, brass)
+			looks += 1
+	assert_eq(looks, gear.teeth + 1, "the disc and every tooth")

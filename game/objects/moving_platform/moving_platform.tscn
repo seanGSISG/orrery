@@ -3,11 +3,6 @@
 [ext_resource type="Script" path="res://objects/moving_platform/moving_platform.gd" id="1"]
 [ext_resource type="Script" path="res://core/level/solid.gd" id="2"]
 
-[sub_resource type="StandardMaterial3D" id="look"]
-albedo_color = Color(0.42, 0.3, 0.2, 1)
-metallic = 0.2
-roughness = 0.6
-
 [node name="MovingPlatform" type="Node3D"]
 script = ExtResource("1")
 
@@ -17,4 +12,7 @@ script = ExtResource("2")
 [node name="Shape" type="CollisionShape3D" parent="Solid"]
 
 [node name="Mesh" type="MeshInstance3D" parent="Solid"]
-material_override = SubResource("look")
+
+[node name="TopBand" type="MeshInstance3D" parent="Solid/Mesh"]
+
+[node name="FootBand" type="MeshInstance3D" parent="Solid/Mesh"]
