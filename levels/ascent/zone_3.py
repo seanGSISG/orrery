@@ -949,9 +949,10 @@ YARDARM = harbour.rope(
 )
 FLAG_E = NESTS[3][0] + 1.6 - THROW
 FLAGSHIP = Ship(
-    "flagship", (FLAG_E - 10.0 - 25.2, FLAG_ROW, FLAG_DECK_TOP + 14.0), 84.0, 9.0
+    "flagship", (FLAG_E - 10.0 - 25.2, FLAG_ROW, FLAG_DECK_TOP + 13.0), 84.0, 8.0
 )
 harbour.envelope(FLAGSHIP)
+harbour.fins(FLAGSHIP, root=12.0, span=5.0, angles=LOW_FINS)
 harbour.gondola(
     FLAGSHIP,
     FLAG_E - 20.0,
@@ -1023,9 +1024,204 @@ for x0, x1, row, half, top in _floors:
             harbour.line(_gantry, (x, y, top - 0.3), (x, keel.y, keel.z + 0.2), 0.04)
 _gantry.add("rigging", collide=False)
 
+# --- Part 6: the Flagship, +460 to +500 ---------------------------------------------------------
+
+# The top (+482): a long deck on the back of the Flagship, from over its nose to near its tail.
+# The mast and its spiral ramp up to the gate stand in the middle.
+FLAG_TOP = 482.0
+TOP_HALF = 7.0
+# The first run: three ramps of 15.4 m at 17° on the north flank, ramps 1 and 3 west in row B
+# and ramp 2 east in row A, then a vent from landing 3 onto the top.
+NORTH_VENT_Y = FLAG_ROW + TOP_HALF + THROW
+FROW_A, FROW_B = NORTH_VENT_Y + 0.2, NORTH_VENT_Y + 3.0
+FRAMP_X = (FLAG_E - 2.8 - 14.7, FLAG_E - 2.8)
+FLEVELS = [FLAG_DECK_TOP + 14.7 * math.tan(math.radians(17.0)) * k for k in range(4)]
+NORTH_VENT_X = FRAMP_X[0] - 1.5
+deck(
+    "flag_bridge",
+    (FRAMP_X[1], FLAG_ROW + 5.0),
+    (FLAG_E, FROW_B + RAMP_W / 2),
+    FLAG_DECK_TOP,
+    "en",
+)
+_brackets = town.Parts()
+for i, (row, a, b) in enumerate(
+    [
+        (FROW_B, FRAMP_X[1], FRAMP_X[0]),
+        (FROW_A, FRAMP_X[0], FRAMP_X[1]),
+        (FROW_B, FRAMP_X[1], FRAMP_X[0]),
+    ]
+):
+    low, high = FLEVELS[i], FLEVELS[i + 1]
+    harbour.slope(f"flag_ramp_{i + 1}", (a, row, low), (b, row, high), RAMP_W, "wood")
+    for edge, side in ((row + RAMP_W / 2, "left"), (row - RAMP_W / 2, "right")):
+        if a > b:
+            side = "right" if side == "left" else "left"
+        harbour.kerb(
+            f"flag_ramp_{i + 1}_{side}", [(a, edge, low), (b, edge, high)], side=side
+        )
+    hull = FLAGSHIP.point((a + b) / 2, 0.0)
+    _brackets.bar(
+        ((a + b) / 2, row - RAMP_W / 2, (low + high) / 2 - 0.35), hull, 0.1, "iron"
+    )
+_brackets.add("flag_brackets", collide=False)
+_landing_y = (FROW_A - RAMP_W / 2, FROW_B + RAMP_W / 2)
+deck(
+    "flag_landing_1",
+    (FRAMP_X[0] - 3.0, _landing_y[0]),
+    (FRAMP_X[0], _landing_y[1]),
+    FLEVELS[1],
+    "swn",
+)
+deck(
+    "flag_landing_2",
+    (FRAMP_X[1], _landing_y[0]),
+    (FRAMP_X[1] + 3.0, _landing_y[1]),
+    FLEVELS[2],
+    "sen",
+)
+deck(
+    "flag_landing_3",
+    (FRAMP_X[0] - 3.0, NORTH_VENT_Y - 1.6),
+    (FRAMP_X[0], _landing_y[1]),
+    FLEVELS[3],
+    "wn",
+)
+vent(
+    "vent_flag_north",
+    (NORTH_VENT_X, NORTH_VENT_Y, FLEVELS[3]),
+    FLAG_TOP - FLEVELS[3] + 2.8,
+)
+
+# The expert way: from the west end of the gondola deck a ramp of loose slates (13.4 m at 27°)
+# and a timber ramp (9.8 m at 31°) climb west under the nose to the bow gallery (+471), and a
+# vent throws the marble east onto the top.
+SLATES = (13.4, 27.0)
+FBOW_RAMP = (9.8, 31.0)
+SLATES_FOOT: Place = (FLAG_E - 20.0, NEST_ROW, FLAG_DECK_TOP)
+_a = math.radians(SLATES[1])
+SLATES_TOP: Place = (
+    SLATES_FOOT[0] - SLATES[0] * math.cos(_a),
+    NEST_ROW,
+    FLAG_DECK_TOP + SLATES[0] * math.sin(_a),
+)
+kit.marker(
+    "crumbling_tiles",
+    at=(
+        (SLATES_FOOT[0] + SLATES_TOP[0]) / 2,
+        NEST_ROW,
+        (FLAG_DECK_TOP + SLATES_TOP[2]) / 2,
+    ),
+    rotation=(SLATES[1], 0.0, 90.0),
+    width=2.68,
+    depth=SLATES[0],
+    tile=1.34,
+    name="slates_flag",
+)
+_a = math.radians(FBOW_RAMP[1])
+FBOW_TOP: Place = (
+    SLATES_TOP[0] - FBOW_RAMP[0] * math.cos(_a),
+    NEST_ROW,
+    SLATES_TOP[2] + FBOW_RAMP[0] * math.sin(_a),
+)
+harbour.slope("flag_bow_ramp", SLATES_TOP, FBOW_TOP, 2.68, "wood")
+for edge, side in ((NEST_ROW + 1.34, "right"), (NEST_ROW - 1.34, "left")):
+    harbour.kerb(
+        f"flag_bow_ramp_{side}",
+        [(SLATES_TOP[0], edge, SLATES_TOP[2]), (FBOW_TOP[0], edge, FBOW_TOP[2])],
+        side=side,
+    )
+FBOW_ROW = NEST_ROW + 4.0
+FBOW_VENT_X = FBOW_TOP[0] - 1.6
+deck(
+    "flag_bow_gallery",
+    (FBOW_TOP[0] - 6.0, NEST_ROW - 1.4),
+    (FBOW_TOP[0], FBOW_ROW + 1.4),
+    FBOW_TOP[2],
+    "swn",
+)
+vent(
+    "vent_flag_bow", (FBOW_VENT_X, FBOW_ROW, FBOW_TOP[2]), FLAG_TOP - FBOW_TOP[2] + 2.8
+)
+# Ropes from the gallery and the slates up to the nose.
+_ropes = town.Parts()
+_nose = FLAGSHIP.point(FLAGSHIP.nose[0] + 1.0, 270.0)
+for x, y, z in [
+    (FBOW_TOP[0] - 6.0, NEST_ROW - 1.3, FBOW_TOP[2]),
+    (FBOW_TOP[0] - 6.0, FBOW_ROW + 1.3, FBOW_TOP[2]),
+    (SLATES_TOP[0], NEST_ROW - 1.3, SLATES_TOP[2]),
+    (SLATES_TOP[0], NEST_ROW + 1.3, SLATES_TOP[2]),
+]:
+    harbour.line(_ropes, (x, y, z - 0.3), _nose, 0.04)
+_ropes.add("flag_bow_ropes", collide=False)
+
+TOP_X = (FBOW_VENT_X + THROW, FLAG_E + 18.0)
+harbour.promenade(
+    FLAGSHIP,
+    [(TOP_X[0], FLAG_TOP), (TOP_X[1], FLAG_TOP)],
+    2 * TOP_HALF,
+    kerbs=[
+        ("s", *TOP_X),
+        ("n", TOP_X[0], NORTH_VENT_X - 2.0),
+        ("n", NORTH_VENT_X + 2.0, TOP_X[1]),
+    ],
+    name="flagship_top",
+)
+kit.marker(
+    "bumper", at=(FBOW_VENT_X + 12.0, FBOW_ROW + 4.5, FLAG_TOP), name="bumper_top_1"
+)
+kit.marker(
+    "bumper", at=(FBOW_VENT_X + 12.0, FBOW_ROW - 4.5, FLAG_TOP), name="bumper_top_2"
+)
+
+# The mast and its spiral ramp: two turns anticlockwise from the south side, 18 m up to the
+# gate deck (+500), the finish.
+GATE_TOP = 500.0
+MAST_AT: Place = (FLAG_E - 10.0, FLAG_ROW, FLAG_TOP)
+HELIX = (MAST_AT, 2.2, 5.4, 270.0, 720.0, GATE_TOP - FLAG_TOP)
+town.helix(*HELIX, name="flag_helix", finish="wood")
+town.helix_kerb(MAST_AT, 5.4, *HELIX[3:], name="flag_helix_kerb")
+harbour.mast("flag_mast", MAST_AT, GATE_TOP + 3.0)
+GATE_ROW = MAST_AT[1] - 3.8
+deck(
+    "gate_deck",
+    (MAST_AT[0], MAST_AT[1] - 5.6),
+    (MAST_AT[0] + 6.0, MAST_AT[1] - 1.8),
+    GATE_TOP,
+    "sen",
+)
+# The gate's way: from the top, two turns of the ramp in legs of 60°.
+GATE_LEGS: list[Leg] = [((MAST_AT[0] - 6.0, GATE_ROW, FLAG_TOP), "speed 3")] + [
+    (
+        town.helix_point(
+            MAST_AT, 3.8, 270.0, 720.0, GATE_TOP - FLAG_TOP, 270.0 + 60.0 * k
+        ),
+        "",
+    )
+    for k in range(13)
+]
+
+# Egg 2: three steps east of the top lead up to the fin tip.
+EGG_STEPS = [
+    (TOP_X[1] + 0.3 + 2.6 * k, TOP_X[1] + 2.6 * (k + 1), FLAG_TOP + 1.25 * (k + 1))
+    for k in range(3)
+]
+for i, (x0, x1, top) in enumerate(EGG_STEPS):
+    deck(f"fin_step_{i + 1}", (x0, FLAG_ROW - 1.2), (x1, FLAG_ROW + 1.2), top)
+    mid = (x0 + x1) / 2
+    harbour.mast(
+        f"fin_step_{i + 1}_mast",
+        (mid, FLAG_ROW, FLAGSHIP.top(mid) - 0.3),
+        top - 0.3,
+        width=1.0,
+        head=0.7,
+    )
+EGG_FIN: Place = ((EGG_STEPS[2][0] + EGG_STEPS[2][1]) / 2, FLAG_ROW, EGG_STEPS[2][2])
+kit.marker("egg", at=EGG_FIN, name="egg_fin")
+
 # --- Routes ----------------------------------------------------------------------------------------
 
-FINISH: Place = (FLAG_E - 10.0, FLAG_ROW, FLAG_DECK_TOP)
+FINISH: Place = (MAST_AT[0] + 3.2, GATE_ROW, GATE_TOP)
 
 # Part 1, first run: the crates, Roof 1 and its vent, Roof 2, the dormers and gangway A.
 FIRST[1] = [
@@ -1217,6 +1413,33 @@ for x0, _, top in NESTS[2:]:
         ((x0 - 4.0, NEST_ROW, top + NEST_RISE), "speed 3"),
     ]
 EXPERT[5][-1] = ((FLAG_E - 2.4, NEST_ROW, FLAG_DECK_TOP), "speed 3")
+
+# Part 6, first run: the three ramps on the north flank, the vent, then the mast ramp.
+FIRST[6] = [
+    ((FLAG_E - 1.4, FROW_B, FLAG_DECK_TOP), "speed 3"),
+    ((FRAMP_X[0] - 0.4, FROW_B, FLEVELS[1]), ""),
+    ((FRAMP_X[0] - 1.4, FROW_B, FLEVELS[1]), "speed 3"),
+    ((FRAMP_X[0] - 1.4, FROW_A, FLEVELS[1]), "speed 3"),
+    ((FRAMP_X[1] + 0.4, FROW_A, FLEVELS[2]), ""),
+    ((FRAMP_X[1] + 1.4, FROW_A, FLEVELS[2]), "speed 3"),
+    ((FRAMP_X[1] + 1.4, FROW_B, FLEVELS[2]), "speed 3"),
+    ((NORTH_VENT_X, FROW_B, FLEVELS[3]), "speed 3"),
+    ((NORTH_VENT_X, NORTH_VENT_Y + 1.2, FLEVELS[3]), "speed 3"),
+    ((NORTH_VENT_X, NORTH_VENT_Y - 5.6, FLAG_TOP), "speed 3"),
+    ((NORTH_VENT_X, GATE_ROW, FLAG_TOP), "speed 3"),
+    *GATE_LEGS,
+]
+# Part 6, expert: the run along the gondola deck, the slates, the bow ramp, the bow vent.
+EXPERT[6] = [
+    (SLATES_FOOT, ""),
+    (SLATES_TOP, ""),
+    (FBOW_TOP, ""),
+    ((FBOW_TOP[0] - 4.6, NEST_ROW, FBOW_TOP[2]), "speed 3"),
+    ((FBOW_TOP[0] - 4.6, FBOW_ROW, FBOW_TOP[2]), "speed 3"),
+    ((FBOW_VENT_X - 1.2, FBOW_ROW, FBOW_TOP[2]), "speed 3"),
+    ((FBOW_VENT_X + 5.6, FBOW_ROW, FLAG_TOP), "speed 3"),
+    *GATE_LEGS,
+]
 
 # --- Start, finish, routes ------------------------------------------------------------------------
 
