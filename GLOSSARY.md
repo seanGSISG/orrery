@@ -27,12 +27,24 @@ The one observable snapshot of the game. Tests and the harness read it; nothing 
 _Avoid_: status, telemetry
 
 **Screen**:
-What the player sees as one whole: `title`, `level_select`, `settings`, `play`, `pause` or `results`. `Game.screen` names the one that shows, and `GameState.screen` reports it. `docs/design/ui.md` has the flow.
+What the player sees as one whole: `title`, `level_select`, `ascent`, `settings`, `play`, `pause`, `results` or `ascent_stats`. `Game.screen` names the one that shows, and `GameState.screen` reports it. `docs/design/ui.md` has the flow.
 _Avoid_: menu (a menu is the list of items on a screen), page, view
 
 **Look**:
 Every font, colour and size of the HUD and the menus, in `UiLook`. `UiTheme` builds the Godot `Theme` from it.
 _Avoid_: skin, style sheet
+
+**Surface**:
+The surface type of a Solid: a `Surface` resource that scales friction and bounce. One Solid has one surface type, so a level needs one Solid for each type.
+_Avoid_: material (a material is how it looks)
+
+**Mover**:
+An object that moves its own Solid each tick from the run time, with `Solid.move()`. The solver reads the surface velocity at the contact point.
+_Avoid_: animated body, platform (a platform is one kind of mover)
+
+**Trigger**:
+An `Area3D` on the trigger layer that an object uses for a volume. The marble overlaps it, and the run calls `on_overlap` of the object.
+_Avoid_: sensor, zone (a zone is a part of the climb)
 
 **Solid**:
 A collider that the marble can touch: level geometry or the solid part of an object. A mover moves it from code with `Solid.move()`.
@@ -79,7 +91,7 @@ The low brass edge, 0.3 m high, on an outer edge of a floor. It stops a marble t
 _Avoid_: rail, border, lip
 
 **Sky preset**:
-One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. A level's `sky` names it, or else the level's tier picks it.
+One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. `ground_dawn.tres` is the sky of the Ascent climb start. A level's `sky` names it, or else the level's tier picks it.
 _Avoid_: skybox, environment
 
 ## Scoring and progress
@@ -95,6 +107,14 @@ _Avoid_: best time (a best time is the player's own record)
 **Medal**:
 The result of a finish: `none`, `qualified` (at or under par) or `gold` (at or under the gold time).
 _Avoid_: rank, rating
+
+**Clockwork Egg**:
+The jewelled egg that a level hides off the main route (the `egg` marker). When the marble finds it, it opens, and `Rules` counts it. A campaign level has one egg; an Ascent zone can have more. The save keeps the found eggs of a level by their node names (`LevelRecord.eggs`).
+_Avoid_: secret, collectible
+
+**Gem**:
+The jewel that the marble must collect before the finish opens. Each colour has its own cut, so colour is never the only cue.
+_Avoid_: coin, pickup (a pickup is a power-up object)
 
 **Rules**:
 The level rules of one run: gems, the clock, the finish, checkpoints, out of bounds and the respawn.
@@ -125,6 +145,54 @@ _Avoid_: replay, shadow
 **RunTracker**:
 The helper that `Save` adds to each run. It records the ghost, races the best ghost, and saves the egg and the finish.
 _Avoid_: recorder, stats tracker
+
+## Settings and input
+
+**Settings tab**:
+One of the five parts of the settings screen: graphics, display, audio, controls or accessibility. A tab shows the rows of its `Settings` vars. `tab_prev` and `tab_next` change the tab.
+_Avoid_: page, category
+
+**Binding**:
+The button that the player gives to one gameplay action on one device, `keyboard` or `pad`. `Settings.bindings` stores it as a short code, for example `key:32`, and `Bindings.apply()` puts it into the input map. A binding replaces the default button of its device only. The menu actions have no binding.
+_Avoid_: keybind, mapping, control scheme
+
+**Glyph**:
+The icon of the button of one input action: an Xbox button for a pad, a key cap for the keyboard and the mouse. `InputGlyph` shows it, for the device used last or for its own `device`.
+_Avoid_: button prompt, hint icon
+
+**Palette**:
+The colours of the gems and the hazards, in `Palette`. There are two: the standard one, and the colourblind one that `Settings.colourblind` turns on.
+_Avoid_: theme (a theme is the Godot `Theme` of the look), colour scheme
+
+## Ascent
+
+**Climb**:
+One play of Ascent, from the climb start to the gate. A quit saves the spot, and the next start continues the same climb. Its level id is `ascent:<zone ids, joined by +>`, and its best time and ghost are kept under it.
+_Avoid_: run (a run is one `LevelRun`), attempt
+
+**Zone**:
+One part of the climb. Each zone is a level script of its own, and the climb loads the built zones from the bottom up to the first one that is not built.
+_Avoid_: stage, chapter, section
+
+**Climb start**:
+The start pad of the first zone. Heights (`GameState.height`) are in metres above it.
+_Avoid_: base, ground zero
+
+**Gate**:
+The "to be continued" gate. It stands on the finish pad of the last built zone and ends the climb.
+_Avoid_: exit, goal
+
+**Spot**:
+The saved place of a climb that is not finished: the marble, the clock, the stats and the recording. The next start continues there. The gate removes it.
+_Avoid_: save point, checkpoint (a checkpoint is a level object)
+
+**Fall**:
+A drop of more than 3 m below the floor that the marble was on, in a climb. It counts for the falls and the metres fallen. It ends when the marble stays on the ground and gets no lower.
+_Avoid_: death, respawn (a respawn is the return after out of bounds)
+
+**Assist**:
+The Ascent switch (`Save.ascent.assist`). With it on, the climb has a checkpoint at each zone start. 10 m below the last checkpoint is out of bounds, and the marble respawns on that checkpoint. A climb that used Assist is marked, and it never replaces a record: it saves no best time, no ghost and no best height.
+_Avoid_: easy mode, cheat
 
 ## Audio
 
