@@ -146,7 +146,14 @@ FACE_POSE = clockwork.frame(FACE, FACE_YAW, FACE_TILT)
 HUB_HOLE = 0.5
 WIND_HOLE = 0.85
 WIND_AT = (5.2 * math.sin(math.radians(120.0)), 5.2 * math.cos(math.radians(120.0)))
-# The hands: name, dial angle, blade and tail outlines as (along, across) from the hub, m.
+# The hands: name, dial angle at run time 0, blade and tail outlines as (along, across) from
+# the hub, m. They turn on the hub (build_hands()): they push a marble, which can jump them.
+HAND_PERIOD = 20.0
+HAND_HEIGHT = 0.25
+HAND_LIFT = 0.05
+# The hands show ten past ten this many seconds into the run, when the expert route of the zone
+# on its own comes to the face (EXPERT[1]).
+HAND_START = 3.0
 HANDS = [
     (
         "minute",
@@ -203,7 +210,7 @@ def build_face() -> None:
             0.0,
             holes=[kit.arc((0.0, 0.0), r0, 0.0, 360.0, 144)],
             name=f"face_chapter_{tag}",
-            material="polished_brass",
+            material="brass_polished",
         )
     for minute in range(60):
         a = math.radians(dial_angle(minute * 6.0))
@@ -220,7 +227,7 @@ def build_face() -> None:
             ],
             0.0,
             name=f"face_mark_{minute:02d}",
-            material="polished_brass" if hour else "gold",
+            material="brass_polished" if hour else "gold",
         )
     # The numerals that stayed on the dial; the five near XII broke off and float as the
     # numeral stones.
@@ -242,27 +249,16 @@ def build_face() -> None:
         0.0,
         holes=[holes[0]],
         name="face_hub",
-        material="polished_brass",
+        material="brass_polished",
     )
     kit.inlay(
         kit.arc(WIND_AT, WIND_HOLE + 0.22, 0.0, 360.0, 48),
         0.0,
         holes=[holes[1]],
         name="face_winding",
-        material="polished_brass",
+        material="brass_polished",
     )
-    # The hands, stopped at ten past ten: blued steel, each a blade with a lozenge, a tail
-    # and a collar round the axle hole. They lie just above the boss and do not collide.
-    for tag, clock, blade, tail in HANDS:
-        a = math.radians(dial_angle(clock))
-        c, s = math.cos(a), math.sin(a)
-        for part, shape in (("blade", blade), ("tail", tail)):
-            kit.inlay(
-                [(u * c - v * s, u * s + v * c) for u, v in shape],
-                0.02,
-                name=f"face_hand_{tag}_{part}",
-                material="blued_steel",
-            )
+    # The collar of the hands round the axle hole (the hands are turning arms: build_hands()).
     kit.inlay(
         kit.arc((0.0, 0.0), 0.85, 0.0, 360.0, 48),
         0.03,
@@ -284,12 +280,39 @@ def build_face() -> None:
             side="right",
             bevel=0.08,
             name=f"face_bezel_{i + 1}",
-            material="polished_brass",
+            material="brass_polished",
         )
     clockwork.place(clockwork.roots(before), FACE_POSE)
 
 
 build_face()
+
+
+def build_hands() -> None:
+    """Places the hands: each blade and each tail is a turning_arm of blued steel that stands
+    HAND_HEIGHT m tall, HAND_LIFT m above the dial, and turns clockwise round the hub once in
+    HAND_PERIOD s. They show ten past ten at HAND_START s. The two hands turn together, so the
+    gap between them stays open; there is no hand over the hub hole."""
+    for tag, clock, blade, tail in HANDS:
+        a = math.radians(dial_angle(clock - 360.0 * HAND_START / HAND_PERIOD))
+        c, s = math.cos(a), math.sin(a)
+        for part, shape in (("blade", blade), ("tail", tail)):
+            kit.marker(
+                "turning_arm",
+                at=on_face((0.0, 0.0), HAND_LIFT),
+                rotation=(FACE_TILT, 0.0, FACE_YAW),
+                points=[
+                    on_face((u * c - v * s, u * s + v * c), HAND_LIFT) for u, v in shape
+                ],
+                name=f"face_hand_{tag}_{part}",
+                period=HAND_PERIOD,
+                clockwise=True,
+                height=HAND_HEIGHT,
+                finish="blued_steel",
+            )
+
+
+build_hands()
 
 # The dial is tipped, so a level piece that meets it follows this plane: the height of the dial's
 # top over a plan point.
@@ -411,13 +434,16 @@ kit.marker(
     name="vent_chamber",
 )
 _cm = chamber_point((CHAMBER[0] + CHAMBER[1]) / 2, 0.0)
+# The probe's box reaches RoomProbe.REACH (0.45 m) past this height. Its top, +154.75 m, stays
+# below the dial's top over the whole box (lowest +155.2 m), so no room light shows on the face.
+CHAMBER_PROBE = 2.3
 kit.marker(
     "room_probe",
     at=(*_cm, CHAMBER_FLOOR),
     rotation=(0.0, 0.0, math.degrees(math.atan2(_cu[1], _cu[0])) - 90.0),
     width=CHAMBER[3] - CHAMBER[2],
     depth=CHAMBER[1] - CHAMBER[0],
-    height=3.4,
+    height=CHAMBER_PROBE,
     name="movement_chamber_probe",
 )
 
@@ -444,7 +470,7 @@ for i, (name, (x, top)) in enumerate(FLAT_GEARS.items()):
         (x, GEAR_Y, top - 4.0),
         [(0.0, 0.0), (0.22, 0.0), (0.22, 3.45), (0.34, 3.5), (0.0, 3.5)],
         name=f"{name}_arbor",
-        material="polished_brass",
+        material="brass_polished",
         collide=False,
     )
 LIFT_X = 24.0
@@ -525,13 +551,13 @@ BELL_LEDGE_OUTLINE = clockwork.union(
     BARREL_R,
 )
 clockwork.fragment("bell_ledge", BELL_LEDGE_OUTLINE, BELL_LEDGE, under=5.0)
-# The foot of the mainspring barrel, set into the floor: a brass ring.
+# The foot of the mainspring barrel, set into the floor: a ring of the kit's brass.
 kit.inlay(
     kit.arc((COIL[0], COIL[1]), BARREL_R - 0.4, 0.0, 360.0, 96),
     BELL_LEDGE,
     holes=[kit.arc((COIL[0], COIL[1]), BARREL_R - 0.85, 0.0, 360.0, 96)],
     name="barrel_foot",
-    material="polished_brass",
+    material="brass",
 )
 
 
@@ -580,8 +606,8 @@ kit.marker(
     swing=50.0,
     name="pendulum_spring",
 )
-# The barrel lid: a brass disc 13 m across, cut straight where the ramp's end meets it, with the
-# teeth of the barrel's great wheel round its edge.
+# The barrel lid: a stone disc 13 m across, cut straight where the ramp's end meets it, with the
+# polished brass teeth of the barrel's great wheel round its edge.
 LID_CENTRE: Place = (-7.0, 54.6, LID)
 LID_R = 6.5
 clockwork.disc(
@@ -597,7 +623,7 @@ kit.teeth(
     side="left",
     pitch=0.7,
     name="barrel_lid_teeth",
-    material="polished_brass",
+    material="brass_polished",
 )
 
 # The west way: three vents in a row north from the bell ledge. Each lifts the marble over the
@@ -688,7 +714,8 @@ for i in range(6):
     )
     SHARDS_3.append(a0 - _s3_step / 2)
 
-# The east way: the fallen pendulum rod, a brass beam from the lid's rim up to its bob, then a
+# The east way: the fallen pendulum rod, a stone beam with polished brass edges from the lid's
+# rim up to its bob (a stone top: a long flat of polished brass mirrors the sun), then a
 # straight chain of three vents and three steps round the ring's inside to RING_EAST.
 BOB_CENTRE: Place = (17.46, 49.0, LID + 7.0)
 _rod_u = (BOB_CENTRE[0] - LID_CENTRE[0], BOB_CENTRE[1] - LID_CENTRE[1])
@@ -713,11 +740,10 @@ kit.ramp(
     rise=ROD_RISE,
     yaw=ROD_HEADING - 90.0,
     name="pendulum_rod",
-    material="polished_brass",
-    trim="gold",
+    trim="brass_polished",
 )
 clockwork.disc("pendulum_bob", BOB, BOB_R, depth=0.9)
-clockwork.rim("pendulum_bob_rim", BOB, BOB_R, 0.9, width=0.1, finish="gold")
+clockwork.rim("pendulum_bob_rim", BOB, BOB_R, 0.9, width=0.1)
 ROD_VENT_HEADING = -75.0
 _rd = (
     math.cos(math.radians(ROD_VENT_HEADING)),
@@ -757,7 +783,8 @@ for i in range(3):
     )
     ROD_STEPS.append(a0 - _e_step / 2)
 
-# The ring: polished brass, 4 m wide, with a brass bead on each edge, open where the ways meet it.
+# The ring: a stone chapter ring 4 m wide, with a polished brass bead on each edge, open where
+# the ways meet it.
 kit.deck(
     kit.arc(AXIS, RING_OUT, 0.0, 360.0, 240),
     RING,
@@ -765,7 +792,6 @@ kit.deck(
     holes=[kit.arc(AXIS, RING_IN, 0.0, 360.0, 240)],
     through=True,
     name="dial_ring",
-    material="polished_brass",
 )
 RING_GAPS = [(RING_WEST, 9.0), (RING_EAST, 9.0)]
 for edge, r, side in (("outer", RING_OUT, "right"), ("inner", RING_IN, "left")):
@@ -781,7 +807,7 @@ for edge, r, side in (("outer", RING_OUT, "right"), ("inner", RING_IN, "left")):
             side="left" if side == "right" else "right",
             bevel=0.06,
             name=f"dial_ring_bead_{edge}_{k + 1}",
-            material="polished_brass",
+            material="brass_polished",
         )
 for hour in range(12):
     a = 90.0 - hour * 30.0
@@ -863,7 +889,7 @@ for i in range(4):
             rise=SLAB_RISE,
             yaw=heading - 90.0,
             name=f"roof_slab_{i + 1}",
-            trim="brass",
+            trim="",
         ),
         "slate",
     )
@@ -928,7 +954,7 @@ ROOF_WING = [
     (ROOF_WEST_X, ROOF_WING_Y),
     (ROOF_WEST_X, 31.3),
 ]
-clockwork.fragment("roof_slab_wing", ROOF_WING, ROOF, under=3.5)
+clockwork.fragment("roof_slab_wing", ROOF_WING, ROOF, under=2.0)
 
 # --- 5. The spire --------------------------------------------------------------------------------
 
@@ -938,7 +964,11 @@ CAP_R = 5.0
 CAP_DEPTH = 0.7
 clockwork.spire("spire", (*AXIS, ROOF - 0.5), 4.0, 3.2, CAP - CAP_DEPTH - ROOF + 0.5)
 clockwork.disc("spire_cap", (*AXIS, CAP), CAP_R, depth=CAP_DEPTH, finish="limestone")
-clockwork.rim("spire_cap_rim", (*AXIS, CAP), CAP_R, CAP_DEPTH, width=0.12)
+# The rim leaves out the cap's south edge, where zone 3's quay meets the cap at +300 m: its
+# outer edge stays north of y = 35.0 (Handover to zone 3).
+clockwork.rim(
+    "spire_cap_rim", (*AXIS, CAP), CAP_R, CAP_DEPTH, width=0.12, span=(-50.0, 230.0)
+)
 
 # The spire ramp: a slate band that winds four half turns clockwise round the spire, from the
 # north point of the roof slab up to the north point of the balcony.
@@ -984,7 +1014,7 @@ clockwork.fragment(
     "spire_balcony",
     clockwork.sector(AXIS, 3.1, 13.0, -45.0, 90.0),
     BALCONY,
-    under=1.2,
+    under=1.0,
 )
 SPIRE_VENT: Place = (8.0, AXIS[1], BALCONY)
 kit.marker("steam_vent", at=SPIRE_VENT, lift=11.5, name="vent_spire")
@@ -1053,8 +1083,7 @@ kit.ramp(
     rise=CAP - BALCONY,
     yaw=ROD_ANGLE + 180.0 - 90.0,
     name="lightning_rod",
-    material="polished_brass",
-    trim="gold",
+    trim="brass_polished",
 )
 
 # A brass kerb round the balcony's outer edge.
@@ -1063,7 +1092,7 @@ kit.wall(
     0.35,
     width=0.25,
     name="spire_balcony_kerb",
-    material="polished_brass",
+    material="brass_polished",
 )
 
 # --- Decoration -----------------------------------------------------------------------------------
@@ -1107,7 +1136,7 @@ for i, (angle, radius, z, size, teeth, roll) in enumerate(TOWER_GEARS):
         depth=0.5,
         yaw=angle + 90.0,
         name=f"tower_gear_{i + 1}",
-        material="polished_brass",
+        material="brass_polished",
     )
     clockwork.tilt(gear, roll, -8.0)
 
@@ -1146,13 +1175,19 @@ _ne = (math.cos(math.radians(45.0)), math.sin(math.radians(45.0)))
 EXPERT[1] = [
     ((STAIR_X + 0.95, STAIR_Y, CROWN), "jump; speed 3"),
 ]
+# On the last stair the bot waits for the hands. From VI it passes HAND_GAP m from the hub on
+# the IX side, where it moves the way the hands turn. It reaches VI 1 to 1.5 s after it leaves.
+# When it reaches VI from 0.7 to 5.3 s after the hands show ten past ten, its line up the face
+# stays 0.7 m or more clear of them, also for a crossing 30 % slower or faster.
+HAND_GAP = 3.5
+HAND_WAIT = f"wait_until face_hand_minute_blade {HAND_START + 1.0} {HAND_START + 2.5}"
 for i, (x, y) in enumerate(STAIRS):
     EXPERT[1] += [
-        ((x, y, CROWN + 1.0 + i), "speed 3"),
+        ((x, y, CROWN + 1.0 + i), "speed 3" if i < 2 else f"speed 3; {HAND_WAIT}"),
         ((x - 0.25, y, CROWN + 1.0 + i), "jump; speed 3"),
     ]
 _vi = (FACE[0] + _se[0] * (_low_plan - 0.8), FACE[1] + _se[1] * (_low_plan - 0.8))
-_by = (FACE[0] + _ne[0] * 2.0, FACE[1] + _ne[1] * 2.0)
+_by = (FACE[0] - _ne[0] * HAND_GAP, FACE[1] - _ne[1] * HAND_GAP)
 _xi = (XII[0] - _nw[0] * 1.0, XII[1] - _nw[1] * 1.0)
 EXPERT[1] += [
     ((*_vi, face_top(_vi)), "speed 4"),
@@ -1376,17 +1411,24 @@ route(
 
 # --- Shots ----------------------------------------------------------------------------------------
 
-kit.shot("overview", at=(75.0, -70.0, 240.0), rotation=(-6.5, 0.0, 34.5))
+# The overview looks south-east from the north-west, with the dawn sun (azimuth 135°) behind it.
+kit.shot("overview", at=(-85.0, 125.0, 262.0), rotation=(-21.0, 0.0, -136.0))
 kit.shot("start", at=(START[0], START[1] - 3.0, CROWN + 1.6), rotation=(8.0, 0.0, 0.0))
 kit.shot(
     "finish",
     at=(FINISH[0] + 12.0, FINISH[1] - 15.0, CAP + 6.0),
     rotation=(-16.0, 0.0, 38.7),
 )
+# The egg shot stands 1.1 m to the side of the chamber's vent and looks at the egg past it.
+_egg_eye = chamber_point(CHAMBER[1] - 0.6, 1.1)
 kit.shot(
     "egg",
-    at=(*chamber_point(CHAMBER[1] - 0.6, 0.0), CHAMBER_FLOOR + 1.3),
-    rotation=(-12.0, 0.0, math.degrees(math.atan2(_cu[1], _cu[0])) + 90.0),
+    at=(*_egg_eye, CHAMBER_FLOOR + 1.3),
+    rotation=(
+        -12.0,
+        0.0,
+        math.degrees(math.atan2(_egg_eye[0] - EGG[0], EGG[1] - _egg_eye[1])),
+    ),
 )
 kit.shot("face", at=(2.0, 14.0, 162.0), rotation=(-12.0, 0.0, 40.0))
 kit.shot("gears", at=(6.0, 18.0, 156.0), rotation=(-2.0, 0.0, -30.0))

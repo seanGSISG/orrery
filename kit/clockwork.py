@@ -2,8 +2,10 @@
 
 Play pieces (they collide):
 - fragment(): a floating piece of broken masonry. Its top is a stone floor with a chamfered,
-  dressed coping round the edge; under it hangs a broken mass of coursed ashlar.
-- disc(): a round floor of any finish, with a rim band, for the barrel lid, the bob and the cap.
+  dressed coping round the edge; under it hangs a mass of a few thick courses of ashlar.
+- disc(): a round floor of any finish (limestone by default), for the barrel lid, the bob and
+  the cap. A large flat floor stays stone: polished brass that faces the sky turns olive
+  (docs/design/visual-quality.md §6), so brass goes on its rim(), teeth and kerbs.
 
 Decoration (no collision): numeral() lays the strokes of a Roman numeral, and rim() runs a
 round band of any finish under a floor's edge.
@@ -38,9 +40,9 @@ BREAK_STEP = 1.1
 # The mass starts this far inside the coping, m.
 BREAK_INSET = 0.12
 # The mass is built of courses about this tall, m. Each course steps in toward the middle by
-# one of these shares of the way, picked at each point, and more in the lower courses.
-COURSE = 0.6
-BREAK_STEPS = (0.03, 0.08, 0.14)
+# one of these shares of the way, the same all round, and more in the lower courses.
+COURSE = 1.0
+BREAK_STEPS = (0.06, 0.1, 0.15)
 
 
 def fragment(
@@ -54,9 +56,10 @@ def fragment(
 ) -> bpy.types.Object:
     """Adds a floating piece of broken masonry whose flat top, of `floor` finish, has the
     plan `outline` at the height `top`. A dressed coping `coping` m deep runs round the edge,
-    with a chamfer on top. Under it hang courses of ashlar that step in toward the middle,
-    each course's edge broken block by block, down to a flat bed `under` m lower. The outline
-    is convex or nearly so. seed: the shape of the break (the name when None). It collides."""
+    with a chamfer on top. Under it hang courses of ashlar about COURSE m tall, down to a
+    dressed bed `under` m lower. Each course steps in toward the middle by the same share all
+    round, so its edge is a clean line. The outline is convex or nearly so. seed: the depth
+    of each step (the name when None). It collides."""
     rng = random.Random(seed if seed is not None else name)
     loop = _resample(turned(list(outline)), BREAK_STEP)
     c = _centroid(loop)
@@ -75,20 +78,19 @@ def fragment(
     _cap(parts, deck, loop, floor, up=True)
     parts.faces(_bands(deck, edge) + _bands(edge, foot), "dressed")
     parts.faces(_bands(foot, upper), "dressed")
-    # The break: each course steps in by a block's depth or two at each point of the edge.
-    courses = max(2, round(under / COURSE))
-    share = [0.0] * len(inner)
+    # The break: each course steps in by one share of the way to the middle.
+    courses = max(1, round(under / COURSE))
+    share = 0.0
     points = inner
     for k in range(courses):
-        grow = 1.0 + k / courses
-        share = [min(s + rng.choice(BREAK_STEPS) * grow, 0.8) for s in share]
-        points = [_toward(p, c, s) for p, s in zip(inner, share, strict=True)]
+        share = min(share + rng.choice(BREAK_STEPS) * (1.0 + k / courses), 0.8)
+        points = [_toward(p, c, share) for p in inner]
         z = level - k * under / courses
         course = ring(points, z)
         bed = ring(points, z - under / courses)
         parts.faces(_bands(upper, course) + _bands(course, bed), "wall")
         upper = bed
-    _cap(parts, upper, points, "wall", up=False)
+    _cap(parts, upper, points, "dressed", up=False)
     return parts.add(name)
 
 
@@ -97,7 +99,7 @@ def disc(
     at: Vec3,
     radius: float,
     depth: float = 0.6,
-    finish: str = "polished_brass",
+    finish: str = "limestone",
     clip: tuple[Point, Point] | None = None,
     segments: int = 96,
 ) -> bpy.types.Object:
@@ -116,7 +118,7 @@ def rim(
     radius: float,
     height: float,
     width: float = 0.25,
-    finish: str = "polished_brass",
+    finish: str = "brass_polished",
     span: tuple[float, float] = (0.0, 360.0),
 ) -> bpy.types.Object:
     """Adds a band of `finish` round the circle of `radius` about `at`, from the height of
@@ -243,7 +245,7 @@ def helix_wall(
     height: float = 0.3,
     width: float = 0.25,
     name: str | None = None,
-    material: str = "polished_brass",
+    material: str = "brass_polished",
 ) -> bpy.types.Object:
     """Adds a kerb that stands on a town.helix() along the circle of `radius`: inside the
     circle (the kerb of the ramp's outer edge) or outside it (of the inner edge). It
