@@ -26,4 +26,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 light_color = Color(1, 0.78, 0.5, 1)
 light_energy = 1.2
 light_bake_mode = 0
+shadow_enabled = true
 omni_range = 4.0

@@ -42,6 +42,10 @@ _Avoid_: material (a material is how it looks)
 An object that moves its own Solid each tick from the run time, with `Solid.move()`. The solver reads the surface velocity at the contact point.
 _Avoid_: animated body, platform (a platform is one kind of mover)
 
+**Turning arm**:
+The `turning_arm` object: a flat bar that turns at a steady speed round its marker's up axis and pushes the marble aside. The marker's points give the bar's outline. It shares its motion with the turning gear (`Turner`). Ascent 2's clock hands are turning arms; the M3 Clock Hands build on it.
+_Avoid_: clock hand (the M3 object), rotor, sweeper
+
 **Trigger**:
 An `Area3D` on the trigger layer that an object uses for a volume. The marble overlaps it, and the run calls `on_overlap` of the object.
 _Avoid_: sensor, zone (a zone is a part of the climb)

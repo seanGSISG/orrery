@@ -4,7 +4,8 @@ extends LevelObject
 ## tall. Put the marker on the floor. When the marble finds it, it tells the rules once and
 ## opens in OPEN_TIME: the lid tips back on its hinge, and the clockwork rises and spins. A
 ## restart closes it again; a checkpoint respawn keeps it open. A small warm light stands
-## above the egg, so the room that hides it is not dark.
+## above the egg, so the room that hides it is not dark. The light casts shadows, so it does
+## not shine through walls; the egg itself casts none, so it does not shadow its own foot.
 ##
 ## The shapes come from res://objects/egg/egg.glb (tools/blender/egg.py, `just build-egg`):
 ## `shell`, `lid` with its origin on the hinge, and `gear` with its origin on its axis.
@@ -29,8 +30,10 @@ var _found_at: float = -1.0
 @onready var _gear: Node3D = $Model/gear
 
 
-## Starts closed, with the clockwork hidden.
+## Starts closed, with the clockwork hidden, and takes the egg's shadow out.
 func _ready() -> void:
+	for node: Node in $Model.find_children("*", "GeometryInstance3D"):
+		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_pose(0.0, 0.0)
 
 

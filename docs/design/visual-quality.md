@@ -49,7 +49,6 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 | Sun shadow filter | Soft Very Low | Soft Low | Soft Medium | Soft High | `RenderingServer.directional_soft_shadow_filter_set_quality` |
 | Sun shadow splits | 2 | 4 | 4 | 4 | `DirectionalLight3D.directional_shadow_mode` |
 | Sun shadow distance | 50 m | 80 m | 120 m | 160 m | `DirectionalLight3D.directional_shadow_max_distance` |
-| Sun angular size (PCSS soft shadows) | 0° | 0° | 0° | 0° | `Light3D.light_angular_distance` |
 | Omni and spot shadow atlas | 2048 | 2048 | 4096 | 4096 | `Viewport.positional_shadow_atlas_size` |
 | Lightmap bicubic sampling | off | on | on | on | `RenderingServer.lightmaps_set_bicubic_filter` |
 | Mesh LOD threshold (pixels; higher is coarser) | 2.0 | 1.0 | 1.0 | 0.5 | `Viewport.mesh_lod_threshold` |
@@ -62,7 +61,7 @@ Rules for the table:
 - Texture quality is the anisotropic level and the mipmap bias. No preset changes the resolution of a texture (section 6).
 - Not built yet: the SDFGI row comes with the Ascent mode. The marble reflection probe row comes with the marble look, because the marble needs its own render layer first.
 - SDFGI never runs in a campaign level, because campaign levels use lightmaps. SDFGI runs only in Ascent and Planetarium on Ultra, where the sun moves.
-- Every preset uses a sun of 0°, so no preset has PCSS soft shadows. A 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`), but in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch that leaked into the shade of the square, on High and on Ultra alike. Test renders of the `egg`, `start` and `crown_down` shots with the sun at 0° and at 0.5°, and with the volumetric fog off, showed that the sun size alone made them. Godot also warns that PCSS has a "noticeable performance cost".
+- The sun has no size: no preset sets `Light3D.light_angular_distance`, so it keeps its default of 0° and no preset has PCSS soft shadows. A 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`), but in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch that leaked into the shade of the square, on High and on Ultra alike. Test renders of the `egg`, `start` and `crown_down` shots with the sun at 0° and at 0.5°, and with the volumetric fog off, showed that the sun size alone made them. Godot also warns that PCSS has a "noticeable performance cost".
 - Fixed project settings (all presets): `rendering/anti_aliasing/quality/use_debanding=true`, `rendering/reflections/reflection_atlas/reflection_size=256` (the default), `rendering/lightmapping/lightmap_gi/use_bicubic_filter=true`.
 
 ### Tonemapping, exposure and colour grading
@@ -287,10 +286,11 @@ A level script names a kit material, and the importer gives those faces the game
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
 - A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
-- Seven objects take their look from `KitMaterials.find()` at run time: the Trapdoor and Crumbling Tiles (#29), and the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30). Each has a test that checks its kit materials.
+- Eight objects take their look from the kit materials: the Trapdoor and Crumbling Tiles (#29), the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30), and the Turning arm (#32). Each has a test that checks its kit materials. An object gets a fixed kit material from `KitMaterials.find()` at run time. A `finish` that the level script names is a `Material` export, which the importer sets, so an unknown name fails the import.
   - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
   - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot. A set `finish` (a kit material, for example `wood` in Ascent 1) replaces the stone; the brass bands stay.
   - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
+  - A Turning arm's bar is its `finish` (Ascent 2's clock hands are `blued_steel`), mapped in the arm's own space like the Turning gear.
   - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
   - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.
   - A Trapdoor's door is its own copy of the kit brass with one texture repeat across the door, so a large door shows no repeat.
