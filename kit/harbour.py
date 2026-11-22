@@ -34,7 +34,8 @@ Point = tuple[float, float]
 # The finishes of the harbour, besides those of kit/town.py (whose brass_polished, the brass
 # of the lift casings, is also the brass of the big harbour fittings):
 # - envelope: the doped cream canvas of an airship; varnish: the varnished timber of a
-#   gondola, a propeller or a fin frame; rope: tarred hemp.
+#   gondola, a propeller or a fin frame; rope: tarred hemp; seam: the lighter cord of the
+#   envelope seams.
 Finish = str
 
 # An envelope: the share of its length that the round nose takes, and the radius of its tail
@@ -49,7 +50,7 @@ BULGE = 0.025
 # frames, as a share of the radius. The fabric is taut over each frame, so it creases there.
 BAY = 3.2
 SAG = 0.02
-# A seam of tarred cord runs along each girder and round each ring frame: SEAM m wide, but at
+# A seam of cord runs along each girder and round each ring frame: SEAM m wide, but at
 # most SEAM_SHARE of a gore's width where the gores narrow to the nose and the tail.
 SEAM = 0.1
 SEAM_SHARE = 0.3
@@ -232,13 +233,13 @@ def _shape(u: float) -> float:
 
 def envelope(ship: Ship) -> bpy.types.Object:
     """Adds the envelope of a ship: fabric gores that stand out between longitudinal girders
-    and sag between the ring frames, a seam of tarred cord along each girder and round each
-    frame, a brass mooring cone on the nose and a brass cap on the tail. It collides."""
+    and sag between the ring frames, a seam of cord (finish seam) along each girder and round
+    each frame, a brass mooring cone on the nose and a brass cap on the tail. It collides."""
     xs, frames = _stations(ship)
     parts = town.Parts()
     bm = parts.bm
     fabric = parts.index("envelope")  # ty: ignore[invalid-argument-type]
-    seam = parts.index("rope")  # ty: ignore[invalid-argument-type]
+    seam = parts.index("seam")  # ty: ignore[invalid-argument-type]
     gore = math.tau / GORES
 
     def ring(x: float) -> list[bmesh.types.BMVert]:
