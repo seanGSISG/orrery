@@ -17,10 +17,9 @@ while IFS= read -r path; do
         *.md | docs/* | LICENSE*) ;;
         # The workflow, the task runner and the version pins: every job.
         .github/* | justfile | mise.toml | tools/setup/pins.env | .gitattributes) run "${jobs[@]}" ;;
-        # The game and what it imports (the kit textures).
-        game/* | assets/*) run lint-game test harness export ;;
-        # The marble's core: every job that imports the game.
-        tools/blender/marble_core.py) run lint-scripts test harness export ;;
+        # The game and what it imports (the kit textures, the marble's core). The script lint
+        # checks any Python or shell script in them.
+        game/* | assets/* | tools/blender/marble_core.py) run lint-game lint-scripts test harness export ;;
         # Level scripts and the level builder: the tests and the export load the built levels.
         levels/* | kit/* | tools/blender/*) run lint-scripts test export ;;
         # Tool projects: the script lint and their own tests.
