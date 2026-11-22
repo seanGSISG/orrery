@@ -52,7 +52,7 @@ FOOT: dict[int, Place] = {}
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
 
-kit.level(title="The Broken Tower", par=300.0, gold=200.0, sky="ground_dawn")
+kit.level(title="The Broken Tower", par=253.8, gold=84.1, sky="ground_dawn")
 
 
 def ring(radius: float, angle: float, centre: Point = AXIS) -> Point:
