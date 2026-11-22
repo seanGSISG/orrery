@@ -31,6 +31,8 @@ jobs:
   changes:
     name: Pick the jobs
     runs-on: ubuntu-latest
+    # Each timeout is 2.5 times the longest recent successful run of the job, rounded up to 5 minutes (at least 5). A hung job then fails fast.
+    timeout-minutes: 5
     outputs:
       levels: ${{ steps.pick.outputs.levels }}
       lint-game: ${{ steps.pick.outputs.lint-game }}
@@ -78,6 +80,7 @@ jobs:
     needs: [changes, levels]
     if: needs.changes.outputs.lint-game == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -94,6 +97,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.lint-scripts == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.3
@@ -108,6 +112,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.levels != 'false'
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -147,6 +152,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -167,6 +173,7 @@ jobs:
     needs: [changes, levels]
     if: needs.changes.outputs.harness == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -182,6 +189,7 @@ jobs:
     needs: [changes, levels]
     if: needs.changes.outputs.export == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -222,6 +230,7 @@ jobs:
     name: Boot the Windows export
     needs: export
     runs-on: windows-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
         with:
@@ -247,6 +256,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.music == 'true' || needs.changes.outputs.art == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.3
