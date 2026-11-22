@@ -416,9 +416,6 @@ def build_chamber() -> None:
         parts.faces([[o[i][1], o[j][1], n[j][1], n[i][1]]], "dressed")
     parts.faces([[o[3][0], o[2][0], o[1][0], o[0][0]]], "wall")
     parts.faces([[n[0][0], n[1][0], n[2][0], n[3][0]]], "limestone")
-    for i in range(4):
-        j = (i + 1) % 4
-        parts.faces([[o[i][0], n[i][0], n[j][0], o[j][0]]], "wall")
     parts.add("movement_chamber")
 
 
@@ -629,12 +626,12 @@ LID_R = 6.5
 clockwork.disc(
     "barrel_lid", LID_CENTRE, LID_R, depth=0.7, clip=((0.0, COIL[1]), (1.0, 0.0))
 )
+# The teeth go clockwise round the kept rim, from one end of the cut to the other.
 _lid_cut = math.degrees(math.asin((COIL[1] - LID_CENTRE[1]) / LID_R))
-_lid_arc = (180.0 - _lid_cut, 360.0 + _lid_cut)
 kit.teeth(
     [
         (x, y, LID - 0.12)
-        for x, y in kit.arc(LID_CENTRE[:2], LID_R, _lid_arc[1], _lid_arc[0], 120)
+        for x, y in kit.arc(LID_CENTRE[:2], LID_R, 180.0 - _lid_cut, _lid_cut, 120)
     ],
     side="left",
     pitch=0.7,

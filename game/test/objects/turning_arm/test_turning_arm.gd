@@ -37,6 +37,7 @@ func test_arm_turns_on_its_period_and_pushes_a_marble_in_its_way() -> void:
 
 func test_bar_takes_its_finish() -> void:
 	var steel: Material = KitMaterials.find("blued_steel")
+	assert_not_null(steel, "the kit has blued steel")
 	var arm: TurningArm = _arm(8.0)
 	arm.finish = steel
 	add_child_autofree(arm)

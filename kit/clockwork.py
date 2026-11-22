@@ -288,7 +288,9 @@ def helix_wall(
 
 def place(objects: Iterable[bpy.types.Object], matrix: Matrix) -> None:
     """Moves each object (built round the origin) by matrix: its world matrix becomes
-    matrix @ its world matrix. Children move with their parents, so pass only the roots."""
+    matrix @ its world matrix. Children move with their parents, so pass only the roots. It
+    updates the view layer first, so a piece placed by its location (a gear, a lathe) keeps it."""
+    bpy.context.view_layer.update()
     for obj in objects:
         obj.matrix_world = matrix @ obj.matrix_world
 
