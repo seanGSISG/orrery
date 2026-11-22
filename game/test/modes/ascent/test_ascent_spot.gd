@@ -135,6 +135,7 @@ func test_new_climb_drops_the_old_spot_at_any_save() -> void:
 		return
 	put(ZONE_2)
 	quit_climb()
+	assert_true(Save.ascent.has_spot, "the assisted climb has a spot before the restart")
 	Save.ascent.assist = false
 	if not climb(true):
 		return
