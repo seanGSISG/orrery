@@ -101,4 +101,6 @@ func test_finish_gives_the_deck_a_kit_material() -> void:
 	platform.finish = "wood"
 	add_child_autofree(platform)
 	var look: MeshInstance3D = platform.get_node("Solid/Mesh") as MeshInstance3D
-	assert_eq(look.material_override, KitMaterials.find("wood"))
+	var wood: Material = KitMaterials.find("wood")
+	assert_not_null(wood, "the kit has a wood material")
+	assert_eq(look.material_override, wood)

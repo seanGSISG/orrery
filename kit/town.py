@@ -671,10 +671,8 @@ def house(
     shown = {key: face for key, face in sides.items() if key not in blind}
     # A string course at each storey and a cornice under the eaves. Each runs only along the
     # shown faces, and stops flush at a blind side, so that two houses in a row meet flush.
-    z = storey
-    while z < eave - 0.9:
-        band(parts, shown, sides, z - 0.09, z + 0.09, 0.07)
-        z += storey
+    for k in range(1, math.ceil((eave - 0.9) / storey)):
+        band(parts, shown, sides, k * storey - 0.09, k * storey + 0.09, 0.07)
     band(parts, shown, sides, eave - 0.5, eave - 0.38, 0.08)
     band(parts, shown, sides, eave - 0.38, eave - 0.25, 0.18)
     for key, face in shown.items():
@@ -968,10 +966,11 @@ def _decal_material(art: str, soft: bool = False) -> bpy.types.Material:
     """Returns the material of a decal art, made once per level: its picture as the colour,
     and its alpha cut at 0.5 (a Round node, which the glTF export writes as alpha mode MASK),
     or for a soft decal its alpha as it is (alpha mode BLEND)."""
-    found = bpy.data.materials.get(f"decal_{art}")
+    key = f"decal_{art}_soft" if soft else f"decal_{art}"
+    found = bpy.data.materials.get(key)
     if found is not None:
         return found
-    found = bpy.data.materials.new(f"decal_{art}")
+    found = bpy.data.materials.new(key)
     found.use_backface_culling = True
     tree = found.node_tree
     bsdf = tree.nodes["Principled BSDF"]

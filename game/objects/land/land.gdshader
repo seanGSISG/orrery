@@ -71,7 +71,10 @@ void fragment() {
 	float fields = smoothstep(meadow, meadow * 1.4, length(p - MODEL_MATRIX[3].xz));
 	vec3 crop = CROPS[int(cell_random(field + 7.1).x * 5.99)];
 	float pixel = max(length(dx), length(dy));
-	float hedge = (1.0 - smoothstep(hedge_width - pixel, hedge_width + pixel, border)) * fields;
+	// A hedge narrower than a pixel fades to its share of the pixel, so that far fields do
+	// not darken.
+	float line = 1.0 - smoothstep(hedge_width - pixel, hedge_width + pixel, border);
+	float hedge = line * clamp(hedge_width / pixel, 0.0, 1.0) * fields;
 	vec3 tint = mix(mix(CROPS[0], crop, fields), HEDGE, hedge);
 	ALBEDO = clamp(grass * tint, vec3(ALBEDO_MIN), vec3(ALBEDO_MAX));
 	ROUGHNESS = 0.95;
