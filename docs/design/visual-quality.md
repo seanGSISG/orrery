@@ -355,8 +355,8 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | VRAM, `b02`, Medium at 1080p | 904 MB |
 | GPU time, `b02`, mean / p99 (one run, with the object looks of #29) | Low 0.28 / 1.01 ms, Medium 0.37 / 0.50 ms, High 0.81 / 0.96 ms, Ultra 1.26 / 1.57 ms at 1080p; High 1.23 / 1.57 ms at 1440p; Ultra 3.95 / 5.14 ms at 4K |
 | Lightmap files, `b03` (#30: 224 meshes, 64,600 triangles in the level; bake 40 s) | 5.2 MB |
-| VRAM, `b03`, Medium at 1080p | 910 MB |
-| GPU time, `b03`, mean / p99 (one run, after the B3 style review) | Low 0.34 / 0.99 ms, Medium 0.43 / 1.43 ms, High 0.86 / 1.08 ms, Ultra 1.32 / 1.89 ms at 1080p; High 1.32 / 1.85 ms at 1440p; Ultra 4.41 / 6.90 ms at 4K |
+| VRAM, `b03`, Medium at 1080p | 912 MB |
+| GPU time, `b03`, mean / p99 (one run, with the round chamfers of the B3 style review) | Low 0.26 / 0.37 ms, Medium 0.39 / 0.54 ms, High 0.87 / 1.12 ms, Ultra 2.00 / 2.38 ms at 1080p; High 1.42 / 3.03 ms at 1440p; Ultra 4.98 / 11.92 ms at 4K |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |
