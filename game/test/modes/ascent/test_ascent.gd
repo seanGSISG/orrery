@@ -114,6 +114,27 @@ func test_light_goes_from_the_ground_dawn_to_noon() -> void:
 	assert_almost_eq(sky.elevation, between, 0.001)
 
 
+## The climb has no lightmap: the fill of the first stop stands in for bounce light at every
+## height, and it grows with the sunlight on a floor. At the climb start the ambient light is
+## that of the zone played alone.
+func test_fill_follows_the_sunlight_on_a_floor() -> void:
+	var sky: AscentSky = AscentSky.new()
+	autofree(sky)
+	var environment: Environment = (sky.get_node(^"sky") as WorldEnvironment).environment
+	var dawn: SkyPreset = AscentSky.GROUND_DAWN
+	var noon: SkyPreset = AscentSky.NOON
+	var share: float = dawn.sky_share
+	assert_almost_eq(environment.ambient_light_energy, 1.0, 0.001)
+	assert_eq(environment.ambient_light_color, dawn.fill_color)
+	assert_almost_eq(environment.ambient_light_sky_contribution, share, 0.001)
+	sky.show_height(AscentSky.NOON_HEIGHT)
+	var rise: float = noon.sun_energy * noon.to_sun().y / (dawn.sun_energy * dawn.to_sun().y)
+	assert_almost_eq(environment.ambient_light_energy, rise, 0.001)
+	assert_gt(rise, 2.0, "the noon sun puts more than twice the light on a floor")
+	assert_eq(environment.ambient_light_color, dawn.fill_color, "the fill keeps its colour")
+	assert_almost_eq(environment.ambient_light_sky_contribution, share, 0.001)
+
+
 ## Between two stops the sky shows the panoramas of those two presets, blended by the share of
 ## the way from the lower stop. The stops rise from the climb start.
 func test_sky_blends_the_two_stops_round_the_height() -> void:
