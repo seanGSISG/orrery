@@ -175,7 +175,7 @@ def wait_for_quiet(label: str) -> None:
 def run_watched(command: list[str]) -> tuple[subprocess.CompletedProcess[str], bool]:
     """Runs a command (timeout RUN_TIMEOUT_S) and returns it with whether another Godot game
     started while it ran. Checks every WATCH_S seconds. The command runs in its own process
-    group, so a timeout kills gamescope and the game it started."""
+    group, so a timeout or Ctrl-C kills gamescope and the game it started."""
     start = time.monotonic()
     disturbed = False
     with subprocess.Popen(
@@ -185,16 +185,26 @@ def run_watched(command: list[str]) -> tuple[subprocess.CompletedProcess[str], b
         text=True,
         start_new_session=True,
     ) as process:
-        while True:
+        try:
+            while True:
+                try:
+                    stdout, stderr = process.communicate(timeout=WATCH_S)
+                    break
+                except subprocess.TimeoutExpired as error:
+                    if time.monotonic() - start > RUN_TIMEOUT_S:
+                        raise subprocess.TimeoutExpired(
+                            command, RUN_TIMEOUT_S
+                        ) from error
+                    disturbed = disturbed or bool(other_games())
+        except (
+            BaseException
+        ):  # a timeout or Ctrl-C: the group must not keep the GPU busy
             try:
-                stdout, stderr = process.communicate(timeout=WATCH_S)
-                break
-            except subprocess.TimeoutExpired as error:
-                if time.monotonic() - start > RUN_TIMEOUT_S:
-                    os.killpg(process.pid, signal.SIGKILL)
-                    process.communicate()
-                    raise subprocess.TimeoutExpired(command, RUN_TIMEOUT_S) from error
-                disturbed = disturbed or bool(other_games())
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.communicate()
+            raise
     done = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     return done, disturbed or bool(other_games())
 
