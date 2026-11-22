@@ -37,6 +37,10 @@ COPING = 0.45
 BREAK_STEP = 1.1
 # The mass starts this far inside the coping, m.
 BREAK_INSET = 0.12
+# The mass is built of courses about this tall, m. Each course steps in toward the middle by
+# one of these shares of the way, picked at each point, and more in the lower courses.
+COURSE = 0.6
+BREAK_STEPS = (0.03, 0.08, 0.14)
 
 
 def fragment(
@@ -50,9 +54,9 @@ def fragment(
 ) -> bpy.types.Object:
     """Adds a floating piece of broken masonry whose flat top, of `floor` finish, has the
     plan `outline` at the height `top`. A dressed coping `coping` m deep runs round the edge,
-    with a chamfer on top; under it a mass of coursed ashlar breaks off `under` m lower in a
-    jagged point. The outline is convex or nearly so. seed: the shape of the break (the name
-    when None). It collides."""
+    with a chamfer on top. Under it hang courses of ashlar that step in toward the middle,
+    each course's edge broken block by block, down to a flat bed `under` m lower. The outline
+    is convex or nearly so. seed: the shape of the break (the name when None). It collides."""
     rng = random.Random(seed if seed is not None else name)
     loop = _resample(turned(list(outline)), BREAK_STEP)
     c = _centroid(loop)
@@ -60,31 +64,31 @@ def fragment(
     bm = parts.bm
     level = top - coping
 
-    def ring(points: Sequence[Point], z: float | Sequence[float]) -> list:
-        heights = [z] * len(points) if isinstance(z, float) else list(z)
-        return [
-            bm.verts.new((x, y, h)) for (x, y), h in zip(points, heights, strict=True)
-        ]
+    def ring(points: Sequence[Point], z: float) -> list:
+        return [bm.verts.new((x, y, z)) for x, y in points]
 
     deck = ring(_inset(loop, CHAMFER), top)
     edge = ring(loop, top - CHAMFER)
     foot = ring(loop, level)
     inner = _inset(loop, BREAK_INSET)
-    shelf = ring(inner, level)
-    # Two jagged rings and a point: the break.
-    near = [_toward(p, c, rng.uniform(0.05, 0.25)) for p in inner]
-    near_z = [level - under * rng.uniform(0.15, 0.45) for _ in near]
-    far = [_toward(p, c, rng.uniform(0.35, 0.6)) for p in inner]
-    far_z = [level - under * rng.uniform(0.55, 0.9) for _ in far]
-    near_v = ring(near, near_z)
-    far_v = ring(far, far_z)
-    tip = bm.verts.new((c[0], c[1], level - under))
+    upper = ring(inner, level)
     _cap(parts, deck, loop, floor, up=True)
     parts.faces(_bands(deck, edge) + _bands(edge, foot), "dressed")
-    parts.faces(_bands(foot, shelf), "dressed")
-    parts.faces(_bands(shelf, near_v) + _bands(near_v, far_v), "wall")
-    n = len(far_v)
-    parts.faces([[far_v[i], far_v[(i + 1) % n], tip] for i in range(n)], "wall")
+    parts.faces(_bands(foot, upper), "dressed")
+    # The break: each course steps in by a block's depth or two at each point of the edge.
+    courses = max(2, round(under / COURSE))
+    share = [0.0] * len(inner)
+    points = inner
+    for k in range(courses):
+        grow = 1.0 + k / courses
+        share = [min(s + rng.choice(BREAK_STEPS) * grow, 0.8) for s in share]
+        points = [_toward(p, c, s) for p, s in zip(inner, share, strict=True)]
+        z = level - k * under / courses
+        course = ring(points, z)
+        bed = ring(points, z - under / courses)
+        parts.faces(_bands(upper, course) + _bands(course, bed), "wall")
+        upper = bed
+    _cap(parts, upper, points, "wall", up=False)
     return parts.add(name)
 
 
@@ -307,6 +311,17 @@ def spire(
     ]
     parts.faces([*sides_loops, loops[1], loops[0][::-1]], finish)
     return parts.add(name)
+
+
+def tilt(obj: bpy.types.Object, roll: float, pitch: float = 0.0) -> None:
+    """Tips obj round its own origin, as a piece knocked loose from the tower: `roll` degrees
+    round its local y axis, then `pitch` degrees round its local x axis. It uses the basis
+    matrix, because the world matrix of a new object is not up to date yet."""
+    obj.matrix_basis = (
+        obj.matrix_basis
+        @ Matrix.Rotation(math.radians(roll), 4, "Y")
+        @ Matrix.Rotation(math.radians(pitch), 4, "X")
+    )
 
 
 def at(matrix: Matrix, point: Vec3) -> Vec3:

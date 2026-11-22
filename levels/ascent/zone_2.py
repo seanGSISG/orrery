@@ -1018,6 +1018,60 @@ kit.ramp(
     trim="gold",
 )
 
+# A brass kerb round the balcony's outer edge.
+kit.wall(
+    [(*ring(13.0, a), BALCONY) for a in range(-45, 91, 5)],
+    0.35,
+    width=0.25,
+    name="spire_balcony_kerb",
+    material="polished_brass",
+)
+
+# --- Decoration -----------------------------------------------------------------------------------
+
+# Pieces of the old tower that float round the climb, 30 m or more from the axis and clear of
+# every route: wall panels with a belfry arch, and big wheels of the clockwork.
+TOWER_WALLS = [  # angle round the axis, radius, height of the foot, roll
+    (75.0, 33.0, 188.0, 8.0),
+    (20.0, 35.0, 232.0, -10.0),
+    (-40.0, 34.0, 205.0, 6.0),
+    (-110.0, 33.0, 262.0, -7.0),
+    (110.0, 36.0, 248.0, 9.0),
+    (-150.0, 40.0, 222.0, -5.0),
+    (160.0, 42.0, 180.0, 7.0),
+    (-75.0, 36.0, 238.0, 11.0),
+]
+for i, (angle, radius, z, roll) in enumerate(TOWER_WALLS):
+    wall = kit.arch(
+        (*ring(radius, angle), z),
+        width=3.2,
+        height=7.0,
+        span=9.0,
+        top=12.0,
+        depth=1.4,
+        yaw=angle + 90.0,
+        name=f"tower_wall_{i + 1}",
+    )
+    clockwork.refinish(wall, "wall")
+    clockwork.tilt(wall, roll, 4.0)
+TOWER_GEARS = [  # angle, radius, height of the middle, wheel radius, teeth, roll
+    (45.0, 31.0, 214.0, 4.5, 24, 15.0),
+    (-75.0, 31.0, 186.0, 3.2, 18, -20.0),
+    (140.0, 34.0, 205.0, 3.8, 20, 10.0),
+    (0.0, 30.0, 262.0, 2.6, 16, 25.0),
+]
+for i, (angle, radius, z, size, teeth, roll) in enumerate(TOWER_GEARS):
+    gear = kit.gear(
+        (*ring(radius, angle), z),
+        size,
+        teeth=teeth,
+        depth=0.5,
+        yaw=angle + 90.0,
+        name=f"tower_gear_{i + 1}",
+        material="polished_brass",
+    )
+    clockwork.tilt(gear, roll, -8.0)
+
 FINISH: Place = (*AXIS, CAP)
 FOOT[2] = (-8.0, 49.5, BELL_LEDGE)
 FOOT[3] = (-5.6, 51.2, LID)
@@ -1279,12 +1333,12 @@ route(
 
 # --- Shots ----------------------------------------------------------------------------------------
 
-kit.shot("overview", at=(48.0, -30.0, 230.0), rotation=(-22.0, 0.0, 40.0))
+kit.shot("overview", at=(75.0, -70.0, 240.0), rotation=(-6.5, 0.0, 34.5))
 kit.shot("start", at=(START[0], START[1] - 3.0, CROWN + 1.6), rotation=(8.0, 0.0, 0.0))
 kit.shot(
     "finish",
-    at=(FINISH[0] + 8.0, FINISH[1] - 8.0, BELL_LEDGE + 5.0),
-    rotation=(-18.0, 0.0, 45.0),
+    at=(FINISH[0] + 12.0, FINISH[1] - 15.0, CAP + 6.0),
+    rotation=(-16.0, 0.0, 38.7),
 )
 kit.shot(
     "egg",
@@ -1293,3 +1347,8 @@ kit.shot(
 )
 kit.shot("face", at=(2.0, 14.0, 162.0), rotation=(-12.0, 0.0, 40.0))
 kit.shot("gears", at=(6.0, 18.0, 156.0), rotation=(-2.0, 0.0, -30.0))
+kit.shot("mainspring", at=(14.0, 34.0, 190.0), rotation=(-11.0, 0.0, 45.0))
+kit.shot("ring", at=(30.0, 10.0, 245.0), rotation=(-17.0, 0.0, 46.0))
+kit.shot("slabs", at=(8.0, 2.0, 258.0), rotation=(-27.0, 0.0, 45.0))
+kit.shot("spire", at=(18.0, 30.0, 285.0), rotation=(-3.0, 0.0, 63.0))
+kit.shot("rod", at=(-40.0, 22.0, 290.0), rotation=(-11.0, 0.0, -37.0))
