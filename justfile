@@ -376,6 +376,11 @@ gallery *ids: fresh-levels import
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
 
+# Run the perf tool's tests (no Godot needed)
+[positional-arguments]
+test-perf *args:
+    uv run --quiet --with pytest pytest tools/perf "$@"
+
 # --- Lightmaps (#24) ---
 
 # Bake the lightmaps of levels (all, or the given ids) on this GPU. Close every Godot editor on this project first
