@@ -100,7 +100,7 @@ The route bot drives both routes to the gate (`just test-levels zone_3`, 2026-11
 
 The Tender way of part 1 is on neither route. A temporary first-run route through it (planks, gondola deck, sponson vent, fin, deckhouse, stern steps, gangway B) reached the gate in 224.0 s; the bot needs a straight run of 1.5 m before the jump onto the deckhouse and before the jump from stern step 1.
 
-`just perf zone_3` (RTX 5090, 2026-11-21, after the style review fixes, two runs): Medium 1080p p99 1.32 to 1.33 ms and 1062 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 3.71 to 3.83 ms (gate 16.7 ms). Before the fixes, Medium p99 was 0.47 ms. The cause of the rise is not measured; the envelopes now have about twice as many faces, for the seams and the frames.
+`just perf zone_3` (RTX 5090, 2026-11-21, after the merge of zone 2 and the seam material, two runs with nothing else on this checkout): Medium 1080p p99 0.44 ms and 1075 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 3.83 to 4.10 ms (gate 16.7 ms). After the style review fixes, two runs gave Medium p99 1.32 to 1.33 ms (0.47 ms before the fixes). That rise came from load, not from the envelopes: a third run now, with a headless climb test on the CPU at the same time, gave Medium p99 1.42 ms.
 
 **Handover from zone 2** (2026-11-21; first found with zone 2 at `t32-zone-2` a5464a2, then checked after zone 2 merged, #108). In a climb of zones 2 and 3, the bot drove zone 2's route to the cap, then zone 3's route with no restart. The first run reached the gate (174.5 s and 219.5 s, no fall). The expert route crossed onto the quay, then fell from the first mooring rope. The fixes:
 
