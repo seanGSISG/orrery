@@ -2,7 +2,7 @@ class_name LevelRun
 extends Node3D
 ## Plays one level and owns its time: one step() is one tick (docs/design/core-runtime.md §3).
 ## Make one with LevelRun.create(level) and add it to the tree at the world origin; _ready()
-## starts the run. The game steps it from _physics_process while auto_step is true. Tests and
+## starts the run. The run steps itself from _physics_process while auto_step is true. Tests and
 ## the harness set auto_step to false and call step() in a plain loop.
 
 ## Every object's and the marble's feedback, re-emitted for audio and rumble.
