@@ -103,11 +103,12 @@ import: fresh-marble kit-textures
         lines=0 still=0
         while kill -0 "$pid" 2>/dev/null && (( still < 180 )); do
             sleep 5
-            # Fold repeats: a hung import can print the same progress line every second.
-            now=$(uniq "$log" | wc -l)
+            # Count distinct lines: a hung import can print the same progress lines again and again.
+            now=$(LC_ALL=C sort -u "$log" | wc -l)
             if (( now == lines )); then still=$((still + 5)); else still=0 lines=$now; fi
         done
-        if (( still < 180 )); then
+        # Godot can exit during the last sleep: then its exit status counts, not the stall.
+        if ! kill -0 "$pid" 2>/dev/null; then
             wait "$pid"
             exit
         fi
