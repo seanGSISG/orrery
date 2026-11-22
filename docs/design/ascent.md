@@ -134,6 +134,7 @@ The ground dawn is the sky of a town on the ground at dawn: the photograph of th
 
 - `game/test/modes/ascent/` drives the fixture climb through `MarbleInput` and `LevelRun.teleport()`, and reads `GameState`, the `Ascent` node and the save. `AscentTest` (`game/test/support/ascent_test.gd`) is the base.
 - `test_route_bot_climbs_to_the_gate` lets the route bot play the first-run route of each zone in turn, from the climb start through the gate.
+- `test_ascent_climb.gd` does the same on the real zones 1 to 3, once with the expert routes and once with the first-run routes: no fall, and the bot of zone 3 reaches the gate. It takes about 15 s of `just test` for each route kind.
 - `game/test/ui/test_ascent_screens.gd` drives the menus with the pad.
 - `just test-levels ascent_fixture_1 ascent_fixture_2 ascent_fixture_3` drives both routes of each fixture zone.
 - `just ui-shots` saves the Ascent menu, the HUD of a climb, its pause menu and the stats screen.
@@ -141,7 +142,7 @@ The ground dawn is the sky of a town on the ground at dawn: the photograph of th
 ## 8. Open points
 
 1. **Eggs in the menus.** The save keeps every egg of every zone, but no screen of Ascent shows them yet (the Ascent menu or the stats screen can count them: 10 in all).
-2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. At the last point of its route the bot comes to rest, so the bot of the next zone starts from a still marble.
+2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` and `test_ascent_climb.gd` do. At the last point of its route the bot comes to rest, so the bot of the next zone starts from a still marble. Zone 2's routes end with a stop on the finish pad (`wait 0`), so the route itself says where the bot comes to rest.
 3. **SDFGI.** Ascent has no SDFGI on Ultra yet (plan §4.7).
 4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between the ground dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws. This is not cheap now (#31): the dawn glow is in the photograph, so the bake cannot take it out, and noon is an approved panorama. A fix needs climb skies from Blender's sky model with no sun disc and no aerosol glow, and a sun disc and its glow in `ascent_sky.gdshader` at the sun of `_apply()`.
 5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
