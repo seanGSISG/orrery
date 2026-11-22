@@ -62,7 +62,7 @@ These are the steps of `docs/research/asset-prompting.md` §3.1. Each Tripo comm
    - It names the material `orrery_lamp`.
    - It reduces each map to the texture size of the class: 1K for clutter (up to 0.7 m) and medium (up to 2.5 m), 2K for hero (taller).
    - It sets metallic to 0 or 1. It clamps roughness to 0.10–0.55 on metal and 0.15–0.95 on dielectric. It clamps albedo: each channel of a dielectric to sRGB 30–240, and the brightest channel of a metal to 180–250, with the hue kept.
-   - It writes the normal map as PNG. The colour map stays JPEG (quality 95).
+   - It writes the normal map and the metallic-roughness map as PNG. The colour map stays JPEG (quality 95).
    - It changes a map only when a rule moves it, so a second run on a clean prop changes nothing.
 
    Options:

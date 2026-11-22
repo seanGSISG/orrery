@@ -265,17 +265,17 @@ bpy.ops.export_scene.gltf(filepath=out, export_format="GLB")
 
 
 def textured_model(folder: Path, uv: str = "uv") -> Path:
-    """Writes a Tripo-like model: 2048 x 1024 maps, a JPEG normal map, a dielectric left half
-    (pure white above pure black, metallic 0.3, roughness 0.02) and a metal right half (dark
-    brass, metallic 0.8, roughness 0.9)."""
+    """Writes a Tripo-like model: 2048 x 1024 maps, JPEG normal and packed maps, a dielectric
+    left half (pure white above pure black, metallic 0.3, roughness 0.02) and a metal right
+    half (dark brass, metallic 0.8, roughness 0.9)."""
     base = Image.new("RGB", (2048, 1024), (0, 0, 0))
     base.paste((255, 255, 255), (0, 0, 1024, 512))
     base.paste((100, 80, 40), (1024, 0, 2048, 1024))
     packed = Image.new("RGB", (2048, 1024), (255, 5, 77))
     packed.paste((255, 230, 204), (1024, 0, 2048, 1024))
-    paths = [folder / "base.jpg", folder / "packed.png", folder / "normal.jpg"]
+    paths = [folder / "base.jpg", folder / "packed.jpg", folder / "normal.jpg"]
     base.save(paths[0], quality=95)
-    packed.save(paths[1])
+    packed.save(paths[1], quality=95)
     Image.new("RGB", (2048, 1024), (128, 128, 255)).save(paths[2], quality=95)
     out = folder / f"tripo-{uv}.glb"
     blender("--python-expr", TEXTURED, "--", *map(str, paths), str(out), uv)

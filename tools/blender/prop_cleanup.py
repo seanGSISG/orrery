@@ -14,7 +14,7 @@ obey docs/design/visual-quality.md §6 (the rules are in tools/art/src/orrery_ar
 - the material is named `orrery_<out>`;
 - every map is at most the texture size of the class (clutter and medium 1K, hero 2K);
 - metallic is 0 or 1, and roughness and albedo are inside the limits of metal or dielectric;
-- the normal map is a PNG;
+- the normal map and the metallic-roughness map are PNG (lossless);
 - --stone pulls warm, light colours to the saturation of the kit limestone.
 
 The class comes from the height (asset-prompting.md §3.2); give --class hero for a prop in view
@@ -61,11 +61,11 @@ class PropError(Exception):
 
 def kit_material(text: str) -> tuple[str, list[int] | None]:
     """Reads --material: a kit material, optionally with the parts that take it."""
-    look, _, parts = text.partition(":")
+    look, colon, parts = text.partition(":")
     if look not in MATERIALS:
         raise argparse.ArgumentTypeError(f"{look!r} is not one of {MATERIALS}")
     try:
-        return look, [int(part) for part in parts.split(",")] if parts else None
+        return look, [int(part) for part in parts.split(",")] if colon else None
     except ValueError:
         raise argparse.ArgumentTypeError(
             f"{text!r}: parts are numbers, as in brass:1,2"
@@ -94,10 +94,11 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1 :])
     if not args.source.is_file():
         parser.error(f"no such model: {args.source}")
-    if args.height <= 0:
-        parser.error("--height must be positive")
+    if not 0 < args.height < float("inf"):
+        parser.error("--height must be a positive number")
     args.size_class = args.size_class or rules.prop_class(args.height)
-    args.triangles = args.triangles or rules.CLASSES[args.size_class].triangles
+    if args.triangles is None:
+        args.triangles = rules.CLASSES[args.size_class].triangles
     if args.triangles < 12:
         parser.error("--triangles must be at least 12")
     return args
@@ -202,7 +203,7 @@ def decimate(obj: bpy.types.Object, budget: int) -> None:
 
 def parts(mesh: bpy.types.Mesh) -> list[list[int]]:
     """Returns the connected parts of the welded mesh as lists of face indices, the part with
-    the most faces first (ties: the lower centre first)."""
+    the most faces first (ties: the lower base first)."""
     shape = bmesh.new()
     shape.from_mesh(mesh)
     shape.faces.ensure_lookup_table()
@@ -340,15 +341,18 @@ def clean_material(material: bpy.types.Material, size: int, stone: bool) -> list
     bump = linked(bsdf.inputs["Normal"], "NORMAL_MAP", name)
     normal = linked(bump.inputs["Color"], "TEX_IMAGE", name) if bump else None
     done = []
-    for node in (base, packed, normal):
-        image = node.image if node else None
-        if image is None:
-            continue
+    images = {n.image for n in material.node_tree.nodes if n.type == "TEX_IMAGE"}
+    for image in images - {None}:
         width, height = image.size
         new = rules.fit_size(width, height, size)
         if new != (width, height):
             image.scale(*new)
             done.append(f"{image.name} {width}x{height} -> {new[0]}x{new[1]}")
+    # The data maps are lossless, so metallic stays exactly 0 or 1 and the normals unblocked.
+    for node in (packed, normal):
+        if node is not None and node.image and magic(node.image) != PNG:
+            node.image = as_png(node.image)
+            done.append(f"{node.image.name}: PNG")
 
     # Metallic and roughness: the blue and green channels of the packed map (glTF), else
     # the BSDF values.
@@ -385,9 +389,6 @@ def clean_material(material: bpy.types.Material, size: int, stone: bool) -> list
         after[..., :3] = rules.limit_albedo(before[..., :3], mask, stone)
         if store(base.image, before, after):
             done.append(f"{base.image.name}: albedo in limits")
-    if normal is not None and normal.image and magic(normal.image) != PNG:
-        normal.image = as_png(normal.image)
-        done.append(f"{normal.image.name}: PNG")
     return done
 
 

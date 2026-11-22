@@ -254,6 +254,8 @@ def build_stage(row: list[bpy.types.Object], width: int) -> None:
     sun.rotation_euler = (math.radians(45.0), 0.0, math.radians(-35.0))
     camera = add("camera", bpy.data.cameras.new("camera"), Vector())
     camera.data.type = "ORTHO"
+    # ortho_scale is the width of the view, also for a sheet taller than wide.
+    camera.data.sensor_fit = "HORIZONTAL"
     camera.rotation_euler = (math.radians(90.0 - ELEVATION), 0.0, 0.0)
     scene.camera = camera
     bpy.context.view_layer.update()
