@@ -13,8 +13,6 @@ from mathutils import Vector
 from kit.scene import Vec3, add_object, default_name, pose
 
 Setting = bool | int | float | str
-# Point names end in two digits, so that their name order is the order of `points`.
-MAX_POINTS = 100
 
 
 def marker(
@@ -34,8 +32,6 @@ def marker(
     as the rotation, never as settings: the export does not turn vector settings into Godot's
     axes.
     """
-    if len(points) > MAX_POINTS:
-        raise ValueError(f"kit.marker({type!r}): at most {MAX_POINTS} points")
     for key, value in settings.items():
         if not isinstance(value, Setting):
             raise TypeError(
@@ -47,8 +43,11 @@ def marker(
     obj.matrix_world = pose(at, rotation)
     obj["orrery"] = {"type": type, **settings}
     world_to_local = obj.matrix_world.inverted()
+    # Point names end in two or more digits, all of one width, so that their name order is
+    # the order of `points`.
+    digits = max(2, len(str(len(points) - 1)))
     for i, point in enumerate(points):
-        child = add_object(f"{obj.name}_p{i:02d}")
+        child = add_object(f"{obj.name}_p{i:0{digits}d}")
         child.empty_display_type = "PLAIN_AXES"
         child.empty_display_size = 0.25
         child.parent = obj

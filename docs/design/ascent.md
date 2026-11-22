@@ -141,9 +141,9 @@ The ground dawn is the sky of a town on the ground at dawn: the photograph of th
 ## 8. Open points
 
 1. **Eggs in the menus.** The save keeps every egg of every zone, but no screen of Ascent shows them yet (the Ascent menu or the stats screen can count them: 10 in all).
-2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. For this, the last point of a zone route must be a stop, or the top floor must be long enough to stop on.
+2. **Whole-climb bot.** The harness `run_bot` drives only the route of the first zone. A test can chain the zone routes, as `test_route_bot_climbs_to_the_gate` does. At the last point of its route the bot comes to rest, so the bot of the next zone starts from a still marble.
 3. **SDFGI.** Ascent has no SDFGI on Ultra yet (plan §4.7).
 4. **Two sun glows.** Each sky panorama holds the glow of its own sun. Between the ground dawn and noon the sky shows both glows, each weaker, and the sun light comes from between them. One sun that moves needs panoramas with no glow and a sun that the sky shader draws. This is not cheap now (#31): the dawn glow is in the photograph, so the bake cannot take it out, and noon is an approved panorama. A fix needs climb skies from Blender's sky model with no sun disc and no aerosol glow, and a sun disc and its glow in `ascent_sky.gdshader` at the sun of `_apply()`.
 5. **Failed saves.** A save that cannot be written gives a warning in the log only, as everywhere in the game. The ghost recording of the climb and the spot are two files; after a crash between the two writes the recording can be a few seconds ahead of the spot.
 6. **Streaming.** All zones load at the start. Add zone streaming only if the memory or performance checks fail (plan §2.9).
-7. **Route points.** A route has at most 100 points (`kit.marker` names them with two digits). The first-run route of zone 1 uses all 100. A longer zone needs fewer points, or a point name with three digits in `kit/markers.py`.
+7. **Route points.** `kit.marker` names the points of a path with two digits up to 100 points and with three digits above that. The first-run route of zone 1 uses 100 points; the first-run route of zone 3 uses more.
