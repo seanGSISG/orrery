@@ -43,6 +43,9 @@ TOOTH_WIDTH = 0.32
 TOOTH_DEPTH = 0.22
 TOOTH_HEIGHT = 0.3
 TOOTH_DROP = 0.12
+# The chamfer on the edges of a gear tooth and a grille rail, so that each edge catches a
+# highlight and the piece reads as cast metal, not a sawn block, m.
+EDGE_BEVEL = 0.02
 # A gear wheel, as shares of its radius: the root of the teeth, the inner edge of the rim,
 # the hub, the width of a spoke and how far the boss on the hub stands out.
 GEAR_ROOT = 0.86
@@ -232,7 +235,8 @@ def teeth(
     material: str = "brass",
 ) -> bpy.types.Object:
     """Adds a row of gear teeth on the face of a wall: blocks of `material`, TOOTH_WIDTH
-    wide, one every `pitch` m along the points of `path`, which is the top edge of the wall.
+    wide with EDGE_BEVEL chamfers, one every `pitch` m along the points of `path`, which is the
+    top edge of the wall.
     The teeth hang TOOTH_DROP below the path and stand out to the `side` of it, seen along
     the path. A corner of the path gets no tooth. They do not collide: put them on outer
     faces only, where the marble does not go."""
@@ -250,6 +254,8 @@ def teeth(
     number = int(total // pitch)
     half = TOOTH_WIDTH / 2
     bm = bmesh.new()
+    # The corners of the back faces, which sit in the wall: their edges stay sharp.
+    back: set[bmesh.types.BMVert] = set()
     travelled = 0.0
     for i in range(spans):
         start, end = path[i], path[(i + 1) % count]
@@ -295,7 +301,16 @@ def teeth(
             for a in range(4):
                 b = (a + 1) % 4
                 bm.faces.new((ends[0][a], ends[0][b], ends[1][b], ends[1][a]))
+            back.update((ends[0][0], ends[0][3], ends[1][0], ends[1][3]))
         travelled += length
+    bmesh.ops.bevel(
+        bm,
+        geom=[e for e in bm.edges if not all(v in back for v in e.verts)],
+        offset=EDGE_BEVEL,
+        segments=1,
+        affect="EDGES",
+        clamp_overlap=True,
+    )
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     return add_mesh(bm, name, surface_material("default", material), collide=False)
 
@@ -549,11 +564,11 @@ def grille(
 ) -> bpy.types.Object:
     """Adds a grille that fills a doorway: round upright bars GRILLE_BAR m wide along the
     doorway with clear gaps of at most GRILLE_GAP m, also at the jambs, which the marble cannot
-    pass, and a level rail at each height in `rails`. `at` is the middle of the threshold, on
-    the middle line of the grille. Like an arch, the grille lies across the way along +y,
-    turned by `yaw` degrees. The bars stand `height` m tall; with `arched`, they stop under the
-    round head of a kit.arch() doorway of the same width and height. It collides, and the sun
-    shines through it."""
+    pass, and a level rail with EDGE_BEVEL chamfers at each height in `rails`. `at` is the
+    middle of the threshold, on the middle line of the grille. Like an arch, the grille lies
+    across the way along +y, turned by `yaw` degrees. The bars stand `height` m tall; with
+    `arched`, they stop under the round head of a kit.arch() doorway of the same width and
+    height. It collides, and the sun shines through it."""
     name = name or default_name("grille", "-col")
     half = width / 2
     spring = height - half
@@ -606,13 +621,21 @@ def grille(
             if edge <= spring or not arched
             else math.sqrt(half * half - (edge - spring) ** 2)
         )
-        bmesh.ops.create_cube(
+        rail = bmesh.ops.create_cube(
             bm,
             size=1.0,
             matrix=Matrix.Translation((0.0, 0.0, z))
             @ Matrix.Diagonal(
                 (2 * across - GRILLE_CLEAR, 1.6 * GRILLE_BAR, 2 * GRILLE_BAR, 1.0)
             ),
+        )["verts"]
+        bmesh.ops.bevel(
+            bm,
+            geom=list({e for v in rail for e in v.link_edges}),
+            offset=EDGE_BEVEL,
+            segments=1,
+            affect="EDGES",
+            clamp_overlap=True,
         )
     obj = add_mesh(bm, name, surface_material("default", material), collide=True)
     obj.location = at

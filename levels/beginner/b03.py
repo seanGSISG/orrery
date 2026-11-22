@@ -66,6 +66,10 @@ GEAR_THICKNESS = 0.5
 # The dial in the court floor: its middle is the middle bumper.
 DIAL_CENTRE = (0.0, 29.8)
 DIAL_RADIUS = 12.0
+# The outer faces of the court walls: how far the cornice reaches out from the wall, and the
+# height of the string course at floor level, m.
+CORNICE = 0.15
+COURSE = 0.3
 
 
 def block(name: str, outline: Sequence[Point], top: float) -> None:
@@ -111,6 +115,20 @@ def coping(name: str, x0: float, y0: float, x1: float, y1: float, top: float) ->
         mid = (y0 + y1) / 2
         strip = kit.rect(x0, mid - 0.05, x1, mid + 0.05)
     kit.inlay(strip, top=top + 0.16, name=f"{name}_strip", material="brass")
+
+
+def cornice(name: str, path: Sequence[Place]) -> None:
+    """Adds a stone lip on the outer edge of a coping, on the left of the path: `path` runs
+    along the coping's outer edge, 0.08 m out from the wall, at the height of the coping's
+    underside. The lip carries the coping out to CORNICE m from the wall, so it reads as a
+    cornice. It does not collide, so the coping's collider stays as it is."""
+    kit.wall(
+        path,
+        height=0.16,
+        width=CORNICE - 0.08,
+        name=name,
+        collide=False,
+    )
 
 
 def pilaster(
@@ -249,7 +267,8 @@ kerb("kerb_step", [(-15, 16, STEP), (-15, 8, STEP), (15, 8, STEP), (15, 16, STEP
 kit.teeth([(15, 16, STEP), (-15, 16, STEP)], name="step_north_teeth")
 
 # The court floor is a dial: a brass ring round the middle bumper with twelve hour bars, and
-# two brass hands that point at the two court springs (see Objects).
+# two brass hands that point at the two court springs. The minute ticks are under Objects,
+# because they keep clear of the bumpers.
 ring("court_dial", DIAL_CENTRE, DIAL_RADIUS - 0.22, DIAL_RADIUS, 0.0)
 ring("court_dial_hub", DIAL_CENTRE, 1.5, 1.68, 0.0)
 for hour in range(12):
@@ -286,6 +305,34 @@ coping("wall_south_east_coping", 15, 15.4, 21.92, 16, STEP)
 kit.teeth(
     [(22.8, 45, BALCONY), (22.8, 16, BALCONY)], side="left", name="wall_east_teeth"
 )
+# The outer faces of the court walls: gear teeth under the coping, a lip that carries the
+# coping out to a cornice, and a string course at the court's floor level. None of it
+# collides. The west side runs from the Step round the south-west corner to the west balcony.
+kit.teeth(
+    [(-15, 15.4, 1.5), (-22.8, 15.4, 1.5), (-22.8, 45, 1.5)],
+    side="left",
+    name="wall_west_teeth",
+)
+kit.teeth(
+    [(22.8, 15.4, STEP), (15, 15.4, STEP)], side="left", name="wall_south_east_teeth"
+)
+cornice(
+    "wall_west_cornice", [(-15, 15.32, 1.5), (-22.88, 15.32, 1.5), (-22.88, 45, 1.5)]
+)
+cornice("wall_east_cornice", [(22.88, 45, BALCONY), (22.88, 15.92, BALCONY)])
+cornice("wall_south_east_cornice", [(22.0, 15.32, STEP), (15, 15.32, STEP)])
+for name, path in (
+    ("west", [(-15, 15.4), (-22.8, 15.4), (-22.8, 45)]),
+    ("east", [(22.8, 45), (22.8, 15.4), (15, 15.4)]),
+):
+    kit.wall(
+        [(x, y, -COURSE / 2) for x, y in path],
+        height=COURSE,
+        width=0.12,
+        bevel=0.03,
+        name=f"wall_{name}_outer_course",
+        collide=False,
+    )
 # Pilasters between the stair gears and a brass string course give the sunlit east wall its
 # rhythm. The pilasters keep 0.2 m from the tips of the gear teeth.
 for i, y in enumerate((16.6, 21.2, 26.0, 30.8, 35.6, 40.3, 44.4)):
@@ -493,6 +540,35 @@ BUMPERS = [
 for i, at in enumerate(BUMPERS):
     kit.marker("bumper", at=(*at, 0.0), name=f"bumper_{i}")
     ring(f"bumper_ring_{i}", at, 0.78, 0.9, 0.0)
+# The minute ticks of the court dial, between the hour bars. A tick that would lie under a
+# bumper or its ring is left out.
+for minute in range(60):
+    angle = math.radians(90 - 6 * minute)
+    ux, uy = math.cos(angle), math.sin(angle)
+    a = (DIAL_CENTRE[0] + ux * 11.1, DIAL_CENTRE[1] + uy * 11.1)
+    b = (DIAL_CENTRE[0] + ux * 11.5, DIAL_CENTRE[1] + uy * 11.5)
+    if minute % 5 == 0 or any(
+        math.dist(end, bumper) < 1.0 for end in (a, b) for bumper in BUMPERS
+    ):
+        continue
+    vx, vy = -uy * 0.05, ux * 0.05
+    kit.inlay(
+        [
+            (a[0] - vx, a[1] - vy),
+            (b[0] - vx, b[1] - vy),
+            (b[0] + vx, b[1] + vy),
+            (a[0] + vx, a[1] + vy),
+        ],
+        name=f"court_dial_minute_{minute:02d}",
+        material="brass",
+    )
+# A brass border line round the bumper court, 1 m inside its walls.
+kit.inlay(
+    kit.rect(-21.05, 16.95, 21.05, 44.05),
+    holes=[kit.rect(-20.95, 17.05, 20.95, 43.95)],
+    name="court_border",
+    material="brass",
+)
 
 for name, offset in (("a", 0.0), ("b", CARRIAGE_PERIOD / 2)):
     kit.marker(

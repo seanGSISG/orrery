@@ -299,10 +299,12 @@ A level script names a kit material, and the importer gives those faces the game
 
 | Set | Limestone | Tint, repeat | Brass | Tint, repeat, roughness scale |
 |---|---|---|---|---|
-| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal007`, metallic 0.85 | (1.0, 1.1, 1.4), 0.7 m, × 2.4 |
+| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal007`, metallic 0.85, detail normal at 0.25 m | (1.0, 1.1, 1.4), 2.0 m, × 2.4 |
 | `b` | Poly Haven `concrete_wall_008` | (2.3, 2.45, 3.0), 1.6 m | ambientCG `Metal048A` | (0.9, 0.8, 0.62), 1.0 m, × 3.0 |
 | `c` | Poly Haven `dirty_concrete` | (1.6, 1.7, 1.9), 1.6 m | ambientCG `Metal008` | (1.0, 1.0, 1.0), 1.2 m, × 1.3 |
 
+- The brass of set A repeats every 2 m: with the 2K maps that is 1024 px/m, the close-zone target (section 6). Before, it repeated every 0.7 m. A bar 0.09 m wide then showed a narrow strip of the map's dark blotches, which read as wood grain, and a dark pit fell every 0.7 m along a rail (B3 style review). The detail normal at 0.25 m gives the fine grain close to the camera.
+- Gear teeth (`kit.teeth()`) and grille rails have 0.02 m chamfers on their edges, so each edge catches a highlight and the piece reads as cast metal, not as a sawn block.
 - Gold is the same in every set: `Metal048A`, tint (1.0, 0.82, 0.5), 0.6 m, roughness × 5.
 - Every limestone is paved: slabs of 1.0 m by 1.5 m in a running bond, joints 12 mm wide, the detail normal at 0.25 m.
 - The tints are above 1 because the colour maps are darker than limestone. The shader keeps the result inside the albedo limits of section 6.
@@ -345,16 +347,16 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Kit textures in Git LFS (sets A, B and C, and gold) | 47 MB |
 | Tier skies in Git LFS (dawn, noon, dusk) | 35 MB |
 | Sky sources in Git LFS (3 HDRIs, the planet map) | 14 MB |
-| Lightmap files, `b01` (#28: 96 meshes, 55,700 triangles, every mesh at 0.1 m per texel; bake 36 s) | 4.6 MB |
+| Lightmap files, `b01` (#28: 96 meshes, 66,100 triangles with the 0.02 m chamfers of #30, every mesh at 0.1 m per texel; bake 151 s) | 5.1 MB |
 | VRAM, `fixture`, Medium at 1080p | 875 MB |
 | VRAM, `b01`, Medium at 1080p | 892 MB |
 | GPU time, `b01`, mean / p99 at 1080p (three runs; see the note on clock speed below) | Low 0.22 to 0.54 / 0.27 to 0.78 ms, Medium 0.38 to 0.89 / 0.95 to 1.16 ms, High 0.83 to 0.90 / 0.94 to 3.00 ms, Ultra 1.30 to 1.33 / 1.60 to 1.62 ms |
-| Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 44,200 triangles in the level; bake 34 s) | 4.8 MB |
+| Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 54,500 triangles in the level with the chamfers of #30; bake 35 s) | 5.7 MB |
 | VRAM, `b02`, Medium at 1080p | 904 MB |
 | GPU time, `b02`, mean / p99 (one run, with the object looks of #29) | Low 0.28 / 1.01 ms, Medium 0.37 / 0.50 ms, High 0.81 / 0.96 ms, Ultra 1.26 / 1.57 ms at 1080p; High 1.23 / 1.57 ms at 1440p; Ultra 3.95 / 5.14 ms at 4K |
-| Lightmap files, `b03` (#30: 169 meshes, 30,900 triangles in the level; bake 35 s) | 4.3 MB |
-| VRAM, `b03`, Medium at 1080p | 909 MB |
-| GPU time, `b03`, mean / p99 (one run) | Low 0.30 / 0.81 ms, Medium 0.56 / 1.36 ms, High 0.85 / 1.07 ms, Ultra 1.29 / 1.62 ms at 1080p; High 1.28 / 1.62 ms at 1440p; Ultra 4.06 / 5.17 ms at 4K |
+| Lightmap files, `b03` (#30: 224 meshes, 44,500 triangles in the level; bake 36 s) | 5.8 MB |
+| VRAM, `b03`, Medium at 1080p | 910 MB |
+| GPU time, `b03`, mean / p99 (one run, after the B3 style review) | Low 0.34 / 0.99 ms, Medium 0.43 / 1.43 ms, High 0.86 / 1.08 ms, Ultra 1.32 / 1.89 ms at 1080p; High 1.32 / 1.85 ms at 1440p; Ultra 4.41 / 6.90 ms at 4K |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |
