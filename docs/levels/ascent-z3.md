@@ -92,11 +92,25 @@ M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 +
 
 Level script: `levels/ascent/zone_3.py`. Harbour kit: `kit/harbour.py`. The script holds the layout as named constants, and most places follow from the ones before them: read the script for the numbers. Plan: x east, y north. Parts 1 to 3 climb north from the quay (y 25 to 118). Part 4 runs north from the Signal roof to Skiff 1, then west to Skiff 2 and the Tanker. Parts 5 and 6 run west from the Tanker to the Flagship (x about -142 to -70, y about 120 to 152).
 
-The route bot drives both routes to the gate (`just test-levels zone_3`, 2026-11-21): first run **214.0 s**, expert **128.8 s**. Par 321.0 s and gold 148.2 s come from `just suggest-times zone_3`. The bot is slower than the estimates (152 s and 73 s): it slows to 3.5 m/s at each sharp turn and it waits for each mover's window.
+The zone uses the town finishes of zone 1 (#31). The brass fittings of the ships (mooring cones, tail caps, hatch coamings, cabin window frames, deck-edge bands, spinners and propeller hubs) take zone 1's `brass_polished`. Polished brass is only on trim and curved parts; the kerbs are kit `brass`. The harbour adds three finishes: `envelope`, `varnish` and `rope`.
+
+The route bot drives both routes to the gate (`just test-levels zone_3`, 2026-11-21, after the merge of the zone 1 art pass): first run **214.0 s**, expert **128.8 s**. Each route starts with a stop on the start pad (see the handover below). Par 321.0 s and gold 148.2 s come from `just suggest-times zone_3`. The bot is slower than the estimates (152 s and 73 s): it slows to 3.5 m/s at each sharp turn and it waits for each mover's window.
 
 The Tender way of part 1 is on neither route. A temporary first-run route through it (planks, gondola deck, sponson vent, fin, deckhouse, stern steps, gangway B) reached the gate in 224.0 s; the bot needs a straight run of 1.5 m before the jump onto the deckhouse and before the jump from stern step 1.
 
-`just perf zone_3` (RTX 5090, 2026-11-21): Medium 1080p p99 0.45 ms and 1057 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 12.04 ms (gate 16.7 ms).
+`just perf zone_3` (RTX 5090, 2026-11-21, after the merge of the zone 1 art pass): Medium 1080p p99 0.47 ms and 1058 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 4.05 ms (gate 16.7 ms).
+
+**Handover from zone 2** (2026-11-21, zone 2 at `t32-zone-2` a5464a2, not merged). In a climb of zones 2 and 3, the bot drove zone 2's route to the cap, then zone 3's route with no restart:
+
+| Route | Zone 2 to the cap | Zone 3, cap to gate | Result |
+|---|---|---|---|
+| First run | 174.5 s | 219.5 s | At the gate, no fall |
+| Expert | 78.2 s | Falls from the first mooring rope | The marble crosses onto the quay; on the rope it falls 120 m onto zone 2 |
+
+- The quay meets the cap only on its arc (x -3 to 3). Beside the arc, the round edge of the cap leaves open drops, 0.85 m wide at x ±3.9 and 4 m at x ±5. The expert route first went from the cap straight to the jetty and fell there. Each route now starts with a stop on the start pad: the way to it crosses the arc, and the bot drives on from rest, as in the zone alone.
+- The expert route climbs the first mooring rope when the zone is played alone, but not after the stop on the pad in a climb. The run-up to the rope is sensitive to small changes in the start.
+- Zone 2's `spire_cap_rim` (a brass band from radius 5.0 to 5.12 m, top at +300 m, all round the cap) lies inside the quay along the arc. Its top is in the plane of the quay's top, so the two flicker there. Zone 2's contract keeps only the cap disc above +297 m inside the quay's rectangle.
+- In a climb, the light at +300 m is between the ground dawn and noon, so the quay at the start is mostly in shadow. The gallery shows the zone alone, in the ground dawn.
 
 | Difference | Reason |
 |---|---|
@@ -120,5 +134,6 @@ The Tender way of part 1 is on neither route. A temporary first-run route throug
 - Enter a vent from a straight approach of 1.5 m or more at speed 3, with the approach point 1.2 m before the vent's middle.
 - The marble climbs a beam of 30° for about 24 m and of 32° for about 22 m from a run-up at full speed. At 35° it stalls. Keep the run-up straight and in line with the beam; after a sharp turn the bot swings 0.8 m off the line, so slow it (`speed 2.5`, then `speed 3`) before a 0.6 m rope.
 - `kit.marker` names path points with three digits above 100 points. The first-run route of this zone has more than 100 points.
+- The bot counts its 300 s limit from its own first input, so a climb can give a bot to each zone in turn (`route_bot.gd`). Zones 2 and 3 take about 394 s.
 - Shot names share one namespace with the level's objects: `kit.shot("rigging")` fails when an object is named `rigging`.
 - To see where the bot fails, copy `game/harness/route_bot.gd`, add a `print` in `_steer()` or at `falls += 1`, run `just test-levels zone_3`, then restore the file. `uv run --quiet --project tools/harness orrery-harness teleport --velocity vx vy vz x y z` (Godot axes: y up, z = -north) probes one throw.

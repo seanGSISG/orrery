@@ -1448,8 +1448,14 @@ kit.marker("finish", at=FINISH)
 
 
 def route(kind: str, legs: list[Leg]) -> None:
-    """Places the route of `kind` through the legs, ending on the finish pad."""
-    legs = [*legs, (FINISH, "")]
+    """Places the route of `kind` through the legs, from a stop on the start pad to the finish
+    pad.
+
+    In a climb the marble comes from the end of zone 2's route on the cap. The way from there
+    to the start pad crosses onto the quay where it meets the cap (x -3 to 3), not over the
+    open drops beside it, and the stop makes the bot drive on from rest, as it does when the
+    zone is played alone."""
+    legs = [(START, "wait 0"), *legs, (FINISH, "")]
     actions = [
         f"{i} {action.strip()}"
         for i, (_, text) in enumerate(legs)
