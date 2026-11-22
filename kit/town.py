@@ -7,18 +7,16 @@ Play pieces (they collide):
   It carries the marble from its bottom to its top, a half turn, and lets it off to one side.
 - casing(): a curved band round a level axis; lift() is made of it.
 - facade(): a straight wall with openings (doors, windows).
-- block(): a box. stall(), crate() and chimney() are dressed boxes. house() and lamp() add a
-  building or a street lamp to a Parts mesh, so that a street of them is one mesh;
-  windows() and window() dress any wall face.
+- block(): a box. stall(), crate() and chimney() are dressed boxes. house() adds a building
+  to a Parts mesh, so that a street of them is one mesh; windows() and window() dress any wall
+  face, and band() runs a string course or a cornice along it.
 
 Decoration (no collision): sign(), clock_face() and decal(), a picture from assets/decals/.
 
 Placeholders: spot() leaves a named empty where a prop model or a decal comes later. It shows
 nothing in the game; docs/levels/ascent-z1.md lists the spots.
 
-Every piece takes world positions. The kit materials (limestone, brass, gold) come from
-kit.surface(); the plain colours of wood, canvas and glass come from paint(). A paint has no
-`material` property, so the importer keeps it as it is.
+Every piece takes world positions. Each face has a Finish: the name of a game material.
 """
 
 import math
@@ -38,7 +36,6 @@ from kit.scene import Vec3, add_object, default_name, pose
 from kit.surfaces import surface as surface_material
 
 Point = tuple[float, float]
-Rgb = tuple[float, float, float]
 # A wall opening: (centre along the wall, width, sill height, head height), m.
 Opening = tuple[float, float, float, float]
 
@@ -59,38 +56,54 @@ LIFT_GUARD = 80.0
 LIFT_WINDOW = 14.0
 # The gear thickness of a lift: room for the marble along the axis, m.
 LIFT_THICKNESS = 1.2
-# Plain colours: linear RGB and roughness.
-PAINTS: dict[str, tuple[Rgb, float]] = {
-    "wood": ((0.135, 0.08, 0.045), 0.75),
-    "door": ((0.03, 0.055, 0.05), 0.55),
-    "glass": ((0.012, 0.017, 0.022), 0.12),
-    "canvas_red": ((0.30, 0.065, 0.04), 0.9),
-    "canvas_ochre": ((0.48, 0.30, 0.09), 0.9),
-    "canvas_green": ((0.11, 0.16, 0.085), 0.9),
-    "canvas_cream": ((0.62, 0.56, 0.45), 0.9),
-    "slate": ((0.045, 0.05, 0.058), 0.7),
-    "iron": ((0.03, 0.03, 0.032), 0.5),
-}
+# The width of a stripe of a stall's valance, m.
+STRIPE = 0.32
+# A window's stone frame: its width and depth, and the height of its lintel, m.
+FRAME = 0.12
+LINTEL = 0.22
+# The finishes of town pieces. Each is a material of game/materials/ (KitMaterials.find):
+# - limestone, brass, gold: the kit's materials (kit.surface()).
+# - wall: limestone cut in courses of ashlar; dressed: limestone with no joints, for frames,
+#   sills, string courses and cornices.
+# - slate (slate_turned runs its courses along y), door, shutter, wood, canvas_*: CC0 texture
+#   sets (docs/licenses.md).
+# - glass: near-white panes that show the room behind; interior: that dark room; sash: painted
+#   window bars; iron: black-painted iron.
+Finish = Literal[
+    "limestone",
+    "brass",
+    "gold",
+    "wall",
+    "dressed",
+    "slate",
+    "slate_turned",
+    "door",
+    "shutter",
+    "wood",
+    "canvas_red",
+    "canvas_ochre",
+    "canvas_green",
+    "canvas_cream",
+    "glass",
+    "interior",
+    "sash",
+    "iron",
+]
+KIT_FINISHES = ("limestone", "brass", "gold")
 
 
-def paint(name: str) -> bpy.types.Material:
-    """Returns the plain colour `name` of PAINTS, made once per level. The importer keeps its
-    colour and roughness, and it collides on the default surface type."""
-    colour, roughness = PAINTS[name]
-    found = bpy.data.materials.get(f"paint_{name}")
+def material(finish: Finish) -> bpy.types.Material:
+    """Returns the material of a finish on surface type default, made once per level. The
+    importer gives its faces the material of that name, so the look is set in the game."""
+    if finish in KIT_FINISHES:
+        return surface_material("default", finish)
+    found = bpy.data.materials.get(f"{finish}_default")
     if found is None:
-        found = bpy.data.materials.new(f"paint_{name}")
+        found = bpy.data.materials.new(f"{finish}_default")
+        found["surface"] = "default"
+        found["material"] = finish
         found.use_backface_culling = True
-        bsdf = found.node_tree.nodes["Principled BSDF"]
-        bsdf.inputs["Base Color"].default_value = (*colour, 1.0)
-        bsdf.inputs["Roughness"].default_value = roughness
-        bsdf.inputs["Metallic"].default_value = 0.6 if name == "iron" else 0.0
     return found
-
-
-def material(name: str) -> bpy.types.Material:
-    """Returns the paint of that name, or else the kit material (limestone, brass, gold)."""
-    return paint(name) if name in PAINTS else surface_material("default", name)
 
 
 # --- Meshes made of parts -------------------------------------------------------------------
@@ -99,31 +112,41 @@ def material(name: str) -> bpy.types.Material:
 class Parts:
     """One mesh built from parts of several materials. Add the parts, then call add() once."""
 
-    def __init__(self, bm: bmesh.types.BMesh | None = None, finish: str = "") -> None:
+    def __init__(
+        self, bm: bmesh.types.BMesh | None = None, finish: Finish | None = None
+    ) -> None:
         self.bm = bm if bm is not None else bmesh.new()
-        self.materials: list[str] = [finish] if finish else []
+        self.materials: list[Finish] = [finish] if finish else []
+        # Single faces and the way each must face: add() keeps them so.
+        self.flats: list[tuple[bmesh.types.BMFace, Vector]] = []
 
-    def index(self, finish: str) -> int:
+    def index(self, finish: Finish) -> int:
         """Returns the material slot of finish, made on first use."""
         if finish not in self.materials:
             self.materials.append(finish)
         return self.materials.index(finish)
 
-    def faces(self, loops: list[list[bmesh.types.BMVert]], finish: str) -> None:
+    def faces(self, loops: list[list[bmesh.types.BMVert]], finish: Finish) -> None:
         """Adds a face on each loop of verts."""
         index = self.index(finish)
         for loop in loops:
             self.bm.faces.new(loop).material_index = index
 
+    def flat(self, corners: Sequence[Vec3], facing: Vector, finish: Finish) -> None:
+        """Adds one face on the corners, seen from the side `facing` (it has no back)."""
+        face = self.bm.faces.new([self.bm.verts.new(c) for c in corners])
+        face.material_index = self.index(finish)
+        self.flats.append((face, facing))
+
     def solid(
-        self, outline: Sequence[Point], bottom: float, top: float, finish: str
+        self, outline: Sequence[Point], bottom: float, top: float, finish: Finish
     ) -> None:
         """Adds a prism: a convex plan outline from the height bottom up to top."""
         low = [self.bm.verts.new((x, y, bottom)) for x, y in outline]
         high = [self.bm.verts.new((x, y, top)) for x, y in outline]
         self.faces([low, high, *_sides(low, high)], finish)
 
-    def box(self, lo: Vec3, hi: Vec3, finish: str = "limestone") -> None:
+    def box(self, lo: Vec3, hi: Vec3, finish: Finish = "limestone") -> None:
         """Adds a box between the corners lo and hi."""
         (x0, y0, z0), (x1, y1, z1) = lo, hi
         self.solid([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], z0, z1, finish)
@@ -135,7 +158,7 @@ class Parts:
         length: float,
         width: float,
         z: tuple[float, float],
-        finish: str,
+        finish: Finish,
     ) -> None:
         """Adds a box `length` m along the unit direction `along` from the plan point `at` and
         `width` m to the left of it, between the heights z."""
@@ -151,7 +174,7 @@ class Parts:
         start: float,
         end: float,
         axis: Literal["x", "y"],
-        finish: str,
+        finish: Finish,
     ) -> None:
         """Adds a prism whose section runs along `axis` from start to end. A section point is
         (across, height): y and z for axis x, x and z for axis y."""
@@ -167,7 +190,7 @@ class Parts:
         last = [self.bm.verts.new(at(u, z, end)) for u, z in section]
         self.faces([first, last, *_sides(first, last)], finish)
 
-    def bar(self, a: Vec3, b: Vec3, width: float, finish: str) -> None:
+    def bar(self, a: Vec3, b: Vec3, width: float, finish: Finish) -> None:
         """Adds a square bar `width` m thick from the point a to b, for a strut or a rope."""
         axis = Vector(b) - Vector(a)
         side = axis.cross(Vector((0.0, 0.0, 1.0)))
@@ -183,6 +206,10 @@ class Parts:
     def add(self, name: str, collide: bool = True) -> bpy.types.Object:
         """Turns the parts into the object `name` (`<name>-col` when it collides)."""
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces[:])
+        for face, facing in self.flats:
+            face.normal_update()
+            if face.normal.dot(facing) < 0.0:
+                face.normal_flip()
         mesh = bpy.data.meshes.new(name)
         self.bm.to_mesh(mesh)
         self.bm.free()
@@ -192,7 +219,7 @@ class Parts:
 
 
 def block(
-    name: str, lo: Vec3, hi: Vec3, finish: str = "limestone", collide: bool = True
+    name: str, lo: Vec3, hi: Vec3, finish: Finish = "wall", collide: bool = True
 ) -> bpy.types.Object:
     """Adds a box between the corners lo and hi."""
     parts = Parts()
@@ -206,7 +233,7 @@ def floor(
     top: float,
     depth: float,
     holes: Sequence[Sequence[Point]] = (),
-    finish: str = "limestone",
+    finish: Finish = "limestone",
 ) -> bpy.types.Object:
     """Adds a floor slab of any outline, `depth` m thick under the height `top`, with holes
     that go through it and have walls: a floor that a ramp or a lift comes up through."""
@@ -251,7 +278,7 @@ def facade(
     thickness: float,
     openings: Sequence[Opening] = (),
     side: Literal["left", "right"] = "right",
-    finish: str = "limestone",
+    finish: Finish = "wall",
 ) -> bpy.types.Object:
     """Adds a straight wall from the plan point a to b, `thickness` m thick on the `side` of
     the line seen from a to b, from the height bottom to top. openings: holes, as (centre,
@@ -291,7 +318,7 @@ def casing(
     thickness: float = LIFT_CASING,
     yaw: float = 0.0,
     name: str | None = None,
-    finish: str = "brass",
+    finish: Finish = "brass",
 ) -> bpy.types.Object:
     """Adds a curved band round a level axis: the part of a tube from the angle `start` to
     `end`, degrees, whose inner face is `radius` m from the axis. `at` is the middle of the
@@ -323,7 +350,7 @@ def helix(
     rise: float,
     thickness: float = 0.5,
     name: str | None = None,
-    finish: str = "limestone",
+    finish: Finish = "limestone",
 ) -> bpy.types.Object:
     """Adds a spiral ramp round the vertical axis through `at`: a slab between the radii
     `inner` and `outer`, from the angle `start` (degrees from +x, counter-clockwise seen from
@@ -474,11 +501,12 @@ def lift(
 
 
 def stall(
-    name: str, lo: Point, hi: Point, top: float, canvas: str = "canvas_red"
+    name: str, lo: Point, hi: Point, top: float, canvas: Finish = "canvas_red"
 ) -> bpy.types.Object:
     """Adds a market stall on the floor at height 0 between the plan corners lo and hi, whose
     flat roof of boards is at the height `top`: four posts, a counter at the front (low y) and
-    a canvas valance round the roof. A low stall is a covered table. The roof is a step."""
+    a valance round the roof in stripes of the canvas and cream. A low stall is a covered
+    table. The roof is a step."""
     (x0, y0), (x1, y1) = lo, hi
     board = 0.14
     under = top - board
@@ -500,13 +528,19 @@ def stall(
         parts.box((x0 + 0.1, y0 + 0.1, 0.0), (x1 - 0.1, y1 - 0.1, under), "wood")
     drop = min(0.35, under - 0.1)
     skirt = 0.03
-    for lo_, hi_ in (
-        ((x0 - skirt, y0 - skirt, under - drop), (x1 + skirt, y0, under)),
-        ((x0 - skirt, y1, under - drop), (x1 + skirt, y1 + skirt, under)),
-        ((x0 - skirt, y0, under - drop), (x0, y1, under)),
-        ((x1, y0, under - drop), (x1 + skirt, y1, under)),
+    z = (under - drop, under)
+    for at, along, length in (
+        ((x0 - skirt, y0 - skirt), (1.0, 0.0), x1 - x0 + 2 * skirt),
+        ((x1 + skirt, y1 + skirt), (-1.0, 0.0), x1 - x0 + 2 * skirt),
+        ((x0 - skirt, y1), (0.0, -1.0), y1 - y0),
+        ((x1 + skirt, y0), (0.0, 1.0), y1 - y0),
     ):
-        parts.box(lo_, hi_, canvas)
+        count = max(1, round(length / STRIPE))
+        step = length / count
+        for i in range(count):
+            start = (at[0] + along[0] * step * i, at[1] + along[1] * step * i)
+            finish = canvas if i % 2 == 0 else "canvas_cream"
+            parts.slab(start, along, step, skirt, z, finish)
     return parts.add(name)
 
 
@@ -531,7 +565,7 @@ def chimney(
     h = width / 2
     parts = Parts()
     if flue <= 0.0:
-        parts.box((x - h, y - h, z - 0.3), (x + h, y + h, z + height))
+        parts.box((x - h, y - h, z - 0.3), (x + h, y + h, z + height), "wall")
         c = h + 0.06
         parts.box((x - c, y - c, z + height - 0.2), (x + c, y + c, z + height), "brass")
     else:
@@ -542,26 +576,8 @@ def chimney(
             ((x - h, y - f), (x - f, y + f)),
             ((x + f, y - f), (x + h, y + f)),
         ):
-            parts.box((ax, ay, z - 0.3), (bx, by, z + height))
+            parts.box((ax, ay, z - 0.3), (bx, by, z + height), "wall")
     return parts.add(name)
-
-
-def lamp(parts: Parts, at: Vec3, height: float = 3.2) -> None:
-    """Adds a street lamp to parts, standing on the floor at `at`: an iron post and a glass
-    lantern."""
-    x, y, z = at
-    top = z + height
-    parts.box((x - 0.18, y - 0.18, z), (x + 0.18, y + 0.18, z + 0.35), "iron")
-    parts.box((x - 0.07, y - 0.07, z + 0.35), (x + 0.07, y + 0.07, top - 0.6), "iron")
-    parts.box(
-        (x - 0.17, y - 0.17, top - 0.6), (x + 0.17, y + 0.17, top - 0.55), "brass"
-    )
-    parts.box(
-        (x - 0.14, y - 0.14, top - 0.55), (x + 0.14, y + 0.14, top - 0.15), "glass"
-    )
-    parts.box(
-        (x - 0.22, y - 0.22, top - 0.15), (x + 0.22, y + 0.22, top - 0.05), "brass"
-    )
 
 
 # --- Buildings ------------------------------------------------------------------------------
@@ -605,48 +621,84 @@ def house(
     ridge: float,
     along: Literal["x", "y"] = "x",
     door: str = "s",
-    roof: str = "limestone",
     blind: str = "",
     storey: float = 3.0,
+    plain: bool = False,
 ) -> None:
     """Adds a town house to parts between the plan corners lo and hi, on the floor at height
-    0: stone walls up to `eave`, a gable roof up to `ridge` whose ridge runs along `along`,
-    a door on the side `door` (s, e, n or w; "" for none) and windows on each storey. blind:
-    the sides with no windows, for example "ew" for a house between two others."""
+    0: coursed stone walls up to `eave` and a slate gable roof up to `ridge`, whose ridge runs
+    along `along`. blind: the sides with no windows, for example "ew" for a house between two
+    others. A house that is not plain also gets a door on the side `door` (s, e, n or w; ""
+    for none), windows, a string course at each storey, a cornice under the eaves and a
+    chimney stack. A plain house is for the far town: walls and a roof only."""
     (x0, y0), (x1, y1) = lo, hi
-    parts.box((x0, y0, 0.0), (x1, y1, eave))
+    parts.box((x0, y0, 0.0), (x1, y1, eave), "wall")
     over = 0.35
     if along == "x":
         mid, ends, low, high = (y0 + y1) / 2, (x0, x1), y0, y1
     else:
         mid, ends, low, high = (x0 + x1) / 2, (y0, y1), x0, x1
-    parts.prism(
-        [(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, "limestone"
-    )
+    slate: Finish = "slate" if along == "x" else "slate_turned"
+    parts.prism([(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, "wall")
     parts.prism(
         [(low - over, eave - 0.25), (high + over, eave - 0.25), (mid, ridge)],
         ends[0] - 0.15,
         ends[1] + 0.15,
         along,
-        roof,
+        slate,
     )
+    if plain:
+        return
     cap = [(mid - 0.12, ridge - 0.1), (mid + 0.12, ridge - 0.1)]
     cap += [(mid + 0.12, ridge + 0.08), (mid - 0.12, ridge + 0.08)]
-    parts.prism(cap, ends[0] - 0.2, ends[1] + 0.2, along, "brass")
-    # A chimney stack on the ridge, a quarter of the way along.
+    parts.prism(cap, ends[0] - 0.2, ends[1] + 0.2, along, "iron")
+    # A chimney stack on the ridge, a quarter of the way along, with a cap and two pots.
     at = ends[0] + (ends[1] - ends[0]) * 0.25
     lo_c, hi_c = (at - 0.45, mid - 0.3), (at + 0.45, mid + 0.3)
     if along == "y":
         lo_c, hi_c = (mid - 0.3, at - 0.45), (mid + 0.3, at + 0.45)
-    parts.box((*lo_c, ridge - 1.0), (*hi_c, ridge + 1.1))
+    parts.box((*lo_c, ridge - 1.0), (*hi_c, ridge + 1.1), "wall")
     parts.box(
-        (lo_c[0] - 0.06, lo_c[1] - 0.06, ridge + 0.95),
-        (hi_c[0] + 0.06, hi_c[1] + 0.06, ridge + 1.1),
-        "brass",
+        (lo_c[0] - 0.06, lo_c[1] - 0.06, ridge + 1.1),
+        (hi_c[0] + 0.06, hi_c[1] + 0.06, ridge + 1.22),
+        "dressed",
     )
-    for key, face in faces(lo, hi).items():
-        if key not in blind:
-            windows(parts, face, eave, storey, door=key == door)
+    for t in (0.3, 0.7):
+        px = lo_c[0] + (hi_c[0] - lo_c[0]) * (t if along == "x" else 0.5)
+        py = lo_c[1] + (hi_c[1] - lo_c[1]) * (0.5 if along == "x" else t)
+        parts.solid(_octagon((px, py), 0.11), ridge + 1.22, ridge + 1.6, "iron")
+    sides = faces(lo, hi)
+    shown = {key: face for key, face in sides.items() if key not in blind}
+    # A string course at each storey and a cornice under the eaves. Each runs only along the
+    # shown faces, and stops flush at a blind side, so that two houses in a row meet flush.
+    z = storey
+    while z < eave - 0.9:
+        band(parts, shown, sides, z - 0.09, z + 0.09, 0.07)
+        z += storey
+    band(parts, shown, sides, eave - 0.5, eave - 0.38, 0.08)
+    band(parts, shown, sides, eave - 0.38, eave - 0.25, 0.18)
+    for key, face in shown.items():
+        windows(parts, face, eave - 0.55, storey, door=key == door)
+
+
+def band(
+    parts: Parts,
+    shown: dict[str, Face],
+    sides: dict[str, Face],
+    bottom: float,
+    top: float,
+    out: float,
+) -> None:
+    """Adds a stone band `out` m proud of each shown face of a box, between the heights
+    bottom and top. At a corner where the next face is shown too, the band runs on round it."""
+    order = list(sides)
+    for key, face in shown.items():
+        before = order[order.index(key) - 1]
+        after = order[(order.index(key) + 1) % 4]
+        s0 = -out if before in shown else 0.0
+        s1 = face.length + (out if after in shown else 0.0)
+        corners = [face.at(s0), face.at(s1), face.at(s1, out), face.at(s0, out)]
+        parts.solid(_counter_clockwise(corners), bottom, top, "dressed")
 
 
 def windows(
@@ -658,19 +710,30 @@ def windows(
     door: bool = False,
     spacing: float = 2.6,
 ) -> None:
-    """Adds a row of windows on each storey of a wall face from the height bottom up to top,
-    about `spacing` m apart, and a door in the middle of the lowest row when `door`."""
+    """Adds a row of windows on each storey of a wall face from the height bottom up to top
+    (the top of the highest lintel), about `spacing` m apart, and a door in the middle of the
+    lowest row when `door`. About one storey in three has shutters."""
     count = max(1, int((face.length - 1.2) // spacing))
     step = face.length / count
     for floor in range(int((top - bottom) // storey) + 1):
         base = bottom + floor * storey
+        shutters = _pick(face.start, floor) % 3 == 0
         for i in range(count):
             door_here = door and floor == 0 and i == count // 2
             sill = base + (0.0 if door_here else 0.9 if floor == 0 else 0.8)
             head = base + (2.4 if door_here else 2.2)
-            if head < top - 0.3:
+            if head + LINTEL <= top:
                 width = 1.4 if door_here else 1.0
-                window(parts, face, step * (i + 0.5), width, sill, head, door_here)
+                window(
+                    parts,
+                    face,
+                    step * (i + 0.5),
+                    width,
+                    sill,
+                    head,
+                    door_here,
+                    shutters=shutters and not door_here,
+                )
 
 
 def window(
@@ -681,43 +744,72 @@ def window(
     sill: float,
     head: float,
     door: bool = False,
-    pane: str = "",
+    pane: Finish | None = None,
+    shutters: bool = False,
 ) -> None:
-    """Adds one window or door on a wall face, `centre` m along it: a panel just proud of the
-    face (glass, a painted door, or the paint `pane`), a stone lintel above it, and a stone
-    sill below a window or a frame round a door."""
+    """Adds one window or door on a wall face, `centre` m along it, from the height sill to
+    head. A stone frame FRAME m wide and deep stands round it, with a lintel above and, under a
+    window, a sill. Inside the frame: a door leaf; or the panel `pane` (for example iron
+    louvres); or a window: a dark room behind near-white glass with a cross of sash bars, so
+    the glass sits back in the frame. shutters: two shutter leaves open flat beside it."""
 
     def piece(
-        s0: float, s1: float, o: float, z0: float, z1: float, finish: str
+        s0: float, s1: float, o0: float, o1: float, z0: float, z1: float, finish: Finish
     ) -> None:
-        corners = [face.at(s0), face.at(s1), face.at(s1, o), face.at(s0, o)]
+        corners = [face.at(s0, o0), face.at(s1, o0), face.at(s1, o1), face.at(s0, o1)]
         parts.solid(_counter_clockwise(corners), z0, z1, finish)
 
+    def panel(o: float, finish: Finish) -> None:
+        a, b = face.at(s0, o), face.at(s1, o)
+        corners = [(*a, sill), (*b, sill), (*b, head), (*a, head)]
+        parts.flat(corners, Vector((*face.out, 0.0)), finish)
+
     half = width / 2
+    s0, s1 = centre - half, centre + half
+    if door:
+        piece(s0, s1, 0.0, 0.05, sill, head, "door")
+    elif pane is not None:
+        piece(s0, s1, 0.0, 0.04, sill, head, pane)
+    else:
+        panel(0.005, "interior")
+        panel(0.03, "glass")
+        bar = 0.025
+        piece(centre - bar, centre + bar, 0.0, 0.06, sill, head, "sash")
+        transom = sill + (head - sill) * 0.62
+        piece(s0, s1, 0.0, 0.06, transom - bar, transom + bar, "sash")
+    piece(s0 - FRAME, s0, 0.0, FRAME, sill, head, "dressed")
+    piece(s1, s1 + FRAME, 0.0, FRAME, sill, head, "dressed")
     piece(
-        centre - half,
-        centre + half,
-        0.04,
-        sill,
+        s0 - FRAME - 0.06,
+        s1 + FRAME + 0.06,
+        0.0,
+        FRAME + 0.02,
         head,
-        pane or ("door" if door else "glass"),
-    )
-    piece(
-        centre - half - 0.15, centre + half + 0.15, 0.14, head, head + 0.22, "limestone"
+        head + LINTEL,
+        "dressed",
     )
     if not door:
         piece(
-            centre - half - 0.1,
-            centre + half + 0.1,
-            0.12,
-            sill - 0.12,
+            s0 - FRAME - 0.05,
+            s1 + FRAME + 0.05,
+            0.0,
+            FRAME + 0.06,
+            sill - 0.1,
             sill,
-            "limestone",
+            "dressed",
         )
-        return
-    for side in (-1, 1):
-        s = centre + side * (half + 0.075)
-        piece(s - 0.075, s + 0.075, 0.1, sill, head, "limestone")
+    if shutters:
+        leaf = half
+        for side in (-1, 1):
+            near = centre + side * (half + FRAME + 0.02)
+            far = near + side * leaf
+            piece(min(near, far), max(near, far), 0.0, 0.04, sill, head, "shutter")
+
+
+def _pick(at: Point, n: int) -> int:
+    """Returns a whole number that a plan point and a count always give the same: a stable
+    choice with no random state."""
+    return int(abs(at[0] * 7.0 + at[1] * 13.0)) + n * 5
 
 
 # --- Decoration -----------------------------------------------------------------------------
@@ -895,7 +987,7 @@ def _dial_ring(
     inner: float,
     outer: float,
     depth: tuple[float, float],
-    finish: str,
+    finish: Finish,
     sides: int = 64,
 ) -> None:
     """Adds a flat ring (a disc when inner is 0) on a dial, between two depths."""
@@ -998,6 +1090,17 @@ def _sides(
     return [
         [low[i], low[(i + 1) % count], high[(i + 1) % count], high[i]]
         for i in range(count)
+    ]
+
+
+def _octagon(at: Point, radius: float) -> list[Point]:
+    """Returns the plan outline of an octagon round `at`."""
+    return [
+        (
+            at[0] + radius * math.cos(math.tau * i / 8),
+            at[1] + radius * math.sin(math.tau * i / 8),
+        )
+        for i in range(8)
     ]
 
 

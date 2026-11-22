@@ -113,7 +113,18 @@ Level script: `levels/ascent/zone_1.py`. Town kit: `kit/town.py`. The script fol
 | The rafters are 19 m at 25.3° and 19.6 m at 29.3°, and meet on a round brass cap 3.2 m across | Two beams that meet in a point make the marble turn 170° on a beam 0.8 m wide |
 | The crown is a slab 14 × 10 m at +150 m on top of the east wall, with a merlon at each corner. The finish is in its middle | Zone 2 starts beside it, on its own floor |
 
-Decoration that the map does not show: a town round the square (about 70 houses in streets of one mesh each, out to 56 m from the square), street lamps, shop signs, a plinth, a cornice at each floor, corner pilasters, glazed windows, the great door of the tower base, a dial on each face of the clock floor (no numerals, six o'clock), and louvres in the belfry. The windows, the dials, the signs, the stays and the tower's dress do not collide.
+Decoration that the map does not show: a town round the square (about 70 houses in streets of one mesh each, out to 56 m from the square), street lamps, shop signs, a plinth, a cornice at each floor, quoins at the corners, glazed windows, the great door of the tower base, a dial on each face of the clock floor (no numerals, six o'clock), and louvres in the belfry. The windows, the dials, the signs, the stays and the tower's dress do not collide.
+
+The look follows a concept board of the square at dawn (GPT-Image, not in the game). Every face has a `town.Finish`, a material in `game/materials/`:
+
+- Walls are `wall`: the limestone of the deck, cut in courses of ashlar 0.95 × 0.42 m (`wall_size` of `kit_surface.gdshader`). Frames, sills, lintels, string courses and cornices are `dressed` limestone with no joints.
+- Roofs are `slate` (CC0); `slate_turned` turns the courses for a ridge along y. Doors, shutters, timber and stall canvas are CC0 texture sets too (`docs/licenses.md`). Iron is black paint (metallic 0).
+- A window has a stone frame 0.12 m wide and deep, a sill and a lintel. In the frame, 0.09 m back, near-white glass (`glass.gdshader`) shows a dark room behind it, under a cross of painted sash bars. About one storey in three has open shutters.
+- A house (`town.house()`) has a string course at each storey and a cornice under the eaves, a chimney stack with two pots, and an iron ridge.
+- The fountain is 4 m across: a low stone basin of still water, with the trial fountain raised in its middle as the upper tier.
+- Moving decks are timber (`finish="wood"` of `moving_platform`).
+
+Past the town: a `land` marker (`game/objects/land/`) gives 12 km of flat country just under the town's ground: grass at its true size, then fields of several crops with hedges between them, faded by the sky's distance fog into the horizon. A far town of plain houses (`town.house(plain=True)`) stands round the ground out to a ragged edge 150 to 260 m from the square: one mesh, `far_town-far`, with no collision, no lightmap and no probe.
 
 ### Routes and times
 
@@ -123,7 +134,11 @@ The other ways up were driven with routes that were not kept: the workshop side 
 
 ### Light
 
-The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the tower and the guildhall put much of the square in shade, and the inside of the tower has the light of the sky only.
+The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the guildhall and the west houses put much of the square in shade. A warm fill (`ground_dawn.tres`: `sky_share` 0.8, `fill_color` a warm stone colour) stands in for the light that sunlit walls throw into the shade, so the shade reads as dawn, not as a cold blue. It lights the zone played alone and the climb start alike.
+
+Each room of the tower has a `room_probe` marker (`game/objects/room_probe/`): a warm ambient light and an interior probe, so the rooms look lit by lamps and warm stone, not by the cold sky. The climb keeps these probes.
+
+The start view faces north into the shade of the tower and the square, and the sun (azimuth 135°) is ahead and to the left. Every level starts with the camera to the north (`MarbleInput.camera_yaw` 0), so a turned start camera would need a start heading in the core input for the player, the bot and the harness alike. Turned round, the zone would put the tower behind the start. The faces that the start looks at stay in shade; the warm fill and the sunlit west faces of the workshop side carry the view.
 
 ### Clockwork Egg as built
 

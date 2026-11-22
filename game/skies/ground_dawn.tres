@@ -12,3 +12,5 @@ sun_azimuth = 135.0
 sun_color = Color(1, 0.84, 0.68, 1)
 sun_energy = 2.27
 fog_density = 0.001
+sky_share = 0.8
+fill_color = Color(0.68, 0.57, 0.46, 1)

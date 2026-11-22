@@ -7,8 +7,12 @@ shader_type spatial;
 //   the course lines go on down its sides. Each slab reads a different part of the texture
 //   and has its own shade, so the texture shows no repeat. The joints are flush lines of
 //   darker stone.
+// - Courses: with a wall size, the sides of a piece are cut into courses of blocks in a
+//   running bond instead of the paving's course lines: a wall of ashlar.
 // - Detail: with a detail size, the normal map is added again at that size for fine grain
 //   close to the camera (docs/design/visual-quality.md §6).
+// - Turn: turns the texture on the top of a piece a quarter turn, so that a texture with a
+//   grain (slates, planks) can run along x or along y.
 
 uniform sampler2D albedo_map : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D roughness_map : hint_roughness_r, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -30,6 +34,10 @@ uniform float joint_width = 0.012;
 uniform float joint_shade = 0.5;
 // The darkest slab is this much darker than the brightest.
 uniform float slab_variation = 0.16;
+// Block length and course height on the sides, m. (0, 0) keeps the paving's course lines.
+uniform vec2 wall_size = vec2(0.0);
+// Turns the top's texture a quarter turn.
+uniform bool turn_top = false;
 
 // Albedo limits in linear light (docs/design/visual-quality.md §6): sRGB 30, 240 and 250.
 const float ALBEDO_MIN = 0.013;
@@ -68,7 +76,7 @@ vec4 side(vec2 at, vec2 at_dx, vec2 at_dy, vec2 size, out vec2 bump) {
 	float shade = 1.0;
 	float joint = 0.0;
 	vec2 flip = vec2(1.0);
-	if (slab_size.x > 0.0 && slab_size.y > 0.0) {
+	if (size.x > 0.0 && size.y > 0.0) {
 		// Running bond: every second row is half a slab along.
 		vec2 slab = vec2(at.x / size.x + 0.5 * mod(floor(at.y / size.y), 2.0), at.y / size.y);
 		vec3 random = slab_random(floor(slab));
@@ -112,16 +120,25 @@ void fragment() {
 	vec3 py = dFdy(p);
 	// A side that the face does not look at costs no texture reads. In a piece's own space
 	// x is across, y is up and -z is along (the glTF axes of the kit's x, z and y).
+	bool walled = wall_size.x > 0.0 && wall_size.y > 0.0;
 	if (weight.x > 0.001) {
-		surface += weight.x * side(vec2(-p.z, -p.y), vec2(-px.z, -px.y), vec2(-py.z, -py.y), vec2(slab_size.y, ENDLESS), bump);
+		vec2 size = walled ? wall_size : vec2(slab_size.y, ENDLESS);
+		surface += weight.x * side(vec2(-p.z, -p.y), vec2(-px.z, -px.y), vec2(-py.z, -py.y), size, bump);
 		bent += weight.x * vec3(0.0, bump.y, -bump.x);
 	}
 	if (weight.y > 0.001) {
-		surface += weight.y * side(vec2(p.x, -p.z), vec2(px.x, -px.z), vec2(py.x, -py.z), slab_size, bump);
-		bent += weight.y * vec3(bump.x, 0.0, bump.y);
+		if (turn_top) {
+			// A quarter turn of (x, -z): no mirror, so the normal map keeps its sense.
+			surface += weight.y * side(vec2(p.z, p.x), vec2(px.z, px.x), vec2(py.z, py.x), slab_size.yx, bump);
+			bent += weight.y * vec3(-bump.y, 0.0, bump.x);
+		} else {
+			surface += weight.y * side(vec2(p.x, -p.z), vec2(px.x, -px.z), vec2(py.x, -py.z), slab_size, bump);
+			bent += weight.y * vec3(bump.x, 0.0, bump.y);
+		}
 	}
 	if (weight.z > 0.001) {
-		surface += weight.z * side(vec2(p.x, -p.y), vec2(px.x, -px.y), vec2(py.x, -py.y), vec2(slab_size.x, ENDLESS), bump);
+		vec2 size = walled ? wall_size : vec2(slab_size.x, ENDLESS);
+		surface += weight.z * side(vec2(p.x, -p.y), vec2(px.x, -px.y), vec2(py.x, -py.y), size, bump);
 		bent += weight.z * vec3(bump.x, bump.y, 0.0);
 	}
 	ALBEDO = clamp(surface.rgb, vec3(ALBEDO_MIN), vec3(mix(ALBEDO_MAX_DIELECTRIC, ALBEDO_MAX_METAL, metallic)));

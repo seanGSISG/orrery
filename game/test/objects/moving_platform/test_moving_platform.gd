@@ -94,3 +94,11 @@ func test_offset_and_restart_set_the_start_of_the_cycle() -> void:
 	run.marble.teleport(b + Vector3.UP * TUNING.radius, Vector3.ZERO)
 	hold(rolling(Vector2.ZERO), 0.5)
 	_assert_on_deck(b)
+
+
+func test_finish_gives_the_deck_a_kit_material() -> void:
+	var platform: MovingPlatform = PLATFORM.instantiate() as MovingPlatform
+	platform.finish = "wood"
+	add_child_autofree(platform)
+	var look: MeshInstance3D = platform.get_node("Solid/Mesh") as MeshInstance3D
+	assert_eq(look.material_override, KitMaterials.find("wood"))

@@ -21,6 +21,9 @@ extends LevelObject
 @export var depth: float = 4.0
 ## Deck size down from the top face, m.
 @export var thickness: float = 0.5
+## The deck's kit material (KitMaterials.find), for example "wood" or "brass". Empty keeps the
+## scene's plain look.
+@export var finish: String = ""
 
 ## World positions where the deck stops, in cycle order. Leg i runs from stop i to stop i + 1,
 ## and the last leg runs back to stop 0.
@@ -43,6 +46,8 @@ func _ready() -> void:
 	var look: MeshInstance3D = $Solid/Mesh
 	look.mesh = mesh
 	look.position = shape.position
+	if finish != "":
+		look.material_override = KitMaterials.find(finish)
 	_plan()
 
 

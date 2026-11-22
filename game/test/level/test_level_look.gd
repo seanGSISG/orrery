@@ -78,7 +78,7 @@ func test_unknown_kit_material_fails() -> void:
 ## A change of KitMaterials.SET must find every material, so each set holds the same names.
 func test_every_set_has_every_kit_material_with_its_textures() -> void:
 	for set_name: String in SETS:
-		for kit_name: String in ["limestone", "brass", "gold"]:
+		for kit_name: String in ["limestone", "wall", "dressed", "brass", "gold"]:
 			var path: String = "res://materials/%s/%s.tres" % [set_name, kit_name]
 			if not ResourceLoader.exists(path):
 				path = "res://materials/%s.tres" % kit_name
@@ -157,6 +157,16 @@ func test_probes_cover_a_long_level_and_stay_small() -> void:
 		var box: AABB = AABB(probe.position - probe.size / 2.0, probe.size)
 		covered = box if covered.size == Vector3.ZERO else covered.merge(box)
 	assert_true(covered.encloses(mesh.transform * mesh.get_aabb()), "the probes enclose the mesh")
+
+
+func test_far_scenery_stays_out_of_the_probes_and_the_lightmap() -> void:
+	var scene: Node3D = _scene()
+	_add_mesh(scene, {}, Vector3(4, 0.5, 4), Vector3.ZERO)
+	var far: MeshInstance3D = _add_mesh(scene, {}, Vector3(400, 10, 400), Vector3(0, 0, -300))
+	far.name = "town-far"
+	assert_eq(_converted(scene, "ReflectionProbe").size(), 1)
+	assert_eq(String(far.name), "town")
+	assert_eq(far.gi_mode, GeometryInstance3D.GI_MODE_DISABLED)
 
 
 func test_a_gap_between_two_islands_gets_no_probe() -> void:
