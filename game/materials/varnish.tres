@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Varnished timber (#33): gondola hulls, fin frames and propellers. The medieval_wood set
+; (Poly Haven, CC0) in a warm honey tone, a little glossier than the bare deck boards.
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/medieval_wood_diff_2k.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/medieval_wood_rough_2k.jpg" id="3"]
+[ext_resource type="Texture2D" path="res://materials/textures/medieval_wood_nor_gl_2k.png" id="4"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/normal_map = ExtResource("4")
+shader_parameter/tint = Vector3(0.95, 0.62, 0.38)
+shader_parameter/tile = 2.0
+shader_parameter/roughness_scale = 0.75
