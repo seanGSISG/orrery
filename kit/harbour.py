@@ -21,6 +21,7 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
+from typing import Literal
 
 import bmesh
 import bpy
@@ -434,16 +435,21 @@ def gondola(
     deck_parts = town.Parts()
     deck_parts.box((x0, y - half, deck - PLANK), (x1, y + half, deck), "wood")
     obj = deck_parts.add(f"{name}_deck")
+
+    def rounding(x: float) -> float:
+        """The share of the full width and depth that the hull has at x: 1 in the middle,
+        0.55 at the ends, where the hull rounds off."""
+        t = (x - x0) / (x1 - x0)
+        return 0.55 + 0.45 * (1.0 - (2.0 * t - 1.0) ** 6)
+
     # The hull: sections across the gondola, square at the top and narrowing to the keel;
     # the ends round off in plan.
     sections = []
     steps = 16
     for i in range(steps + 1):
-        t = i / steps
-        x = x0 + (x1 - x0) * t
-        end = 1.0 - (2.0 * t - 1.0) ** 6
-        w = half * (0.55 + 0.45 * end)
-        keel = depth * (0.55 + 0.45 * end)
+        x = x0 + (x1 - x0) * i / steps
+        w = half * rounding(x)
+        keel = depth * rounding(x)
         top = deck - PLANK
         sections.append(
             [
@@ -465,11 +471,14 @@ def gondola(
         )
     dress = town.Parts()
     if windows:
-        count = max(1, int((x1 - x0 - 2.0) // 1.3))
+        # The windows sit on the middle 70 % of the sides, where the hull is nearly straight,
+        # each one on the hull at its x.
+        span = (x1 - x0) * 0.7
+        count = max(1, int(span // 1.3))
         for side in (-1.0, 1.0):
             for k in range(count):
-                x = x0 + 1.0 + (x1 - x0 - 2.0) * (k + 0.5) / count
-                yy = y + side * (half * 0.985 + 0.01)
+                x = (x0 + x1 - span) / 2 + span * (k + 0.5) / count
+                yy = y + side * (half * rounding(x) * 0.985 + 0.01)
                 lo, hi = deck - PLANK - 0.85, deck - PLANK - 0.25
                 _window(dress, x, yy, side, lo, hi)
         # A brass band under the deck edge.
@@ -592,13 +601,21 @@ def engine(name: str, at: Vec3, length: float = 2.2, radius: float = 0.45) -> No
     propeller(f"{name}_propeller", (x + length / 2 + 0.12, y, z), radius * 3.2)
 
 
-def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
-    """Adds a still propeller of varnished timber with a brass hub, its disc across x."""
-    x, y, z = at
+def propeller(
+    name: str, at: Vec3, radius: float, blades: int = 4, axis: Literal["x", "z"] = "x"
+) -> None:
+    """Adds a still propeller of varnished timber with a brass hub, its shaft along `axis`:
+    x for the propeller of an engine, z for one on an upright axle."""
+    middle = Vector(at)
+    shaft = Vector((1.0, 0.0, 0.0)) if axis == "x" else Vector((0.0, 0.0, 1.0))
+    # Two directions across the shaft; (u, v, shaft) is right-handed, so the faces keep their
+    # winding.
+    u = Vector((0.0, 1.0, 0.0)) if axis == "x" else Vector((1.0, 0.0, 0.0))
+    v = shaft.cross(u)
     parts = town.Parts()
     hub = [
         [
-            Vector((x + dx, y + 0.16 * math.cos(a), z + 0.16 * math.sin(a)))
+            middle + shaft * dx + u * 0.16 * math.cos(a) + v * 0.16 * math.sin(a)
             for a in _ring(10)
         ]
         for dx in (-0.12, 0.12)
@@ -615,9 +632,9 @@ def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
             chord = 0.22 * (1.0 - 0.6 * t) + 0.04
             twist = 0.9 - 0.6 * t
             a = a0
-            centre = Vector((x, y + r * math.cos(a), z + r * math.sin(a)))
-            along = Vector((0.0, -math.sin(a), math.cos(a)))
-            pitch = Vector((1.0, 0.0, 0.0))
+            centre = middle + u * r * math.cos(a) + v * r * math.sin(a)
+            along = -u * math.sin(a) + v * math.cos(a)
+            pitch = shaft
             lead = along * math.cos(twist) + pitch * math.sin(twist)
             thick = pitch * math.cos(twist) * 0.04 - along * math.sin(twist) * 0.04
             sections.append(
@@ -699,7 +716,7 @@ def storey(
                 for c, d in zip(corners, drops, strict=True)
             ]
             high = [bm.verts.new((*c, floor)) for c in corners]
-            broken.faces([low, high, *town._sides(low, high)], "wall")
+            broken.faces([low[::-1], high, *town._sides(low, high)], "wall")
             s, drop = s + step, after
     # The broken floor: a slab of rough stone under the storey.
     broken.box(

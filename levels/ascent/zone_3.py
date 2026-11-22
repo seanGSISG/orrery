@@ -616,7 +616,9 @@ GEAR: Place = (14.95, MAST_ROW, 331.5)
 kit.marker(
     "turning_gear", at=GEAR, period=8.0, radius=2.1, teeth=12, name="propeller_gear"
 )
-harbour.propeller("propeller_gear_blades", (GEAR[0], GEAR[1], GEAR[2] - 2.7), 1.5)
+harbour.propeller(
+    "propeller_gear_blades", (GEAR[0], GEAR[1], GEAR[2] - 2.7), 1.5, axis="z"
+)
 town.block(
     "propeller_gear_axle",
     (GEAR[0] - 0.2, GEAR[1] - 0.2, 324.0),
