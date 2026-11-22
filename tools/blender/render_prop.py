@@ -49,6 +49,8 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1 :])
     if not args.prop.is_file():
         parser.error(f"no such prop: {args.prop}")
+    if args.width < 64 or args.samples < 1:
+        parser.error("--width must be at least 64 and --samples at least 1")
     return args
 
 

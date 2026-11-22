@@ -334,9 +334,14 @@ def clean_material(material: bpy.types.Material, size: int, stone: bool) -> list
         raise PropError(f"material {name}: {len(nodes)} Principled BSDF nodes, not 1")
     bsdf = nodes[0]
     base = linked(bsdf.inputs["Base Color"], "TEX_IMAGE", name)
-    split = linked(bsdf.inputs["Metallic"], "SEPARATE_COLOR", name)
-    if split is None:
-        split = linked(bsdf.inputs["Roughness"], "SEPARATE_COLOR", name)
+    # Both come straight from one split of the packed map; a factor node in between stops it.
+    splits = {
+        linked(bsdf.inputs[key], "SEPARATE_COLOR", name)
+        for key in ("Metallic", "Roughness")
+    } - {None}
+    if len(splits) > 1:
+        raise PropError(f"material {name}: metallic and roughness come from two maps")
+    split = next(iter(splits), None)
     packed = linked(split.inputs["Color"], "TEX_IMAGE", name) if split else None
     bump = linked(bsdf.inputs["Normal"], "NORMAL_MAP", name)
     normal = linked(bump.inputs["Color"], "TEX_IMAGE", name) if bump else None
