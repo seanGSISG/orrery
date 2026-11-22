@@ -87,3 +87,37 @@ M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 +
 - The flotilla ropes cross open sky from ship to ship. They are the hardest moves in M1 and they are in view the whole time.
 - The two eggs sit at the bottom and the top of the zone. Both need a move that goes against the climb.
 - The gate at the top faces the next zone, so the slice ends with a view of what comes next.
+
+## As built
+
+**Progress (2026-11-21):** the harbour kit (`kit/harbour.py`) and four new materials are written and pushed, but they are not built or tested yet. `levels/ascent/zone_3.py` does not exist yet. No check has run on zone 3.
+
+### Handoff note
+
+- Ticket: seanGSISG/orrery#33. Branch: `t33-zone-3` (from `t31-zone-1-art`). No PR: the coordinator runs the style review first. Do not open a PR and do not merge.
+- Commits: `b1a1e5b` harbour kit and materials; `d3ad168` harness fix (hold the shot camera 30 frames before a capture, from the coordinator, so that High gallery shots are deterministic). This note is in the next commit.
+- Checks done: none on zone 3. `kit/harbour.py` passes `ruff` only.
+- Nothing is running.
+
+**What exists.** `kit/harbour.py` gives: `slab`, `slope`, `rope` (beam with level heels and a hawser; pass `heel=0` for a beam that starts at an edge), `kerb` (brass), `Ship` (axis along x, nose at the low-x end; `top(x)`, `bottom(x)`, `point(x, angle)`), `envelope` (gored hull; `hollow=True` and `hatches` for the Flagship), `promenade` (deck along a profile of `(x, z)`), `gondola`, `fins` (returns the top height of the level fins), `engine`, `propeller`, `storey` (broken-wall house storey), `parapet`, `gable`, `chimneys`, `mast` (iron lattice), `lamp`. New materials: `brass_polished`, `envelope`, `varnish`, `rope` in `game/materials/`. Expect bugs: `propeller` merges meshes with `bm.from_mesh`, and the `promenade` trestle angle maths is not checked.
+
+**Handover contract.** Zone 2's spire cap: round floor 10 m across, top +300.0 m, centre plan (0.0, 39.0). Zone 3 builds its own start floor flush beside the cap (not over it), and nothing else within 6 m of the cap's axis below +312 m. Do not build the cap in `zone_3.py`; start the bot on the zone 3 floor.
+
+**Working layout (planned, not built).** All ships point west (nose at low x). Part 1 (300 to 322 m):
+
+- Quay start floor: x −7..5.5, y 25..35, top 300, minus the cap circle (radius 5); start pad (0, 29, 300); parapet on the south, west and east sides except the exits.
+- West way: steps x −7.3..−9.6 (301) and −9.9..−12.2 (302), y 28.5..31.5; Roof 1 storey x −12.5..−29.5, y 27..41 (gutter walk 303, slate slope x −14.5 at 303 to −22.5 at 308, ridge walk to −25.5 at 308); ridge vent (−24, 39.6, 308) throws north to Roof 2 terrace x −30..−21.2, y 42.3..53 at 315 with bumpers near (−28.2, 46) and (−24.5, 50.5); dormer steps 316, 317, 318 at x −20.9..−13.4, y 43.3..46.3; gangway A (moving platform 3 × 3, period 8) from (−11.75, 44.8, 318) to (−8.6, 47.7, 322); expert rope from (−21.2, 51.5, 315) to (−7.0, 51.5, 322). Harbourmaster storey x −7..3, y 46..56, terrace 322 (rest ledge).
+- East way: crumbling planks x 5.5..10, y 33.5..35.5, 300 to 301; the Tender `Ship(nose (7.5, 34.5, 308.5), length 19, radius 4.4)` with gondola deck 301 (x 10..23); a deck vent on a south sponson near (18, 28, 301) throws east onto the south tail plane (308.5); a ramp up to the promenade top (about 313); gangway B (period 10) to the Harbourmaster south edge (1.5, 44.4, 322). Egg `egg_crate`: a cargo crate on a davit at x 9.5..14, y 28.5..31.5, top 297.8, with a small vent that throws the marble back north to the gondola deck.
+- Parts 2 to 6 follow §Layout above: Courier with three flank ramps and a pendulum, mast way with a turning gear; Sailmakers' roof 344; chimney field and the Lamplighter to the Signal roof 382; Skiff 1, Skiff 2, Tanker 419 with gangplanks or three rope beams; crow's nests or three cargo lifts to the Flagship deck 460; Flagship inside ramps or outside ramps, then the mast spiral to the gate at 500. Egg `egg_fin` at the dorsal fin tip (about +483). Keep vent columns clear of the envelopes: put vents on sponsons beside the hulls.
+
+**Decisions.** No AI art is generated yet (the brief caps spend, and the worker rules say to stop before spending). Reuse the zone 1 props and procedural geometry. The coordinator asked to merge `origin/prop-cleanup-materials` (PR #105) before any Tripo prop is made. The routes follow the zone 1 pattern: `FIRST` and `EXPERT` legs and a `route(kind, legs)` helper, at most 100 points each.
+
+**Failed approaches.** Shell heredocs that write files in `game/` are refused by the worktree guard; use the Write tool.
+
+**Risks.** The quay south of the cap can clash with zone 2's arrivals (the lightning rod from the west or south-west, the vent to the balcony on the east). Keep the quay shallow (about 0.6 m) and away from the east and west sides of the cap. `game/test/level/test_campaign_levels.gd` asserts one egg per level; Ascent zones need two (each more than 5 m off the first-run route).
+
+**Next 3 steps.**
+
+1. Write `levels/ascent/zone_3.py` part by part (Part 1 first), with `kit.level(title="Sky Harbour", par=..., gold=..., sky="ground_dawn")`, the start and finish markers, the eggs, the shots (overview, start, finish, egg) and the routes. Then run `just build-levels zone_3` and fix the kit bugs.
+2. Change the egg test for Ascent, then run `just lint`, `just test` and `just test-levels zone_3`; set the times with `just suggest-times zone_3`.
+3. Run `just perf zone_3` and `just gallery zone_3`, look at every frame in `build/gallery/zone_3/`, fill this section, then commit and push.
