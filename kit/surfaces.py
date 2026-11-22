@@ -4,13 +4,14 @@ names its look and `surface` names its surface type."""
 import bpy
 
 # The looks in the game's material library (game/materials/kit_materials.gd).
-MATERIALS = ("limestone", "brass", "gold")
+MATERIALS = ("limestone", "brass", "gold", "polished_brass", "blued_steel")
 
 
 def surface(id: str = "default", material: str = "limestone") -> bpy.types.Material:
     """Returns the kit material `material` on surface type `id`, made once per level.
 
-    material: limestone (track decks), brass (trim and borders) or gold (inlays). The Godot
+    material: limestone (track decks), brass (trim and borders), gold (inlays),
+    polished_brass (large clockwork parts) or blued_steel (springs and clock hands). The Godot
     importer gives the faces the look `game/materials/<set>/<material>.tres`. id: the importer
     gives the faces the Surface `game/core/level/<id>_surface.tres`, and it makes one Solid
     for each surface type.
