@@ -144,7 +144,7 @@ FACE: Place = (
 FACE_POSE = clockwork.frame(FACE, FACE_YAW, FACE_TILT)
 # The holes in the dial: the hub, where the axle was, and the winding hole at four o'clock.
 HUB_HOLE = 0.5
-WIND_HOLE = 0.7
+WIND_HOLE = 0.85
 WIND_AT = (5.2 * math.sin(math.radians(120.0)), 5.2 * math.cos(math.radians(120.0)))
 # The bezel's gaps: at VI for the stairs and at XII for the vent landing, degrees of the dial
 # (0 at XII, clockwise).
