@@ -127,8 +127,14 @@ func test_fill_follows_the_sunlight_on_a_floor() -> void:
 	assert_almost_eq(environment.ambient_light_energy, 1.0, 0.001)
 	assert_eq(environment.ambient_light_color, dawn.fill_color)
 	assert_almost_eq(environment.ambient_light_sky_contribution, share, 0.001)
+	var start_light: float = dawn.sun_energy * dawn.to_sun().y
+	sky.show_height(AscentSky.NOON_HEIGHT * 0.5)
+	var sun: DirectionalLight3D = sky.get_node(^"sun") as DirectionalLight3D
+	var midway: float = sun.light_energy * sin(deg_to_rad(sky.elevation)) / start_light
+	assert_almost_eq(environment.ambient_light_energy, midway, 0.001, "it follows the sun midway")
+	assert_gt(midway, 1.5, "the midway sun puts more light on a floor than the dawn sun")
 	sky.show_height(AscentSky.NOON_HEIGHT)
-	var rise: float = noon.sun_energy * noon.to_sun().y / (dawn.sun_energy * dawn.to_sun().y)
+	var rise: float = noon.sun_energy * noon.to_sun().y / start_light
 	assert_almost_eq(environment.ambient_light_energy, rise, 0.001)
 	assert_gt(rise, 2.0, "the noon sun puts more than twice the light on a floor")
 	assert_eq(environment.ambient_light_color, dawn.fill_color, "the fill keeps its colour")
