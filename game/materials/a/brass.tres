@@ -1,8 +1,8 @@
 [gd_resource type="ShaderMaterial" format=3]
 
 ; Kit brass of set A (docs/design/visual-quality.md §10): ambientCG Metal048C, the `metal048c`
-; variant of the brass study, which Sean picked on 2026-11-22. Its blotches vary about half as
-; much as those of Metal007, so a narrow bar reads as metal, not as wood or cork. Metallic 1.
+; variant of the brass study, which Sean picked on 2026-11-22. Its colour blotches vary about
+; half as much as those of Metal007, so a narrow bar reads as metal, not as wood or cork. Metallic 1.
 ; Tinted albedo about sRGB (222, 186, 108). Roughness 0.271 x 1.59 = 0.43: at or above 0.4, so
 ; faces that look up at a blue sky do not turn olive. Polished brass and gold stay on Metal048A.
 

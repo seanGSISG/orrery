@@ -8,7 +8,8 @@ extends Object
 ## SET picks the material set: A, B or C of the style board.
 ## - "a": honey limestone and aged brass. Sean approved it on 2026-11-21. Its brass is
 ##   ambientCG Metal048C (Sean's pick of 2026-11-22). The polished brass (brass_polished) and the
-##   gold stay on Metal048A; the kit brass differs from them by its texture, tint and roughness.
+##   gold stay on Metal048A; the kit brass differs from the gold by its texture and
+##   darker albedo, and from the polished brass by its roughness and mottle.
 ## - "b": cream limestone and satin brass.
 ## - "c": weathered grey stone and dark bronze.
 ## A set is the folder res://materials/<set>/. A material that every set shares is in
