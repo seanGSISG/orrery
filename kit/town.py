@@ -12,6 +12,8 @@ Play pieces (they collide):
   face, and band() runs a string course or a cornice along it.
 
 Decoration (no collision): sign(), clock_face() and decal(), a picture from assets/decals/.
+Far scenery: panes() gives a far house its windows, and shadow() draws the shadow that a
+far house casts on the ground from the sun of a sky (sun()).
 
 Placeholders: spot() leaves a named empty where a prop model or a decal comes later. It shows
 nothing in the game; docs/levels/ascent-z1.md lists the spots.
@@ -20,6 +22,7 @@ Every piece takes world positions. Each face has a Finish: the name of a game ma
 """
 
 import math
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import pairwise
@@ -41,6 +44,8 @@ Opening = tuple[float, float, float, float]
 
 # Decal art: PNG pictures with alpha (Git LFS), from the asset tools (tools/art/README.md).
 DECALS = Path(__file__).resolve().parents[1] / "assets" / "decals"
+# The sky presets of the game (SkyPreset): sun() reads the sun of one.
+SKIES = Path(__file__).resolve().parents[1] / "game" / "skies"
 # A curved piece gets one section for each this many degrees of its arc.
 ARC_STEP = 5.0
 # A lift gear: the gap from its tooth tips to the casing, the casing's thickness, the gap from
@@ -72,6 +77,7 @@ LINTEL = 0.22
 #   sets (docs/licenses.md).
 # - glass: near-white panes that show the room behind; interior: that dark room; sash: painted
 #   window bars; iron: black-painted iron; water: still water, dark, with a weak reflection.
+# - ground_shadow: the shadow of a far house on the land (shadow()).
 Finish = Literal[
     "limestone",
     "brass",
@@ -98,6 +104,7 @@ Finish = Literal[
     "sash",
     "iron",
     "water",
+    "ground_shadow",
 ]
 KIT_FINISHES = ("limestone", "brass", "gold")
 # The walls of town houses: house() gives each house one of them, picked from its place, so
@@ -726,6 +733,50 @@ def house(
     band(parts, shown, sides, eave - 0.38, eave - 0.25, 0.18)
     for key, face in shown.items():
         windows(parts, face, eave - 0.55, storey, door=key == door)
+
+
+def sun(sky: str) -> tuple[float, float]:
+    """Returns the sun of the sky preset `game/skies/<sky>.tres` (SkyPreset): its elevation
+    above the horizon and its azimuth counter-clockwise from +x, in degrees."""
+    text = (SKIES / f"{sky}.tres").read_text()
+    pattern = r"^(sun_elevation|sun_azimuth) = ([-\d.]+)$"
+    found = dict(re.findall(pattern, text, re.MULTILINE))
+    return float(found["sun_elevation"]), float(found["sun_azimuth"])
+
+
+def shadow(
+    parts: Parts, corners: Sequence[Vec3], light: tuple[float, float], z: float
+) -> None:
+    """Adds the shadow that a convex solid with these corners casts on level ground at the
+    height z, from a sun at (elevation, azimuth) degrees (sun()): the hull of the corners
+    moved along the sunlight down to z, as one `ground_shadow` face. Far scenery casts no
+    real shadow, so it draws its shadows this way."""
+    elevation, azimuth = (math.radians(a) for a in light)
+    reach = 1.0 / math.tan(elevation)
+    away = (-math.cos(azimuth) * reach, -math.sin(azimuth) * reach)
+    feet = [(x + away[0] * (h - z), y + away[1] * (h - z)) for x, y, h in corners]
+    outline = [(x, y, z) for x, y in _hull(feet)]
+    parts.flat(outline, Vector((0.0, 0.0, 1.0)), "ground_shadow")
+
+
+def _hull(points: Sequence[Point]) -> list[Point]:
+    """Returns the convex hull of plan points, counter-clockwise (the monotone chain)."""
+    ordered = sorted(set(points))
+
+    def half(run: Sequence[Point]) -> list[Point]:
+        chain: list[Point] = []
+        for p in run:
+            while len(chain) >= 2 and _cross(chain[-2], chain[-1], p) <= 0.0:
+                chain.pop()
+            chain.append(p)
+        return chain[:-1]
+
+    return half(ordered) + half(ordered[::-1])
+
+
+def _cross(a: Point, b: Point, c: Point) -> float:
+    """Returns the z of the cross product (b - a) x (c - a): above 0 when a, b, c turn left."""
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 
 
 def panes(

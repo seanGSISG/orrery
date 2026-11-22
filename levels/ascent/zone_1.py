@@ -201,7 +201,10 @@ EXPERT: dict[int, list[Leg]] = {}
 FOOT: dict[int, Place] = {}
 
 
-kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky="ground_dawn")
+# The sky of the zone played alone: the dawn on the ground. The far town draws its shadows
+# from its sun.
+SKY = "ground_dawn"
+kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky=SKY)
 
 # --- The town ground ----------------------------------------------------------------------------
 
@@ -1308,12 +1311,18 @@ FAR_ROADS: list[list[Point]] = [
 # ground that the far town keeps out of.
 FAR_FROM = (0.0, 20.0)
 FAR_KEEP_OUT = ((-70.0, -40.0), (70.0, 90.0))
+# The sun that the far houses' shadows come from, and the height of the shadows: above the
+# land (-0.03 m) and the roads (-0.012 m), below the town's ground.
+FAR_SUN = town.sun(SKY)
+FAR_SHADOW_Z = -0.005
 
 
 def far_town() -> None:
     """Adds the far town: rows of plain houses along FAR_ROADS, each house turned to its road,
     and farms in the fields beyond. It is far scenery (`-far`): one mesh with no collision,
-    no lightmap, no reflection probe and no shadow."""
+    no lightmap, no reflection probe and no real shadow. Each house draws its shadow on the
+    land instead (town.shadow()), from the sun of SKY. In the climb the sun rises with the
+    height, so there the drawn shadows are longer than the real ones."""
     rng = random.Random(31)
     parts = town.Parts()
     placed: list[tuple[Point, float, int]] = []
@@ -1342,6 +1351,17 @@ def far_town() -> None:
         ridge = eave + depth * rng.uniform(0.36, 0.46)
         town.house(parts, lo, hi, eave, ridge, "x", blind="ew", plain=True)
         parts.turn(mark, at, heading)
+        # The corners of the house, turned as it is: its foot, its eaves and its ridge.
+        c, s = math.cos(math.radians(heading)), math.sin(math.radians(heading))
+        x, y = width / 2, depth / 2
+        local = [
+            (i * x, j * y, h) for h in (0.0, eave) for i in (-1, 1) for j in (-1, 1)
+        ]
+        local += [(-x, 0.0, ridge), (x, 0.0, ridge)]
+        corners = [
+            (at[0] + c * u - s * v, at[1] + s * u + c * v, h) for u, v, h in local
+        ]
+        town.shadow(parts, corners, FAR_SUN, FAR_SHADOW_Z)
 
     group = 0
     for road in FAR_ROADS:

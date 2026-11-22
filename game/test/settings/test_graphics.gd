@@ -32,7 +32,7 @@ const TABLE: Dictionary[String, Dictionary] = {
 		"anisotropy": Viewport.ANISOTROPY_16X,
 		"bias": -0.5,
 		"effects": [true, true, true, true, true],
-		"sun": [160.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, 0.5],
+		"sun": [160.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, 0.0],
 	},
 }
 

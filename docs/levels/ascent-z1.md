@@ -140,7 +140,7 @@ The other ways up were driven with routes that were not kept: the workshop side 
 
 The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the guildhall and the west houses put much of the square in shade. A warm fill (`ground_dawn.tres`: `sky_share` 0.8, `fill_color` a warm stone colour) stands in for the light that sunlit walls throw into the shade, so the shade reads as dawn, not as a cold blue. It lights the zone played alone and the climb start alike.
 
-The low dawn sun caused two changes to shared settings. The High preset now has a sun size of 0° (no soft PCSS shadows): at 0.5° it made a cross-hatch dither in shade, stepped shadow edges from the tower and a sun patch that leaked into the shade by the west bench (`docs/design/visual-quality.md`). The glow threshold is 1.5 (`SkyPreset.environment()`): sunlit stone reaches about 1.1, and at 1.0 it glowed.
+The low dawn sun caused two changes to shared settings. The High and Ultra presets now have a sun size of 0° (no soft PCSS shadows): at 0.5° it made a cross-hatch dither in shade, stepped shadow edges from the tower and a sun patch that leaked into the shade by the west bench (`docs/design/visual-quality.md`). The glow threshold is 1.5 (`SkyPreset.environment()`): sunlit stone reaches about 1.1, and at 1.0 it glowed.
 
 Each room of the tower has a `room_probe` marker (`game/objects/room_probe/`): a warm ambient light and an interior probe, so the rooms look lit by lamps and warm stone, not by the cold sky. The climb keeps these probes.
 
