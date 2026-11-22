@@ -58,7 +58,9 @@ func environment() -> Environment:
 	result.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	result.glow_intensity = 0.3
 	result.glow_bloom = 0.0
-	result.glow_hdr_threshold = 1.0
+	# Above the brightest sunlit stone (about 1.1 under the low dawn sun), so only emitters and
+	# the sun glow.
+	result.glow_hdr_threshold = 1.5
 	# Aerial perspective: far geometry fades into the sky behind it. The sky itself stays clear.
 	result.fog_enabled = true
 	result.fog_mode = Environment.FOG_MODE_EXPONENTIAL

@@ -22,7 +22,9 @@ Each section of the tower has a way inside and a way outside:
 """
 
 import math
+import random
 from collections.abc import Sequence
+from itertools import pairwise
 from typing import Literal
 
 import kit
@@ -199,11 +201,14 @@ EXPERT: dict[int, list[Leg]] = {}
 FOOT: dict[int, Place] = {}
 
 
-kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky="ground_dawn")
+# The sky of the zone played alone: the dawn on the ground. The far town draws its shadows
+# from its sun.
+SKY = "ground_dawn"
+kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky=SKY)
 
 # --- The town ground ----------------------------------------------------------------------------
 
-kit.deck(kit.rect(-60, -45, 60, 85), top=0.0, depth=1.0, name="ground")
+kit.deck(kit.rect(-60, -30, 60, 80), top=0.0, depth=1.0, name="ground")
 # The square: a brass band round its edge.
 SQUARE = kit.rect(-17, 0, 17, 32)
 kit.inlay(
@@ -214,12 +219,32 @@ kit.inlay(
 )
 START: Place = (0.0, 23.5, 0.0)
 
-# The fountain in the middle of the square: the hero prop, 2 m across, with still water in its
-# basin. A cylinder keeps the marble out of it.
+# The fountain in the middle of the square, 4 m across: a low stone basin of still water, and
+# in it the hero prop (2 m across) raised as the upper tier, with still water in its own basin.
+# The rim and the prop's cylinder keep the marble out.
 FOUNTAIN = (0.0, 15.0)
-kit.prop("fountain", at=(*FOUNTAIN, 0.0), collider="cylinder")
+BASIN_R, BASIN_RIM, BASIN_TOP = 2.0, 0.22, 0.55
+TIER = 0.3
+town.floor(
+    "fountain_rim",
+    kit.arc(FOUNTAIN, BASIN_R, 0, 360),
+    BASIN_TOP,
+    BASIN_TOP,
+    holes=[kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360)],
+    finish="dressed",
+)
+# The basin's floor is dark wet stone, so the water over it shows the sky's reflection.
+town.floor(
+    "fountain_floor",
+    kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360),
+    0.1,
+    0.1,
+    finish="wet_stone",
+)
+kit.prop("fountain", at=(*FOUNTAIN, TIER), collider="cylinder")
 water = town.Parts()
-water.solid(kit.arc(FOUNTAIN, 0.86, 0, 360), 0.55, 0.62, "glass")
+water.solid(kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360), 0.42, 0.44, "water")
+water.solid(kit.arc(FOUNTAIN, 0.86, 0, 360), 0.55 + TIER, 0.62 + TIER, "water")
 water.add("fountain_water", collide=False)
 
 # --- 1. Town: the market side (way A) -----------------------------------------------------------
@@ -385,6 +410,7 @@ kit.marker(
     stop=2.0,
     width=3.0,
     depth=3.0,
+    finish="wood",
     name="hoist",
 )
 
@@ -533,6 +559,7 @@ kit.marker(
     stop=1.0,
     width=2.4,
     depth=2.4,
+    finish="wood",
     name="counterweight",
 )
 # Two pendulums hang from the ramp above and swing along the ramp.
@@ -773,6 +800,7 @@ for name, (x, z, offset) in BELL_WEIGHTS.items():
         offset=offset,
         width=3.0,
         depth=3.0,
+        finish="wood",
         name=name,
     )
 for i, z in enumerate((CLOCK_FLOOR + 10.0, CLOCK_FLOOR + 20.0)):
@@ -942,6 +970,7 @@ kit.marker(
     stop=2.0,
     width=3.0,
     depth=3.0,
+    finish="wood",
     name="hoist_west",
 )
 # The stair fragments: floating pieces of the broken stair, west from the bell floor, a
@@ -973,6 +1002,7 @@ kit.marker(
     stop=2.0,
     width=3.0,
     depth=3.0,
+    finish="wood",
     name="bell_cradle",
 )
 # The crown, on top of the east wall: the zone's top and its finish.
@@ -1022,14 +1052,16 @@ kit.ramp(
 # of the base and the louvres of the belfry. None of it collides: it stands at most 0.25 m
 # proud of the walls.
 dress = town.Parts()
-dress.box((X0 - 0.25, Y0 - 0.25, 0.0), (X1 + 0.25, Y1 + 0.25, 0.9))
+dress.box((X0 - 0.25, Y0 - 0.25, 0.0), (X1 + 0.25, Y1 + 0.25, 0.9), "dressed")
+# The solid base (a kit deck) gets a skin of coursed stone, like the walls above it.
+dress.box((X0 - 0.02, Y0 - 0.02, 0.9), (X1 + 0.02, Y1 + 0.02, BASE - 0.5), "wall")
 for z, finish in (
-    (BASE, "limestone"),
-    (GALLERY, "limestone"),
-    (GEAR_ROOM, "limestone"),
+    (BASE, "dressed"),
+    (GALLERY, "dressed"),
+    (GEAR_ROOM, "dressed"),
     (CLOCK_FLOOR, "brass"),
     (BELFRY, "brass"),
-    (BELL_FLOOR, "limestone"),
+    (BELL_FLOOR, "dressed"),
 ):
     for lo, hi in (
         ((X0 - 0.25, Y0 - 0.25), (X1 + 0.25, Y0)),
@@ -1041,36 +1073,56 @@ for z, finish in (
 for cx, cy in ((X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)):
     sx, sy = (1.0 if cx < 0 else -1.0), (1.0 if cy < TOWER[1] else -1.0)
     top = CROWN - 1.0 if cx > 0 else BELL_FLOOR - SLAB
+    # The pilasters are of the grey stone, so the corners read from afar.
     dress.box(
         (min(cx, cx + sx * 1.0), min(cy, cy - sy * 0.12), 0.9),
         (max(cx, cx + sx * 1.0), max(cy, cy - sy * 0.12), top),
+        "wall_grey",
     )
     dress.box(
         (min(cx, cx - sx * 0.12), min(cy, cy + sy * 1.0), 0.9),
         (max(cx, cx - sx * 0.12), max(cy, cy + sy * 1.0), top),
+        "wall_grey",
     )
 TOWER_FACES = town.faces((X0, Y0), (X1, Y1))
-# Two windows on each face of each storey, clear of the doors, the dials and the louvres.
+# The light of each room of the tower (objects/room_probe): a warm ambient light, and
+# reflections of the room, not of the sky.
+for i, (bottom, top) in enumerate(
+    pairwise((BASE, GALLERY, GEAR_ROOM, CLOCK_FLOOR, BELFRY, BELL_FLOOR, CROWN))
+):
+    kit.marker(
+        "room_probe",
+        at=(*TOWER, bottom),
+        width=2 * IN,
+        depth=2 * IN,
+        height=top - SLAB - bottom,
+        name=f"room_{i + 1}",
+    )
+# Two windows on each face of each storey, clear of the doors, the dials and the louvres. Each
+# storey has its own window (width, height, and the step up to the next row, m), so the floors
+# read apart from afar: tall in the base, taller in the gallery, small and square in the gear
+# room.
 for side, face in TOWER_FACES.items():
-    for bottom, top in (
-        (BASE + 4.0, GALLERY - 1.0),
-        (GALLERY + 5.0, GEAR_ROOM - 1.0),
-        (GEAR_ROOM + 5.0, CLOCK_FLOOR - 1.0),
+    for bottom, top, width, height, step in (
+        (BASE + 4.0, GALLERY - 1.0, 1.3, 3.4, 6.0),
+        (GALLERY + 5.0, GEAR_ROOM - 1.0, 1.2, 4.2, 9.0),
+        (GEAR_ROOM + 5.0, CLOCK_FLOOR - 1.0, 0.9, 1.1, 4.0),
     ):
         z = bottom
-        while z + 3.0 < top:
+        while z + height < top:
             for along in (2.6, face.length - 2.6):
-                town.window(dress, face, along, 1.1, z, z + 2.6)
-            z += 6.0
+                town.window(dress, face, along, width, z, z + height)
+            z += step
     town.window(
         dress, face, face.length / 2, 3.2, BELFRY + 5.0, BELFRY + 13.0, pane="iron"
     )
-town.window(dress, TOWER_FACES["s"], 6.0, 3.0, 0.9, 5.4, door=True)
 # The square's name plaque over the great door, clear of the door's lintel (5.6 m).
 town.decal(
     "plaque_square", "plaque_square", (TOWER[0], Y0 - 0.02, 6.7), 0.0, (2.4, 1.6)
 )
 dress.add("tower_dress", collide=False)
+# The great door of the tower base: a hero prop 4 m wide on the plinth, its back in the wall.
+kit.prop("great_door", at=(TOWER[0], Y0, 0.9))
 # The broken crown: merlons at the corners.
 for i, (mx, my) in enumerate(
     ((cx0, cy0), (cx1 - 1.0, cy0), (cx1 - 1.0, cy1 - 1.0), (cx0, cy1 - 1.0))
@@ -1083,22 +1135,18 @@ for i, (mx, my) in enumerate(
 # --- The town round the square ------------------------------------------------------------------
 
 
-# A house of a street: plan corners, eave height, the sides with no windows, roof paint.
-House = tuple[Point, Point, float, str, str]
+# A house of a street: plan corners, eave height, the sides with no windows.
+House = tuple[Point, Point, float, str]
 
 
 def street(
-    name: str,
-    houses: Sequence[House],
-    along: Literal["x", "y"],
-    door: str,
-    roof: str = "limestone",
+    name: str, houses: Sequence[House], along: Literal["x", "y"], door: str
 ) -> None:
-    """Adds a row of houses as one mesh: each house is (lo, hi, eave, blind sides, roof
-    paint), with its ridge 3.4 m above the eave."""
+    """Adds a row of houses as one mesh: each house is (lo, hi, eave, blind sides), with its
+    ridge 3.4 m above the eave."""
     parts = town.Parts()
-    for lo, hi, eave, blind, finish in houses:
-        town.house(parts, lo, hi, eave, eave + 3.4, along, door, finish or roof, blind)
+    for lo, hi, eave, blind in houses:
+        town.house(parts, lo, hi, eave, eave + 3.4, along, door, blind)
     parts.add(name)
 
 
@@ -1125,7 +1173,7 @@ def row(
             ends = ends.replace("w" if along == "x" else "s", "")
         if i == len(widths) - 1:
             ends = ends.replace("e" if along == "x" else "n", "")
-        out.append((lo, hi, eave, ends, "slate" if i % 3 == 1 else ""))
+        out.append((lo, hi, eave, ends))
         at += width
     return out
 
@@ -1152,7 +1200,7 @@ street(
     "y",
     "e",
 )
-street("town_west_inner", [((-31.5, 4.0), (-25.6, 18.8), 7.0, "", "")], "y", "e")
+street("town_west_inner", [((-31.5, 4.0), (-25.6, 18.8), 7.0, "")], "y", "e")
 # North-west and north of the tower, across a street from it.
 street("town_north_w", row(-40.0, [9, 9], [8, 9.5], (41.0, 49.0), "x"), "x", "s")
 street(
@@ -1170,8 +1218,8 @@ street(
 street(
     "town_north_e_inner",
     [
-        ((14.0, 41.0), (21.0, 48.0), 8.0, "", ""),
-        ((22.0, 41.0), (29.0, 48.0), 9.0, "", "slate"),
+        ((14.0, 41.0), (21.0, 48.0), 8.0, ""),
+        ((22.0, 41.0), (29.0, 48.0), 9.0, ""),
     ],
     "x",
     "s",
@@ -1183,8 +1231,9 @@ street(
     "y",
     "w",
 )
-street("town_east_inner", [((19.5, -1.0), (27.5, 6.5), 8.0, "", "")], "x", "s")
-# The outer ring: streets of plainer houses out to the edge of the ground.
+street("town_east_inner", [((19.5, -1.0), (27.5, 6.5), 8.0, "")], "x", "s")
+# The outer ring: streets of plainer houses out to the edge of the ground. Its four sides meet
+# at the corners, so a marble on the ground cannot roll out of the town.
 street(
     "town_ring_s",
     row(
@@ -1225,7 +1274,7 @@ street(
     "town_ring_n",
     row(
         -47.0,
-        [9, 10, 8, 9, 10, 9, 8, 10, 9, 10],
+        [9, 10, 8, 9, 10, 9, 8, 10, 9, 12],
         [8, 9, 7, 8.5, 9, 7.5, 8, 9, 7, 8],
         (66.0, 75.0),
         "x",
@@ -1233,6 +1282,158 @@ street(
     "x",
     "s",
 )
+
+# Open country round the town (objects/land), just under the town's ground. It holds a marble
+# that falls past the ring and puts it out of bounds.
+kit.marker("land", at=(0.0, 20.0, -0.03), name="land")
+
+
+# The far town round the ground: houses along country roads out from the town. Each road is a
+# list of plan points from the edge of the ground; its strip of gravel lies just above the
+# land. The houses thin out toward the road's end, 200 to 300 m from the square. A few farms
+# stand in the fields beyond.
+FAR_ROADS: list[list[Point]] = [
+    [(0.0, -36.0), (8.0, -110.0), (-6.0, -200.0), (12.0, -300.0)],
+    [(4.0, 86.0), (-6.0, 160.0), (10.0, 240.0), (2.0, 330.0)],
+    [(66.0, 22.0), (140.0, 30.0), (220.0, 14.0), (310.0, 26.0)],
+    [(-66.0, 34.0), (-140.0, 22.0), (-220.0, 40.0), (-300.0, 28.0)],
+    [(66.0, -36.0), (125.0, -95.0), (190.0, -175.0), (225.0, -230.0)],
+    [(-66.0, -36.0), (-120.0, -100.0), (-175.0, -185.0)],
+    [(66.0, 86.0), (120.0, 150.0), (170.0, 235.0)],
+    [(-66.0, 86.0), (-125.0, 140.0), (-195.0, 205.0), (-230.0, 250.0)],
+    # Lanes between the roads, about 120 m from the square.
+    [(-120.0, -100.0), (-40.0, -112.0), (8.0, -110.0)],
+    [(140.0, 30.0), (150.0, -40.0), (125.0, -95.0)],
+    [(-6.0, 160.0), (60.0, 150.0), (120.0, 150.0)],
+    [(-140.0, 22.0), (-150.0, 90.0), (-125.0, 140.0)],
+]
+# The middle of the square, from which the far town's reach is measured, and the box round the
+# ground that the far town keeps out of.
+FAR_FROM = (0.0, 20.0)
+FAR_KEEP_OUT = ((-70.0, -40.0), (70.0, 90.0))
+# The sun that the far houses' shadows come from, and the height of the shadows: above the
+# land (-0.03 m) and the roads (-0.012 m), below the town's ground.
+FAR_SUN = town.sun(SKY)
+FAR_SHADOW_Z = -0.005
+
+
+def far_town() -> None:
+    """Adds the far town: rows of plain houses along FAR_ROADS, each house turned to its road,
+    and farms in the fields beyond. It is far scenery (`-far`): one mesh with no collision,
+    no lightmap, no reflection probe and no real shadow. Each house draws its shadow on the
+    land instead (town.shadow()), from the sun of SKY. In the climb the sun rises with the
+    height, so there the drawn shadows are longer than the real ones."""
+    rng = random.Random(31)
+    parts = town.Parts()
+    placed: list[tuple[Point, float, int]] = []
+
+    def free(at: Point, radius: float, group: int) -> bool:
+        (x0, y0), (x1, y1) = FAR_KEEP_OUT
+        if x0 - radius < at[0] < x1 + radius and y0 - radius < at[1] < y1 + radius:
+            return False
+        return all(
+            math.dist(at, other) > radius + size - 1.0
+            for other, size, owner in placed
+            if owner != group
+        )
+
+    def house(
+        at: Point, width: float, depth: float, heading: float, group: int
+    ) -> None:
+        radius = math.hypot(width, depth) / 2
+        if not free(at, radius, group):
+            return
+        placed.append((at, radius, group))
+        mark = parts.mark()
+        lo = (at[0] - width / 2, at[1] - depth / 2)
+        hi = (at[0] + width / 2, at[1] + depth / 2)
+        eave = rng.uniform(5.5, 9.0)
+        ridge = eave + depth * rng.uniform(0.36, 0.46)
+        town.house(parts, lo, hi, eave, ridge, "x", blind="ew", plain=True)
+        parts.turn(mark, at, heading)
+        # The corners of the house, turned as it is: its foot, its eaves and its ridge.
+        c, s = math.cos(math.radians(heading)), math.sin(math.radians(heading))
+        x, y = width / 2, depth / 2
+        local = [
+            (i * x, j * y, h) for h in (0.0, eave) for i in (-1, 1) for j in (-1, 1)
+        ]
+        local += [(-x, 0.0, ridge), (x, 0.0, ridge)]
+        corners = [
+            (at[0] + c * u - s * v, at[1] + s * u + c * v, h) for u, v, h in local
+        ]
+        town.shadow(parts, corners, FAR_SUN, FAR_SHADOW_Z)
+
+    group = 0
+    for road in FAR_ROADS:
+        end = rng.uniform(200.0, 300.0)
+        for a, b in pairwise(road):
+            group += 1
+            length = math.dist(a, b)
+            u = ((b[0] - a[0]) / length, (b[1] - a[1]) / length)
+            heading = math.degrees(math.atan2(u[1], u[0]))
+            # The road: a strip of gravel 5 m wide, just above the grass, that runs on
+            # 2.5 m past each end to meet the next strip at a bend.
+            n = (-u[1], u[0])
+            road = [
+                (a[0] + u[0] * s + n[0] * w, a[1] + u[1] * s + n[1] * w)
+                for s, w in (
+                    (-2.5, -2.5),
+                    (length + 2.5, -2.5),
+                    (length + 2.5, 2.5),
+                    (-2.5, 2.5),
+                )
+            ]
+            parts.solid(road, -0.025, -0.012, "gravel")
+            for side in (1, -1):
+                n = (-u[1] * side, u[0] * side)
+                along = rng.uniform(0.0, 4.0)
+                setback = 3.0 + rng.uniform(0.0, 1.5)
+                while along < length - 4.0:
+                    width = rng.uniform(6.0, 9.0)
+                    depth = rng.uniform(7.0, 9.5)
+                    mid = along + width / 2
+                    out = setback + depth / 2
+                    at = (
+                        a[0] + u[0] * mid + n[0] * out,
+                        a[1] + u[1] * mid + n[1] * out,
+                    )
+                    reach = math.dist(at, FAR_FROM)
+                    # Rows break at lanes, and they thin out over the last 80 m of the road.
+                    keep = min(1.0, (end - reach) / 80.0)
+                    if rng.random() < 0.1:
+                        along += rng.uniform(4.0, 12.0)
+                        setback = 3.0 + rng.uniform(0.0, 1.5)
+                        continue
+                    if rng.random() < keep:
+                        house(at, width, depth, heading, group)
+                    along += width
+    # Farms: a house and two or three barns round a yard, out in the fields.
+    for _ in range(16):
+        group += 1
+        angle = rng.uniform(0.0, math.tau)
+        reach = rng.uniform(380.0, 1400.0)
+        yard = (
+            FAR_FROM[0] + reach * math.cos(angle),
+            FAR_FROM[1] + reach * math.sin(angle),
+        )
+        heading = rng.uniform(0.0, 180.0)
+        h = math.radians(heading)
+        u, n = (math.cos(h), math.sin(h)), (-math.sin(h), math.cos(h))
+        for along, out, width, depth in (
+            (0, 9, 10, 7),
+            (-2, -9, 16, 8),
+            (11, 0, 8, 14),
+        )[: rng.randint(2, 3)]:
+            at = (
+                yard[0] + u[0] * along + n[0] * out,
+                yard[1] + u[1] * along + n[1] * out,
+            )
+            turned = heading if width >= depth else heading + 90.0
+            house(at, max(width, depth), min(width, depth), turned, group)
+    parts.add("far_town-far", collide=False)
+
+
+far_town()
 
 # Street lamps round the square, off the ways up. A cylinder makes each post solid.
 LAMPS = [
@@ -1252,10 +1453,18 @@ for at in LAMPS:
 
 # The windows and doors of the bakery, the workshop and the guildhall. They do not collide.
 fronts = town.Parts()
-town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["e"], BAKERY_TOP, door=True)
+# The shop fronts: the bakery's and the clockmaker's shop windows show their shops.
+bakery_front = town.faces((bx0, by0), (bx1, by1))["e"]
+town.window(fronts, bakery_front, 2.4, 1.0, 0.9, 2.2, room="window_room_a")
+town.window(fronts, bakery_front, 7.2, 1.4, 0.0, 2.4, door=True)
+town.window(fronts, bakery_front, 10.2, 2.0, 0.6, 2.3, room="window_bakery")
 town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["s"], BAKERY_TOP)
 workshop_faces = town.faces((wx0, wy0), (wx1, wy1))
-town.windows(fronts, workshop_faces["w"], ROOF, door=True)
+town.windows(fronts, workshop_faces["w"], ROOF, bottom=3.0)
+town.window(fronts, workshop_faces["w"], 3.5, 2.0, 0.6, 2.3, room="window_clockmaker")
+town.window(fronts, workshop_faces["w"], 8.0, 1.4, 0.0, 2.4, door=True)
+for along, room in ((11.5, "window_room_b"), (15.0, "window_room_a")):
+    town.window(fronts, workshop_faces["w"], along, 1.0, 0.9, 2.2, room=room)
 town.windows(fronts, workshop_faces["n"], ROOF)
 town.windows(fronts, workshop_faces["s"], ROOF, bottom=BALCONY)
 hall = town.Face((gx1, gy0), (0.0, 1.0), (1.0, 0.0), TERRACE_Y - gy0)
@@ -1288,38 +1497,56 @@ town.sign(
     height=0.8,
     art="sign_clockmaker",
 )
-town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0))
+town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0), art="sign_inn")
 town.decal(
     "sign_guildhall", "sign_guildhall", (gx1 + 0.02, 25.5, 3.85), 90.0, (2.4, 0.9)
 )
 town.decal("sign_workshop", "sign_workshop", (18.5, wy0 - 0.02, 6.1), 0.0, (1.65, 1.1))
 town.decal("dial_shop", "dial_shop", (wx0 - 0.02, 16.0, 6.4), -90.0, (1.2, 1.2))
-town.spot(
-    "decal",
+# Street name plates, between the ground floor's lintels and the first floor's sills.
+town.decal(
     "street_name_south",
-    (4.0, -1.0 + 0.06, 3.0),
-    (90.0, 0.0, 180.0),
-    (1.0, 0.02, 0.3),
-    "street name plate",
+    "street_name_south",
+    (4.55, -1.0 + 0.02, 3.5),
+    180.0,
+    (1.0, 0.32),
 )
-town.spot(
-    "decal",
-    "street_name_east",
-    (14.5 - 0.06, 13.0, 3.0),
-    (90.0, 0.0, -90.0),
-    (1.0, 0.02, 0.3),
-    "street name plate",
+town.decal(
+    "street_name_east", "street_name_east", (wx0 - 0.02, 13.0, 3.0), -90.0, (1.0, 0.28)
 )
+# Notices: a market bill by the guildhall's door, and the clockmaker's notice by his door.
+town.decal("notice_market", "notice_market", (gx1 + 0.02, 27.0, 1.5), 90.0, (0.6, 0.8))
+town.decal("notice_clock", "notice_clock", (wx0 - 0.02, 22.2, 1.5), -90.0, (0.6, 0.8))
+# Grime: damp at the foot of the walls round the square, and rain streaks under sills.
+GRIME_BASE = [
+    ((bx1 + 0.015, 9.0, 0.4), 90.0),
+    ((bx1 + 0.015, 12.0, 0.4), 90.0),
+    ((bx1 + 0.015, 15.0, 0.4), 90.0),
+    ((wx0 - 0.015, 26.5, 0.4), -90.0),
+    ((wx0 - 0.015, 17.0, 0.4), -90.0),
+    ((wx0 - 0.015, 12.0, 0.4), -90.0),
+    ((gx1 + 0.015, 22.0, 0.4), 90.0),
+    ((gx1 + 0.015, 29.5, 0.4), 90.0),
+]
+for i, (at, yaw) in enumerate(GRIME_BASE):
+    town.decal(f"grime_base_{i}", "grime_base", at, yaw, (3.0, 0.8), soft=True)
+GRIME_STREAKS = [
+    ((wx0 - 0.015, 17.5, 3.35), -90.0),
+    ((wx0 - 0.015, 11.5, 3.35), -90.0),
+    ((gx1 + 0.015, 29.0, 1.05), 90.0),
+]
+for i, (at, yaw) in enumerate(GRIME_STREAKS):
+    town.decal(f"grime_streaks_{i}", "grime_streaks", at, yaw, (1.2, 1.0), soft=True)
 # Props: decoration from the art trial (#96). Each has a simple collider, so the marble meets it
 # as it looks; none stands on a way up.
 PROPS: list[tuple[str, Place, float, str]] = [
     ("bread_cart", (6.0, 3.0, 0.0), 30.0, "box"),
-    ("barrels", (-17.4, 16.6, 0.0), 0.0, "cylinder"),
+    ("barrels", (-17.3, 19.0, 0.0), 0.0, "cylinder"),
     ("barrels", (13.6, 25.6, 0.0), 0.0, "cylinder"),
     ("barrels", (-10.2, -0.3, 0.0), 0.0, "cylinder"),
     ("barrels", (24.2, 15.6, 0.0), 0.0, "cylinder"),
-    ("flower_trough", (-2.3, FOUNTAIN[1], 0.0), 0.0, "box"),
-    ("flower_trough", (2.3, FOUNTAIN[1], 0.0), 0.0, "box"),
+    ("flower_trough", (-3.3, FOUNTAIN[1], 0.0), 0.0, "box"),
+    ("flower_trough", (3.3, FOUNTAIN[1], 0.0), 0.0, "box"),
     ("flower_trough", (-2.6, Y0 - 0.6, 0.0), 90.0, "box"),
     ("flower_trough", (2.6, Y0 - 0.6, 0.0), 90.0, "box"),
     ("flower_trough", (-14.0, -0.35, 0.0), 90.0, "box"),
@@ -1328,39 +1555,21 @@ PROPS: list[tuple[str, Place, float, str]] = [
 ]
 for name, at, yaw, collider in PROPS:
     kit.prop(name, at=at, rotation=(0.0, 0.0, yaw), collider=collider)
-# Prop spots: props whose art comes later (docs/levels/ascent-z1.md). None is on a way up.
-PROP_SPOTS = {
-    "bench_1": ((-10.5, 30.8, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
-    "bench_2": ((10.5, 29.6, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
-    "bench_3": (
-        (-15.8, 26.0, 0.0),
-        90.0,
-        (1.8, 0.6, 0.9),
-        "bench by the guildhall lane",
-    ),
-    "goods_stall_2": (
-        (-12.5, 9.95, 0.95),
-        0.0,
-        (2.6, 0.6, 0.5),
-        "bread on the counter",
-    ),
-    "goods_stall_3": (
-        (-16.0, 9.95, 0.95),
-        0.0,
-        (2.6, 0.6, 0.5),
-        "fruit on the counter",
-    ),
-    "clock_parts": ((13.8, 22.5, 0.0), -90.0, (1.2, 0.8, 1.0), "crate of clock parts"),
-    "hay_cart": (
-        (0.0, -5.0, 0.0),
-        0.0,
-        (1.8, 3.2, 1.6),
-        "hay cart in the south street",
-    ),
-    "anvil": ((25.0, 14.0, 0.0), 0.0, (0.8, 0.5, 0.8), "anvil by the waterwheel"),
-}
-for name, (at, yaw, size, note) in PROP_SPOTS.items():
-    town.spot("prop", name, at, (0.0, 0.0, yaw), size, note)
+# The props of the art pass: benches with their backs to the tower, goods on the counters of
+# the bakery's and the fruit seller's stalls, a crate of clock parts by the workshop, a hay
+# cart in the south street and an anvil by the waterwheel. None is on a way up.
+ART_PROPS: list[tuple[str, Place, float, str]] = [
+    ("bench", (-10.5, 30.8, 0.0), 180.0, "box"),
+    ("bench", (10.5, 29.6, 0.0), 180.0, "box"),
+    ("bench", (-15.8, 26.0, 0.0), 90.0, "box"),
+    ("stall_bread", (-12.5, 9.95, 0.95), 0.0, "none"),
+    ("stall_fruit", (-16.0, 9.95, 0.95), 0.0, "none"),
+    ("clock_parts", (13.8, 22.5, 0.0), -90.0, "box"),
+    ("hay_cart", (0.0, -5.0, 0.0), 0.0, "box"),
+    ("anvil", (25.0, 14.0, 0.0), 0.0, "box"),
+]
+for name, at, yaw, collider in ART_PROPS:
+    kit.prop(name, at=at, rotation=(0.0, 0.0, yaw), collider=collider)
 
 # --- Routes: section 1 -------------------------------------------------------------------------
 
@@ -1628,3 +1837,8 @@ kit.shot("gear_room", at=(4.6, 34.2, 59.0), rotation=(-12, 0, 45))
 kit.shot("clock_floor", at=(-4.6, 34.2, 84.0), rotation=(8, 0, -40))
 kit.shot("belfry", at=(4.6, 43.6, 118.0), rotation=(-15, 0, 140))
 kit.shot("clock", at=(16.0, 37.5, 95.0), rotation=(0, 0, 82))
+# The fork of each floor of the tower: its way inside and the door to its way outside.
+kit.shot("fork_gallery", at=(4.4, 43.8, 27.8), rotation=(-4, 0, 147))
+kit.shot("fork_gear_room", at=(4.8, 35.0, 53.5), rotation=(-10, 0, 70))
+kit.shot("fork_clock_floor", at=(-4.8, 36.0, 82.2), rotation=(4, 0, -59))
+kit.shot("fork_belfry", at=(4.8, 34.0, 113.5), rotation=(-10, 0, 35))

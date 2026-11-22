@@ -102,6 +102,9 @@ Ascent 1 (`ascent-z1.md`, "As built") found these rules for tall levels and for 
 - **Two pieces that the marble rolls across meet flush.** A step of 0.12 m stopped the marble at the end of a beam. Moving decks stop flush with their floors, and the gap beside a moving deck is 0.2 m or less.
 - **A route has at most 100 points** (`kit.marker`). On a spiral ramp 2 m wide, points 72° apart at 4.75 m from the middle keep each leg clear of the inner kerb.
 - **A lift gear needs a casing.** `town.lift()` carries the marble from the bottom of the gear to its top and lets it off sideways.
+- **Give each indoor room a `room_probe`.** Without it, a room has the cold ambient light of the sky. The marker is the middle of the room's floor, with the room's inside size; its probe reaches 0.45 m into the walls, so keep the walls thicker than that.
+- **Put land round a town.** A `land` marker just under the town's ground gives open country out to the haze. The land holds the marble, and its touch puts the marble out of bounds, so close the town's edge with houses: a marble on the ground must not roll out by accident. Far scenery (houses past the play space) is one mesh named `<name>-far`: no collision, no lightmap and no probe.
+- **Town finishes.** Walls take `wall` (coursed ashlar), frames and bands `dressed` (no joints), roofs `slate`. `town.Finish` lists every finish; each is a material in `game/materials/`.
 
 ## Rules from B3
 

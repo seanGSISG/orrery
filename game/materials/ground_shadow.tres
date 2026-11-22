@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; The shadows of the far houses on the land (kit/town.py `ground_shadow`). ground_shadow.gdshader
+; holds the look.
+
+[ext_resource type="Shader" path="res://materials/ground_shadow.gdshader" id="1"]
+
+[resource]
+shader = ExtResource("1")

@@ -110,6 +110,7 @@ func test_shot_marker_becomes_a_camera_named_after_it() -> void:
 	var camera: Camera3D = scene.get_node(^"overview") as Camera3D
 	assert_not_null(camera)
 	assert_eq(camera.position, Vector3(1, 2, 3))
+	assert_eq(camera.far, FollowCamera.FAR, "it sees as far as the play camera")
 
 
 func test_wrong_setting_type_fails_with_level_id_and_node_name() -> void:

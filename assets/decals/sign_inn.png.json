@@ -1,0 +1,48 @@
+{
+  "service": "OpenAI Images API /v1/images/edits",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "Image 1 sets the paint style, the board, the brass edge and the wear only. Do not copy its words or its picture. Draw a new sign.\nUSE: A flat game decal for the hanging sign board of an inn in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular sign board with rounded corners, of oiled timber painted a dark, sun-faded midnight blue, with a thin aged-brass edge and a small round brass stud in each corner. A hand-painted picture, centred, with no words: in the upper part a thin crescent moon in cream with a fine gold outline, and below it a pewter tankard with a curved handle, painted in cream, soft grey and gold, with a little foam at its rim. Three small gold four-pointed stars sit around the moon.\nSTYLE: Photographic realism with restraint. Old paint with fine cracks and soft wear at the edges, the wood grain showing through, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No text of any kind, no letters, no numerals. No people, no extra signs. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "Image 1 sets the paint style, the board, the brass edge and the wear only. Do not copy its words or its picture. Draw a new sign.\nUSE: A flat game decal for the hanging sign board of an inn in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular sign board with rounded corners, of oiled timber painted a dark, sun-faded midnight blue, with a thin aged-brass edge and a small round brass stud in each corner. A hand-painted picture, centred, with no words: in the upper part a thin crescent moon in cream with a fine gold outline, and below it a pewter tankard with a curved handle, painted in cream, soft grey and gold, with a little foam at its rim. Three small gold four-pointed stars sit around the moon.\nSTYLE: Photographic realism with restraint. Old paint with fine cracks and soft wear at the edges, the wood grain showing through, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No text of any kind, no letters, no numerals. No people, no extra signs. No logos, no watermarks. Original design only.",
+    "size": "1600x1120",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "image": [
+      "assets/decals/sign_bakery.png"
+    ],
+    "usage": {
+      "input_tokens": 1861,
+      "input_tokens_details": {
+        "image_tokens": 1536,
+        "text_tokens": 325
+      },
+      "output_tokens": 1548,
+      "total_tokens": 3409,
+      "output_tokens_details": {
+        "image_tokens": 1548,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0601,
+  "billed_usd": 0.0604,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/sign_inn.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/sign_inn-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0523
+    },
+    "superseded_finals": []
+  },
+  "total_billed_usd": 0.1127
+}

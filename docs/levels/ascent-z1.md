@@ -113,7 +113,22 @@ Level script: `levels/ascent/zone_1.py`. Town kit: `kit/town.py`. The script fol
 | The rafters are 19 m at 25.3° and 19.6 m at 29.3°, and meet on a round brass cap 3.2 m across | Two beams that meet in a point make the marble turn 170° on a beam 0.8 m wide |
 | The crown is a slab 14 × 10 m at +150 m on top of the east wall, with a merlon at each corner. The finish is in its middle | Zone 2 starts beside it, on its own floor |
 
-Decoration that the map does not show: a town round the square (about 70 houses in streets of one mesh each, out to 56 m from the square), street lamps, shop signs, a plinth, a cornice at each floor, corner pilasters, glazed windows, the great door of the tower base, a dial on each face of the clock floor (no numerals, six o'clock), and louvres in the belfry. The windows, the dials, the signs, the stays and the tower's dress do not collide.
+Decoration that the map does not show: a town round the square (about 70 houses in streets of one mesh each, out to 56 m from the square), street lamps, shop signs, a plinth, a cornice at each floor, quoins of grey stone at the corners, glazed windows of a different size on each storey (tall in the base, taller in the gallery, small and square in the gear room), the great door of the tower base, a dial on each face of the clock floor (no numerals, six o'clock), and louvres in the belfry. The windows, the dials, the signs, the stays and the tower's dress do not collide.
+
+The look follows a concept board of the square at dawn (GPT-Image, not in the game). Every face has a `town.Finish`, a material in `game/materials/`:
+
+- Walls are `wall`: the limestone of the deck, cut in courses of ashlar 0.95 × 0.42 m (`wall_size` of `kit_surface.gdshader`). Frames, sills, lintels, string courses and cornices are `dressed` limestone with no joints. Each house of the town takes one of `wall`, `wall_grey`, `wall_ochre` and `wall_pale` at random (`town.HOUSE_WALLS`): the same stone in four tints, so the houses read apart.
+- Roofs are `slate` (CC0); `slate_turned` turns the courses for a ridge along y. The slate albedo is about sRGB 86 to 91: a dark grey that keeps its courses in shade. Doors, shutters, timber and stall canvas are CC0 texture sets too (`docs/licenses.md`). Iron is black paint (metallic 0).
+- A window has a stone frame 0.12 m wide and deep, a sill and a lintel. In the frame, 0.09 m back, near-white glass (`glass.gdshader`) shows a dark room behind it, under a cross of painted sash bars. About one storey in three has open shutters.
+- A house (`town.house()`) has a string course at each storey and a cornice under the eaves, a chimney stack with two pots, and an iron ridge.
+- The fountain is 4 m across: a low stone basin with the trial fountain raised in its middle as the upper tier. The basin floor is dark `wet_stone`, and the water is `water` (`game/materials/water.gdshader`): a thin, dark, clear surface with slow ripples that move its reflection.
+- The casings and the side rings of the lift gears are `brass_polished` (metallic 1, roughness 0.23), so they mirror the room and the sun. The gears themselves belong to `turning_gear`.
+- A steam vent's column is a soft shader (`game/objects/steam_vent/steam.gdshader`): it fades at its edges and toward its top, and slow noise drifts up through it.
+- Moving decks are timber (`finish="wood"` of `moving_platform`) in the brass bands that every deck has.
+
+Past the town: a `land` marker (`game/objects/land/`) gives 120 km of flat country just under the town's ground. Every camera sees 50 km (`FollowCamera.FAR`), where the sky's distance fog is full, so the land meets the sky with no step. Round the town the land is closes, small grass fields with thin hedges. Past 90 m it is farmland: blocks of fields on a grid turned 0.3 rad, each block cut into two to five strips of one crop (young or ripe wheat, stubble, ploughed earth, pasture, hay) with rows, grass margins between the strips, hedges with trees round the block, and a few woods (`land.gdshader`). The four streets of the outer ring meet at the corners, so a marble on the ground cannot leave the town. A marble that falls past the ring from the tower lands on the grass, and the touch puts it out of bounds: it comes back on the start pad (with Assist, on the last checkpoint).
+
+A far town stands round the ground (`far_town()`): twelve gravel roads and lanes (`FAR_ROADS`) lead out from the town, and plain houses (`town.house(plain=True)`) stand along both sides of each, turned to face it, with windows, a chimney stack and walls of the four tints. Each road's houses thin out and stop at a random 200 to 300 m from the square, and 16 farms stand alone out to 1.4 km. All of it is one mesh, `far_town-far`, with no collision, no lightmap, no probe and no real shadow: at that distance the sun's shadows were soft blobs on the land. Instead each house draws its shadow on the land (`town.shadow()`): the hull of its corners moved along the sunlight of `ground_dawn` (12°, azimuth 135°, read from `game/skies/ground_dawn.tres`), in the `ground_shadow` material, which darkens the land by half and, with the stencil, darkens each pixel once where two shadows overlap. In the climb the sun rises with the height (about 26° at the crown), so there the drawn shadows are longer than the real ones.
 
 ### Routes and times
 
@@ -123,47 +138,50 @@ The other ways up were driven with routes that were not kept: the workshop side 
 
 ### Light
 
-The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the tower and the guildhall put much of the square in shade, and the inside of the tower has the light of the sky only.
+The zone has no lightmap bake: in the climb, the mode removes each zone's lightmap (`docs/design/ascent.md` §2). Played alone, the zone has the `ground_dawn` sky (`kit.level(sky="ground_dawn")`). At dawn the guildhall and the west houses put much of the square in shade. A warm fill (`ground_dawn.tres`: `sky_share` 0.8, `fill_color` a warm stone colour) stands in for the light that sunlit walls throw into the shade, so the shade reads as dawn, not as a cold blue. It lights the zone played alone and the climb start alike.
+
+The low dawn sun caused two changes to shared settings. The High and Ultra presets now have a sun size of 0° (no soft PCSS shadows): at 0.5° it made a cross-hatch dither in shade, stepped shadow edges from the tower and a sun patch that leaked into the shade by the west bench (`docs/design/visual-quality.md`). The glow threshold is 1.5 (`SkyPreset.environment()`): sunlit stone reaches about 1.1, and at 1.0 it glowed.
+
+Each room of the tower has a `room_probe` marker (`game/objects/room_probe/`): a warm ambient light and an interior probe, so the rooms look lit by lamps and warm stone, not by the cold sky. The climb keeps these probes.
+
+The start view faces north into the shade of the tower and the square, and the sun (azimuth 135°) is ahead and to the left. Every level starts with the camera to the north (`MarbleInput.camera_yaw` 0), so a turned start camera would need a start heading in the core input for the player, the bot and the harness alike. Turned round, the zone would put the tower behind the start. The faces that the start looks at stay in shade; the warm fill and the sunlit west faces of the workshop side carry the view.
 
 ### Clockwork Egg as built
 
 The dry chimney stands at the south end of the ridge walk (+14 m). Its flue, 1.3 m wide, goes down 15 m to the hearth of the guildhall's hall. The egg stands in front of the hearth. A door 2.4 m wide in the hall's east wall opens to the street beside the square.
 
-### Props, decals and placeholders
+### Props and decals
 
-The art of the zone-1 trial (#96; `assets/props/`, `assets/decals/`, `docs/licenses.md`) is in place. Every play surface is still kit geometry; a prop is decoration with a simple collider where the marble could otherwise roll through it.
+The art of the zone-1 trial (#96) and of the art pass is in place (`assets/props/`, `assets/decals/`, `docs/licenses.md`). Every play surface is still kit geometry; a prop is decoration with a simple collider where the marble could otherwise roll through it. The zone has 12 prop meshes and 32 prop instances.
 
 | Prop | Instances | Where | Collider |
 |---|---|---|---|
-| `fountain` | 1 | The middle of the square, with still water in its basin (a glass disc that does not collide) | cylinder |
+| `great_door` | 1 | The tower's great door: an arched timber door in a stone surround, 4 m wide, on the plinth of the south face | none |
+| `fountain` | 1 | The upper tier of the fountain, raised 0.3 m in the middle of the 4 m basin, with still water in its own basin | cylinder |
 | `lamp_post` | 10 | Round the square, off the ways up | cylinder |
+| `bench` | 3 | Two with their backs to the tower, one by the guildhall lane | box |
 | `bread_cart` | 1 | South-east of the fountain | box |
-| `barrels` | 4 | By the bakery door, by the workshop door, by the inn, by the waterwheel | cylinder |
+| `barrels` | 4 | North of the bakery, by the workshop door, by the inn, by the waterwheel | cylinder |
 | `flower_trough` | 7 | Beside the fountain, beside the tower's great door, in front of the south houses, by the guildhall door | box |
+| `stall_bread`, `stall_fruit` | 1 each | On the counters of the middle and the west stall | none |
+| `clock_parts` | 1 | By the clockmaker's door | box |
+| `hay_cart` | 1 | In the south street | box |
+| `anvil` | 1 | By the waterwheel | box |
 
 | Decal | Where |
 |---|---|
 | `dial_tower` | The four dials of the clock floor, 8.8 m across, under the brass hands at six o'clock |
 | `dial_shop` | The workshop's west wall, beside the clockmaker's sign |
-| `sign_bakery`, `sign_clockmaker` | Both faces of the hanging boards of the bakery and the clockmaker |
+| `sign_bakery`, `sign_clockmaker`, `sign_inn` | Both faces of the hanging boards of the bakery, the clockmaker and the inn |
 | `sign_guildhall` | Over the hall door of the guildhall |
 | `sign_workshop` | The workshop's south wall, over the balcony |
 | `plaque_square` | Over the great door of the tower |
+| `street_name_south`, `street_name_east` | The corner house of the south street, and the workshop's west wall |
+| `window_bakery`, `window_clockmaker` | Behind the glass of the two shop windows, each 2 m wide |
+| `window_room_a`, `window_room_b` | Behind the glass of three ground-floor windows of the bakery and the workshop |
+| `notice_market`, `notice_clock` | By the guildhall's door, and by the clockmaker's door |
+| `grime_base`, `grime_streaks` | Damp at the foot of the walls round the square, and rain streaks under three sills (soft decals) |
 
-`town.decal(name, art, at, yaw, size)` puts a picture of `assets/decals/` on an upright quad. Its alpha cuts the outline at 0.5 (glTF alpha mode MASK), and it does not collide.
+`town.decal(name, art, at, yaw, size, soft)` puts a picture of `assets/decals/` on an upright quad. Its alpha cuts the outline at 0.5 (glTF alpha mode MASK); a soft decal blends by its alpha (BLEND). It does not collide. `town.window(..., room=art)` puts a decal behind a window's glass in place of the dark room.
 
-The props and decals that wait for their art have a placeholder: an empty with the custom property `town_spot` = {kind, size, note}, from `town.spot()`. It shows nothing in the game. To put a model in, change its `town.spot("prop", name, at, rotation, ...)` line to `kit.prop(name, at=..., rotation=..., collider=...)` at the same place. No spot stands on a way up.
-
-| Prop spot | Place (x, y, z) | Size (w × d × h, m) | To make |
-|---|---|---|---|
-| `prop_bench_1`, `prop_bench_2` | (−10.5, 30.8, 0), (10.5, 29.6, 0) | 1.8 × 0.6 × 0.9 | Benches with their backs to the tower |
-| `prop_bench_3` | (−15.8, 26.0, 0) | 1.8 × 0.6 × 0.9 | Bench by the guildhall lane |
-| `prop_goods_stall_2`, `prop_goods_stall_3` | (−12.5, 9.95, 0.95), (−16.0, 9.95, 0.95) | 2.6 × 0.6 × 0.5 | Bread and fruit on the stall counters |
-| `prop_clock_parts` | (13.8, 22.5, 0) | 1.2 × 0.8 × 1.0 | A crate of clock parts by the workshop door |
-| `prop_hay_cart` | (0.0, −5.0, 0) | 1.8 × 3.2 × 1.6 | Hay cart in the south street |
-| `prop_anvil` | (25.0, 14.0, 0) | 0.8 × 0.5 × 0.8 | Anvil by the waterwheel |
-
-| Decal spot | Where | Art to make |
-|---|---|---|
-| `decal_sign_inn` | The board of the inn's hanging sign, south side of the square | Sign art on both faces |
-| `decal_street_name_south`, `decal_street_name_east` | The corner house of the south street, and the workshop's west wall | Street name plates |
+`town.spot()` still leaves a placeholder empty (custom property `town_spot` = {kind, size, note}) where a prop or a decal comes later; the zone has none left.

@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+; Black-painted cast iron: a dielectric paint (metallic 0), sRGB 40 (docs/design/visual-quality.md §6).
+[resource]
+albedo_color = Color(0.157, 0.157, 0.165, 1)
+roughness = 0.5

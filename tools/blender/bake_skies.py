@@ -13,7 +13,8 @@ DirectionalLight3D, so the image holds no full-strength sun: the sun disc is cut
 
 - dawn (Beginner): a photographed Earth sky (Poly Haven, CC0) over a sea of clouds. No planets.
 - ground_dawn (the Ascent climb start): the same photograph with its own far horizon, over far
-  land that the world shader draws. It is the sky of a town on the ground. No planets.
+  land that the world shader draws, with two near posts painted out (PAINT_OUT). It is the sky
+  of a town on the ground. No planets.
 - noon (Intermediate): Blender's physical sky seen from 16 km, with a cloud layer far below.
 - dusk (Advanced): the same sky model from 80 km: the curve of the Earth, faint stars and one
   pale planet (NASA's Cassini map of Jupiter, public domain) low in the haze.
@@ -124,6 +125,18 @@ FIELDS: tuple[tuple[Color, float], ...] = (
 )
 FIELD_SIZE = 140.0  # m across a field
 FIELD_SHARE = 0.3  # of the cells in a farmed area
+# Near objects in the ground dawn's photograph that paint_out() removes: a survey post and a
+# smaller post on the far horizon. Pixel boxes (x0, y0, x1, y1) in the 2048x1024 photograph, y
+# from the top as in an image viewer, ends excluded.
+PAINT_OUT: tuple[tuple[int, int, int, int], ...] = (
+    (
+        1034,
+        507,
+        1040,
+        518,
+    ),  # the survey post, blue-white, on the ridge just below the horizon
+    (1085, 507, 1089, 511),  # a thin post that stands up from the far horizon
+)
 GROUND_DAWN = GroundSky(file="syferfontein_6d_clear", strength=DAWNS["a"].strength, sun_elevation=DAWNS["a"].sun_elevation, sun_color=DAWNS["a"].sun_color, sun_strength=DAWNS["a"].sun_strength, height=250.0, seam=(0.7, 1.8), visibility=6000.0)  # fmt: skip
 NOON = PhysicalSky(altitude=16000.0, sun_elevation=58.0, strength=0.2, cloud_drop=7.0, cloud_color=(5.6, 5.6, 5.7), sun_disc=True)  # fmt: skip
 DUSK = PhysicalSky(altitude=80000.0, sun_elevation=-5.5, strength=0.6, cloud_drop=70.0, cloud_color=(0.035, 0.05, 0.085), stars=4.0, planet=1.45, airglow=(0.0025, 0.0035, 0.006))  # fmt: skip
@@ -237,7 +250,8 @@ def build_ground(sky: GroundSky) -> float:
     """
     tree = new_world()
     image = bpy.data.images.load(str(SOURCES / "sky" / f"{sky.file}_2k.hdr"))
-    pixels = image_pixels(image)
+    pixels = paint_out(image_pixels(image), PAINT_OUT)
+    image.pixels.foreach_set(pixels.ravel())
     view = node(tree, "ShaderNodeTexCoord").outputs["Generated"]
     split = node(tree, "ShaderNodeSeparateXYZ", Vector=view)
 
@@ -338,6 +352,22 @@ def build_ground(sky: GroundSky) -> float:
     finish_world(tree, whole.outputs["Result"])
     u, _ = image_sun(pixels)
     return (0.5 - u) * 360.0  # Cycles maps a direction to u = 0.5 - atan2(y, x) / 2pi
+
+
+def paint_out(
+    pixels: np.ndarray, boxes: tuple[tuple[int, int, int, int], ...]
+) -> np.ndarray:
+    """Returns the pixels (rows from the bottom) with each box (x0, y0, x1, y1, y from the top)
+    filled row by row: a straight blend from the column left of the box to the column right of
+    it, so the far horizon line runs through with no seam."""
+    filled = pixels.copy()
+    rows = pixels.shape[0]
+    for x0, y0, x1, y1 in boxes:
+        band = slice(rows - y1, rows - y0)
+        left, right = pixels[band, x0 - 1], pixels[band, x1]
+        t = (np.arange(1, x1 - x0 + 1, dtype=np.float32) / (x1 - x0 + 1))[:, None]
+        filled[band, x0:x1] = left[:, None] * (1.0 - t) + right[:, None] * t
+    return filled
 
 
 def horizon(pixels: np.ndarray, sky: GroundSky) -> bpy.types.Image:

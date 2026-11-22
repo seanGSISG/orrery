@@ -24,6 +24,8 @@ kit.ramp(at=(4, 4, 8), length=12, rise=4, name="flight_2")
 kit.track(at=(4, 16, 12), width=4, length=4, name="top_1")
 
 kit.marker("start", at=(-4, 0, 0))
+# A room's light (objects/room_probe), which the climb keeps.
+kit.marker("room_probe", at=(20, 0, 0), width=4.0, depth=4.0, height=3.0, name="room")
 kit.marker("finish", at=(4, 18, 12))
 
 POINTS = [

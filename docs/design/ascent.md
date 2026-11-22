@@ -38,7 +38,7 @@ Rules for a zone script:
 4. **Routes.** Carry a `first_run` route and an `expert` route from the start pad to the finish pad, as every level does. `just test-levels zone_<n>` drives them on the zone alone.
 5. **Par and gold.** Ascent has no par time, but `just test-levels` compares each route with the level's `par` and `gold`. Set them with `just suggest-times zone_<n>`.
 6. **No carried power-ups** (plan §2.9). The HUD of a climb has no power-up slot.
-7. **Light.** Do not rely on the zone's own sun or sky. In the climb, the mode removes each zone's `WorldEnvironment`, `DirectionalLight3D`, `LightmapGI` and `ReflectionProbe` nodes: the light changes with the height, and a probe that looks once would keep the light of the start. The sky lights the reflections.
+7. **Light.** Do not rely on the zone's own sun or sky. In the climb, the mode removes each zone's `WorldEnvironment`, `DirectionalLight3D`, `LightmapGI` and `ReflectionProbe` nodes: the light changes with the height, and a probe that looks once would keep the light of the start. The sky lights the reflections. The exception is the probe of a `room_probe` marker (`game/objects/room_probe/`): a room shows itself, not the sky, and its warm ambient light is its own.
 
 What the mode does with the zones:
 

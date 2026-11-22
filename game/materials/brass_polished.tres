@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Polished brass (docs/design/visual-quality.md §6: metallic 1, roughness 0.15 to 0.30, brightest
+; channel 200 to 245): the casings and rings of the lift gears (kit/town.py lift()). It is the
+; polished Metal048A of the marble's core on the style board, so it mirrors the room and the sun.
+; Roughness 0.09 x 2.6 = 0.23; tinted albedo about sRGB (241, 206, 133): warm, so it turns less
+; olive where it mirrors the blue sky. Every set shares it.
+
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Color.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048A_2K-JPG_Roughness.jpg" id="3"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/tint = Vector3(0.88, 0.8, 0.7)
+shader_parameter/tile = 0.6
+shader_parameter/roughness_scale = 2.6
+shader_parameter/metallic = 1.0

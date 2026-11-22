@@ -43,14 +43,18 @@ func test_far_geometry_has_a_visibility_range() -> void:
 		assert_gte(mesh.visibility_range_end, Ascent.FAR, mesh.name)
 
 
-## The climb has one sun and one sky: those of the zones are gone.
+## The climb has one sun and one sky: those of the zones are gone. Of the reflection probes,
+## only a room's stays (zone 1 has one).
 func test_the_climb_has_one_sun_and_one_sky() -> void:
 	if not climb():
 		return
 	assert_eq(run.find_children("*", "DirectionalLight3D", true, false).size(), 1)
 	assert_eq(run.find_children("*", "WorldEnvironment", true, false).size(), 1)
 	assert_eq(run.find_children("*", "LightmapGI", true, false).size(), 0)
-	assert_eq(run.find_children("*", "ReflectionProbe", true, false).size(), 0)
+	var probes: Array[Node] = run.find_children("*", "ReflectionProbe", true, false)
+	assert_eq(probes.size(), 1)
+	if probes.size() == 1:
+		assert_true(probes[0].get_parent() is RoomProbe, "the room's probe")
 
 
 ## The state gives the height above the climb start.

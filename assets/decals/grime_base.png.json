@@ -1,0 +1,51 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A game decal overlay of dirt only. It is alpha-blended onto the foot of a pale stone wall. Straight-on orthographic view.\nSUBJECT: The damp and dirt at the foot of an old stone wall, with nothing behind it. A continuous band of dark grey-brown damp staining, with a hint of green algae and splashed soil, runs along the whole bottom edge of the frame. It is darkest at the very bottom, breaks up into mottled blotches higher up and fades to nothing by two thirds of the height. The top third of the frame is clear. The band keeps the same height and strength from the left edge to the right edge, so that the picture can repeat side by side with no visible join.\nSTYLE: Photographic realism with restraint. Matte, soft, natural weathering as on old limestone. No hard edges, no paint drips, no glossy wet look. It is a flat stain in the surface, not a growth: no grass, no leaves, no moss tufts.\nCONSTRAINTS: Fully transparent background. Only the dirt is drawn. Every drawn pixel is dark: dark grey-brown or dark green-black. Where the stain is thin, it has the same dark colour and is only more transparent. No white, no pale haze, no mist, no fog and no light halo around the stain. Do not draw the wall, stone blocks, joints, a window, a sill, a checkerboard, a backdrop or a shadow. No text, no logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A game decal overlay of dirt only. It is alpha-blended onto the foot of a pale stone wall. Straight-on orthographic view.\nSUBJECT: The damp and dirt at the foot of an old stone wall, with nothing behind it. A continuous band of dark grey-brown damp staining, with a hint of green algae and splashed soil, runs along the whole bottom edge of the frame. It is darkest at the very bottom, breaks up into mottled blotches higher up and fades to nothing by two thirds of the height. The top third of the frame is clear. The band keeps the same height and strength from the left edge to the right edge, so that the picture can repeat side by side with no visible join.\nSTYLE: Photographic realism with restraint. Matte, soft, natural weathering as on old limestone. No hard edges, no paint drips, no glossy wet look. It is a flat stain in the surface, not a growth: no grass, no leaves, no moss tufts.\nCONSTRAINTS: Fully transparent background. Only the dirt is drawn. Every drawn pixel is dark: dark grey-brown or dark green-black. Where the stain is thin, it has the same dark colour and is only more transparent. No white, no pale haze, no mist, no fog and no light halo around the stain. Do not draw the wall, stone blocks, joints, a window, a sill, a checkerboard, a backdrop or a shadow. No text, no logos, no watermarks. Original design only.",
+    "size": "2048x688",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 323,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 323
+      },
+      "output_tokens": 655,
+      "total_tokens": 978,
+      "output_tokens_details": {
+        "image_tokens": 655,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0213,
+  "billed_usd": 0.0213,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/grime_base-2.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/grime_base-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0176
+    },
+    "superseded_finals": [
+      {
+        "file": "build/art/images/zone1-art/decals/grime_base.png.json",
+        "model": "gpt-image-2.6-sunburst",
+        "billed_usd": 0.0211
+      }
+    ]
+  },
+  "total_billed_usd": 0.06
+}

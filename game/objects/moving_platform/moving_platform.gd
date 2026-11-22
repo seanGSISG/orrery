@@ -7,7 +7,7 @@ extends LevelObject
 ## along the path, or once round it when `loop` is true. The top face of the deck is at the
 ## path point, and the deck keeps the marker's rotation. With no points the deck stays still.
 ## The deck is a slab of the kit's stone in a frame of the kit's brass (KitMaterials): a band
-## round its top edge and one round its foot.
+## round its top edge and one round its foot. A set `finish` replaces the stone; the bands stay.
 
 ## The brass bands: their height, how far they stand out from the stone, and how far each band
 ## keeps from the deck's top face and underside, m.
@@ -32,6 +32,9 @@ static var _stone: ShaderMaterial = null
 @export var depth: float = 4.0
 ## Deck size down from the top face, m.
 @export var thickness: float = 0.5
+## The deck's kit material (KitMaterials.find), for example "wood" or "brass", in place of the
+## stone. The brass bands stay. Empty keeps the stone.
+@export var finish: String = ""
 
 ## World positions where the deck stops, in cycle order. Leg i runs from stop i to stop i + 1,
 ## and the last leg runs back to stop 0.
@@ -57,6 +60,10 @@ func _ready() -> void:
 	look.mesh = mesh
 	look.material_override = stone()
 	look.position = shape.position
+	if finish != "":
+		look.material_override = KitMaterials.find(finish)
+		if look.material_override == null:
+			push_error("moving_platform `%s`: no kit material `%s`" % [name, finish])
 	var tall: float = minf(BAND, thickness / 3.0)
 	# Chamfered edges catch a highlight, so the bands read as brass and not as paint.
 	var band: ArrayMesh = Chamfer.box(

@@ -1,0 +1,175 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"20b81dcc-f3bb-4185-a2e6-bd63ef1c68f2\"",
+  "settings": {
+    "input": "20b81dcc-f3bb-4185-a2e6-bd63ef1c68f2",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-art-hay_cart2-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-art-hay_cart2-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-art-hay_cart2-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-art-hay_cart2-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "4ee481cd-8563-4805-bb94-021f74b2a02a",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1-art/props/hay_cart-draft.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0452
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1-art/props/hay_cart-final2.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0632,
+      "refs": [
+        "build/art/images/zone1-art/props/hay_cart-final.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-art-hay_cart2-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "761f5e54-bc15-4c09-ae99-c74005dc61f1",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-art-hay_cart2-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "20b81dcc-f3bb-4185-a2e6-bd63ef1c68f2",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "761f5e54-bc15-4c09-ae99-c74005dc61f1"
+          }
+        ],
+        "face_limit": 4000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-art-hay_cart2.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "4ee481cd-8563-4805-bb94-021f74b2a02a",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "superseded": [
+      {
+        "file": "build/art/images/zone1-art/props/hay_cart-final.png.json",
+        "service": "OpenAI Images API /v1/images/edits",
+        "model": "gpt-image-2.6-sunburst",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0628
+      },
+      {
+        "file": "build/art/models/zone1-art-hay_cart-views.json",
+        "service": "Tripo API /generation/image-to-multiview",
+        "model": "",
+        "task_id": "8f3f511a-ce28-4662-b30d-9bc371b1018e",
+        "seed": null,
+        "billed_usd": 0.1,
+        "settings": {
+          "input": "build/art/images/zone1-art/props/hay_cart-final.png"
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-hay_cart-shape.glb.json",
+        "service": "Tripo API /generation/multiview-to-model",
+        "model": "P1-20260311",
+        "task_id": "67fd11e6-08b2-4c72-9ee9-8bb7da299a17",
+        "seed": 1,
+        "billed_usd": 0.4,
+        "settings": {
+          "model": "P1-20260311",
+          "texture": false,
+          "pbr": false,
+          "inputs": [
+            {
+              "task_id": "8f3f511a-ce28-4662-b30d-9bc371b1018e"
+            }
+          ],
+          "face_limit": 4000,
+          "model_seed": 1
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-hay_cart.glb.json",
+        "service": "Tripo API /models/texture",
+        "model": "v3.5-20260815",
+        "task_id": "ca3546d5-c8f8-4740-b8a9-b19cf453bb58",
+        "seed": 1,
+        "billed_usd": 0.1,
+        "settings": {
+          "input": "67fd11e6-08b2-4c72-9ee9-8bb7da299a17",
+          "model": "v3.5-20260815",
+          "pbr": true,
+          "delight": true,
+          "bake": true,
+          "texture_quality": "standard",
+          "texture_prompt": {
+            "images": [
+              {
+                "front": "build/art/models/zone1-art-hay_cart-views.front.jpeg"
+              },
+              {
+                "left": "build/art/models/zone1-art-hay_cart-views.left.jpeg"
+              },
+              {
+                "back": "build/art/models/zone1-art-hay_cart-views.back.jpeg"
+              },
+              {
+                "right": "build/art/models/zone1-art-hay_cart-views.right.jpeg"
+              }
+            ]
+          },
+          "texture_seed": 1
+        }
+      }
+    ]
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name hay_cart --stone 1.0 --metal-threshold 0.6 --fill-holes 12 --fit 1.8,3.3,1.6",
+  "total_billed_usd": 1.3712
+}

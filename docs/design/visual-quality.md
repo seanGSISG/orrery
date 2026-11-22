@@ -49,7 +49,7 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 | Sun shadow filter | Soft Very Low | Soft Low | Soft Medium | Soft High | `RenderingServer.directional_soft_shadow_filter_set_quality` |
 | Sun shadow splits | 2 | 4 | 4 | 4 | `DirectionalLight3D.directional_shadow_mode` |
 | Sun shadow distance | 50 m | 80 m | 120 m | 160 m | `DirectionalLight3D.directional_shadow_max_distance` |
-| Sun angular size (PCSS soft shadows) | 0° | 0° | 0.5° | 0.5° | `Light3D.light_angular_distance` |
+| Sun angular size (PCSS soft shadows) | 0° | 0° | 0° | 0° | `Light3D.light_angular_distance` |
 | Omni and spot shadow atlas | 2048 | 2048 | 4096 | 4096 | `Viewport.positional_shadow_atlas_size` |
 | Lightmap bicubic sampling | off | on | on | on | `RenderingServer.lightmaps_set_bicubic_filter` |
 | Mesh LOD threshold (pixels; higher is coarser) | 2.0 | 1.0 | 1.0 | 0.5 | `Viewport.mesh_lod_threshold` |
@@ -62,7 +62,7 @@ Rules for the table:
 - Texture quality is the anisotropic level and the mipmap bias. No preset changes the resolution of a texture (section 6).
 - Not built yet: the SDFGI row comes with the Ascent mode. The marble reflection probe row comes with the marble look, because the marble needs its own render layer first.
 - SDFGI never runs in a campaign level, because campaign levels use lightmaps. SDFGI runs only in Ascent and Planetarium on Ultra, where the sun moves.
-- The 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`). Godot warns that PCSS has a "noticeable performance cost", so Low and Medium use 0°.
+- Every preset uses a sun of 0°, so no preset has PCSS soft shadows. A 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`), but in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch that leaked into the shade of the square, on High and on Ultra alike. Test renders of the `egg`, `start` and `crown_down` shots with the sun at 0° and at 0.5°, and with the volumetric fog off, showed that the sun size alone made them. Godot also warns that PCSS has a "noticeable performance cost".
 - Fixed project settings (all presets): `rendering/anti_aliasing/quality/use_debanding=true`, `rendering/reflections/reflection_atlas/reflection_size=256` (the default), `rendering/lightmapping/lightmap_gi/use_bicubic_filter=true`.
 
 ### Tonemapping, exposure and colour grading
@@ -71,7 +71,7 @@ Rules for the table:
 - Start: `tonemap_agx_white = 16.29` (the default) and `tonemap_agx_contrast = 1.25` (the default). Range: white 6.0 to 16.29 ("at least 6.0" for photorealistic light), contrast 1.0 to 1.5.
 - Exposure is fixed per sky preset (`Environment.tonemap_exposure`). Auto exposure stays off (`CameraAttributesPractical.auto_exposure_enabled = false`), so a level looks the same every run and gallery shots are comparable. In Ascent, a script sets the exposure from the same height curve that drives the time of day.
 - Colour grading uses only `tonemap_agx_contrast` and `adjustment_saturation` (with `adjustment_enabled`). Do not use a colour-correction LUT (`adjustment_color_correction`) and do not use the Soft Light glow blend mode. Both are SDR-only and break HDR output.
-- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.0 or higher, `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
+- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.5 (as built: stone in the low dawn sun reaches about 1.1, and at 1.0 it glowed), `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
 
 ### HDR output
 
@@ -141,6 +141,8 @@ Godot writes the lightmap as `.exr` and the shadowmask as `.png` (`scene/3d/ligh
   - `LevelConverter` adds them at import: a grid over the bounds of the level's meshes plus 3 m, with one probe for each grid cell that holds a mesh. Each probe looks from 2 m above the highest mesh of its cell.
   - `box_projection` is off. A level is in the open air, so most of a reflection is the sky, which is very far away. Box projection puts the sky on the walls of the box, and the reflection of the sky then slides as the camera moves along the track. Turn it on by hand only for a closed room.
   - `ambient_mode` is Disabled. The probes give reflections only; the lightmap and its probes give the ambient light.
+  - A mesh named `<name>-far` is far scenery: it gets no probe and stays out of the lightmap.
+- Room probes: a `room_probe` marker (`game/objects/room_probe/`) gives an indoor room an interior probe with box projection and a warm ambient colour. Godot's Forward+ renderer lets the first probe in a cluster take the whole weight, and a probe fades out over its blend distance at the edge of its box, so the room probe's box reaches 0.45 m into the walls, the floor and the ceiling.
 - Marble probe (Ultra only): one `ReflectionProbe` follows the marble with `UPDATE_ALWAYS`. Its `cull_mask` leaves out the marble's layer, so the marble does not reflect itself. Its `reflection_mask` is only the marble's layer, so only the marble uses it. Godot recommends "only one ReflectionProbe with UPDATE_ALWAYS at most per scene", because of its "significant performance cost".
 - SSR (High and Ultra) adds sharp reflections on opaque surfaces such as polished stone and brass. SSR does not reflect transparent materials and does not apply to them (manual, "Environment and post-processing").
 
@@ -287,7 +289,7 @@ A level script names a kit material, and the importer gives those faces the game
 - A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
 - Seven objects take their look from `KitMaterials.find()` at run time: the Trapdoor and Crumbling Tiles (#29), and the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30). Each has a test that checks its kit materials.
   - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
-  - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot.
+  - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot. A set `finish` (a kit material, for example `wood` in Ascent 1) replaces the stone; the brass bands stay.
   - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
   - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
   - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.

@@ -17,6 +17,9 @@ extends RefCounted
 ##   `<name>-colonly` collides and goes away. Their faces are grouped by the `surface` extra of
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
 ##   with the Surface res://core/level/<surface>_surface.tres.
+## - Far scenery: a mesh named `<name>-far` stays visible as `<name>`, but it stays out of the
+##   lightmap, gets no reflection probe and casts no shadow: scenery past the play space, such
+##   as the far town round an Ascent zone. (Its shadows were soft blobs on the land.)
 ## - Lint: a level has exactly one `level`, one `start` and one `finish` marker. A level outside
 ##   levels/test/ (tier `test`) also has the gallery shots `overview`, `start`, `finish` and
 ##   `egg` (docs/design/visual-quality.md §7).
@@ -107,7 +110,7 @@ func convert(scene: Node3D) -> Level:
 	var visible: Array[MeshInstance3D] = _build_solids(meshes)
 	_apply_materials(visible)
 	_add_light_rig(level_data)
-	_add_probes(visible)
+	_add_probes(visible.filter(_lit))
 	_add_lightmap()
 	scene.set_script(LEVEL_SCRIPT)
 	_apply(scene, LEVEL_SCRIPT, level_data, "level")
@@ -136,9 +139,9 @@ func _marker_data(node: Node3D) -> Dictionary:
 	return {}
 
 
-## Returns "-col" or "-colonly" when the node name ends with that hint, else "".
+## Returns "-col", "-colonly" or "-far" when the node name ends with that hint, else "".
 func _hint(node: Node) -> String:
-	for hint: String in ["-colonly", "-col"]:
+	for hint: String in ["-colonly", "-col", "-far"]:
 		if String(node.name).ends_with(hint):
 			return hint
 	return ""
@@ -198,11 +201,13 @@ func _check_routes(markers: Array[Node3D], tier: String) -> void:
 
 
 ## Puts a Camera3D with the marker's name and transform in the marker's place. It looks along
-## the marker's -z axis in Godot, which is the marker's +y axis in Blender.
+## the marker's -z axis in Godot, which is the marker's +y axis in Blender, as far as the play
+## camera sees (FollowCamera.FAR).
 func _place_shot(marker: Node3D, data: Dictionary) -> void:
 	if data.size() > 1:
 		_fail(marker, "a `shot` marker has no settings")
 	var camera: Camera3D = Camera3D.new()
+	camera.far = FollowCamera.FAR
 	var parent: Node = marker.get_parent()
 	var index: int = marker.get_index()
 	parent.remove_child(marker)
@@ -270,6 +275,12 @@ func _build_solids(meshes: Array[MeshInstance3D]) -> Array[MeshInstance3D]:
 		if hint == "":
 			visible.append(mesh_node)
 			continue
+		if hint == "-far":
+			mesh_node.name = String(mesh_node.name).trim_suffix(hint)
+			mesh_node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+			mesh_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			visible.append(mesh_node)
+			continue
 		_add_faces(mesh_node, faces)
 		if hint == "-col":
 			mesh_node.name = String(mesh_node.name).trim_suffix(hint)
@@ -297,6 +308,11 @@ func _build_solids(meshes: Array[MeshInstance3D]) -> Array[MeshInstance3D]:
 		solid.owner = _root
 		collision.owner = _root
 	return visible
+
+
+## Returns true for a mesh in the lit play space: every mesh but far scenery.
+func _lit(mesh_node: MeshInstance3D) -> bool:
+	return mesh_node.gi_mode != GeometryInstance3D.GI_MODE_DISABLED
 
 
 ## Adds the faces of each mesh surface, in root space, to the group of its material's surface.
