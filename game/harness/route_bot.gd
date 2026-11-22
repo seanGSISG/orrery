@@ -16,8 +16,12 @@ extends InputSource
 ## "stuck" (no progress for STUCK_SECONDS), "fell" (MAX_FALLS falls; stuck_at is the last
 ## ground position), "route_end" (the bot reached the last point, but the run did not finish
 ## in STUCK_SECONDS: a gem is missing) or "timeout" (MAX_SECONDS).
+##
+## In a climb, a bot for each zone can follow the last one with no restart: make it the
+## InputHub source and step the run until it is done (test_ascent_spot.gd). Each bot counts
+## MAX_SECONDS from its own first input, so a climb of many zones does not time out.
 
-## The bot gives up after this much run time, s.
+## The bot gives up after it has driven this long, s.
 const MAX_SECONDS: float = 300.0
 ## The bot gives up when the distance to the next point does not shrink by PROGRESS in this
 ## time, s.
@@ -93,6 +97,8 @@ var _yaw: float = 0.0
 var _best: float = INF
 var _since_best: float = 0.0
 var _started: bool = false
+## The run tick of the first input.
+var _start_tick: int = 0
 var _falling: bool = false
 ## True after the marble reached the last point.
 var _at_end: bool = false
@@ -164,6 +170,7 @@ func next_input(state: GameState) -> MarbleInput:
 ## Starts at the first point, with the speed plan from the marble's start position.
 func _start(state: GameState) -> void:
 	waypoint = 0
+	_start_tick = state.tick
 	_from = state.position
 	_ground_at = state.position
 	_plan_speeds(state.position, state.up)
@@ -182,7 +189,7 @@ func _follow(state: GameState) -> bool:
 		done = true
 		finished = true
 		return false
-	if state.tick * _dt >= MAX_SECONDS:
+	if (state.tick - _start_tick) * _dt >= MAX_SECONDS:
 		_give_up(&"timeout", state.position)
 		return false
 	if state.status == &"respawning":
