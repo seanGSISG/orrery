@@ -126,6 +126,16 @@ func test_unknown_setting_fails() -> void:
 	assert_string_contains(errors, "level t: node gem_3: unknown setting `speed`")
 
 
+func test_material_setting_takes_a_kit_material_name() -> void:
+	var errors: String = _errors(_scene([{"type": "moving_platform", "finish": "woood"}]))
+	assert_string_contains(errors, "setting `finish` must be a kit material name, got woood")
+	var level: Level = LevelConverter.new().convert(
+		_scene([{"type": "moving_platform", "finish": "wood"}])
+	)
+	var platform: MovingPlatform = level.get_node("moving_platform_3") as MovingPlatform
+	assert_eq(platform.finish, KitMaterials.find("wood"))
+
+
 func test_unknown_marker_type_fails() -> void:
 	var errors: String = _errors(_scene([{"type": "nothing"}]))
 	assert_string_contains(errors, "unknown marker type `nothing`")

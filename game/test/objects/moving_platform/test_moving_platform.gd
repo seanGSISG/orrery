@@ -119,11 +119,11 @@ func test_deck_is_kit_stone_in_a_brass_frame() -> void:
 
 func test_finish_replaces_the_stone_and_keeps_the_bands() -> void:
 	var platform: MovingPlatform = PLATFORM.instantiate() as MovingPlatform
-	platform.finish = "wood"
-	add_child_autofree(platform)
-	var look: MeshInstance3D = platform.get_node("Solid/Mesh") as MeshInstance3D
 	var wood: Material = KitMaterials.find("wood")
 	assert_not_null(wood, "the kit has a wood material")
+	platform.finish = wood
+	add_child_autofree(platform)
+	var look: MeshInstance3D = platform.get_node("Solid/Mesh") as MeshInstance3D
 	assert_eq(look.material_override, wood)
 	var brass: Material = KitMaterials.find("brass")
 	for band_name: String in ["TopBand", "FootBand"]:
