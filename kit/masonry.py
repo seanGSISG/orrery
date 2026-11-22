@@ -51,8 +51,9 @@ GEAR_HUB = 0.28
 GEAR_SPOKE = 0.14
 GEAR_BOSS = 0.05
 GEAR_SPOKES = 6
-# A grille: the width of a bar, the clear gap between two bars (below the marble's 0.4 m), the
-# sides of a round bar, and the gap between the bars and the head of an arch, m.
+# A grille: the width of a bar along the doorway, the clear gap between two bars (below the
+# marble's 0.4 m), the sides of a round bar (a hexagon), and the gap between the bars and the
+# head of an arch, m.
 GRILLE_BAR = 0.09
 GRILLE_GAP = 0.26
 GRILLE_SIDES = 6
@@ -546,13 +547,13 @@ def grille(
     name: str | None = None,
     material: str = "brass",
 ) -> bpy.types.Object:
-    """Adds a grille that fills a doorway: round upright bars GRILLE_BAR m thick with gaps of
-    at most GRILLE_GAP m, also at the sides, which the marble cannot pass, and a level rail at
-    each height in `rails`. `at` is the middle of the threshold, on the middle line of the
-    grille. Like an arch, the
-    grille lies across the way along +y, turned by `yaw` degrees. The bars stand `height` m
-    tall; with `arched`, they stop under the round head of a kit.arch() doorway of the same
-    width and height. It collides, and the sun shines through it."""
+    """Adds a grille that fills a doorway: round upright bars GRILLE_BAR m wide along the
+    doorway with clear gaps of at most GRILLE_GAP m, also at the jambs, which the marble cannot
+    pass, and a level rail at each height in `rails`. `at` is the middle of the threshold, on
+    the middle line of the grille. Like an arch, the grille lies across the way along +y,
+    turned by `yaw` degrees. The bars stand `height` m tall; with `arched`, they stop under the
+    round head of a kit.arch() doorway of the same width and height. It collides, and the sun
+    shines through it."""
     name = name or default_name("grille", "-col")
     half = width / 2
     spring = height - half
@@ -572,6 +573,10 @@ def grille(
     pitch = GRILLE_BAR + GRILLE_GAP
     count = max(1, math.ceil((width - GRILLE_GAP) / pitch))
     first = -(count - 1) * pitch / 2
+    # create_cone puts a corner of the hexagon on +y, so a bar is only GRILLE_BAR * cos 30°
+    # wide along the doorway. A turn of 30° puts two corners on the doorway's line, so each bar
+    # is GRILLE_BAR wide along it and each gap is GRILLE_GAP.
+    turn = Matrix.Rotation(math.radians(30), 4, "Z")
     bm = bmesh.new()
     for i in range(count):
         x = first + i * pitch
@@ -583,7 +588,7 @@ def grille(
             radius1=GRILLE_BAR / 2,
             radius2=GRILLE_BAR / 2,
             depth=reach,
-            matrix=Matrix.Translation((x, 0.0, reach / 2)),
+            matrix=Matrix.Translation((x, 0.0, reach / 2)) @ turn,
         )
     # The sides of a bar shade round; its ends are its only faces that are not quads.
     for face in bm.faces:
