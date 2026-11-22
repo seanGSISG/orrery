@@ -71,14 +71,14 @@ func advance(_run: LevelRun, t: float) -> void:
 
 
 ## Adds one box Solid shape and one mesh for each tooth, spaced evenly round the rim. The first
-## tooth points along the marker's x axis.
+## tooth points along the marker's x axis. The mesh has chamfered edges (Chamfer), so the teeth
+## catch a highlight; the shape is the plain box.
 func _add_teeth(material: Material) -> void:
 	var length: float = TOOTH_LENGTH + TOOTH_ROOT
 	var size: Vector3 = Vector3(length, thickness, TOOTH_WIDTH)
 	var box: BoxShape3D = BoxShape3D.new()
 	box.size = size
-	var mesh: BoxMesh = BoxMesh.new()
-	mesh.size = size
+	var mesh: ArrayMesh = Chamfer.box(size)
 	for i: int in teeth:
 		var turn: Basis = Basis(Vector3.UP, TAU * i / teeth)
 		var pose: Transform3D = Transform3D(turn, turn * Vector3(radius - length / 2.0, 0, 0))

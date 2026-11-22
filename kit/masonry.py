@@ -307,7 +307,8 @@ def teeth(
         bm,
         geom=[e for e in bm.edges if not all(v in back for v in e.verts)],
         offset=EDGE_BEVEL,
-        segments=1,
+        segments=2,
+        profile=0.5,
         affect="EDGES",
         clamp_overlap=True,
     )

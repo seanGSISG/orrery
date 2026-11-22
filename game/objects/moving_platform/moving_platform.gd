@@ -57,9 +57,11 @@ func _ready() -> void:
 	look.mesh = mesh
 	look.material_override = stone()
 	look.position = shape.position
-	var band: BoxMesh = BoxMesh.new()
 	var tall: float = minf(BAND, thickness / 3.0)
-	band.size = Vector3(width + 2.0 * BAND_PROUD, tall, depth + 2.0 * BAND_PROUD)
+	# Chamfered edges catch a highlight, so the bands read as brass and not as paint.
+	var band: ArrayMesh = Chamfer.box(
+		Vector3(width + 2.0 * BAND_PROUD, tall, depth + 2.0 * BAND_PROUD)
+	)
 	# The top band's top is BAND_DROP below the deck's top face, and the foot band's bottom is
 	# BAND_DROP above the deck's underside, so no face of a band lies on a face of the stone.
 	var top: MeshInstance3D = $Solid/Mesh/TopBand
