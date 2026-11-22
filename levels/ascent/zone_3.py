@@ -512,7 +512,7 @@ harbour.promenade(
     2.4,
     kerbs=[("s", -24.0, -6.5), ("n", -24.0, RAMP_X[1])],
 )
-SAILMAKERS = (2.0, 61.6, 25.4, 71.6)
+SAILMAKERS = (2.0, 61.6, 25.4, 78.0)
 SAILMAKERS_TOP = 344.0
 GANGPLANK_C_LOW: Place = (-4.9, 66.0, COURIER_TOP)
 GANGPLANK_C_HIGH: Place = (SAILMAKERS[0] - 1.6, 66.0, SAILMAKERS_TOP)
@@ -594,12 +594,195 @@ house(
     SAILMAKERS_TOP,
     height=4.5,
     seed=7,
-    gaps=[("w", 64.4, 67.6), ("s", MAST_STEPS_X[0] - 0.1, SAILMAKERS[2])],
+    gaps=[
+        ("w", 64.4, 67.6),
+        ("s", MAST_STEPS_X[0] - 0.1, SAILMAKERS[2]),
+        ("n", 2.5, 5.7),
+    ],
 )
+
+# --- Part 3: chimney field, +344 to +382 --------------------------------------------------------
+
+# West way: three steps north from the Sailmakers' roof, then Roof 3, a slate slope of 20° up
+# west to a ridge with a chimney vent.
+P3_COL = 4.1
+P3_STEPS = [(78.3, 80.6, 345.0), (80.9, 83.2, 346.0), (83.5, 85.8, 347.0)]
+for i, (y0, y1, top) in enumerate(P3_STEPS):
+    stack(f"field_step_{i + 1}", (P3_COL - 1.5, y0), (P3_COL + 1.5, y1), top)
+ROOF_3 = (-15.5, 86.1, 6.0, 95.1)
+R3_GUTTER = (2.0, 348.0)
+R3_RIDGE = (-15.5, -12.1, 353.13)
+r3x0, r3y0, r3x1, r3y1 = ROOF_3
+
+
+def slope_roof(
+    name: str,
+    lo: Point,
+    hi: Point,
+    gutter: tuple[float, float, float],
+    ridge: tuple[float, float, float],
+    seed: int,
+) -> None:
+    """Adds a house with a roof that slopes along x: a flat gutter walk from gutter[0] to
+    gutter[1] at gutter[2], a slate slope from gutter[0] to ridge's near end, and a flat ridge
+    walk between ridge[0] and ridge[1] at ridge[2]. The storey under it is 4 m tall."""
+    (x0, y0), (x1, y1) = lo, hi
+    g0, _, gz = gutter
+    k0, k1, kz = ridge
+    near = k1 if g0 > k1 else k0
+    base = gz - 0.25
+    harbour.storey(
+        name, (x0, y0), (x1, y1), base - 4.0, base, seed=seed, windows="nesw"
+    )
+    mass = town.Parts()
+    mass.prism([(g0, base), (near, base), (near, kz - 0.3)], y0, y1, "y", "wall")
+    mass.box((k0, y0, base), (k1, y1, kz - 0.25), "wall")
+    mass.add(f"{name}_mass")
+    for part, (a, b, z) in (("gutter", gutter), ("ridge", ridge)):
+        harbour.slab(
+            f"{name}_{part}", (a, y0 - EAVE, z - 0.25), (b, y1 + EAVE, z), "dressed"
+        )
+    mid = (y0 + y1) / 2
+    harbour.slope(
+        f"{name}_slope",
+        (g0, mid, gz),
+        (near, mid, kz),
+        y1 - y0 + 2 * EAVE,
+        "slate_turned",
+    )
+    for side, y in (("s", y0 - EAVE), ("n", y1 + EAVE)):
+        harbour.kerb(
+            f"{name}_kerb_{side}",
+            [(g0, y, gz), (near, y, kz)],
+            side="right" if (side == "s") == (near > g0) else "left",
+        )
+
+
+slope_roof(
+    "roof_3", (r3x0, r3y0), (r3x1, r3y1), (R3_GUTTER[0], r3x1, 348.0), R3_RIDGE, 8
+)
+CHIMNEY_VENT = (-13.8, 93.6)
+town.chimney("roof_3_stack", (-13.8, 87.6, 353.13), 1.1, 1.8)
+vent("vent_chimney", (*CHIMNEY_VENT, R3_RIDGE[2]), 10.5)
+for i, (x, y) in enumerate([(-4.0, 87.4), (-8.5, 93.8), (-1.0, 93.9)]):
+    height = R3_GUTTER[1] + (R3_GUTTER[0] - x) * math.tan(math.radians(20.0))
+    town.chimney(f"roof_3_chimney_{i}", (x, y, height - 0.3), 0.9, 1.8)
+
+# Roof 4 (+361 to +366): a slate slope of 20° up east, with a bumper; a vent on its ridge.
+ROOF_4 = (-17.0, 97.3, 7.5, 107.3)
+r4x0, r4y0, r4x1, r4y1 = ROOF_4
+R4_GUTTER = (-17.0, -10.0, 361.0)
+R4_RIDGE = (4.1, 7.5, 366.13)
+slope_roof("roof_4", (r4x0, r4y0), (r4x1, r4y1), R4_GUTTER, R4_RIDGE, 9)
+kit.marker("bumper", at=(-2.0, 104.6, 363.9), name="bumper_roof_4")
+ROOF_4_VENT = (5.8, 105.6)
+vent("vent_roof_4", (*ROOF_4_VENT, R4_RIDGE[2]), 10.5)
+for i, (x, y) in enumerate([(-6.0, 98.3), (1.0, 98.4), (-14.5, 106.3)]):
+    height = 361.0 + max(0.0, x + 10.0) * math.tan(math.radians(20.0))
+    town.chimney(f"roof_4_chimney_{i}", (x, y, height - 0.3), 0.9, 1.6)
+
+# Roof 5 (+374), then gangway D to the Signal roof, 12 s a cycle.
+ROOF_5 = (0.0, 109.0, 10.0, 117.0)
+SIGNAL = (16.6, 99.0, 27.6, 110.0)
+SIGNAL_TOP = 382.0
+GANGWAY_D_LOW: Place = (11.6, 113.0, 374.0)
+GANGWAY_D_HIGH: Place = (SIGNAL[0] - 1.6, 109.4 - 0.5, SIGNAL_TOP)
+house(
+    "roof_5",
+    ROOF_5[:2],
+    ROOF_5[2:],
+    374.0,
+    seed=10,
+    gaps=[("s", 3.8, 7.8), ("e", 111.4, 114.6)],
+)
+kit.marker(
+    "moving_platform",
+    at=GANGWAY_D_LOW,
+    points=[GANGWAY_D_HIGH],
+    period=12.0,
+    stop=1.5,
+    width=3.0,
+    depth=3.0,
+    finish="wood",
+    name="gangway_d",
+)
+
+# East way: the Lamplighter. A vent on the Sailmakers' roof throws the marble to its gondola
+# (+351); a vent on a sponson throws it to the stern gallery (+359.5); the flying gangway runs
+# along the ship up to the bow gallery (+365.5); a vent, a platform (+374) and a vent.
+LAMPLIGHTER = Ship("lamplighter", (8.0, 82.0, 360.0), 26.0, 6.0)
+LAMP_DECK = 351.0
+harbour.envelope(LAMPLIGHTER)
+harbour.fins(LAMPLIGHTER, root=6.0, span=2.6)
+harbour.gondola(
+    LAMPLIGHTER,
+    17.0,
+    31.0,
+    LAMP_DECK,
+    3.6,
+    kerbs=[("s", 17.0, 19.4), ("s", 22.6, 31.0), ("n", 17.0, 27.3)],
+)
+harbour.engine("lamplighter_engine_1", (14.0, 74.6, 356.0))
+harbour.engine("lamplighter_engine_2", (24.0, 76.6, 357.5))
+SAIL_VENT = (21.0, 76.8)
+vent("vent_sailmakers", (*SAIL_VENT, SAILMAKERS_TOP), 10.0)
+deck("lamplighter_sponson", (27.5, 83.8), (31.0, 91.2), LAMP_DECK, "en")
+LAMP_VENT = (29.25, 90.0)
+vent("vent_lamplighter", (*LAMP_VENT, LAMP_DECK), 11.2)
+STERN_GALLERY = (27.5, 93.2, 33.0, 97.6)
+GALLERY_TOP = 359.5
+deck("stern_gallery", STERN_GALLERY[:2], STERN_GALLERY[2:], GALLERY_TOP, "en")
+FLYING_ROW = 95.4
+BOW_TOP = 365.5
+BOW_GALLERY = (8.0, 92.6, 12.5, 99.0)
+harbour.slope(
+    "flying_gangway",
+    (STERN_GALLERY[0], FLYING_ROW, GALLERY_TOP),
+    (BOW_GALLERY[2], FLYING_ROW, BOW_TOP),
+    2.4,
+    "wood",
+)
+for edge, side in ((FLYING_ROW - 1.2, "left"), (FLYING_ROW + 1.2, "right")):
+    harbour.kerb(
+        f"flying_gangway_{side}",
+        [(STERN_GALLERY[0], edge, GALLERY_TOP), (BOW_GALLERY[2], edge, BOW_TOP)],
+        side=side,
+    )
+deck("bow_gallery", BOW_GALLERY[:2], BOW_GALLERY[2:], BOW_TOP, "ws")
+# Ropes from the envelope hold the gangway and the galleries.
+_hangers = town.Parts()
+for x in (31.0, 25.0, 19.0, 13.0, 10.0):
+    hull = LAMPLIGHTER.point(x, 45.0)
+    z = GALLERY_TOP + (STERN_GALLERY[0] - min(x, STERN_GALLERY[0])) * (
+        BOW_TOP - GALLERY_TOP
+    ) / (STERN_GALLERY[0] - BOW_GALLERY[2])
+    for y in (FLYING_ROW - 1.1, FLYING_ROW + 1.1):
+        harbour.line(_hangers, (x, y, z), (hull.x, hull.y, hull.z), 0.05)
+_hangers.add("flying_gangway_hangers", collide=False)
+BOW_VENT = (10.25, 97.6)
+vent("vent_bow", (*BOW_VENT, BOW_TOP), 11.0)
+LAMP_PLATFORM = (7.5, 100.8, 15.0, 106.8)
+LAMP_PLATFORM_TOP = 374.0
+deck("lamp_platform", LAMP_PLATFORM[:2], LAMP_PLATFORM[2:], LAMP_PLATFORM_TOP, "wn")
+harbour.mast("lamp_platform_mast", (11.25, 103.8, 352.0), LAMP_PLATFORM_TOP - 0.3)
+PLATFORM_VENT = (13.4, 104.0)
+vent("vent_platform", (*PLATFORM_VENT, LAMP_PLATFORM_TOP), 10.8)
+
+# The Signal roof (+382): the third rest ledge.
+house(
+    "signal",
+    SIGNAL[:2],
+    SIGNAL[2:],
+    SIGNAL_TOP,
+    height=4.5,
+    seed=11,
+    gaps=[("w", 100.5, 110.0)],
+)
+harbour.lamp("signal_lamp", (26.9, 99.7, SIGNAL_TOP))
 
 # --- Routes ----------------------------------------------------------------------------------------
 
-FINISH: Place = (14.0, 66.6, SAILMAKERS_TOP)
+FINISH: Place = (22.5, 104.5, SIGNAL_TOP)
 
 # Part 1, first run: the crates, Roof 1 and its vent, Roof 2, the dormers and gangway A.
 FIRST[1] = [
@@ -683,6 +866,42 @@ for i, (y0, _, top) in enumerate(MAST_STEPS):
     edge = MAST_STEPS[i + 1][0] if i < len(MAST_STEPS) - 1 else SAILMAKERS[1]
     EXPERT[2].append(((MAST_COL, edge - 0.9, top), "jump; speed 3"))
 EXPERT[2].append(((MAST_COL, SAILMAKERS[1] + 1.2, SAILMAKERS_TOP), "speed 3"))
+
+# Part 3, first run: the steps, Roof 3, the chimney vent, Roof 4, its vent, Roof 5, gangway D.
+FIRST[3] = [((P3_COL, 76.0, SAILMAKERS_TOP), "speed 4")]
+_tops = [SAILMAKERS_TOP] + [top for _, _, top in P3_STEPS]
+_edges = [y0 for y0, _, _ in P3_STEPS] + [r3y0]
+for i, edge in enumerate(_edges):
+    FIRST[3].append(((P3_COL, edge - 0.9, _tops[i]), "jump; speed 3"))
+    FIRST[3].append(((P3_COL, edge + 0.8, _tops[i] + 1.0), "speed 3"))
+FIRST[3] += [
+    ((R3_GUTTER[0] + 0.8, 90.6, R3_GUTTER[1]), "speed 3"),
+    ((R3_RIDGE[1] - 0.5, 90.6, R3_RIDGE[2]), ""),
+    ((CHIMNEY_VENT[0], CHIMNEY_VENT[1] - 1.2, R3_RIDGE[2]), "speed 3"),
+    ((CHIMNEY_VENT[0], r4y0 + 1.7, R4_GUTTER[2]), "speed 3"),
+    ((R4_GUTTER[1] - 1.0, 101.5, R4_GUTTER[2]), "speed 4"),
+    ((R4_RIDGE[0] + 0.5, 101.5, R4_RIDGE[2]), ""),
+    ((ROOF_4_VENT[0], ROOF_4_VENT[1] - 1.2, R4_RIDGE[2]), "speed 3"),
+    ((ROOF_4_VENT[0], ROOF_5[1] + 2.0, 374.0), "speed 3"),
+    ((8.8, GANGWAY_D_LOW[1], 374.0), "wait_until gangway_d 11.2 11.8"),
+    (GANGWAY_D_LOW, "speed 3; wait_until gangway_d 6.2 7.2"),
+    ((SIGNAL[0] + 2.4, GANGWAY_D_HIGH[1], SIGNAL_TOP), "speed 3"),
+]
+# Part 3, expert: four vents and the flying gangway of the Lamplighter.
+EXPERT[3] = [
+    ((SAIL_VENT[0], SAIL_VENT[1] - 2.8, SAILMAKERS_TOP), "speed 4"),
+    ((SAIL_VENT[0], SAIL_VENT[1] - 1.2, SAILMAKERS_TOP), "speed 3"),
+    ((SAIL_VENT[0], LAMPLIGHTER.nose[1], LAMP_DECK), "speed 3"),
+    ((LAMP_VENT[0], LAMPLIGHTER.nose[1] + 0.6, LAMP_DECK), "speed 3"),
+    ((LAMP_VENT[0], LAMP_VENT[1] - 1.2, LAMP_DECK), "speed 3"),
+    ((LAMP_VENT[0], FLYING_ROW, GALLERY_TOP), "speed 3"),
+    ((BOW_GALLERY[2] - 0.5, FLYING_ROW, BOW_TOP), ""),
+    ((BOW_VENT[0] + 0.9, FLYING_ROW, BOW_TOP), "speed 3"),
+    ((BOW_VENT[0], BOW_VENT[1] - 1.2, BOW_TOP), "speed 3"),
+    ((BOW_VENT[0], 103.4, LAMP_PLATFORM_TOP), "speed 3"),
+    ((PLATFORM_VENT[0] - 1.2, PLATFORM_VENT[1], LAMP_PLATFORM_TOP), "speed 3"),
+    ((SIGNAL[0] + 2.4, PLATFORM_VENT[1], SIGNAL_TOP), "speed 3"),
+]
 
 # --- Start, finish, routes ------------------------------------------------------------------------
 
