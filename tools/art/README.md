@@ -57,8 +57,22 @@ These are the steps of `docs/research/asset-prompting.md` §3.1. Each Tripo comm
 4. **Geometry.** `just model --views <views task id> -o lamp-shape.glb --face-limit 4000 --seed 1 --yes`. The default series is P1 (low-poly) and there is no texture yet. `--series p2` or `h` compares; `--texture` textures in the same call; an image path instead of `--views` (with `--back` ...) sends your own views.
 5. **Look at the shape** in Blender before you pay for the texture.
 6. **Texture.** `just art texture <model task id> -o lamp.glb --front build/art/models/lamp-views.front.png --back build/art/models/lamp-views.back.png --seed 1 --yes`. It sends the texture model `v3.5-20260815` and `delight: true`, so the texture holds no baked light. `--no-bake` sends `bake: false`.
-7. **Clean-up.** `just prop-cleanup build/art/models/lamp.glb lamp --height 3.2 --triangles 6000 [--material brass]`. Headless Blender welds and decimates the mesh, scales it to the height in metres, puts the origin on the centre of its base, and writes `assets/props/lamp.glb` (Git LFS) with the recipe beside it. `--material` replaces the model's texture with a kit material (`limestone`, `brass`, `gold`).
-8. **Level.** In a level script: `kit.prop("lamp", at=(4.0, 2.0, 0.0), rotation=(0.0, 0.0, 90.0), collider="box")`. A prop is decoration: it does not collide unless `collider` is `box` or `cylinder`, and then only that simple shape collides. The marble rolls only on our own kit pieces.
+7. **Clean-up.** `just prop-cleanup build/art/models/lamp.glb lamp --height 3.2`. Headless Blender writes `assets/props/lamp.glb` (Git LFS) with the recipe beside it. It does all of these:
+   - It welds the mesh, decimates it to the triangle budget, scales it to the height in metres and puts the origin on the centre of its base.
+   - It names the material `orrery_lamp`.
+   - It reduces each map to the texture size of the class: 1K for clutter (up to 0.7 m) and medium (up to 2.5 m), 2K for hero (taller).
+   - It sets metallic to 0 or 1. It clamps roughness to 0.10–0.55 on metal and 0.15–0.95 on dielectric. It clamps albedo: each channel of a dielectric to sRGB 30–240, and the brightest channel of a metal to 180–250, with the hue kept.
+   - It writes the normal map and the metallic-roughness map as PNG. The colour map stays JPEG (quality 95).
+   - It changes a map only when a rule moves it, so a second run on a clean prop changes nothing.
+
+   Options:
+   - `--class hero` gives a prop in view at spawn the hero texture size. `--triangles N` replaces the class budget (clutter 2,000, medium 6,000, hero 15,000).
+   - `--stone` pulls warm, light colours to the saturation of the kit limestone. Use it for a stone prop that came out ochre. It does not change dark timber or colours that are not warm.
+   - `--material brass` gives every face a kit material (`limestone`, `brass`, `gold`). `--parts` prints the connected parts of the model, largest first; `--material brass:1,2` then gives the kit material to parts 1 and 2 only.
+
+   The clean-up stops with `prop-cleanup: error:` and exit code 1 when it cannot fix the model: the triangle budget is out of reach, the model has textures but no UVs, or a material graph is not the one that the glTF importer makes. The rules are in `src/orrery_art/materials.py`.
+8. **Review.** `just render-prop lamp` writes `build/props/lamp.png`: the prop from the front, the right, the back and the left, beside the marble and a block of each kit material, in neutral light. Look at the size, the shape and the colours against the kit blocks. Then look at the prop in `just gallery`.
+9. **Level.** In a level script: `kit.prop("lamp", at=(4.0, 2.0, 0.0), rotation=(0.0, 0.0, 90.0), collider="box")`. A prop is decoration: it does not collide unless `collider` is `box` or `cylinder`, and then only that simple shape collides. The marble rolls only on our own kit pieces.
 
 A rerun of a Tripo command after a time-out waits for the same task (its task file is `<output>.task.json`), even if the inputs have moved. Tripo runs one image task at a time on an account (views, edit-views); a busy account answers HTTP 429, and the tool waits for `Retry-After` and tries again.
 
@@ -70,6 +84,6 @@ Everything goes to `build/art/` (git-ignored): `images/`, `models/`, `batches/` 
 
 ## Tests and code
 
-`just test-art` runs the tests with mocked OpenAI and Tripo APIs. They make no paid call. The prop tests run `prop_cleanup.py` and `kit.prop` in headless `blender-5.2`, and they skip when it is missing.
+`just test-art` runs the tests with mocked OpenAI and Tripo APIs. They make no paid call. The material rule tests need no Blender. The prop tests run `prop_cleanup.py`, `render_prop.py` and `kit.prop` in headless `blender-5.2`, and they skip when it is missing.
 
 The Tripo client in `src/orrery_art/tripo.py` runs any task type: a `Task` is an endpoint, its JSON options (local files as `Path`s, which it uploads) and its outputs. `image_to_multiview`, `edit_multiview`, `model` and `texture` are thin functions that return a `Task`; a later step (`mesh/decimate`, `mesh/uv`, `mesh/segment` ...) is one more.

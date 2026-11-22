@@ -2,6 +2,7 @@
 then `kit.prop` in a tiny level built by tools/blender/build_level.py. Skipped when
 blender-5.2 is missing."""
 
+import io
 import json
 import os
 import shutil
@@ -9,7 +10,9 @@ import struct
 import subprocess
 from pathlib import Path
 
+import numpy as np
 import pytest
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 BLENDER = os.environ.get("BLENDER", "blender-5.2")
@@ -32,12 +35,19 @@ bpy.ops.export_scene.gltf(filepath=sys.argv[-1], export_format="GLB")
 """
 
 
-def blender(*args: str) -> str:
+def blender(*args: str, code: int = 0) -> str:
+    """Runs Blender, checks its exit code and returns its output."""
     result = subprocess.run(
         [BLENDER, *FLAGS, *args], capture_output=True, text=True, check=False
     )
-    assert result.returncode == 0, result.stdout + result.stderr
-    return result.stdout
+    assert result.returncode == code, result.stdout + result.stderr
+    return result.stdout + result.stderr
+
+
+def cleanup(source: Path, out: Path, *args: str, code: int = 0) -> str:
+    """Runs prop_cleanup.py on source and returns its output."""
+    script = str(ROOT / "tools" / "blender" / "prop_cleanup.py")
+    return blender("--python", script, "--", str(source), str(out), *args, code=code)
 
 
 def read_glb(path: Path) -> dict:
@@ -46,6 +56,29 @@ def read_glb(path: Path) -> dict:
     length, kind = struct.unpack_from("<I4s", data, 12)
     assert data[:4] == b"glTF" and kind == b"JSON"
     return json.loads(data[20 : 20 + length])
+
+
+def glb_images(path: Path) -> dict[str, tuple[str, bytes]]:
+    """Returns the images of a .glb by the BSDF input they feed (base, packed, normal): the
+    MIME type and the file bytes."""
+    data = path.read_bytes()
+    gltf = read_glb(path)
+    length = struct.unpack_from("<I", data, 12)[0]
+    blob = data[20 + length + 8 :]
+    material = gltf["materials"][0]
+    pbr = material["pbrMetallicRoughness"]
+    textures = {
+        "base": pbr["baseColorTexture"]["index"],
+        "packed": pbr["metallicRoughnessTexture"]["index"],
+        "normal": material["normalTexture"]["index"],
+    }
+    out = {}
+    for role, texture in textures.items():
+        image = gltf["images"][gltf["textures"][texture]["source"]]
+        view = gltf["bufferViews"][image["bufferView"]]
+        start = view.get("byteOffset", 0)
+        out[role] = (image["mimeType"], blob[start : start + view["byteLength"]])
+    return out
 
 
 def validator_errors(path: Path) -> int:
@@ -107,6 +140,17 @@ def test_prop_cleanup_scales_centres_decimates_and_sets_the_kit_material(
         "material": "brass",
     }
     assert validator_errors(lamp) == 0
+
+
+def test_render_prop_writes_one_review_sheet(lamp: Path, tmp_path: Path) -> None:
+    out = tmp_path / "lamp.png"
+    script = str(ROOT / "tools" / "blender" / "render_prop.py")
+    args = ("--samples", "1", "--width", "480")
+    assert f"render-prop: {out}" in blender(
+        "--python", script, "--", str(lamp), str(out), *args
+    )
+    with Image.open(out) as sheet:
+        assert sheet.width == 480 and 120 <= sheet.height < 480
 
 
 def test_kit_prop_places_shared_meshes_and_simple_colliders(
@@ -185,3 +229,112 @@ def test_prop_cleanup_keeps_a_mirrored_part_outward(tmp_path: Path) -> None:
     script = str(ROOT / "tools" / "blender" / "prop_cleanup.py")
     blender("--python", script, "--", str(source), str(out), "--height", "1")
     assert "inward faces: 0" in blender("--python-expr", INWARD, "--", str(out))
+
+
+# A cube with the material graph that the glTF importer makes for a Tripo model: base colour,
+# packed metallic-roughness and normal map, each an image file. sys.argv: the three images, the
+# out .glb, and "no-uv" to export it without UVs.
+TEXTURED = """
+import sys, bpy
+base, packed, normal, out, uv = sys.argv[sys.argv.index("--") + 1 :]
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.mesh.primitive_cube_add(size=1)
+cube = bpy.context.object
+if uv == "no-uv":
+    cube.data.uv_layers.remove(cube.data.uv_layers[0])
+material = bpy.data.materials.new("tripo")
+cube.data.materials.append(material)
+tree = material.node_tree
+bsdf = tree.nodes["Principled BSDF"]
+def image(path, data):
+    node = tree.nodes.new("ShaderNodeTexImage")
+    node.image = bpy.data.images.load(path)
+    if data:
+        node.image.colorspace_settings.name = "Non-Color"
+    return node
+tree.links.new(image(base, False).outputs["Color"], bsdf.inputs["Base Color"])
+split = tree.nodes.new("ShaderNodeSeparateColor")
+tree.links.new(image(packed, True).outputs["Color"], split.inputs["Color"])
+tree.links.new(split.outputs["Green"], bsdf.inputs["Roughness"])
+tree.links.new(split.outputs["Blue"], bsdf.inputs["Metallic"])
+bump = tree.nodes.new("ShaderNodeNormalMap")
+tree.links.new(image(normal, True).outputs["Color"], bump.inputs["Color"])
+tree.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+bpy.ops.export_scene.gltf(filepath=out, export_format="GLB")
+"""
+
+
+def textured_model(folder: Path, uv: str = "uv") -> Path:
+    """Writes a Tripo-like model: 2048 x 1024 maps, JPEG normal and packed maps, a dielectric
+    left half (pure white above pure black, metallic 0.3, roughness 0.02) and a metal right
+    half (dark brass, metallic 0.8, roughness 0.9)."""
+    base = Image.new("RGB", (2048, 1024), (0, 0, 0))
+    base.paste((255, 255, 255), (0, 0, 1024, 512))
+    base.paste((100, 80, 40), (1024, 0, 2048, 1024))
+    packed = Image.new("RGB", (2048, 1024), (255, 5, 77))
+    packed.paste((255, 230, 204), (1024, 0, 2048, 1024))
+    paths = [folder / "base.jpg", folder / "packed.jpg", folder / "normal.jpg"]
+    base.save(paths[0], quality=95)
+    packed.save(paths[1], quality=95)
+    Image.new("RGB", (2048, 1024), (128, 128, 255)).save(paths[2], quality=95)
+    out = folder / f"tripo-{uv}.glb"
+    blender("--python-expr", TEXTURED, "--", *map(str, paths), str(out), uv)
+    return out
+
+
+def test_prop_cleanup_makes_tripo_materials_game_ready_and_a_rerun_changes_nothing(
+    tmp_path: Path,
+) -> None:
+    first, second = tmp_path / "crate.glb", tmp_path / "again" / "crate.glb"
+    log = cleanup(textured_model(tmp_path), first, "--height", "0.5")
+    assert "prop-cleanup: crate.glb: clutter" in log
+    assert read_glb(first)["materials"][0]["name"] == "orrery_crate"
+    images = glb_images(first)
+    assert [mime for mime, _ in images.values()] == [
+        "image/jpeg",
+        "image/png",
+        "image/png",
+    ]
+    maps = {
+        role: np.asarray(Image.open(io.BytesIO(data)).convert("RGB")).astype(int)
+        for role, (_, data) in images.items()
+    }
+    assert all(pixels.shape == (512, 1024, 3) for pixels in maps.values())
+    packed, base = maps["packed"], maps["base"]
+    # Metallic 0 or 1; roughness 0.15 (38) and 0.55 (140). Far from the edge between halves.
+    assert packed[:, :500, 2].max() == 0 and packed[:, 524:, 2].min() == 255
+    assert np.unique(packed[:, :500, 1]).tolist() == [38]
+    assert np.unique(packed[:, 524:, 1]).tolist() == [140]
+    # Albedo: white and black clamp to 240 and 30; the dark brass scales to 180 (JPEG noise).
+    assert np.abs(base[20:230, 20:480] - 240).max() <= 2
+    assert np.abs(base[280:500, 20:480] - 30).max() <= 2
+    assert np.abs(base[20:490, 544:1000] - [180, 144, 72]).max() <= 3
+    cleanup(first, second, "--height", "0.5")
+    assert glb_images(second) == images
+
+
+def test_prop_cleanup_stops_on_textures_without_uvs(tmp_path: Path) -> None:
+    source = textured_model(tmp_path, "no-uv")
+    log = cleanup(source, tmp_path / "x.glb", "--height", "1", code=1)
+    assert (
+        "prop-cleanup: error: tripo-no-uv.glb: the model has textures but no UV map"
+        in log
+    )
+
+
+def test_prop_cleanup_gives_a_kit_material_to_chosen_parts(tmp_path: Path) -> None:
+    source, out = tmp_path / "source.glb", tmp_path / "post.glb"
+    blender("--python-expr", PRIMITIVE, "--", str(source))
+    log = cleanup(source, out, "--height", "2", "--material", "brass:1", "--parts")
+    # Part 0 is the sphere (most faces), part 1 the cube on top of it. glTF has triangles only.
+    assert "prop-cleanup: part 0: 960 faces, centre (0.00, 0.00, 0.60) m" in log
+    assert "prop-cleanup: part 1: 12 faces, centre (0.00, 0.00, 1.80) m" in log
+    gltf = read_glb(out)
+    brass = [
+        primitive
+        for primitive in gltf["meshes"][0]["primitives"]
+        if gltf["materials"][primitive["material"]].get("extras", {}).get("material")
+        == "brass"
+    ]
+    assert len(brass) == 1
+    assert gltf["accessors"][brass[0]["indices"]]["count"] // 3 == 12

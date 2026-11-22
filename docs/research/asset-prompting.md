@@ -307,7 +307,7 @@ An asset script in `tools/blender/` should do this for each GLB [I]:
 
 1. Import. Delete tiny loose islands. Merge by distance. Recalculate normals. Report non-manifold edges and the triangle count.
 2. Scale to the real height from the prop spec (the marble is 0.4 m across; `auto_size` is not trusted [I]). Set the origin to the bottom centre. Apply transforms. The up axis is Y for glTF, and Godot matches it.
-3. Materials: name `orrery_<prop>`. Snap metallic to 0 or 1. Clamp albedo into the allowed range. Set roughness limits per `visual-quality.md` §6 (brass 0.15 to 0.55, stone 0.45 to 0.95).
+3. Materials: name `orrery_<prop>`. Snap metallic to 0 or 1. Clamp albedo into the allowed range. Set roughness limits per `visual-quality.md` §6 (brass 0.15 to 0.55, stone 0.45 to 0.95). As built (`tools/blender/prop_cleanup.py`, `tools/art/README.md`): roughness 0.10 to 0.55 on metal and 0.15 to 0.95 on dielectric, the span of the metal and the dielectric rows of §6, because a Tripo map does not tell stone from timber or paint.
 4. Down-sample the textures to the class size, as JPG (albedo, roughness) and PNG (normal), per `visual-quality.md` §6 (source files).
 5. Add a hidden simple collider (box or convex hull). No trimesh from Tripo.
 6. Put the GLB in `kit/props/` (Git LFS). `docs/plan.md` §4.3 allows hero props as `.blend` in `kit/`. Store a recipe file beside it: prompt, concept image path, task IDs, seeds, parameters, credits used, date. The same seed and the same input give the same mesh (docs: `model_seed`, `texture_seed`) [P], so the recipe makes the asset repeatable [I].
