@@ -33,8 +33,8 @@ func _ready() -> void:
 	super()
 
 
-## Returns the outline from the points, in the marker's plane as (x, z), counter-clockwise
-## seen from above.
+## Returns the outline from the points, in the marker's plane as (x, z), counter-clockwise in
+## those axes.
 func _outline() -> PackedVector2Array:
 	var out: PackedVector2Array = []
 	for child: Node in get_children():
