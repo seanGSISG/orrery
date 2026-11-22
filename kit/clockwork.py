@@ -25,6 +25,7 @@ from mathutils.geometry import tessellate_polygon
 import kit
 from kit import town
 from kit.outlines import turned
+from kit.surfaces import MATERIALS
 
 Point = tuple[float, float]
 Vec3 = tuple[float, float, float]
@@ -215,9 +216,14 @@ def union(
 
 
 def refinish(obj: bpy.types.Object, material: str) -> bpy.types.Object:
-    """Gives every face of obj the kit material `material` (kit/surfaces.py), for a town piece
-    such as town.helix() that takes only a town.Finish. Returns obj."""
-    look = kit.surface("default", material)
+    """Gives every face of obj the look `material`: a kit material (kit/surfaces.py) or a
+    town.Finish. It dresses a piece made for another look, such as town.helix() (town finishes
+    only) or kit.ramp() (kit materials only). Returns obj."""
+    look = (
+        kit.surface("default", material)
+        if material in MATERIALS
+        else town.material(material)  # type: ignore[arg-type]
+    )
     for i in range(len(obj.data.materials)):
         obj.data.materials[i] = look
     return obj
@@ -272,6 +278,12 @@ def frame(at: Vec3, yaw: float, tilt: float) -> Matrix:
         @ Matrix.Rotation(math.radians(yaw), 4, "Z")
         @ Matrix.Rotation(math.radians(tilt), 4, "X")
     )
+
+
+def at(matrix: Matrix, point: Vec3) -> Vec3:
+    """Returns the world position of a point of a piece's own frame, for a pose from frame()."""
+    p = matrix @ Vector(point)
+    return (p.x, p.y, p.z)
 
 
 def roots(before: set[str]) -> list[bpy.types.Object]:

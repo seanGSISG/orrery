@@ -23,8 +23,6 @@ Each part has a west way and an east way:
 
 import math
 
-from mathutils import Vector
-
 import kit
 from kit import clockwork, town
 
@@ -49,7 +47,7 @@ CAP = 300.0
 
 # For work on one part: the start pad and both routes begin at the foot of this part (FOOT).
 # Keep it at 1.
-TEST_FROM = 3
+TEST_FROM = 1
 FOOT: dict[int, Place] = {}
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
@@ -161,8 +159,7 @@ def dial_angle(clock: float) -> float:
 
 def on_face(local: Point, lift: float = 0.0) -> Place:
     """Returns the world point of a point of the dial's own frame, `lift` m above the dial."""
-    p = FACE_POSE @ Vector((local[0], local[1], lift))
-    return (p.x, p.y, p.z)
+    return clockwork.at(FACE_POSE, (local[0], local[1], lift))
 
 
 def build_face() -> None:
@@ -765,9 +762,140 @@ for hour in range(12):
         material="blued_steel",
     )
 
-FINISH: Place = (*ring(RING_MID, RING_EAST + 8.0), RING)
+# --- 4. Bells and slabs --------------------------------------------------------------------------
+
+# The roof slab: the broken top of the belfry roof at +270, round the axis, with a wing to the
+# west-south-west where the vent chain and the weight lift arrive.
+ROOF_WING_X = -12.6
+ROOF_CORE = [
+    (12.4, 35.0),
+    (12.9, 41.5),
+    (10.0, 48.6),
+    (4.0, 51.8),
+    (-4.2, 51.4),
+    (-10.2, 47.8),
+    (ROOF_WING_X, 41.0),
+    (ROOF_WING_X, 29.0),
+    (-9.4, 27.0),
+    (-3.8, 26.0),
+    (4.2, 26.4),
+    (10.2, 29.6),
+]
+clockwork.fragment("roof_slab", ROOF_CORE, ROOF, under=6.0)
+
+# The west way: four vents in a row south above the ring's west side; the strongest throws the
+# marble onto the roof slab's wing.
+CHAIN2_X = -22.2
+CHAIN2 = [
+    (*ring(24.3, RING_WEST), RING, 9.5),
+]
+for i, z in enumerate((243.0, 251.0, 259.0)):
+    CHAIN2.append((CHAIN2_X, CHAIN2[0][1] - 3.5 * (i + 1), z, 9.5 if i < 2 else 12.5))
+CHAIN2[0] = (CHAIN2_X, CHAIN2[0][1], RING, 9.5)
+for i, (x, y, z, lift) in enumerate(CHAIN2):
+    kit.marker("steam_vent", at=(x, y, z), lift=lift, name=f"vent_bells_{i + 1}")
+    if i > 0:
+        clockwork.fragment(
+            f"bells_ledge_{i}",
+            kit.rect(x - 1.5, y - 4.3, x + 1.5, y + 1.1),
+            z,
+            under=1.3,
+        )
+
+# The east way: four roof slabs of slate that climb clockwise round above the ring from
+# RING_EAST, with a flat ridge stone after each, and two bells that swing along the middle two.
+SLAB_R = 25.2
+SLAB_RUN = 11.0
+SLAB_RISE = 4.0
+SLAB_SPAN = 2.0 * math.degrees(math.asin(SLAB_RUN / 2.0 / SLAB_R))
+RIDGE_SPAN = 5.6
+SLABS: list[tuple[Place, Place]] = []
+# The angle where each slab ends and its ridge stone starts.
+SLAB_ANGLES: list[float] = []
+_a = RING_EAST - 6.0
+for i in range(4):
+    z0 = RING + SLAB_RISE * i
+    p0, p1 = ring(SLAB_R, _a), ring(SLAB_R, _a - SLAB_SPAN)
+    heading = math.degrees(math.atan2(p1[1] - p0[1], p1[0] - p0[0]))
+    clockwork.refinish(
+        kit.ramp(
+            at=(*p0, z0),
+            width=3.4,
+            length=SLAB_RUN,
+            rise=SLAB_RISE,
+            yaw=heading - 90.0,
+            name=f"roof_slab_{i + 1}",
+            trim="brass",
+        ),
+        "slate",
+    )
+    SLABS.append(((*p0, z0), (*p1, z0 + SLAB_RISE)))
+    _a -= SLAB_SPAN
+    clockwork.fragment(
+        f"roof_ridge_{i + 1}",
+        clockwork.sector(AXIS, SLAB_R - 1.9, SLAB_R + 1.5, _a - RIDGE_SPAN, _a),
+        z0 + SLAB_RISE,
+        under=1.0,
+    )
+    if i in (1, 2):
+        mid = ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
+        kit.marker(
+            "pendulum",
+            at=(*mid, z0 + SLAB_RISE / 2 + 4.6),
+            rotation=(0.0, 0.0, heading),
+            period=4.0,
+            swing=45.0,
+            name=f"pendulum_slab_{i}",
+        )
+    SLAB_ANGLES.append(_a)
+    _a -= RIDGE_SPAN
+# The weight lift: from the last ridge stone up beside the roof slab's wing. The deck's near side
+# runs along the ridge stone's end, 0.05 m off, because a gap as wide as the marble catches it.
+# The wing's edge follows the deck's inner side. _wr points out from the axis, _wt clockwise.
+WEIGHT_2_R = 24.0
+_wr = (math.cos(math.radians(_a)), math.sin(math.radians(_a)))
+_wt = (_wr[1], -_wr[0])
+_w = ring(WEIGHT_2_R, _a)
+WEIGHT_2_LOW: Place = (
+    _w[0] + _wt[0] * 1.55,
+    _w[1] + _wt[1] * 1.55,
+    RING + 4 * SLAB_RISE,
+)
+kit.marker(
+    "moving_platform",
+    at=WEIGHT_2_LOW,
+    rotation=(0.0, 0.0, _a - 90.0),
+    points=[(*WEIGHT_2_LOW[:2], ROOF)],
+    period=16.0,
+    stop=3.0,
+    width=3.0,
+    depth=3.0,
+    name="weight_lift_2",
+)
+_inner = [
+    (
+        WEIGHT_2_LOW[0] - _wr[0] * 1.6 + _wt[0] * k * 1.5,
+        WEIGHT_2_LOW[1] - _wr[1] * 1.6 + _wt[1] * k * 1.5,
+    )
+    for k in (1.0, -1.0)
+]
+# Near the last vent the wing's north edge stays 2.8 m south of it: a marble that the vent
+# throws south at 3 m/s is still below the roof's top 2 m from the vent.
+ROOF_WING_Y = CHAIN2[-1][1] - 2.8
+ROOF_WING = [
+    *_inner,
+    (ROOF_WING_X, 29.0),
+    (ROOF_WING_X, 40.0),
+    (-21.0, ROOF_WING_Y),
+    (-24.4, ROOF_WING_Y),
+    (-25.0, 31.6),
+]
+clockwork.fragment("roof_slab_wing", ROOF_WING, ROOF, under=3.5)
+
+FINISH: Place = (-6.0, 40.0, ROOF)
 FOOT[2] = (-8.0, 49.5, BELL_LEDGE)
 FOOT[3] = (-5.6, 51.2, LID)
+FOOT[4] = (*ring(RING_MID, RING_EAST + 4.0), RING)
 kit.marker("start", at=START if TEST_FROM == 1 else FOOT[TEST_FROM])
 kit.marker("finish", at=FINISH)
 
@@ -862,24 +990,24 @@ FIRST[3] = [
     ((SHARD_X, COIL[1] + 2.4, LID), "speed 3"),
     ((SHARD_X, COIL[1] + 0.9, LID), "jump; speed 3"),
 ]
-for i, (x, y) in enumerate(SHARDS_1):
-    FIRST[3] += [
-        ((x, y, LID + 1.0 + i), "speed 3"),
-        ((x, y - 0.25, LID + 1.0 + i), "jump; speed 3" if i < 5 else "speed 3"),
-    ]
-FIRST[3][-1] = (
-    (SHARD_X, SHARDS_1[-1][1] - 0.6, LID + 6.0),
-    "speed 2; wait_until lift_shards 9.6 0.3",
-)
+# On the stairs the bot jumps where it crosses each step's jump point, and a jump that it
+# reaches in the air goes off at the landing; so a step needs no point of its own.
 FIRST[3] += [
+    ((x, y - 0.25, LID + 1.0 + i), "jump; speed 3")
+    for i, (x, y) in enumerate(SHARDS_1[:-1])
+]
+FIRST[3] += [
+    (
+        (SHARD_X, SHARDS_1[-1][1] - 0.6, LID + 6.0),
+        "speed 2; wait_until lift_shards 9.6 0.3",
+    ),
     (SHARD_LIFT, "speed 2; wait_until lift_shards 5.0 6.2"),
     ((SHARD_X - 0.6, SHARD_Y, LID + 14.0), "jump; speed 3"),
 ]
-for i, (x, y) in enumerate(SHARDS_2):
-    FIRST[3] += [
-        ((x, y, LID + 15.0 + i), "speed 3"),
-        ((x - 0.25, y, LID + 15.0 + i), "jump; speed 3"),
-    ]
+FIRST[3] += [
+    ((x - 0.25, y, LID + 15.0 + i), "jump; speed 3")
+    for i, (x, y) in enumerate(SHARDS_2)
+]
 _t = (math.sin(math.radians(SHARD_VENT_AT)), -math.cos(math.radians(SHARD_VENT_AT)))
 FIRST[3] += [
     ((_vl_east - 1.2, SHARD_Y, SHARD_VENT_LEDGE), "speed 3"),
@@ -894,22 +1022,19 @@ FIRST[3] += [
     (on_ring(28.8, 189.0, SHARD_TOP), "speed 3"),
     (on_ring(28.8, 186.2, SHARD_TOP), "jump; speed 2.5"),
 ]
-for i, a in enumerate(SHARDS_3):
-    last = i == len(SHARDS_3) - 1
-    FIRST[3] += [
-        (
-            on_ring(28.8, a, SHARD_TOP + 1.0 + i),
-            "speed 2.5" if not last else "speed 1.5",
-        ),
-        (
-            on_ring(28.8, a - 1.1, SHARD_TOP + 1.0 + i)
-            if not last
-            else on_ring(28.0, a, SHARD_TOP + 6.0),
-            "jump; speed 2.5",
-        ),
-    ]
-FIRST[3] += [(on_ring(RING_MID, SHARDS_3[-1], RING), "speed 3")]
-for a in range(int(SHARDS_3[-1]) + 20, int(RING_EAST + 360.0) - 5, 22):
+FIRST[3] += [
+    (on_ring(28.8, a - 1.1, SHARD_TOP + 1.0 + i), "jump; speed 2.5")
+    for i, a in enumerate(SHARDS_3[:-1])
+]
+FIRST[3] += [
+    (on_ring(28.8, SHARDS_3[-1], SHARD_TOP + 6.0), "speed 1.5"),
+    (on_ring(28.0, SHARDS_3[-1], SHARD_TOP + 6.0), "jump; speed 2.5"),
+]
+# The last shard step ends beside vent_bells_1, so the first run lands on the ring's outer half,
+# clear of the vent. Then it rolls clockwise round the north half to RING_EAST: the roof slabs
+# climb over the south half, and the first slab starts at the ring's own height.
+FIRST[3] += [(on_ring(26.0, SHARDS_3[-1], RING), "speed 2")]
+for a in range(int(SHARDS_3[-1]) - 20, int(RING_EAST), -22):
     FIRST[3].append((on_ring(RING_MID, a, RING), "speed 12"))
 EXPERT[3] = [
     ((ROD_FOOT[0] - _rod_u[0] * 2.0, ROD_FOOT[1] - _rod_u[1] * 2.0, LID), "speed 4"),
@@ -939,6 +1064,33 @@ for i, a in enumerate(ROD_STEPS):
 EXPERT[3] += [(on_ring(RING_MID, ROD_STEPS[-1], RING), "speed 3")]
 for a in range(int(ROD_STEPS[-1]) + 20, int(RING_WEST) - 5, 22):
     EXPERT[3].append((on_ring(RING_MID, a, RING), "speed 12"))
+
+
+# --- Routes: part 4 -------------------------------------------------------------------------------
+
+FIRST[4] = [(on_ring(SLAB_R, RING_EAST - 3.0, RING), "speed 4")]
+for i, (p0, p1) in enumerate(SLABS):
+    pre = ""
+    if i in (1, 2):
+        pre = f"speed 3; wait_until pendulum_slab_{i} 1.4 1.8"
+    FIRST[4] += [
+        (p0, pre or "speed 5"),
+        (
+            (p1[0] + (p1[0] - p0[0]) * 0.06, p1[1] + (p1[1] - p0[1]) * 0.06, p1[2]),
+            "speed 5",
+        ),
+    ]
+_ridge_end = ring(WEIGHT_2_R, SLAB_ANGLES[-1] - RIDGE_SPAN + 1.6)
+FIRST[4] += [
+    ((*_ridge_end, RING + 4 * SLAB_RISE), "speed 2; wait_until weight_lift_2 0.1 0.8"),
+    (WEIGHT_2_LOW, "speed 2; wait_until weight_lift_2 8.2 10.5"),
+    ((WEIGHT_2_LOW[0] - _wr[0] * 3.2, WEIGHT_2_LOW[1] - _wr[1] * 3.2, ROOF), "speed 3"),
+]
+EXPERT[4] = [
+    ((CHAIN2_X + 0.6, CHAIN2[0][1] + 3.4, RING), "speed 3"),
+    ((CHAIN2_X, CHAIN2[0][1] + 1.8, RING), "speed 3"),
+    ((CHAIN2_X, CHAIN2[-1][1] - 4.8, ROOF), "speed 3"),
+]
 
 
 def route(kind: str, legs: list[Leg]) -> None:
@@ -987,5 +1139,3 @@ kit.shot(
 )
 kit.shot("face", at=(2.0, 14.0, 162.0), rotation=(-12.0, 0.0, 40.0))
 kit.shot("gears", at=(6.0, 18.0, 156.0), rotation=(-2.0, 0.0, -30.0))
-kit.shot("debug_plan", at=(-4.0, 46.0, 215.0), rotation=(-90.0, 0.0, 0.0))
-kit.shot("debug_ledge", at=(-4.0, 30.0, 182.0), rotation=(-20.0, 0.0, 0.0))
