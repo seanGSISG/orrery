@@ -209,8 +209,9 @@ func _follow(state: GameState) -> bool:
 
 ## Goes along the route: waits at a stop, leaves each point it reached, then steers to the next.
 ## After a point with a press it stops for this tick, so the press goes out before the next
-## point can start a wait. The bot does not leave the last point: it steers back to it until the
-## run finishes, because a jump can fly over the finish.
+## point can start a wait. The bot does not leave the last point: it steers back to it and comes
+## to rest on it until the run finishes, because a jump can fly over the finish. In a climb the
+## next zone's bot then starts from a still marble.
 func _act(state: GameState, input: MarbleInput) -> void:
 	while not _at_end:
 		var point: Route.Waypoint = _points[waypoint]
@@ -309,11 +310,11 @@ func _press(state: GameState, input: MarbleInput) -> void:
 
 
 ## Steers along the line from the last point to the next one. The wished speed along the line
-## is the most from which the marble can still brake to the plan's speed at the point; past the
-## point it turns back. A pull toward the line keeps the marble on it, so it passes each point
-## and its gem. The camera looks along the line. On the ground the move asks for the wished
-## velocity over the ground; in the air it only steers and brakes, so a flight keeps its
-## take-off speed.
+## is the most from which the marble can still brake to the plan's speed at the point (to rest
+## at the last point once it got there); past the point it turns back. A pull toward the line
+## keeps the marble on it, so it passes each point and its gem. The camera looks along the
+## line. On the ground the move asks for the wished velocity over the ground; in the air it
+## only steers and brakes, so a flight keeps its take-off speed.
 func _steer(state: GameState, input: MarbleInput) -> void:
 	var point: Route.Waypoint = _points[waypoint]
 	var up: Vector3 = state.up
@@ -321,10 +322,12 @@ func _steer(state: GameState, input: MarbleInput) -> void:
 	var back: Vector3 = _flat(state.position - point.position, up)
 	var ahead: float = -back.dot(along)
 	var off: Vector3 = back + along * ahead
-	var room: float = maxf(absf(ahead) - (STOP_REACH / 2.0 if point.stops() else REACH), 0.0)
+	var rest: bool = point.stops() or _at_end
+	var room: float = maxf(absf(ahead) - (STOP_REACH / 2.0 if rest else REACH), 0.0)
 	var air: bool = not state.on_ground
 	var brake: float = AIR_BRAKE if air else GROUND_BRAKE
-	var speed: float = minf(_caps[waypoint], sqrt(_limits[waypoint] ** 2 + 2.0 * brake * room))
+	var limit: float = 0.0 if _at_end else _limits[waypoint]
+	var speed: float = minf(_caps[waypoint], sqrt(limit ** 2 + 2.0 * brake * room))
 	var want: Vector3 = along * signf(ahead) * speed - (off * LINE_GAIN).limit_length(MAX_CORRECTION)
 	want = want.limit_length(_caps[waypoint])
 	var velocity: Vector3 = _flat(state.velocity, up)
