@@ -130,37 +130,79 @@ def vent(name: str, at: Place, lift: float, radius: float = 1.0) -> None:
 
 # --- Part 1: first roofs, +300 to +322 ----------------------------------------------------------
 
-# The quay: the zone start, flush with the south edge of the cap. It meets the cap's edge on
-# the arc x -3 to 3, from ARC degrees round the cap to -180 - ARC. Beside the arc its floor
-# wraps round the cap's south half as far as WRAP degrees below the cap's east and west points,
-# so that no gap opens between the two: there it stays outside zone 2's brass rim round the cap
-# (radius 5.0 to 5.12), and its edge runs straight out from the cap. A jetty runs west from the
-# quay to the wall of Roof 1.
+# The quay: the zone start, flush with the south edge of the cap. It wraps round the cap's
+# south half, from WRAP degrees below the cap's east point to WRAP below its west point, and
+# meets zone 2's floor edge to edge, top to top at +300 m, so that no gap opens beside the cap:
+# - from RIM_SPAN[0] to RIM_SPAN[1] - 360 degrees the cap has no rim, and the quay follows the
+#   sides of the cap's polygon;
+# - beyond, it follows the outer edge of the rim and its square-cut ends.
+# Its outer edges run straight out from the cap to the sides of the quay. A jetty runs west
+# from the quay to the wall of Roof 1.
 QUAY = (-7.0, 25.0, 5.5, 35.0)
 qx0, qy0, qx1, qy1 = QUAY
 START: Place = (0.0, 29.0, 300.0)
-ARC = math.degrees(math.atan2(qy1 - CAP[1], 3.0))
-WRAP = 20.0
-RIM_CLEAR = CAP_RADIUS + 0.14
+WRAP = 22.0
+# Zone 2's cap and rim (levels/ascent/zone_2.py, t32-zone-2 006410b): the cap is a polygon of
+# CAP_SIDES sides round CAP; the rim is a brass band RIM_WIDTH m wide outside it, in steps of
+# RIM_STEP degrees counter-clockwise over RIM_SPAN, with mitred corners.
+CAP_SIDES = 96
+RIM_SPAN = (-50.0, 230.0)
+RIM_STEP = 4.0
+RIM_WIDTH = 0.12
+
+
+def round_cap(angle: float, radius: float) -> Point:
+    """Returns the plan point `radius` m from the cap's axis at `angle` degrees."""
+    a = math.radians(angle)
+    return (CAP[0] + radius * math.cos(a), CAP[1] + radius * math.sin(a))
+
+
+def cap_edge(angle: float) -> Point:
+    """Returns the point at `angle` degrees on the edge of zone 2's cap polygon."""
+    side = 360.0 / CAP_SIDES
+    middle = (math.floor(angle / side) + 0.5) * side
+    apothem = CAP_RADIUS * math.cos(math.radians(side / 2))
+    return round_cap(angle, apothem / math.cos(math.radians(angle - middle)))
+
+
+def rim_end(angle: float, toward: float) -> Point:
+    """Returns the outer corner of the end of zone 2's rim at `angle` degrees: the band ends
+    square to its last side, which runs to `toward` degrees."""
+    x, y = round_cap(angle, CAP_RADIUS)
+    n = math.radians((angle + toward) / 2)
+    return (x + RIM_WIDTH * math.cos(n), y + RIM_WIDTH * math.sin(n))
 
 
 def wrap_corner(angle: float, x: float) -> Point:
-    """Returns the point on the side x of the quay that the line straight out from the cap at
-    `angle` degrees meets."""
+    """Returns the point on the side x of the quay that the line straight out from the cap's
+    axis at `angle` degrees meets."""
     a = math.radians(angle)
-    out = (x - CAP[0] - RIM_CLEAR * math.cos(a)) / math.cos(a)
-    return (x, CAP[1] + (RIM_CLEAR + out) * math.sin(a))
+    return (x, CAP[1] + (x - CAP[0]) * math.tan(a))
 
 
+_rim_out = CAP_RADIUS + RIM_WIDTH / math.cos(math.radians(RIM_STEP / 2))
+_bare = (RIM_SPAN[0], RIM_SPAN[1] - 360.0)
+_side = 360.0 / CAP_SIDES
+# The rim's corners between its end and the line out from the cap at WRAP.
+_steps = round((-WRAP - _bare[0]) / RIM_STEP)
 town.floor(
     "quay",
     [
         (qx0, qy0),
         (qx1, qy0),
         wrap_corner(-WRAP, qx1),
-        *kit.arc(CAP, RIM_CLEAR, -WRAP, ARC),
-        *kit.arc(CAP, CAP_RADIUS, ARC, -180.0 - ARC),
-        *kit.arc(CAP, RIM_CLEAR, -180.0 - ARC, -180.0 + WRAP),
+        *[round_cap(-WRAP - RIM_STEP * k, _rim_out) for k in range(_steps)],
+        rim_end(_bare[0], _bare[0] + RIM_STEP),
+        cap_edge(_bare[0]),
+        *[
+            round_cap(_side * k, CAP_RADIUS)
+            for k in range(
+                math.ceil(_bare[0] / _side) - 1, math.floor(_bare[1] / _side), -1
+            )
+        ],
+        cap_edge(_bare[1]),
+        rim_end(_bare[1], _bare[1] - RIM_STEP),
+        *[round_cap(_bare[1] - RIM_STEP * k, _rim_out) for k in range(1, _steps + 1)],
         wrap_corner(-180.0 + WRAP, qx0),
     ],
     300.0,
