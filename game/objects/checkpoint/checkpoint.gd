@@ -1,19 +1,25 @@
 class_name Checkpoint
 extends LevelObject
 ## The `checkpoint` marker: a pad, 1.5 m wide. When the marble reaches it, the next fall
-## respawns the marble on it. It glows while it is the last checkpoint.
+## respawns the marble on it. The pad is a raised plate of stone in a brass rim with a blue
+## lens (PadLook); the lens glows while the pad is the last checkpoint.
 
 const COLOUR: Color = Color(0.34, 0.71, 0.91)
+## Radius of the pad, m: the trigger's radius.
+const RADIUS: float = 0.75
+## Glow of the lit lens, times its colour.
+const GLOW: float = 1.0
 
 var _lit: bool = false
-var _look: StandardMaterial3D = StandardMaterial3D.new()
+var _lens: StandardMaterial3D = PadLook.lens(COLOUR, false, GLOW)
 
 @onready var _pad: MeshInstance3D = $Mesh
 
 
-## Gives the pad its own material and shows it unlit.
+## Builds the pad and shows it unlit.
 func _ready() -> void:
-	_pad.material_override = _look
+	_pad.mesh = PadLook.mesh(RADIUS)
+	PadLook.dress(_pad, _lens)
 	_light(false)
 
 
@@ -36,10 +42,7 @@ func on_overlap(run: LevelRun, first: bool) -> void:
 		feedback.emit(&"checkpoint.reach", 1.0, global_position)
 
 
-## Makes the pad bright and glowing when lit, dim when not.
+## Makes the lens glow when lit, and pale when not.
 func _light(lit: bool) -> void:
 	_lit = lit
-	_look.albedo_color = COLOUR if lit else COLOUR.darkened(0.6)
-	_look.emission_enabled = lit
-	_look.emission = COLOUR
-	_look.emission_energy_multiplier = 1.0
+	PadLook.light(_lens, COLOUR, lit, GLOW)

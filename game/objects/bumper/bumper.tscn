@@ -5,8 +5,7 @@
 
 [sub_resource type="StandardMaterial3D" id="look"]
 albedo_color = Color(0.72, 0.2, 0.14, 1)
-metallic = 0.6
-roughness = 0.35
+roughness = 0.5
 
 [node name="Bumper" type="Node3D"]
 script = ExtResource("1")
@@ -18,3 +17,7 @@ script = ExtResource("2")
 
 [node name="Mesh" type="MeshInstance3D" parent="Solid"]
 material_override = SubResource("look")
+
+[node name="Base" type="MeshInstance3D" parent="Solid/Mesh"]
+
+[node name="Cap" type="MeshInstance3D" parent="Solid/Mesh"]
