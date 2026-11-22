@@ -138,14 +138,15 @@ test: fresh-levels import
     count=$(grep -oE '^Tests +[0-9]+' "$log" | grep -oE '[0-9]+' || true)
     if (( ${count:-0} == 0 )); then echo "just test: zero tests ran" >&2; exit 1; fi
 
-# Lint GDScript (gdlint, and a Godot compile check), Python (Ruff; ty outside Blender
-# scripts) and shell scripts (shellcheck). Tool versions come from tools/setup/pins.env
+# Lint GDScript, Python and shell scripts (lint-game and lint-scripts)
+lint: lint-game lint-scripts
+
+# Lint GDScript: gdlint, and a Godot compile check. Tool versions come from tools/setup/pins.env
 [script("bash")]
-lint: import
+lint-game: import
     set -euo pipefail
     source tools/setup/pins.env
-    files() { git ls-files --cached --others --exclude-standard "$@"; }
-    mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
+    mapfile -t gd < <(git ls-files --cached --others --exclude-standard 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
     # Compile every game script, also the ones that no test loads. Load them from a running
     # SceneTree, not with --check-only, so that references to autoloads resolve.
@@ -163,9 +164,17 @@ lint: import
     log=$("{{ godot }}" --headless --path game --script "$check" -- "${gd[@]}" 2>&1) || status=$?
     if (( status != 0 )) || grep -q 'SCRIPT ERROR' <<<"$log"; then
         echo "$log" >&2
-        echo "just lint: a game script does not compile" >&2
+        echo "just lint-game: a game script does not compile" >&2
         exit 1
     fi
+
+# Lint Python (Ruff; ty outside Blender scripts) and shell scripts (shellcheck). It needs no
+# Godot. Tool versions come from tools/setup/pins.env
+[script("bash")]
+lint-scripts:
+    set -euo pipefail
+    source tools/setup/pins.env
+    files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t py < <(files '*.py')
     uvx "ruff@$RUFF_VERSION" check "${py[@]}"
     uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
@@ -187,8 +196,8 @@ lint: import
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
-# Build the Linux and Windows release exports into build/
-export: import
+# Build the Linux and Windows release exports, with every level, into build/
+export: fresh-levels import
     mkdir -p build/linux build/windows
     "{{ godot }}" --headless --path game --export-release "Linux" ../build/linux/orrery.x86_64
     "{{ godot }}" --headless --path game --export-release "Windows Desktop" ../build/windows/orrery.exe
@@ -240,8 +249,9 @@ model *args:
     @uv run --quiet --project tools/art orrery-art model "$@"
 
 # Clean a generated GLB into assets/props/<name>.glb for kit.prop: real height in m, the origin
-# on the base centre, a triangle budget, optionally one kit material. For example
-# `just prop-cleanup build/art/models/lamp.glb lamp --height 1.8 --triangles 4000 --material brass`
+# on the base centre, the triangle budget and texture size of its class, and materials inside
+# the limits of visual-quality.md §6. For example
+# `just prop-cleanup build/art/models/lamp.glb lamp --height 3.2 [--class hero] [--stone] [--material brass:1,2]`
 [positional-arguments]
 [script("bash")]
 prop-cleanup source name *args:
@@ -271,6 +281,29 @@ prop-cleanup source name *args:
     rm -f "$dest.json"
     if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
     echo "$dest"
+
+# Render the review sheet of assets/props/<id>.glb to build/props/<id>.png: four views of the
+# prop beside the marble and the kit materials, in neutral light (headless Cycles on the CPU)
+[positional-arguments]
+[script("bash")]
+render-prop id *args:
+    set -euo pipefail
+    id=$1
+    shift
+    if [[ ! $id =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just render-prop: the id must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    out="build/props/$id.png"
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/render_prop.py -- "assets/props/$id.glb" "$out" "$@" >"$log" 2>&1; then
+        cat "$log" >&2
+        echo "just render-prop: Blender failed" >&2
+        exit 1
+    fi
+    echo "$out"
 
 # Run the asset tool tests: mocked APIs, no paid call. The prop tests need blender-5.2
 [positional-arguments]

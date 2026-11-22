@@ -32,9 +32,12 @@ func _ready() -> void:
 	steam.top_radius = radius
 	steam.bottom_radius = radius * 0.7
 	steam.height = lift
+	steam.cap_top = false
+	steam.cap_bottom = false
 	var look: MeshInstance3D = $Steam
 	look.mesh = steam
 	look.position = shape.position
+	look.set_instance_shader_parameter(&"height", lift)
 	var grate: CylinderMesh = CylinderMesh.new()
 	grate.top_radius = radius
 	grate.bottom_radius = radius

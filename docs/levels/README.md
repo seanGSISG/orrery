@@ -44,9 +44,9 @@ These are the `@export` defaults in `game/objects/<type>/<type>.gd`. A marker ca
 | Steam Vent | `lift` 8 m, column `radius` 1.0 m, `push` 60 m/s². The marble reaches `lift` m above the grate and hovers there while it stays in the column | The briefs set the `lift` of each vent |
 | Trapdoor | `delay` 0.5 s after the first touch, then a 0.3 s swing open. The door starts to shut `close_after` 5 s after it starts to open. Panel 4 × 4 × 0.5 m | A 4 m trapdoor is safe at 8 m/s or more |
 | Crumbling Tiles | Each tile breaks `delay` 0.5 s after its own first touch. A broken tile does not return by itself: a respawn or a restart brings the tiles back. Grid 4 × 4 m of 2 m `tile`, 0.5 m thick | Same rule as the trapdoor, for each tile. A tile that has gone does not come back until the next respawn |
-| Moving platform | `period` 8 s for one cycle with the stops included, `stop` 1 s at each point, `loop` false (there and back), `offset` 0 s. Deck 4 × 4 × 0.5 m | The briefs set the path, period and stop of each platform |
+| Moving platform | `period` 8 s for one cycle with the stops included, `stop` 1 s at each point of the path, `loop` false (there and back; true goes on from the last point to the first), `offset` 0 s (give a second deck on one loop `period` ÷ 2). Deck `width` 4 × `depth` 4 × `thickness` 0.5 m; its top face is at the marker and at each path point. Only `period` sets the speed: each leg eases out and in, so its top speed is π/2 × its average speed | A straight leg cannot go round a building, so a loop round a tower needs a stop at each corner (B3). The briefs set the path, period and stop of each platform |
 | Pendulum | `period` 4 s, `swing` 60° to each side, `length` 4 m, bob `radius` 0.6 m, `offset` 0 s | The bob sweeps the track when the pivot is about `length` + `radius` above it |
-| Turning gear | `period` 8 s for one turn, `radius` 2.1 m to the tooth tips, `teeth` 12, `thickness` 0.5 m, `clockwise` false | |
+| Turning gear | `period` 8 s for one turn, `radius` 2.1 m to the tooth tips, `teeth` 12, `thickness` 0.5 m, `clockwise` false. The top face is at the marker | B3's stair gears turn once in 10 s, every second one clockwise |
 
 ## Time estimates
 
@@ -65,13 +65,13 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-B1, B2 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+B1, B2, B3 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
 | B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
 | B2 (route bot, 2026-11-21) | 32.8 s | 24.2 s | 49.3 s | 27.9 s |
-| B3 | 49 s | 23 s | 74 s | 26 s |
+| B3 (route bot, 2026-11-21) | 62.4 s | 24.2 s | 93.6 s | 27.8 s |
 | Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
 | Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
 | Ascent 3 (300 to 500 m) | 152 s | 73 s | | |
@@ -85,7 +85,7 @@ B1 and B2 (`b01.md` and `b02.md`, "As built") found these rules. They hold for e
 - **A piece that lies across an edge makes a step.** Give a beam or a ramp a level end that follows the edge.
 - **The route bot slows for each turn:** to 6.9 m/s at 30° and to 3.5 m/s at 90° or more (`RouteBot._turn_speed`). A sharp turn costs about half a second. On B1, curve points 2 to 3 m apart made the bot miss a point and turn back. So a fast route has few points, long legs and few turns.
 - **Leave 0.5 m between a route line and a kerb or a pillar.**
-- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines. `deck(..., holes=..., through=True)` makes each hole a shaft through the block, for a trapdoor or a gap to fall through.
+- **Kit pieces for an open floor** are in `kit/masonry.py`: `deck` (a floor of any outline), `dish`, `wall` (also a kerb), `arch`, `grille` (bars in a doorway that the marble cannot pass), `lathe` and `pillar` collide; `inlay`, `teeth`, `gear`, `hoop` and `ball` are decoration and do not. `kit/outlines.py` has `rect`, `box` and `arc` for the outlines. `deck(..., holes=..., through=True)` makes each hole a shaft through the block, for a trapdoor or a gap to fall through.
 - **An open trapdoor hangs its own length below its hinge**, from the bottom of the panel. Leave that room under it, or give the marker a shorter `depth` and a thinner `thickness`.
 - **A gate needs a wall.** A gap of 3 m or less is a jump, not a barrier. To make one way in, close the sides with a wall higher than any jump reaches: 1.5 m from the floor, 2.5 m from a step of 1 m next to it.
 - **A checkpoint pad catches a marble within 0.95 m of its middle.** Put it in a passage 2.3 to 3 m wide, or put one pad on each line that players take.
@@ -105,3 +105,13 @@ Ascent 1 (`ascent-z1.md`, "As built") found these rules for tall levels and for 
 - **Give each indoor room a `room_probe`.** Without it, a room has the cold ambient light of the sky. The marker is the middle of the room's floor, with the room's inside size; its probe reaches 0.45 m into the walls, so keep the walls thicker than that.
 - **Put land round a town.** A `land` marker just under the town's ground gives open country out to the haze. The land holds the marble, and its touch puts the marble out of bounds, so close the town's edge with houses: a marble on the ground must not roll out by accident. Far scenery (houses past the play space) is one mesh named `<name>-far`: no collision, no lightmap and no probe.
 - **Town finishes.** Walls take `wall` (coursed ashlar), frames and bands `dressed` (no joints), roofs `slate`. `town.Finish` lists every finish; each is a material in `game/materials/`.
+
+## Rules from B3
+
+B3 (`b03.md`, "As built") found these rules.
+
+- **A wall that faces the start puts the start in shade.** The dawn sun is 12° high, so a wall 5 m high throws a shadow 23 m long. Where a wall must stand across the way, give it arches with grilles: the sun and the view pass through, the marble does not.
+- **A moving platform goes straight from stop to stop.** A loop round a tower needs a stop at each corner, and the deck sweeps half its width, and more at its corners, on each side of the line between stops.
+- **A spring lands the marble with a bounce.** After a drop of 4 m the marble bounces about 1 m high and settles about 4 m further on. Put a gem 4 m past the landing, or on the arc itself.
+- **The bot only steers and brakes in the air.** Its speed at a `use` point sets the length of the arc: about 5 m/s from the court onto a balcony, 12 m/s for a long arc. The point after a `use` must be past the landing, or the bot turns back on the balcony and rolls off its edge.
+- **A rolling marble goes over a parapet when it falls 6 m.** A marble that leaves a carriage fast clears the court's 1.2 m parapet 6 m below and lands in the court.

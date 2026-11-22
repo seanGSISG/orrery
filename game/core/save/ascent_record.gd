@@ -29,7 +29,7 @@ var assisted: bool = false
 ## Stats of the current climb: falls and total metres fallen.
 var falls: int = 0
 var fallen: float = 0.0
-## Best height above the climb start in any climb, m, and the marble centre there. The flag
-## stands at this place.
+## Best height above the climb start in any climb, m, and the floor point under the marble
+## there. The flag stands at this place.
 var best_height: float = 0.0
 var best_position: Vector3 = Vector3.ZERO

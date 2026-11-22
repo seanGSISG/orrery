@@ -49,6 +49,7 @@ func _run() -> void:
 		return
 	_marble = Game.run.marble.global_position
 	_poses = _shot_poses(Game.run.level)
+	_camera.far = FollowCamera.FAR
 	Game.run.add_child(_camera)
 	_camera.make_current()
 	var viewport: RID = get_viewport().get_viewport_rid()

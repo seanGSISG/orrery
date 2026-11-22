@@ -49,7 +49,7 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 | Sun shadow filter | Soft Very Low | Soft Low | Soft Medium | Soft High | `RenderingServer.directional_soft_shadow_filter_set_quality` |
 | Sun shadow splits | 2 | 4 | 4 | 4 | `DirectionalLight3D.directional_shadow_mode` |
 | Sun shadow distance | 50 m | 80 m | 120 m | 160 m | `DirectionalLight3D.directional_shadow_max_distance` |
-| Sun angular size (PCSS soft shadows) | 0° | 0° | 0.5° | 0.5° | `Light3D.light_angular_distance` |
+| Sun angular size (PCSS soft shadows) | 0° | 0° | 0° | 0° | `Light3D.light_angular_distance` |
 | Omni and spot shadow atlas | 2048 | 2048 | 4096 | 4096 | `Viewport.positional_shadow_atlas_size` |
 | Lightmap bicubic sampling | off | on | on | on | `RenderingServer.lightmaps_set_bicubic_filter` |
 | Mesh LOD threshold (pixels; higher is coarser) | 2.0 | 1.0 | 1.0 | 0.5 | `Viewport.mesh_lod_threshold` |
@@ -62,7 +62,7 @@ Rules for the table:
 - Texture quality is the anisotropic level and the mipmap bias. No preset changes the resolution of a texture (section 6).
 - Not built yet: the SDFGI row comes with the Ascent mode. The marble reflection probe row comes with the marble look, because the marble needs its own render layer first.
 - SDFGI never runs in a campaign level, because campaign levels use lightmaps. SDFGI runs only in Ascent and Planetarium on Ultra, where the sun moves.
-- The 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`). Godot warns that PCSS has a "noticeable performance cost", so Low and Medium use 0°.
+- Every preset uses a sun of 0°, so no preset has PCSS soft shadows. A 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`), but in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch that leaked into the shade of the square, on High and on Ultra alike. Test renders of the `egg`, `start` and `crown_down` shots with the sun at 0° and at 0.5°, and with the volumetric fog off, showed that the sun size alone made them. Godot also warns that PCSS has a "noticeable performance cost".
 - Fixed project settings (all presets): `rendering/anti_aliasing/quality/use_debanding=true`, `rendering/reflections/reflection_atlas/reflection_size=256` (the default), `rendering/lightmapping/lightmap_gi/use_bicubic_filter=true`.
 
 ### Tonemapping, exposure and colour grading
@@ -71,7 +71,7 @@ Rules for the table:
 - Start: `tonemap_agx_white = 16.29` (the default) and `tonemap_agx_contrast = 1.25` (the default). Range: white 6.0 to 16.29 ("at least 6.0" for photorealistic light), contrast 1.0 to 1.5.
 - Exposure is fixed per sky preset (`Environment.tonemap_exposure`). Auto exposure stays off (`CameraAttributesPractical.auto_exposure_enabled = false`), so a level looks the same every run and gallery shots are comparable. In Ascent, a script sets the exposure from the same height curve that drives the time of day.
 - Colour grading uses only `tonemap_agx_contrast` and `adjustment_saturation` (with `adjustment_enabled`). Do not use a colour-correction LUT (`adjustment_color_correction`) and do not use the Soft Light glow blend mode. Both are SDR-only and break HDR output.
-- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.0 or higher, `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
+- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.5 (as built: stone in the low dawn sun reaches about 1.1, and at 1.0 it glowed), `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
 
 ### HDR output
 
@@ -287,7 +287,12 @@ A level script names a kit material, and the importer gives those faces the game
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
 - A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
-- Two objects take their look from `KitMaterials.find()` at run time (#29).
+- Seven objects take their look from `KitMaterials.find()` at run time: the Trapdoor and Crumbling Tiles (#29), and the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30). Each has a test that checks its kit materials.
+  - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
+  - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot. A set `finish` (a kit material, for example `wood` in Ascent 1) replaces the stone; the brass bands stay.
+  - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
+  - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
+  - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.
   - A Trapdoor's door is its own copy of the kit brass with one texture repeat across the door, so a large door shows no repeat.
   - Crumbling Tiles are a copy of the kit limestone: tint × 0.78, normal strength 1.8 and no paving (a tile moves, and the paving picks each slab's look from the piece's world position, so it would flicker). Each tile sits on a 4 cm tray of kit brass that shows as a brass line in the 5 cm gap round it. Each tile also lies at its own fixed tilt of up to 0.8° (its collider stays level) and shows its own patch of stone, both picked from its grid index. So loose tiles read apart from solid floor by shape, not by colour alone.
   - `crumbling_tiles.gd` is a tool script, so its tiles (meshes with lightmap UVs) exist in the editor and the lightmap bake lights them like the stone round them; a tile's baked light moves with it as it falls. Before, the tiles had only the probes, which over an empty frame see the sky: B2's east sheet in shade measured sRGB (55, 52, 47), and with the bake (73, 64, 52). The bake also closes the crumbling cells over B2's undercroft, as the tiles do in play, so that room is darker: the median luma of B2's `egg` shot went from 37 to 16 (pure black 0.05 %).
@@ -296,10 +301,12 @@ A level script names a kit material, and the importer gives those faces the game
 
 | Set | Limestone | Tint, repeat | Brass | Tint, repeat, roughness scale |
 |---|---|---|---|---|
-| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal007`, metallic 0.85 | (1.0, 1.1, 1.4), 0.7 m, × 2.4 |
+| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal007`, metallic 0.85, detail normal at 0.25 m | (1.0, 1.1, 1.4), 2.0 m, × 2.4 |
 | `b` | Poly Haven `concrete_wall_008` | (2.3, 2.45, 3.0), 1.6 m | ambientCG `Metal048A` | (0.9, 0.8, 0.62), 1.0 m, × 3.0 |
 | `c` | Poly Haven `dirty_concrete` | (1.6, 1.7, 1.9), 1.6 m | ambientCG `Metal008` | (1.0, 1.0, 1.0), 1.2 m, × 1.3 |
 
+- The brass of set A repeats every 2 m: with the 2K maps that is 1024 px/m, the close-zone target (section 6). Before, it repeated every 0.7 m. A bar 0.09 m wide then showed a narrow strip of the map's dark blotches, which read as wood grain, and a dark pit fell every 0.7 m along a rail (B3 style review). The detail normal at 0.25 m gives the fine grain close to the camera.
+- Gear teeth (`kit.teeth()`) and grille rails have 0.02 m chamfers on their edges, so each edge catches a highlight and the piece reads as cast metal, not as a sawn block. The teeth's chamfers are round, in two segments: with one flat segment, the small triangle at each corner caught the sun as a near-white point. The brass that objects build in code (turning-gear teeth, the carriage bands) gets the same 0.02 m chamfers from `Chamfer.box()` (`game/objects/chamfer.gd`); their colliders stay plain boxes.
 - Gold is the same in every set: `Metal048A`, tint (1.0, 0.82, 0.5), 0.6 m, roughness × 5.
 - Every limestone is paved: slabs of 1.0 m by 1.5 m in a running bond, joints 12 mm wide, the detail normal at 0.25 m.
 - The tints are above 1 because the colour maps are darker than limestone. The shader keeps the result inside the albedo limits of section 6.
@@ -342,13 +349,16 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Kit textures in Git LFS (sets A, B and C, and gold) | 47 MB |
 | Tier skies in Git LFS (dawn, noon, dusk) | 35 MB |
 | Sky sources in Git LFS (3 HDRIs, the planet map) | 14 MB |
-| Lightmap files, `b01` (#28: 96 meshes, 55,700 triangles, every mesh at 0.1 m per texel; bake 36 s) | 4.6 MB |
+| Lightmap files, `b01` (#28: 96 meshes, 83,300 triangles with the round 0.02 m chamfers of #30, every mesh at 0.1 m per texel; bake 39 s) | 4.7 MB |
 | VRAM, `fixture`, Medium at 1080p | 875 MB |
 | VRAM, `b01`, Medium at 1080p | 892 MB |
 | GPU time, `b01`, mean / p99 at 1080p (three runs; see the note on clock speed below) | Low 0.22 to 0.54 / 0.27 to 0.78 ms, Medium 0.38 to 0.89 / 0.95 to 1.16 ms, High 0.83 to 0.90 / 0.94 to 3.00 ms, Ultra 1.30 to 1.33 / 1.60 to 1.62 ms |
-| Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 44,200 triangles in the level; bake 34 s) | 4.8 MB |
+| Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 72,400 triangles in the level with the chamfers of #30; bake 39 s) | 5.1 MB |
 | VRAM, `b02`, Medium at 1080p | 904 MB |
 | GPU time, `b02`, mean / p99 (one run, with the object looks of #29) | Low 0.28 / 1.01 ms, Medium 0.37 / 0.50 ms, High 0.81 / 0.96 ms, Ultra 1.26 / 1.57 ms at 1080p; High 1.23 / 1.57 ms at 1440p; Ultra 3.95 / 5.14 ms at 4K |
+| Lightmap files, `b03` (#30: 224 meshes, 64,600 triangles in the level; bake 40 s) | 5.2 MB |
+| VRAM, `b03`, Medium at 1080p | 912 MB |
+| GPU time, `b03`, mean / p99 (one run, with the round chamfers of the B3 style review) | Low 0.26 / 0.37 ms, Medium 0.39 / 0.54 ms, High 0.87 / 1.12 ms, Ultra 2.00 / 2.38 ms at 1080p; High 1.42 / 3.03 ms at 1440p; Ultra 4.98 / 11.92 ms at 4K |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |

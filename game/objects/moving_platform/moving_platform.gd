@@ -6,6 +6,17 @@ extends LevelObject
 ## rides along through friction. One cycle takes `period` s, stops included: there and back
 ## along the path, or once round it when `loop` is true. The top face of the deck is at the
 ## path point, and the deck keeps the marker's rotation. With no points the deck stays still.
+## The deck is a slab of the kit's stone in a frame of the kit's brass (KitMaterials): a band
+## round its top edge and one round its foot. A set `finish` replaces the stone; the bands stay.
+
+## The brass bands: their height, how far they stand out from the stone, and how far each band
+## keeps from the deck's top face and underside, m.
+const BAND: float = 0.14
+const BAND_PROUD: float = 0.025
+const BAND_DROP: float = 0.02
+
+## The deck's stone of every platform; stone() makes it once.
+static var _stone: ShaderMaterial = null
 
 ## Seconds for one cycle, stops included.
 @export var period: float = 8.0
@@ -21,8 +32,8 @@ extends LevelObject
 @export var depth: float = 4.0
 ## Deck size down from the top face, m.
 @export var thickness: float = 0.5
-## The deck's kit material (KitMaterials.find), for example "wood" or "brass". Empty keeps the
-## scene's plain look.
+## The deck's kit material (KitMaterials.find), for example "wood" or "brass", in place of the
+## stone. The brass bands stay. Empty keeps the stone.
 @export var finish: String = ""
 
 ## World positions where the deck stops, in cycle order. Leg i runs from stop i to stop i + 1,
@@ -34,7 +45,9 @@ var _times: PackedFloat64Array = []
 @onready var _solid: Solid = $Solid
 
 
-## Sizes the deck and works out the path from the marker's points.
+## Sizes the deck and its brass bands and works out the path from the marker's points. The
+## bands are nodes of the scene, so that a mode that sets a range on every mesh of a level
+## before the level's _ready (Ascent) finds them.
 func _ready() -> void:
 	var box: BoxShape3D = BoxShape3D.new()
 	box.size = Vector3(width, thickness, depth)
@@ -45,12 +58,37 @@ func _ready() -> void:
 	mesh.size = box.size
 	var look: MeshInstance3D = $Solid/Mesh
 	look.mesh = mesh
+	look.material_override = stone()
 	look.position = shape.position
 	if finish != "":
 		look.material_override = KitMaterials.find(finish)
 		if look.material_override == null:
 			push_error("moving_platform `%s`: no kit material `%s`" % [name, finish])
+	var tall: float = minf(BAND, thickness / 3.0)
+	# Chamfered edges catch a highlight, so the bands read as brass and not as paint.
+	var band: ArrayMesh = Chamfer.box(
+		Vector3(width + 2.0 * BAND_PROUD, tall, depth + 2.0 * BAND_PROUD)
+	)
+	# The top band's top is BAND_DROP below the deck's top face, and the foot band's bottom is
+	# BAND_DROP above the deck's underside, so no face of a band lies on a face of the stone.
+	var top: MeshInstance3D = $Solid/Mesh/TopBand
+	var foot: MeshInstance3D = $Solid/Mesh/FootBand
+	top.position.y = thickness / 2.0 - BAND_DROP - tall / 2.0
+	foot.position.y = BAND_DROP + (tall - thickness) / 2.0
+	for frame: MeshInstance3D in [top, foot]:
+		frame.mesh = band
+		frame.material_override = KitMaterials.find("brass")
 	_plan()
+
+
+## Returns the deck's stone: a copy of the kit limestone with no paving. A deck moves, and the
+## paving picks each slab's look from the piece's world position, so it would flicker.
+static func stone() -> ShaderMaterial:
+	if _stone == null:
+		var slab: ShaderMaterial = KitMaterials.find("limestone").duplicate() as ShaderMaterial
+		slab.set_shader_parameter("slab_size", Vector2.ZERO)
+		_stone = slab
+	return _stone
 
 
 ## Puts the deck at its start pose. A checkpoint respawn does not change it, because the clock
