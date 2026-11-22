@@ -30,7 +30,8 @@ func test_climb_stops_at_the_first_zone_that_is_not_built() -> void:
 	assert_eq(Ascent.built_from_bottom(Ascent.FIXTURE), Ascent.FIXTURE)
 
 
-## Every mesh of the zones has a visibility range, so far geometry is not drawn.
+## Every mesh of the zones has a visibility range, so far geometry is not drawn. The gate too:
+## the mode adds it after it builds the zones.
 func test_far_geometry_has_a_visibility_range() -> void:
 	if not climb():
 		return
@@ -38,8 +39,6 @@ func test_far_geometry_has_a_visibility_range() -> void:
 	assert_gt(meshes.size(), 20, "the meshes of the zones")
 	for node: Node in meshes:
 		var mesh: MeshInstance3D = node as MeshInstance3D
-		if mesh.get_parent() is AscentGate:
-			continue
 		assert_gte(mesh.visibility_range_end, Ascent.FAR, mesh.name)
 
 

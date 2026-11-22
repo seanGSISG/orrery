@@ -254,7 +254,8 @@ func _build(ids: Array[StringName]) -> Level:
 			zone_level.free()
 			continue
 		_strip(zone_level)
-		_set_ranges(zone_level)
+		# When the zone is ready: some objects make their meshes in _ready().
+		zone_level.ready.connect(_set_ranges.bind(zone_level), CONNECT_ONE_SHOT)
 		_starts.append(pads[0] as StartPad)
 		_zone_ids.append(id)
 		level.add_child(zone_level)
@@ -292,7 +293,9 @@ func _strip(zone_level: Level) -> void:
 		node.free()
 
 
-## Gives every mesh of a zone its visibility range: FAR from its nearest side.
+## Gives every mesh of a zone its visibility range: FAR from its nearest side. It runs when the
+## zone is ready, so the meshes that objects make in _ready() (gear teeth, tiles) and the gate
+## get it too.
 func _set_ranges(zone_level: Level) -> void:
 	var meshes: Array[Node] = []
 	_find(zone_level, meshes, func(node: Node) -> bool: return node is GeometryInstance3D)

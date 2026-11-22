@@ -261,6 +261,9 @@ func test_route_bot_climbs_to_the_gate() -> void:
 		var route: Route = object as Route
 		var bot: RouteBot = RouteBot.new(run, route)
 		assert_eq(bot.problems.size(), 0, route.name)
+		# A bot with problems never ends, so the climb stops here, through the clean-up below.
+		if not bot.problems.is_empty():
+			break
 		InputHub.use_source(bot)
 		while not bot.done:
 			run.step(InputHub.next_input(run.state))

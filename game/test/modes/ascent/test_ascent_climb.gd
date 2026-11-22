@@ -2,7 +2,8 @@ extends AscentTest
 ## The route bot climbs the real Ascent zones 1 to 3 in one run (docs/design/ascent.md §8.2):
 ## from the climb start, the bot of each zone drives that zone's route in turn through
 ## MarbleInput, with no restart, and the bot of zone 3 reaches the gate. Each test takes about
-## 15 s, most of it the physics of the climb.
+## 15 s, most of it the physics of the climb. The real zones also give the visibility range
+## test the objects that make meshes when they are ready.
 
 
 ## The expert route of each zone climbs to the gate with no fall.
@@ -13,6 +14,22 @@ func test_expert_routes_climb_to_the_gate() -> void:
 ## The first-run route of each zone climbs to the gate with no fall.
 func test_first_run_routes_climb_to_the_gate() -> void:
 	climb_to_the_gate(&"first_run")
+
+
+## The meshes that objects make in _ready() (the teeth of the turning gears, the stones of the
+## crumbling tiles) have a visibility range too, like the rest of the zones.
+func test_object_meshes_have_a_visibility_range() -> void:
+	run = Ascent.start(true, Ascent.ZONES)
+	if Ascent.of(run) == null:
+		fail_test("zones 1 to 3 are not built: run `just build-levels`")
+		return
+	var made: Array[Node] = []
+	for object: LevelObject in run.objects:
+		if object is TurningGear or object is CrumblingTiles:
+			made.append_array(object.find_children("*", "MeshInstance3D", true, false))
+	assert_gt(made.size(), 0, "meshes that the objects made")
+	for node: Node in made:
+		assert_gte((node as MeshInstance3D).visibility_range_end, Ascent.FAR, node.name)
 
 
 ## Starts a new climb of Ascent.ZONES and lets a bot drive the route of kind in each zone, from

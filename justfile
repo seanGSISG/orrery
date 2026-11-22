@@ -50,7 +50,10 @@ build-egg:
 build-marble:
     set -euo pipefail
     out=game/core/marble/built
-    tmp=$(mktemp -d)
+    # In build/, on the file system of the checkout, as in build-egg: the last step is then a
+    # rename, and Godot never reads a part of the file.
+    mkdir -p build
+    tmp=$(mktemp -d build/marble.XXXXXX)
     trap 'rm -rf "$tmp"' EXIT
     if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
         --python tools/blender/marble_core.py -- "$tmp/orrery_core.glb" >"$tmp/log" 2>&1; then
@@ -299,12 +302,14 @@ prop-cleanup source name *args:
     fi
     grep '^prop-cleanup:' "$tmp/log"
     "${GLTF_VALIDATOR:-gltf_validator}" "$staged"
+    # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
+    # A source without a record leaves none, so an old record never names a new prop. Copy the
+    # record first: a clean-up in place has the same record as source and as destination.
+    if [[ -f "$source.json" ]]; then cp "$source.json" "$tmp/record.json"; fi
     mkdir -p assets/props
     mv "$staged" "$dest"
-    # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
-    # A source without a record leaves none, so an old record never names a new prop.
     rm -f "$dest.json"
-    if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
+    if [[ -f "$tmp/record.json" ]]; then cp "$tmp/record.json" "$dest.json"; fi
     echo "$dest"
 
 # Render the review sheet of assets/props/<id>.glb to build/props/<id>.png: four views of the
