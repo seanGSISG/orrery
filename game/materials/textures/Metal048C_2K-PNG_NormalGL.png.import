@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d22olhhmdpju6"
-path.bptc="res://.godot/imported/Metal007_2K-JPG_Color.jpg-492313c2cd7c2311b89f3fbc53f84c38.bptc.ctex"
+uid="uid://m0snsj6ekd57"
+path.s3tc="res://.godot/imported/Metal048C_2K-PNG_NormalGL.png-176c77fa6fc59f9e8bb29edc91d490ca.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,18 +11,18 @@ metadata={
 
 [deps]
 
-source_file="res://materials/textures/Metal007_2K-JPG_Color.jpg"
-dest_files=["res://.godot/imported/Metal007_2K-JPG_Color.jpg-492313c2cd7c2311b89f3fbc53f84c38.bptc.ctex"]
+source_file="res://materials/textures/Metal048C_2K-PNG_NormalGL.png"
+dest_files=["res://.godot/imported/Metal048C_2K-PNG_NormalGL.png-176c77fa6fc59f9e8bb29edc91d490ca.s3tc.ctex"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=true
+compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
