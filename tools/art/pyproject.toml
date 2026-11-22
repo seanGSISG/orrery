@@ -3,9 +3,11 @@ name = "orrery-art"
 version = "0.1.0"
 description = "Orrery asset tools: GPT-Image 2D art and Tripo image-to-3D props, with a dry run and a spend guard."
 requires-python = ">=3.13"
-# openai 3 talks HTTP through httpx2; the Tripo client uses it too. Pillow checks alpha.
+# openai 3 talks HTTP through httpx2; the Tripo client uses it too. Pillow checks alpha. numpy runs
+# the prop material rules (materials.py), at the version that Blender 5.2 bundles.
 dependencies = [
     "httpx2==2.16.2",
+    "numpy==2.3.4",
     "openai==3.57.0",
     "pillow==13.0.0",
 ]

@@ -1,11 +1,10 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://objects/steam_vent/steam_vent.gd" id="1"]
+[ext_resource type="Shader" path="res://objects/steam_vent/steam.gdshader" id="2"]
 
-[sub_resource type="StandardMaterial3D" id="steam"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0.92, 0.95, 1, 0.18)
+[sub_resource type="ShaderMaterial" id="steam"]
+shader = ExtResource("2")
 
 [sub_resource type="StandardMaterial3D" id="grate"]
 albedo_color = Color(0.22, 0.2, 0.19, 1)

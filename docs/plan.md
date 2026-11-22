@@ -118,7 +118,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 - **Concept:** start in a clockmaker's town square on Earth at dawn. Climb through the pieces of a broken clock tower, rooftops and airships, the cloud sea, the sky-clockwork world, thin air with strong wind gusts, and finally space with low gravity and stars, where the Orrery's gate waits.
 - **Structure:** one continuous, hand-designed climb in 8 zones, each zone its own level script. A first climb takes about 60 minutes; a skilled run takes about 10–12 minutes.
 - **Light:** the time of day follows height, from dawn through day and sunset to the starfield.
-- **Falls:** no checkpoints by default. A fall can drop the marble several zones. The game saves the exact spot on quit and continues from there. **Assist** adds a checkpoint at each zone start, and stats mark assisted runs.
+- **Falls:** no checkpoints by default. A fall can drop the marble several zones. The game saves the exact spot on quit and continues from there. **Assist** adds a checkpoint at each zone start, and the stats mark an assisted climb. An assisted climb never replaces a record: it saves no best time, no ghost and no best height (Sean, 2026-11-21).
 - **Stats:** height meter on screen, a flag in the world at your best height, time to the top, falls, total meters fallen, a stats screen at the end, and a ghost of your best climb.
 - **Objects:** no carried power-ups. Only objects built into the world (bumpers, steam vents, cannons, gears, wind, low gravity).
 - **Loading:** start simple. Load all zones at the start and use Godot's visibility ranges for far geometry. Add zone streaming only if the memory or performance checks fail.
@@ -145,8 +145,8 @@ Each object and power-up is introduced in a level that focuses on it, before any
   - Gems are 0.5 m wide and float 0.3 m above the floor. Each colour has its own cut. A faint beam shows each gem across the level.
 - **HUD and menus** (Sean, 2026-11-21; ticket #6; `docs/ui-mockups/README.md`): direction B (glass and light) for the in-level HUD and the Ascent HUD; direction C (orrery chart) for the title, level select, pause, settings and results screens. The HUD takes the coral accent and the numerals of C.
 - The marble always casts a crisp blob shadow straight down, so the player can judge jumps.
-- Geometry comes from Blender scripts (`bpy` and geometry nodes). Textures and skies come from CC0 libraries (Poly Haven, ambientCG). Textures are 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6). 2D art (logo, UI icons, menu art) comes from the local ComfyUI.
-- No paid AI 3D generators.
+- Geometry comes from Blender scripts (`bpy` and geometry nodes). Base tiling materials start from CC0 libraries (Poly Haven, ambientCG). The tier skies are our own Cycles renders (`just bake-skies`) of CC0 HDRIs or Blender's sky model. Textures are 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6). 2D art (logo, menu art) comes from the local ComfyUI or from GPT-Image.
+- **AI art** (Sean, 2026-11-21): AI art is allowed where it looks better than a CC0 or scripted piece. GPT-Image makes decals, signage and concept images. Tripo makes decorative props from an image. Both run through `tools/art` (4.3). Every AI asset gets a row in `docs/licenses.md`. Prompts never name games, brands, characters or living artists (`docs/research/asset-prompting.md`).
 - **Look review:** before any final art, Sean approves a style board (ComfyUI concept images of the world, the M1 Ascent zones and the marble, plus 3 Blender test renders of a piece of track in final materials and lighting). The HUD and each menu get 3 distinct static mockups for Sean to pick from. Both are done (2026-11-21): see above, `docs/style/README.md` and `docs/ui-mockups/README.md`.
 
 ### 2.12 Audio and music
@@ -165,9 +165,9 @@ Each object and power-up is introduced in a level that focuses on it, before any
 
 - English only. All text goes through Godot's translation system so other languages can come later.
 - No analytics, telemetry or network access in the game.
-- Accessibility: gem and hazard colours that colourblind players can tell apart, plus shape cues; camera shake and motion blur toggles; a reduced-flashing setting.
+- Accessibility: gem and hazard colours that colourblind players can tell apart (the colourblind palette), plus shape cues (each gem colour has its own cut); a camera shake toggle. A motion blur toggle and a reduced-flashing option are deferred: M1 has neither (#23, 2026-11-20). Add the reduced-flashing option with the first effect that flashes (for example the Spark Mine, M2).
 - Saves and settings live in Godot's `user://` folder (standard per OS).
-- Display: windowed, borderless or fullscreen; any resolution; ultrawide; frame-rate cap or uncapped; V-Sync toggle; high-refresh monitors.
+- Display: windowed, borderless or fullscreen; any resolution; ultrawide; frame-rate cap or uncapped; V-Sync toggle; HDR output where the display supports it; high-refresh monitors.
 - Graphics presets Low, Medium, High, Ultra (4.7).
 - Steam Deck: no special work in v1.
 
@@ -189,6 +189,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 | Test display | `gamescope --backend headless` (fallback: a small window on the KDE desktop) | — |
 | CI | GitHub Actions on `ubuntu-latest` and `windows-latest`, `chickensoft-games/setup-godot@v2` | — |
 | Music models | ACE-Step 1.5 XL (MIT), Stable Audio 3 Medium (Stability Community License) in the local ComfyUI | — |
+| Art models | GPT-Image-2.6 (2D art) and Tripo (decorative 3D props), through `tools/art` | — |
 
 No third-party Godot MCP. The harness MCP covers running the game, screenshots, input and game state; the Godot command line covers imports, exports and tests; agents edit scene files as text. If agents struggle with menu or UI scene work, add `hi-godot/godot-ai` then.
 
@@ -219,11 +220,13 @@ orrery/
 │   ├── addons/            gut, lightmap_baker (the bake plugin, 4.7)
 │   ├── core/              marble solver, camera, input, gravity fields, save data, ghosts
 │   ├── objects/           one folder per object or power-up (scene + script)
-│   ├── modes/             campaign, ascent, planetarium
+│   ├── modes/             ascent (campaign and planetarium come later)
 │   ├── ui/                menus and HUD
 │   ├── audio/             buses, music players, sound effects
 │   ├── debug/             feel-review course support and the live tuning overlay
 │   ├── settings/          graphics presets
+│   ├── skies/             sky presets and their baked skies
+│   ├── materials/         kit materials and the kit surface shader
 │   ├── harness/           automation interface and route bot (left out of release exports)
 │   ├── levels/built/      built .glb files (generated, ignored by git)
 │   └── test/              GUT tests; object tests in test/objects/<type>/
@@ -232,10 +235,11 @@ orrery/
 │   ├── ascent/            zone_1.py … zone_8.py
 │   └── planetarium/
 ├── kit/                   shared Blender library: track pieces, props, materials, marker helpers
-├── assets/                Git LFS: textures/, audio/sfx/, audio/music/, ui/
+├── assets/                Git LFS: textures/, decals/, props/ (the sounds and the music are in game/audio/)
 ├── tools/
 │   ├── blender/           build_level.py, look-dev renders
 │   ├── harness/           uv project: harness MCP server + CLI
+│   ├── art/               GPT-Image and Tripo art tools (4.3)
 │   ├── audio/             sfx synth, music pipeline, review page
 │   ├── gallery/           screenshot gallery
 │   ├── perf/              GPU frame-time check
@@ -244,7 +248,7 @@ orrery/
 └── scripts/               one-off scripts
 ```
 
-Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`.
+Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`. The exception is `game/objects/egg/egg.glb`: `just build-egg` writes it, and it is committed, like the baked skies.
 
 Object tests live in `game/test/objects/<type>/`, not beside the object: the release exports leave out only `test/*`, and GUT scans only `res://test/`. The runtime design is in `docs/design/core-runtime.md`.
 
@@ -300,6 +304,7 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 ### 4.4 Game runtime
 
 - **Autoloads:** `Game` (mode and level flow), `Save` (progress, best times, ghosts, settings), `InputHub` (one input source at a time: player, route bot or harness), `Graphics` (the graphics preset), `Music`.
+- **Settings:** `Save.settings` (`Settings`, a `SaveRecord`) holds every player setting. `Save.change_settings({key: value})` sets them, calls `Settings.apply()` and writes the save file; the settings menu and the harness `set_setting` use it. `Settings.apply()` puts each value into the game: the camera, rumble, input, graphics preset, bus volumes, display, `Palette` (the standard or colourblind colours) and `Bindings` (the player's buttons in the input map). The save file has a format version (2) and `read()` migrates an older file (`docs/design/core-runtime.md` §4).
 - **Input sources:** the marble reads a small `MarbleInput` value each tick (move vector, jump, use, camera yaw and pitch). The player, the route bot and the harness all produce it, so tests drive the exact path the player uses.
 - **Objects:** each object is one scene with one typed script and its own GUT test.
 - **Ghosts:** the marble's position and rotation, recorded 30 times a second of level clock by the `RunTracker` that `Save` adds to each run. `RunTracker` follows the signal `LevelRun.stepped`, which `step()` emits at the end of every tick (`docs/design/core-runtime.md` §4). They play back the same on any PC because they do not re-simulate.
@@ -310,15 +315,16 @@ Hero props that are impractical to script may be `.blend` files in `kit/` (Git L
 - Protocol: newline-delimited JSON-RPC 2.0 over TCP.
 - Commands (`game/harness/harness.gd`):
   - `ping`, `quit`
-  - `load_level {id}`. `load_mode {mode, zone?}` is a stub: it returns the error `NOT_AVAILABLE` until the menus (#22) and Ascent (#27) exist.
+  - `load_level {id}`. `load_mode {mode, zones?, zone?, resume?, assist?}` starts a mode; `ascent` is the only mode. It starts a new climb, or continues the saved spot when `resume` is true. `zones` are the zone level ids from the bottom, `zone` (1 is the first) puts the marble on the start pad of that zone, and `assist` sets Assist first. Until a zone is built, it climbs the fixture zones (`docs/design/ascent.md`).
   - `state`: the `GameState` as JSON (`docs/design/core-runtime.md` §6): marble position, velocity, spin, up, on-ground, gems collected and total, timer, medal, held power-up, last checkpoint, egg found, height (Ascent), level status, input device
   - `input {move, jump, use, camera, frames}`: `camera` is `[yaw, pitch]`; with no `frames` the input holds until the next `input`
   - `step {frames}`: runs the ticks (120 per second) at once, at most 36000 per request, and pauses. `pause`, `resume`, `set_time_scale {scale}` (ticks per physics frame, 0 to 64)
   - `teleport {position, velocity?}`
   - `screenshot {path?, shot?}`: saves the real rendered frame, optionally from a named camera shot. It returns `{path, width, height, blank, adapter}`. It fails with `NO_FRAME` under `godot --headless`, which renders nothing. The gallery takes its shots without a warm-up step.
   - `run_bot {route?}`: restarts the level, plays a route to the end at full speed, pauses, and returns `{finished, time, falls}` (plus `{stuck_at, waypoint, reason}` when the bot gave up). `route` is `first_run` (default), `expert` or a route node name.
-  - `logs {since}`, `set_setting {key, value}`
-- **Harness MCP** (`tools/harness/`): Python server that launches the game and wraps the socket. Tools: `game_launch {level = "flat", display = headless|window|none, width = 1920, height = 1080}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot?}` (returns the image), `game_run_bot {route?}`, `game_logs {since}`, `game_quit`. `display` is `headless` (gamescope, no window; falls back to `window`), `window` (a desktop window) or `none` (`godot --headless`: no frames, no screenshots; CI uses it). `game_launch` has no `mode` parameter yet. The same package has a CLI (`uv run orrery-harness …`, or `just harness …`) with one subcommand for every harness command, so there is one implementation. `teleport`, `pause`, `resume`, `set_time_scale`, `load_level` and `set_setting` are in the CLI only. See `tools/harness/README.md`.
+  - `logs {since}`
+  - `set_setting {key, value}`: a key of `Settings` (such as `graphics_preset`) goes through `Save.change_settings()`, as the settings menu does: it applies the value and writes the save file. It returns the error `NOT_SAVED` when the value changed but the file could not be written. Any other key sets the project setting of that name. An unknown key gives `NOT_FOUND`.
+- **Harness MCP** (`tools/harness/`): Python server that launches the game and wraps the socket. Tools: `game_launch {level = "flat", display = headless|window|none, width = 1920, height = 1080}`, `game_state`, `game_input {move, jump, use, camera, frames}`, `game_step {frames}`, `game_screenshot {shot?}` (returns the image), `game_run_bot {route?}`, `game_load_mode {mode = ascent, zone?, zones?, resume?, assist?}`, `game_logs {since}`, `game_quit`. `display` is `headless` (gamescope, no window; falls back to `window`), `window` (a desktop window) or `none` (`godot --headless`: no frames, no screenshots; CI uses it). `game_launch` has no `mode` parameter: start a mode with `game_load_mode` after the launch. The same package has a CLI (`uv run orrery-harness …`, or `just harness …`) with one subcommand for every harness command, so there is one implementation. `teleport`, `pause`, `resume`, `set_time_scale`, `load_level` and `set_setting` are in the CLI only. See `tools/harness/README.md`.
 - **Session isolation:** each launch gets its own empty `user://` folder, `build/harness/user-<port>-<random>/` (set through `XDG_DATA_HOME`). The folder is deleted when the session ends, so a harness session never reads or writes the player's saves and ghosts. Every automated launch (harness, gallery, perf, bake) is silent (`--audio-driver Dummy`). `just run` and `just feel` keep the sound.
 - Launch (`display = headless`): `gamescope --backend headless -W <width> -H <height> -- godot --path game --resolution <width>x<height> -- --harness-port=<port> [--level <id>]`. Fallback: a window on the KDE desktop.
 
@@ -383,7 +389,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just blender` / `just blender-agent` | Opens Blender 5.2 with the MCP bridge on `localhost:9876`: in a window, or hidden in gamescope |
 | `just import` | `godot --headless --path game --import` |
 | `just build-levels [id…]` | Builds level scripts into `game/levels/built/*.glb` and checks that they import |
-| `just lint` | `gdlint` (gdtoolkit), a Godot compile check of every game script, Ruff (check and format), ty, shellcheck. Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
+| `just lint` | `just lint-game` (`gdlint` from gdtoolkit, and a Godot compile check of every game script) and `just lint-scripts` (Ruff check and format, ty, shellcheck; no Godot). Tool versions come from `tools/setup/pins.env`. The level lint runs in the importer, in `just build-levels` |
 | `just test` | GUT unit tests, headless. Fails if a test fails, a test script does not load, or zero tests ran. It runs with an empty `user://` that it deletes, so tests never touch the player's save (#73) |
 | `just test-levels [id…]` | Runs the route bot on each built level, headless (4.6). Fails if `first_run` is not under par or `expert` not under gold. Like `just test`, it uses an empty `user://` (#73) |
 | `just suggest-times <id>` | Prints par and gold from the route bot's times (4.6) |
@@ -395,6 +401,10 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response (local only) |
 | `just ui-shots` | Saves a screenshot of each HUD and menu screen at 1080p and 4K into `build/ui/` |
 | `just build-sfx [--montage PATH]` | Synthesises the sound effects and the test music loops, and checks them. `--montage` also joins the sounds into one OGG |
+| `just art …` / `just model …` / `just prop-cleanup <source> <name>` | GPT-Image art and Tripo props through `tools/art`; paid calls need `--yes`, `--dry-run` sends nothing. `prop-cleanup` turns a generated model into `assets/props/<name>.glb` (4.3) |
+| `just test-music` / `just test-art` | The tests of the music pipeline and of the asset tools (mocked APIs, no paid call) |
+| `just bake-skies [name…]` | Bakes the tier skies into `game/skies/<name>.hdr` with Cycles on this GPU |
+| `just build-marble` / `just build-egg` | Builds the marble's brass core (`game/core/marble/built/`, ignored by git) and the Clockwork Egg (`game/objects/egg/egg.glb`, committed) from `tools/blender/` |
 | `just feel` | Builds the feel-review course and plays it in a window with the tuning overlay (`docs/feel-review.md`) |
 | `just run [level]` | Plays a level in a window (default: `flat`) |
 | `just export` | Builds Linux and Windows release exports into `build/` |
@@ -416,15 +426,16 @@ Tests stay focused: one test per behaviour, no broad smoke tests, no tests kept 
 
 ### 5.3 CI (GitHub Actions)
 
-CI runs only the jobs that a change needs, on pull requests and on pushes to `main` and `plan-*`. The `changes` job lists the changed files and `.github/pick-jobs.sh` maps them to jobs: docs (`*.md`, `docs/`) run no job; `game/`, `assets/` and the marble's core script run everything except the tool tests; `levels/`, `kit/` and `tools/blender/` run lint and the tests; each tool project under `tools/` runs lint and its own tests (`tools/harness` the harness job, `tools/audio/music` and `tools/art` the tool tests); `.github/`, `justfile`, `mise.toml`, `tools/setup/pins.env`, `.gitattributes` and any path that no rule names run every job. A manual run (`workflow_dispatch`) or a new branch also runs every job.
+CI runs only the jobs that a change needs, on pull requests and on pushes to `main` and `plan-*`. The `changes` job lists the changed files and `.github/pick-jobs.sh` maps them to jobs: docs (`*.md`, `docs/`) run no job; `game/`, `assets/` and the marble's core script run both lints, the tests, the harness and the export; `levels/`, `kit/` and `tools/blender/` run the script lint, the tests and the export; each tool project under `tools/` runs the script lint and its own tests (`tools/harness` the harness job, `tools/audio/music` and `tools/art` the tool tests), and other `tools/` files run only the script lint; `.github/`, `justfile`, `mise.toml`, `tools/setup/pins.env`, `.gitattributes` and any path that no rule names run every job. A manual run (`workflow_dispatch`) or a new branch also runs every job.
 
 - **`changes` job** (ubuntu): picks the jobs, and writes the changed files and the picked jobs to the run summary.
-- **`lint` job** (ubuntu): runs `just lint`.
-- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` (only `just build-marble` when no test job runs), uploads the built files.
+- **`lint-game` job** (ubuntu): runs `just lint-game`, which imports the game.
+- **`lint-scripts` job** (ubuntu): runs `just lint-scripts`. It has no Godot and no LFS files, so a tool change lints in about a minute.
+- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` when the tests or the export run (else only `just build-marble`), uploads the built files.
 - **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
 - **`harness` job** (ubuntu): `just test-harness`, the harness contract tests on a headless debug build.
-- **`export` job** (ubuntu): `setup-godot@v2` with export templates, `just export`, boots the Linux export, uploads both exports as artifacts.
-- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless and checks its boot marker.
+- **`export` job** (ubuntu): `setup-godot@v2` with export templates, downloads the built levels, `just export`, boots the Linux export, plays every level in it (`.github/check-export.sh`), uploads both exports as artifacts. The check fails when the export does not load a built level or a file of its baked lightmap.
+- **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless, checks its boot marker, and plays every level in it with the same check.
 - **`tools` job** (ubuntu): `just test-music` and `just test-art`, each when its tool changed.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 

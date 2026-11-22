@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Still water (the fountain of Ascent 1). water.gdshader holds its look.
+
+[ext_resource type="Shader" path="res://materials/water.gdshader" id="1"]
+
+[resource]
+shader = ExtResource("1")

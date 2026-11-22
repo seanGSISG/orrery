@@ -6,15 +6,6 @@
 height = 1.0
 radius = 0.75
 
-[sub_resource type="StandardMaterial3D" id="look"]
-albedo_color = Color(0.3, 0.55, 0.9, 1)
-
-[sub_resource type="CylinderMesh" id="mesh"]
-material = SubResource("look")
-top_radius = 0.75
-bottom_radius = 0.75
-height = 0.02
-
 [node name="Checkpoint" type="Node3D"]
 script = ExtResource("1")
 
@@ -29,5 +20,3 @@ monitorable = false
 shape = SubResource("area")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("mesh")

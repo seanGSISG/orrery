@@ -96,7 +96,28 @@ func test_offset_and_restart_set_the_start_of_the_cycle() -> void:
 	_assert_on_deck(b)
 
 
-func test_finish_gives_the_deck_a_kit_material() -> void:
+func test_deck_is_kit_stone_in_a_brass_frame() -> void:
+	var platform: MovingPlatform = _platform([Vector3(0, 3, 0)], 8.0, 1.0, false)
+	add_child_autofree(platform)
+	var deck: MeshInstance3D = platform.get_node("Solid/Mesh") as MeshInstance3D
+	var stone: ShaderMaterial = deck.material_override as ShaderMaterial
+	var limestone: ShaderMaterial = KitMaterials.find("limestone") as ShaderMaterial
+	var map: Texture2D = stone.get_shader_parameter("albedo_map")
+	var kit_map: Texture2D = limestone.get_shader_parameter("albedo_map")
+	var slabs: Vector2 = stone.get_shader_parameter("slab_size")
+	assert_eq(stone.shader, limestone.shader, "the kit shader")
+	assert_eq(map, kit_map, "the kit limestone texture")
+	assert_eq(slabs, Vector2.ZERO, "no paving on a deck that moves")
+	var bands: int = 0
+	for node: Node in deck.get_children():
+		var band: MeshInstance3D = node as MeshInstance3D
+		if band != null:
+			assert_eq(band.material_override, KitMaterials.find("brass"))
+			bands += 1
+	assert_eq(bands, 2, "a brass band round the top edge and one round the foot")
+
+
+func test_finish_replaces_the_stone_and_keeps_the_bands() -> void:
 	var platform: MovingPlatform = PLATFORM.instantiate() as MovingPlatform
 	platform.finish = "wood"
 	add_child_autofree(platform)
@@ -104,3 +125,7 @@ func test_finish_gives_the_deck_a_kit_material() -> void:
 	var wood: Material = KitMaterials.find("wood")
 	assert_not_null(wood, "the kit has a wood material")
 	assert_eq(look.material_override, wood)
+	var brass: Material = KitMaterials.find("brass")
+	for band_name: String in ["TopBand", "FootBand"]:
+		var band: MeshInstance3D = look.get_node(band_name) as MeshInstance3D
+		assert_eq(band.material_override, brass, band_name)

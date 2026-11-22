@@ -68,3 +68,17 @@ func test_speed_setting_sets_the_push() -> void:
 	run.marble.teleport(Vector3(0, TUNING.radius, -1.5), Vector3(0, 0, -5))
 	hold(rolling(Vector2.ZERO), 0.3)
 	assert_almost_eq(run.state.velocity.z, 8.0, 0.8)
+
+
+func test_drum_is_an_enamel_band_between_brass_rings() -> void:
+	var bumper: Bumper = BUMPER.instantiate() as Bumper
+	add_child_autofree(bumper)
+	var drum: MeshInstance3D = bumper.get_node("Solid/Mesh") as MeshInstance3D
+	var enamel: StandardMaterial3D = drum.material_override as StandardMaterial3D
+	assert_eq(enamel.albedo_color, Palette.hazard(), "the band has the hazard colour")
+	for part: String in ["Base", "Cap"]:
+		var ring: MeshInstance3D = drum.get_node(part) as MeshInstance3D
+		assert_eq(ring.material_override, KitMaterials.find("brass"), "%s is the kit brass" % part)
+	var cap: MeshInstance3D = drum.get_node("Cap") as MeshInstance3D
+	var tall: float = (cap.mesh as CylinderMesh).height
+	assert_gt(cap.position.y + tall / 2.0, bumper.height / 2.0, "the cap hides the top face")

@@ -10,7 +10,8 @@ var tick: int = 0
 var level: StringName = &""
 ## &"none", &"playing", &"respawning" or &"finished". Run (&"none"), then rules.
 var status: StringName = &"none"
-## &"title", &"level_select", &"settings", &"play", &"pause" or &"results". Game.
+## &"title", &"level_select", &"settings", &"play", &"pause", &"results", &"ascent" or
+## &"ascent_stats". Game.
 var screen: StringName = &"play"
 ## &"keyboard" or &"pad". Game.snapshot().
 var input_device: StringName = &"keyboard"

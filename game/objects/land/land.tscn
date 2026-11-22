@@ -13,7 +13,7 @@ shader_parameter/normal_map = ExtResource("4")
 
 [sub_resource type="PlaneMesh" id="plane"]
 material = SubResource("look")
-size = Vector2(12000, 12000)
+size = Vector2(120000, 120000)
 
 [sub_resource type="WorldBoundaryShape3D" id="ground"]
 

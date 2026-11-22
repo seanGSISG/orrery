@@ -7,11 +7,6 @@
 height = 1.0
 radius = 1.0
 
-[sub_resource type="CylinderMesh" id="mesh"]
-top_radius = 1.0
-bottom_radius = 1.0
-height = 0.02
-
 [sub_resource type="ShaderMaterial" id="beam_look"]
 shader = ExtResource("2")
 shader_parameter/height = 4.0
@@ -41,8 +36,6 @@ monitorable = false
 shape = SubResource("area")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("mesh")
 
 [node name="Beam" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.02, 0)
