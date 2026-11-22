@@ -28,7 +28,7 @@ from mathutils import Vector
 
 import kit
 from kit import town
-from kit.scene import Vec3, add_object
+from kit.scene import Vec3
 
 Point = tuple[float, float]
 # The finishes of the harbour, besides those of kit/town.py:
@@ -336,7 +336,9 @@ def _stations(ship: Ship) -> list[float]:
     """Returns the x of the rings of an envelope: close together round the nose, then about a
     quarter BAY apart, and never at the nose tip itself."""
     x0, length = ship.nose[0], ship.length
-    nose = [x0 + NOSE * length * (1.0 - math.cos(math.pi / 2 * k / 9)) for k in range(1, 10)]
+    nose = [
+        x0 + NOSE * length * (1.0 - math.cos(math.pi / 2 * k / 9)) for k in range(1, 10)
+    ]
     body = math.ceil((1.0 - NOSE) * length / (BAY / 4))
     tail = [
         x0 + NOSE * length + (1.0 - NOSE) * length * k / body for k in range(body + 1)
@@ -409,11 +411,16 @@ def promenade(
         x = x_first + (x_last - x_first) * k / count
         deck = _height(profile, x) - PLANK
         for side in (-1.0, 1.0):
-            foot = ship.point(x, 90.0 - side * 90.0 * min(1.0, half / max(ship.r(x), 0.1)))
+            foot = ship.point(
+                x, 90.0 - side * 90.0 * min(1.0, half / max(ship.r(x), 0.1))
+            )
             y_leg = y + side * (half - 0.25)
             if deck - foot.z > 0.15 and ship.r(x) > half * 0.6:
                 legs.bar(
-                    Vector((x, y_leg, deck)), Vector((x, y_leg, foot.z - 0.1)), 0.1, "iron"
+                    Vector((x, y_leg, deck)),
+                    Vector((x, y_leg, foot.z - 0.1)),
+                    0.1,
+                    "iron",
                 )
     if legs.bm.faces:
         legs.add(f"{name}_trestles", collide=False)
@@ -596,13 +603,17 @@ def engine(name: str, at: Vec3, length: float = 2.2, radius: float = 0.45) -> No
         t = k / 8
         r = radius * math.sin(math.pi * (0.15 + 0.85 * t)) ** 0.6
         xx = x - length / 2 + length * t
-        rings.append([Vector((xx, y + r * math.cos(a), z + r * math.sin(a))) for a in _ring(12)])
+        rings.append(
+            [Vector((xx, y + r * math.cos(a), z + r * math.sin(a))) for a in _ring(12)]
+        )
     town.Parts(town._loft(rings), "varnish").add(f"{name}_car", collide=False)  # ty: ignore[invalid-argument-type]
     _fan(
         parts,
         [Vector((x - length / 2 - 0.25, y, z))]
         + [
-            Vector((x - length / 2 + 0.05, y + 0.18 * math.cos(a), z + 0.18 * math.sin(a)))
+            Vector(
+                (x - length / 2 + 0.05, y + 0.18 * math.cos(a), z + 0.18 * math.sin(a))
+            )
             for a in _ring(12)
         ],
         "brass_polished",
@@ -616,7 +627,10 @@ def propeller(name: str, at: Vec3, radius: float, blades: int = 4) -> None:
     x, y, z = at
     parts = town.Parts()
     hub = [
-        [Vector((x + dx, y + 0.16 * math.cos(a), z + 0.16 * math.sin(a))) for a in _ring(10)]
+        [
+            Vector((x + dx, y + 0.16 * math.cos(a), z + 0.16 * math.sin(a)))
+            for a in _ring(10)
+        ]
         for dx in (-0.12, 0.12)
     ]
     parts.bm.free()
@@ -657,7 +671,9 @@ def _ring(count: int) -> list[float]:
     return [math.tau * k / count for k in range(count)]
 
 
-def line(parts: town.Parts, a: Vec3, b: Vec3, width: float = 0.05, finish: Finish = "rope") -> None:
+def line(
+    parts: town.Parts, a: Vec3, b: Vec3, width: float = 0.05, finish: Finish = "rope"
+) -> None:
     """Adds a straight rope or cable from a to b to parts."""
     parts.bar(Vector(a), Vector(b), width, finish)  # ty: ignore[invalid-argument-type]
 
@@ -704,16 +720,24 @@ def storey(
             b = face.at(s + step, 0.0)
             c = face.at(s + step, -0.5)
             d = face.at(s, -0.5)
-            broken.solid(town._counter_clockwise([a, b, c, d]), floor - drop, floor, "wall")
+            broken.solid(
+                town._counter_clockwise([a, b, c, d]), floor - drop, floor, "wall"
+            )
             s += step
     # The broken floor: a slab of rough stone under the storey.
-    broken.box((x0 + 0.5, y0 + 0.5, floor - 0.45), (x1 - 0.5, y1 - 0.5, floor), "dressed")
+    broken.box(
+        (x0 + 0.5, y0 + 0.5, floor - 0.45), (x1 - 0.5, y1 - 0.5, floor), "dressed"
+    )
     broken.add(f"{name}_broken", collide=False)
     return obj
 
 
 def parapet(
-    name: str, lo: Point, hi: Point, top: float, gaps: Sequence[tuple[str, float, float]] = ()
+    name: str,
+    lo: Point,
+    hi: Point,
+    top: float,
+    gaps: Sequence[tuple[str, float, float]] = (),
 ) -> None:
     """Adds a stone parapet 0.9 m tall round a flat roof between lo and hi, whose floor is at
     `top`, with gaps: (side s, e, n or w, from, to) in m along that side as faces() runs it."""

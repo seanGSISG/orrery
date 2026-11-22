@@ -42,7 +42,7 @@ TERRACE = 0.25
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
 
-kit.level(title="Sky Harbour", par=400.0, gold=200.0, sky="ground_dawn")
+kit.level(title="Sky Harbour", par=321.0, gold=148.2, sky="ground_dawn")
 
 
 def house(
@@ -1477,4 +1477,10 @@ kit.shot("egg", at=(4.0, 26.0, 299.5), rotation=(-12, 0, -50))
 kit.shot("first_roofs", at=(-4.0, 22.0, 309.0), rotation=(4, 0, 40))
 kit.shot("tender", at=(30.0, 18.0, 312.0), rotation=(-6, 0, 30))
 kit.shot("courier", at=(-6.0, 90.0, 338.0), rotation=(-4, 0, 160))
-kit.shot("finish", at=(4.0, 58.0, 346.0), rotation=(-6, 0, -30))
+kit.shot("sailmakers", at=(4.0, 58.0, 346.0), rotation=(-6, 0, -30))
+kit.shot("flotilla", at=(24.0, 106.0, 396.0), rotation=(4, 0, 59))
+kit.shot("nests_and_lifts", at=(-30.0, 112.0, 430.0), rotation=(12, 0, 64))
+kit.shot("flagship_bow", at=(-150.0, 110.0, 478.0), rotation=(0, 0, -55))
+kit.shot("fin_tip", at=(-88.0, 130.0, 484.5), rotation=(2, 0, -76))
+kit.shot("finish", at=(-90.0, 116.0, 506.0), rotation=(-17, 0, 41))
+kit.shot("overview_top", at=(40.0, 60.0, 470.0), rotation=(-14, 0, 53))
