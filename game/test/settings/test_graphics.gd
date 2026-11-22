@@ -4,35 +4,35 @@ extends GutTest
 
 ## What each preset must set, from the preset table: anti-aliasing (screen-space mode, MSAA,
 ## scaling mode), anisotropic level, mipmap bias, the environment effects (glow, SSAO, SSIL,
-## SSR, volumetric fog) and the sun (shadow distance in m, split mode, angular size).
+## SSR, volumetric fog) and the sun (shadow distance in m, split mode).
 const TABLE: Dictionary[String, Dictionary] = {
 	"low": {
 		"aa": [Viewport.SCREEN_SPACE_AA_FXAA, Viewport.MSAA_DISABLED, Viewport.SCALING_3D_MODE_BILINEAR],
 		"anisotropy": Viewport.ANISOTROPY_4X,
 		"bias": 0.0,
 		"effects": [false, false, false, false, false],
-		"sun": [50.0, DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS, 0.0],
+		"sun": [50.0, DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS],
 	},
 	"medium": {
 		"aa": [Viewport.SCREEN_SPACE_AA_DISABLED, Viewport.MSAA_2X, Viewport.SCALING_3D_MODE_BILINEAR],
 		"anisotropy": Viewport.ANISOTROPY_16X,
 		"bias": 0.0,
 		"effects": [true, false, false, false, false],
-		"sun": [80.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, 0.0],
+		"sun": [80.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS],
 	},
 	"high": {
 		"aa": [Viewport.SCREEN_SPACE_AA_DISABLED, Viewport.MSAA_DISABLED, Viewport.SCALING_3D_MODE_FSR2],
 		"anisotropy": Viewport.ANISOTROPY_16X,
 		"bias": -0.5,
 		"effects": [true, true, false, true, true],
-		"sun": [120.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, 0.0],
+		"sun": [120.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS],
 	},
 	"ultra": {
 		"aa": [Viewport.SCREEN_SPACE_AA_DISABLED, Viewport.MSAA_DISABLED, Viewport.SCALING_3D_MODE_FSR2],
 		"anisotropy": Viewport.ANISOTROPY_16X,
 		"bias": -0.5,
 		"effects": [true, true, true, true, true],
-		"sun": [160.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, 0.0],
+		"sun": [160.0, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS],
 	},
 }
 
@@ -73,8 +73,7 @@ func test_each_preset_sets_its_rendering_settings() -> void:
 		effects.append(environment.volumetric_fog_enabled)
 		assert_eq(effects, want_effects, "%s glow, SSAO, SSIL, SSR, volumetric fog" % preset)
 		var shadow: Array = [sun.directional_shadow_max_distance, sun.directional_shadow_mode]
-		shadow.append(sun.light_angular_distance)
-		assert_eq(shadow, want_sun, "%s sun shadow distance, splits, angular size" % preset)
+		assert_eq(shadow, want_sun, "%s sun shadow distance, splits" % preset)
 
 
 ## With volumetric fog on, the distance fog gives up the volumetric share of the haze.

@@ -12,7 +12,8 @@ extends RefCounted
 ##   Camera3D with the marker's name and transform, for the harness `screenshot {shot}` command.
 ##   A marker of any other type becomes an instance of res://objects/T/T.tscn with the marker's
 ##   name and transform. Each other key sets the @export var of that name on the instance root,
-##   and the marker's children become Marker3D children of the instance, in name order.
+##   and the marker's children become Marker3D children of the instance, in name order. A
+##   Material export takes a kit material name: an unknown name fails the import.
 ## - Collision: a mesh named `<name>-col` collides and stays visible as `<name>`; a mesh named
 ##   `<name>-colonly` collides and goes away. Their faces are grouped by the `surface` extra of
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
@@ -238,14 +239,17 @@ func _apply(target: Object, script: Script, settings: Dictionary, node: String) 
 			continue
 		var value: Variant = _converted(settings[key], types[name])
 		if value == null:
-			var expected: String = type_string(types[name])
+			var expected: String = (
+				"a kit material name" if types[name] == TYPE_OBJECT else type_string(types[name])
+			)
 			_error(node, "setting `%s` must be %s, got %s" % [name, expected, settings[key]])
 			continue
 		target.set(name, value)
 
 
 ## Returns value converted to the Variant type, or null when it does not convert. Numbers
-## arrive from glTF as floats, so a whole float converts to int too.
+## arrive from glTF as floats, so a whole float converts to int too. A String converts to an
+## Object (a Material export) as the kit material of that name, or null when there is none.
 func _converted(value: Variant, type: int) -> Variant:
 	var number: bool = value is float or value is int
 	if type == TYPE_FLOAT and number:
@@ -255,13 +259,12 @@ func _converted(value: Variant, type: int) -> Variant:
 		var whole: float = value
 		if whole == roundf(whole):
 			return int(whole)
-	if type == TYPE_BOOL and value is bool:
-		return value
-	if type == TYPE_STRING and value is String:
-		return value
-	if type == TYPE_STRING_NAME and value is String:
-		var text: String = value
-		return StringName(text)
+	if type == TYPE_OBJECT and value is String:
+		var kit_name: String = value
+		return KitMaterials.find(kit_name)
+	var strings: bool = value is String and type in [TYPE_STRING, TYPE_STRING_NAME]
+	if strings or (type == TYPE_BOOL and value is bool):
+		return type_convert(value, type)
 	return null
 
 
