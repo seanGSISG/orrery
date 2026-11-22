@@ -4,12 +4,19 @@ extends LevelObject
 ## away from its axis (the marker's up axis, Blender z) at `speed`. The push is across the
 ## floor, also from the top face, so a bumper never lifts the marble onto a ledge. A marble
 ## that already leaves faster keeps its speed. The bottom face is at the marker. Each push
-## emits `bumper.hit` and makes the drum pulse. The drum has the hazard colour of Palette.
+## emits `bumper.hit` and makes the drum pulse. The drum is a band of enamel in the hazard
+## colour of Palette between a base and a cap of the kit's brass (KitMaterials).
 
 ## Seconds that the pulse lasts.
 const PULSE_TIME: float = 0.15
 ## The drum grows by this part of its radius at the peak of the pulse.
 const PULSE_GROWTH: float = 0.15
+## The brass base and cap: their height as shares of the drum's height, and how far they stand
+## out from the enamel, m. The cap reaches CAP_PROUD above the top face, so it hides it.
+const BASE_SHARE: float = 0.26
+const CAP_SHARE: float = 0.22
+const BRASS_PROUD: float = 0.035
+const CAP_PROUD: float = 0.004
 
 ## Speed away from the axis after a push, m/s.
 @export var speed: float = 15.0
@@ -27,7 +34,9 @@ var _pushed_at: float = -INF
 @onready var _look: MeshInstance3D = $Solid/Mesh
 
 
-## Sizes the drum from the settings.
+## Sizes the drum and its brass base and cap from the settings. The base and cap are children
+## of the drum in the scene, so they pulse with it, and a mode that sets a range on every mesh
+## of a level before the level's _ready (Ascent) finds them.
 func _ready() -> void:
 	var drum: CylinderShape3D = CylinderShape3D.new()
 	drum.radius = radius
@@ -41,8 +50,25 @@ func _ready() -> void:
 	mesh.height = height
 	_look.mesh = mesh
 	_look.position = shape.position
+	var base: float = BASE_SHARE * height
+	var cap: float = CAP_SHARE * height
+	_ring($Solid/Mesh/Base as MeshInstance3D, base, (base - height) / 2.0)
+	_ring($Solid/Mesh/Cap as MeshInstance3D, cap + CAP_PROUD, (height - cap + CAP_PROUD) / 2.0)
 	add_to_group(Palette.GROUP)
 	apply_palette()
+
+
+## Makes part a brass ring of the drum: a cylinder `tall` m high that stands BRASS_PROUD out
+## from the enamel, its middle `at` m above the drum's middle, with a small bevel on its top
+## edge.
+func _ring(part: MeshInstance3D, tall: float, at: float) -> void:
+	var ring: CylinderMesh = CylinderMesh.new()
+	ring.top_radius = radius + BRASS_PROUD - 0.012
+	ring.bottom_radius = radius + BRASS_PROUD
+	ring.height = tall
+	part.mesh = ring
+	part.material_override = KitMaterials.find("brass")
+	part.position.y = at
 
 
 ## Colours the drum with the hazard colour of the palette. Every bumper shares the material.

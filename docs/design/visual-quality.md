@@ -285,7 +285,12 @@ A level script names a kit material, and the importer gives those faces the game
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
 - A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
-- Two objects take their look from `KitMaterials.find()` at run time (#29).
+- Seven objects take their look from `KitMaterials.find()` at run time: the Trapdoor and Crumbling Tiles (#29), and the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30). Each has a test that checks its kit materials.
+  - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
+  - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot.
+  - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
+  - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
+  - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.
   - A Trapdoor's door is its own copy of the kit brass with one texture repeat across the door, so a large door shows no repeat.
   - Crumbling Tiles are a copy of the kit limestone: tint × 0.78, normal strength 1.8 and no paving (a tile moves, and the paving picks each slab's look from the piece's world position, so it would flicker). Each tile sits on a 4 cm tray of kit brass that shows as a brass line in the 5 cm gap round it. Each tile also lies at its own fixed tilt of up to 0.8° (its collider stays level) and shows its own patch of stone, both picked from its grid index. So loose tiles read apart from solid floor by shape, not by colour alone.
   - `crumbling_tiles.gd` is a tool script, so its tiles (meshes with lightmap UVs) exist in the editor and the lightmap bake lights them like the stone round them; a tile's baked light moves with it as it falls. Before, the tiles had only the probes, which over an empty frame see the sky: B2's east sheet in shade measured sRGB (55, 52, 47), and with the bake (73, 64, 52). The bake also closes the crumbling cells over B2's undercroft, as the tiles do in play, so that room is darker: the median luma of B2's `egg` shot went from 37 to 16 (pure black 0.05 %).
@@ -347,6 +352,9 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 44,200 triangles in the level; bake 34 s) | 4.8 MB |
 | VRAM, `b02`, Medium at 1080p | 904 MB |
 | GPU time, `b02`, mean / p99 (one run, with the object looks of #29) | Low 0.28 / 1.01 ms, Medium 0.37 / 0.50 ms, High 0.81 / 0.96 ms, Ultra 1.26 / 1.57 ms at 1080p; High 1.23 / 1.57 ms at 1440p; Ultra 3.95 / 5.14 ms at 4K |
+| Lightmap files, `b03` (#30: 169 meshes, 30,900 triangles in the level; bake 35 s) | 4.3 MB |
+| VRAM, `b03`, Medium at 1080p | 909 MB |
+| GPU time, `b03`, mean / p99 (one run) | Low 0.30 / 0.81 ms, Medium 0.56 / 1.36 ms, High 0.85 / 1.07 ms, Ultra 1.29 / 1.62 ms at 1080p; High 1.28 / 1.62 ms at 1440p; Ultra 4.06 / 5.17 ms at 4K |
 | VRAM, `fixture`, Ultra at 4K | 2.3 GB |
 | GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
 | GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |

@@ -2,7 +2,8 @@
 (kit/outlines.py) and stands walls, kerbs and pillars on them.
 
 - deck(): a floor of any outline. dish(): a round bowl that fills a round hole in a deck.
-- wall(): a wall or a kerb along a path. arch(): a wall panel with a doorway.
+- wall(): a wall or a kerb along a path. arch(): a wall panel with a doorway. grille(): a
+  row of bars that fills a doorway, too close for the marble and open to the light.
 - teeth(): a row of gear teeth along the top of an outer wall. They do not collide.
 - lathe() and pillar(): round pieces. They collide.
 - hoop(), ball() and gear(): a round ring, a ball and a gear wheel against a wall. They do
@@ -50,6 +51,12 @@ GEAR_HUB = 0.28
 GEAR_SPOKE = 0.14
 GEAR_BOSS = 0.05
 GEAR_SPOKES = 6
+# A grille: the width of a bar, the clear gap between two bars (below the marble's 0.4 m), the
+# sides of a round bar, and the gap between the bars and the head of an arch, m.
+GRILLE_BAR = 0.09
+GRILLE_GAP = 0.26
+GRILLE_SIDES = 6
+GRILLE_CLEAR = 0.02
 
 
 def deck(
@@ -524,6 +531,78 @@ def arch(
         matrix=Matrix.Rotation(math.pi / 2, 3, "X"),
     )
     obj = add_mesh(bm, name, surface_material(surface, material), collide=True)
+    obj.location = at
+    obj.rotation_euler = (0.0, 0.0, math.radians(yaw))
+    return obj
+
+
+def grille(
+    at: Vec3,
+    width: float,
+    height: float,
+    yaw: float = 0.0,
+    arched: bool = False,
+    rails: Sequence[float] = (),
+    name: str | None = None,
+    material: str = "brass",
+) -> bpy.types.Object:
+    """Adds a grille that fills a doorway: round upright bars GRILLE_BAR m thick with gaps of
+    at most GRILLE_GAP m, also at the sides, which the marble cannot pass, and a level rail at
+    each height in `rails`. `at` is the middle of the threshold, on the middle line of the
+    grille. Like an arch, the
+    grille lies across the way along +y, turned by `yaw` degrees. The bars stand `height` m
+    tall; with `arched`, they stop under the round head of a kit.arch() doorway of the same
+    width and height. It collides, and the sun shines through it."""
+    name = name or default_name("grille", "-col")
+    half = width / 2
+    spring = height - half
+    if arched and spring < 0.0:
+        raise ValueError(
+            "kit.grille: an arched doorway is at least half its width high"
+        )
+
+    def top(x: float) -> float:
+        """The height of the doorway at x across it."""
+        if not arched or abs(x) >= half:
+            return height
+        return spring + math.sqrt(half * half - x * x) - GRILLE_CLEAR
+
+    # Enough bars that the gap at each side of the row is no wider than the gap between bars.
+    pitch = GRILLE_BAR + GRILLE_GAP
+    count = math.ceil((width - GRILLE_GAP) / pitch)
+    first = -(count - 1) * pitch / 2
+    bm = bmesh.new()
+    for i in range(count):
+        x = first + i * pitch
+        reach = top(abs(x) + GRILLE_BAR / 2)
+        bmesh.ops.create_cone(
+            bm,
+            cap_ends=True,
+            segments=GRILLE_SIDES,
+            radius1=GRILLE_BAR / 2,
+            radius2=GRILLE_BAR / 2,
+            depth=reach,
+            matrix=Matrix.Translation((x, 0.0, reach / 2)),
+        )
+    # The sides of a bar shade round; its ends are its only faces that are not quads.
+    for face in bm.faces:
+        face.smooth = len(face.verts) == 4
+    for z in rails:
+        # A rail reaches across the doorway at its height, under the head of an arch.
+        across = (
+            half
+            if z <= spring or not arched
+            else math.sqrt(half * half - (z - spring) ** 2)
+        )
+        bmesh.ops.create_cube(
+            bm,
+            size=1.0,
+            matrix=Matrix.Translation((0.0, 0.0, z))
+            @ Matrix.Diagonal(
+                (2 * across - GRILLE_CLEAR, 1.6 * GRILLE_BAR, 2 * GRILLE_BAR, 1.0)
+            ),
+        )
+    obj = add_mesh(bm, name, surface_material("default", material), collide=True)
     obj.location = at
     obj.rotation_euler = (0.0, 0.0, math.radians(yaw))
     return obj
