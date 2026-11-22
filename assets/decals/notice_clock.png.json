@@ -1,0 +1,45 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal of a printed public notice pasted on a stone wall in an old town. Straight-on orthographic view, no perspective. The sheet fills the frame with a thin margin.\nSUBJECT: One upright sheet of aged cream paper, three units wide and four units tall, printed in black letterpress ink. At the top, one large heading in bold serif capitals, centred: \"CLOCKS MENDED\". Under the heading, a simple black woodcut picture of a round clock face with twelve plain bar marks, two hands and no numerals, cut with bold plain lines. Under the picture, one thick rule, one thin rule and a small printer's flower ornament. A thin double line border runs just inside the edge of the sheet. The paper is foxed and slightly yellowed, with soft creases, one small tear at an edge and slightly uneven edges. The ink is a little worn.\nTEXT RULES: The only words are \"CLOCKS MENDED\", once. Spelling: C-L-O-C-K-S, a space, M-E-N-D-E-D. No other text, no small print, no numerals, no dates.\nSTYLE: Photographic realism with restraint. Matte paper and matte ink as seen under neutral light. Soft, even, shadowless light from all sides. No glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sheet of paper, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No nails, no tape. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal of a printed public notice pasted on a stone wall in an old town. Straight-on orthographic view, no perspective. The sheet fills the frame with a thin margin.\nSUBJECT: One upright sheet of aged cream paper, three units wide and four units tall, printed in black letterpress ink. At the top, one large heading in bold serif capitals, centred: \"CLOCKS MENDED\". Under the heading, a simple black woodcut picture of a round clock face with twelve plain bar marks, two hands and no numerals, cut with bold plain lines. Under the picture, one thick rule, one thin rule and a small printer's flower ornament. A thin double line border runs just inside the edge of the sheet. The paper is foxed and slightly yellowed, with soft creases, one small tear at an edge and slightly uneven edges. The ink is a little worn.\nTEXT RULES: The only words are \"CLOCKS MENDED\", once. Spelling: C-L-O-C-K-S, a space, M-E-N-D-E-D. No other text, no small print, no numerals, no dates.\nSTYLE: Photographic realism with restraint. Matte paper and matte ink as seen under neutral light. Soft, even, shadowless light from all sides. No glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sheet of paper, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No nails, no tape. No logos, no watermarks. Original design only.",
+    "size": "1152x1536",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 339,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 339
+      },
+      "output_tokens": 1629,
+      "total_tokens": 1968,
+      "output_tokens_details": {
+        "image_tokens": 1629,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0506,
+  "billed_usd": 0.0506,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/notice_clock.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/notice_clock-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0421
+    },
+    "superseded_finals": []
+  },
+  "total_billed_usd": 0.0927
+}

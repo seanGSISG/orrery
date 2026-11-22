@@ -1,0 +1,44 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat backdrop picture for a game. It sits behind the glass of a house window to show the room inside. Straight-on view from the street, level camera, no tilt. The picture fills the whole frame from edge to edge.\nSUBJECT: A dim parlour in an old stone town house, seen from just outside its window, about 1.0 m wide and 1.4 m tall. Close to the viewer, one white cotton lace curtain hangs from the top edge of the frame and is drawn to the left, so that it covers the left half of the picture in soft vertical folds; the lace has a simple leaf pattern. In the open right half, just inside, a potted fern in a terracotta pot stands on a small round timber table. Behind it, a dim room: a papered wall in a muted dusty rose, a dark timber mantel shelf with a plain jug, and a framed landscape picture. The lace curtain and the fern are gently lit and the room behind them is much darker. The room is empty of people.\nLIGHT: Soft dim daylight comes in from the viewer's side only. The middle is gently lit and the corners fall into soft shadow. No lamp is lit.\nSTYLE: Photographic realism with restraint. Muted colours: off-white lace, dusty rose, fern green, terracotta, dark timber. Fine grain. No glow, no bloom.\nCONSTRAINTS: No window frame, no glazing bars, no glass, no reflections, no border and no vignette frame. No text, no numerals, no labels, no people, no animals, no watermark, no logos. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat backdrop picture for a game. It sits behind the glass of a house window to show the room inside. Straight-on view from the street, level camera, no tilt. The picture fills the whole frame from edge to edge.\nSUBJECT: A dim parlour in an old stone town house, seen from just outside its window, about 1.0 m wide and 1.4 m tall. Close to the viewer, one white cotton lace curtain hangs from the top edge of the frame and is drawn to the left, so that it covers the left half of the picture in soft vertical folds; the lace has a simple leaf pattern. In the open right half, just inside, a potted fern in a terracotta pot stands on a small round timber table. Behind it, a dim room: a papered wall in a muted dusty rose, a dark timber mantel shelf with a plain jug, and a framed landscape picture. The lace curtain and the fern are gently lit and the room behind them is much darker. The room is empty of people.\nLIGHT: Soft dim daylight comes in from the viewer's side only. The middle is gently lit and the corners fall into soft shadow. No lamp is lit.\nSTYLE: Photographic realism with restraint. Muted colours: off-white lace, dusty rose, fern green, terracotta, dark timber. Fine grain. No glow, no bloom.\nCONSTRAINTS: No window frame, no glazing bars, no glass, no reflections, no border and no vignette frame. No text, no numerals, no labels, no people, no animals, no watermark, no logos. Original design only.",
+    "size": "1120x1568",
+    "quality": "high",
+    "output_format": "png",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 344,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 344
+      },
+      "output_tokens": 1533,
+      "total_tokens": 1877,
+      "output_tokens_details": {
+        "image_tokens": 1533,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0478,
+  "billed_usd": 0.0477,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/window_room_b.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/window_room_b-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0398
+    },
+    "superseded_finals": []
+  },
+  "total_billed_usd": 0.0875
+}

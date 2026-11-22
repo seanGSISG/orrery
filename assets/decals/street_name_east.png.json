@@ -1,0 +1,46 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for a street name plate fixed to a stone wall in an old town. Straight-on orthographic view, no perspective. The plate fills the frame: it reaches the left and right edges, and it is so tall that only a thin clear strip, one twentieth of the frame height, stays above it and below it.\nSUBJECT: A long rectangular vitreous-enamel street name plate with slightly rounded corners, ten units wide and three units tall. Deep dark blue enamel with a thin white border line set a little inside the edge. One line of white capital letters in a plain serif typeface, centred and evenly spaced: \"MAINSPRING ROW\". The letters are about two fifths of the plate height. A small round screw head sits at the middle of each short end. The enamel is old: slightly dulled, with a few small chips at the edge and at the screws that show dark steel and a trace of rust.\nTEXT RULES: Draw exactly this one line, once, and no other text. Spelling: M-A-I-N-S-P-R-I-N-G, a space, R-O-W.\nSTYLE: Photographic realism with restraint. Satin enamel as seen under neutral light. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the plate, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for a street name plate fixed to a stone wall in an old town. Straight-on orthographic view, no perspective. The plate fills the frame: it reaches the left and right edges, and it is so tall that only a thin clear strip, one twentieth of the frame height, stays above it and below it.\nSUBJECT: A long rectangular vitreous-enamel street name plate with slightly rounded corners, ten units wide and three units tall. Deep dark blue enamel with a thin white border line set a little inside the edge. One line of white capital letters in a plain serif typeface, centred and evenly spaced: \"MAINSPRING ROW\". The letters are about two fifths of the plate height. A small round screw head sits at the middle of each short end. The enamel is old: slightly dulled, with a few small chips at the edge and at the screws that show dark steel and a trace of rust.\nTEXT RULES: Draw exactly this one line, once, and no other text. Spelling: M-A-I-N-S-P-R-I-N-G, a space, R-O-W.\nSTYLE: Photographic realism with restraint. Satin enamel as seen under neutral light. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the plate, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No logos, no watermarks. Original design only.",
+    "size": "2048x688",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 327,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 327
+      },
+      "output_tokens": 655,
+      "total_tokens": 982,
+      "output_tokens_details": {
+        "image_tokens": 655,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0214,
+  "billed_usd": 0.0213,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/street_name_east.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/street_name_east-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0177
+    },
+    "superseded_finals": [],
+    "post": "cropped to the alpha bounds (0, 59, 2048, 628) of the 2048x688 original; the unedited original is build/art/images/zone1-art/decals/street_name_east.png"
+  },
+  "total_billed_usd": 0.039
+}

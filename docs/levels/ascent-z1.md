@@ -144,41 +144,38 @@ The start view faces north into the shade of the tower and the square, and the s
 
 The dry chimney stands at the south end of the ridge walk (+14 m). Its flue, 1.3 m wide, goes down 15 m to the hearth of the guildhall's hall. The egg stands in front of the hearth. A door 2.4 m wide in the hall's east wall opens to the street beside the square.
 
-### Props, decals and placeholders
+### Props and decals
 
-The art of the zone-1 trial (#96; `assets/props/`, `assets/decals/`, `docs/licenses.md`) is in place. Every play surface is still kit geometry; a prop is decoration with a simple collider where the marble could otherwise roll through it.
+The art of the zone-1 trial (#96) and of the art pass is in place (`assets/props/`, `assets/decals/`, `docs/licenses.md`). Every play surface is still kit geometry; a prop is decoration with a simple collider where the marble could otherwise roll through it. The zone has 12 prop meshes and 32 prop instances.
 
 | Prop | Instances | Where | Collider |
 |---|---|---|---|
-| `fountain` | 1 | The middle of the square, with still water in its basin (a glass disc that does not collide) | cylinder |
+| `great_door` | 1 | The tower's great door: an arched timber door in a stone surround, 4 m wide, on the plinth of the south face | none |
+| `fountain` | 1 | The upper tier of the fountain, raised 0.3 m in the middle of the 4 m basin, with still water in its own basin | cylinder |
 | `lamp_post` | 10 | Round the square, off the ways up | cylinder |
+| `bench` | 3 | Two with their backs to the tower, one by the guildhall lane | box |
 | `bread_cart` | 1 | South-east of the fountain | box |
-| `barrels` | 4 | By the bakery door, by the workshop door, by the inn, by the waterwheel | cylinder |
+| `barrels` | 4 | North of the bakery, by the workshop door, by the inn, by the waterwheel | cylinder |
 | `flower_trough` | 7 | Beside the fountain, beside the tower's great door, in front of the south houses, by the guildhall door | box |
+| `stall_bread`, `stall_fruit` | 1 each | On the counters of the middle and the west stall | none |
+| `clock_parts` | 1 | By the clockmaker's door | box |
+| `hay_cart` | 1 | In the south street | box |
+| `anvil` | 1 | By the waterwheel | box |
 
 | Decal | Where |
 |---|---|
 | `dial_tower` | The four dials of the clock floor, 8.8 m across, under the brass hands at six o'clock |
 | `dial_shop` | The workshop's west wall, beside the clockmaker's sign |
-| `sign_bakery`, `sign_clockmaker` | Both faces of the hanging boards of the bakery and the clockmaker |
+| `sign_bakery`, `sign_clockmaker`, `sign_inn` | Both faces of the hanging boards of the bakery, the clockmaker and the inn |
 | `sign_guildhall` | Over the hall door of the guildhall |
 | `sign_workshop` | The workshop's south wall, over the balcony |
 | `plaque_square` | Over the great door of the tower |
+| `street_name_south`, `street_name_east` | The corner house of the south street, and the workshop's west wall |
+| `window_bakery`, `window_clockmaker` | Behind the glass of the two shop windows, each 2 m wide |
+| `window_room_a`, `window_room_b` | Behind the glass of three ground-floor windows of the bakery and the workshop |
+| `notice_market`, `notice_clock` | By the guildhall's door, and by the clockmaker's door |
+| `grime_base`, `grime_streaks` | Damp at the foot of the walls round the square, and rain streaks under three sills (soft decals) |
 
-`town.decal(name, art, at, yaw, size)` puts a picture of `assets/decals/` on an upright quad. Its alpha cuts the outline at 0.5 (glTF alpha mode MASK), and it does not collide.
+`town.decal(name, art, at, yaw, size, soft)` puts a picture of `assets/decals/` on an upright quad. Its alpha cuts the outline at 0.5 (glTF alpha mode MASK); a soft decal blends by its alpha (BLEND). It does not collide. `town.window(..., room=art)` puts a decal behind a window's glass in place of the dark room.
 
-The props and decals that wait for their art have a placeholder: an empty with the custom property `town_spot` = {kind, size, note}, from `town.spot()`. It shows nothing in the game. To put a model in, change its `town.spot("prop", name, at, rotation, ...)` line to `kit.prop(name, at=..., rotation=..., collider=...)` at the same place. No spot stands on a way up.
-
-| Prop spot | Place (x, y, z) | Size (w × d × h, m) | To make |
-|---|---|---|---|
-| `prop_bench_1`, `prop_bench_2` | (−10.5, 30.8, 0), (10.5, 29.6, 0) | 1.8 × 0.6 × 0.9 | Benches with their backs to the tower |
-| `prop_bench_3` | (−15.8, 26.0, 0) | 1.8 × 0.6 × 0.9 | Bench by the guildhall lane |
-| `prop_goods_stall_2`, `prop_goods_stall_3` | (−12.5, 9.95, 0.95), (−16.0, 9.95, 0.95) | 2.6 × 0.6 × 0.5 | Bread and fruit on the stall counters |
-| `prop_clock_parts` | (13.8, 22.5, 0) | 1.2 × 0.8 × 1.0 | A crate of clock parts by the workshop door |
-| `prop_hay_cart` | (0.0, −5.0, 0) | 1.8 × 3.2 × 1.6 | Hay cart in the south street |
-| `prop_anvil` | (25.0, 14.0, 0) | 0.8 × 0.5 × 0.8 | Anvil by the waterwheel |
-
-| Decal spot | Where | Art to make |
-|---|---|---|
-| `decal_sign_inn` | The board of the inn's hanging sign, south side of the square | Sign art on both faces |
-| `decal_street_name_south`, `decal_street_name_east` | The corner house of the south street, and the workshop's west wall | Street name plates |
+`town.spot()` still leaves a placeholder empty (custom property `town_spot` = {kind, size, note}) where a prop or a decal comes later; the zone has none left.

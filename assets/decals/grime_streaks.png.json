@@ -1,0 +1,51 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A game decal overlay of dirt only. It is alpha-blended onto a pale stone wall under a window sill. Straight-on orthographic view.\nSUBJECT: Dark rain streaks only, with nothing behind them. Ten narrow vertical run-off stains of dark grey-brown grime with a slight green-black tint start at the top edge of the frame, where they are widest and darkest, and run straight down, thinning and fading out to nothing before the bottom edge. They have different lengths and strengths and are irregularly spaced across the width, with soft feathered sides. Three of them are longer and darker. The left edge, the right edge and the bottom edge of the frame are clear.\nSTYLE: Photographic realism with restraint. Matte, soft, natural weathering as on old limestone. No hard edges, no paint drips, no glossy wet look.\nCONSTRAINTS: Fully transparent background. Only the dirt is drawn. Every drawn pixel is dark: dark grey-brown or dark green-black. Where the stain is thin, it has the same dark colour and is only more transparent. No white, no pale haze, no mist, no fog and no light halo around the stain. Do not draw the wall, stone blocks, joints, a window, a sill, a checkerboard, a backdrop or a shadow. No text, no logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A game decal overlay of dirt only. It is alpha-blended onto a pale stone wall under a window sill. Straight-on orthographic view.\nSUBJECT: Dark rain streaks only, with nothing behind them. Ten narrow vertical run-off stains of dark grey-brown grime with a slight green-black tint start at the top edge of the frame, where they are widest and darkest, and run straight down, thinning and fading out to nothing before the bottom edge. They have different lengths and strengths and are irregularly spaced across the width, with soft feathered sides. Three of them are longer and darker. The left edge, the right edge and the bottom edge of the frame are clear.\nSTYLE: Photographic realism with restraint. Matte, soft, natural weathering as on old limestone. No hard edges, no paint drips, no glossy wet look.\nCONSTRAINTS: Fully transparent background. Only the dirt is drawn. Every drawn pixel is dark: dark grey-brown or dark green-black. Where the stain is thin, it has the same dark colour and is only more transparent. No white, no pale haze, no mist, no fog and no light halo around the stain. Do not draw the wall, stone blocks, joints, a window, a sill, a checkerboard, a backdrop or a shadow. No text, no logos, no watermarks. Original design only.",
+    "size": "1536x1280",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 289,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 289
+      },
+      "output_tokens": 1904,
+      "total_tokens": 2193,
+      "output_tokens_details": {
+        "image_tokens": 1904,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0587,
+  "billed_usd": 0.0586,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/grime_streaks-2.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/grime_streaks-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0484
+    },
+    "superseded_finals": [
+      {
+        "file": "build/art/images/zone1-art/decals/grime_streaks.png.json",
+        "model": "gpt-image-2.6-sunburst",
+        "billed_usd": 0.0584
+      }
+    ]
+  },
+  "total_billed_usd": 0.1654
+}

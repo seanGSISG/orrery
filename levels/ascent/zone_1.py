@@ -205,7 +205,7 @@ kit.level(title="Clockmaker's Square", par=263.2, gold=119.7, sky="ground_dawn")
 
 # --- The town ground ----------------------------------------------------------------------------
 
-kit.deck(kit.rect(-60, -45, 60, 85), top=0.0, depth=1.0, name="ground")
+kit.deck(kit.rect(-60, -30, 60, 80), top=0.0, depth=1.0, name="ground")
 # The square: a brass band round its edge.
 SQUARE = kit.rect(-17, 0, 17, 32)
 kit.inlay(
@@ -1102,12 +1102,13 @@ for side, face in TOWER_FACES.items():
     town.window(
         dress, face, face.length / 2, 3.2, BELFRY + 5.0, BELFRY + 13.0, pane="iron"
     )
-town.window(dress, TOWER_FACES["s"], 6.0, 3.0, 0.9, 5.4, door=True)
 # The square's name plaque over the great door, clear of the door's lintel (5.6 m).
 town.decal(
     "plaque_square", "plaque_square", (TOWER[0], Y0 - 0.02, 6.7), 0.0, (2.4, 1.6)
 )
 dress.add("tower_dress", collide=False)
+# The great door of the tower base: a hero prop 4 m wide on the plinth, its back in the wall.
+kit.prop("great_door", at=(TOWER[0], Y0, 0.9))
 # The broken crown: merlons at the corners.
 for i, (mx, my) in enumerate(
     ((cx0, cy0), (cx1 - 1.0, cy0), (cx1 - 1.0, cy1 - 1.0), (cx0, cy1 - 1.0))
@@ -1289,7 +1290,7 @@ def far_town() -> None:
             reach = math.hypot((x0 + x1) / 2, (y0 + y1) / 2 - 20.0)
             if reach > 150.0 + 110.0 * rng.random():
                 continue
-            if x1 > -72.0 and x0 < 72.0 and y1 > -58.0 and y0 < 98.0:
+            if x1 > -72.0 and x0 < 72.0 and y1 > -44.0 and y0 < 94.0:
                 continue
             at = x0 if along == "x" else y0
             end = x1 if along == "x" else y1
@@ -1325,10 +1326,18 @@ for at in LAMPS:
 
 # The windows and doors of the bakery, the workshop and the guildhall. They do not collide.
 fronts = town.Parts()
-town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["e"], BAKERY_TOP, door=True)
+# The shop fronts: the bakery's and the clockmaker's shop windows show their shops.
+bakery_front = town.faces((bx0, by0), (bx1, by1))["e"]
+town.window(fronts, bakery_front, 2.4, 1.0, 0.9, 2.2, room="window_room_a")
+town.window(fronts, bakery_front, 7.2, 1.4, 0.0, 2.4, door=True)
+town.window(fronts, bakery_front, 10.2, 2.0, 0.6, 2.3, room="window_bakery")
 town.windows(fronts, town.faces((bx0, by0), (bx1, by1))["s"], BAKERY_TOP)
 workshop_faces = town.faces((wx0, wy0), (wx1, wy1))
-town.windows(fronts, workshop_faces["w"], ROOF, door=True)
+town.windows(fronts, workshop_faces["w"], ROOF, bottom=3.0)
+town.window(fronts, workshop_faces["w"], 3.5, 2.0, 0.6, 2.3, room="window_clockmaker")
+town.window(fronts, workshop_faces["w"], 8.0, 1.4, 0.0, 2.4, door=True)
+for along, room in ((11.5, "window_room_b"), (15.0, "window_room_a")):
+    town.window(fronts, workshop_faces["w"], along, 1.0, 0.9, 2.2, room=room)
 town.windows(fronts, workshop_faces["n"], ROOF)
 town.windows(fronts, workshop_faces["s"], ROOF, bottom=BALCONY)
 hall = town.Face((gx1, gy0), (0.0, 1.0), (1.0, 0.0), TERRACE_Y - gy0)
@@ -1361,33 +1370,51 @@ town.sign(
     height=0.8,
     art="sign_clockmaker",
 )
-town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0))
+town.sign("sign_inn", (-8.0, -1.0, 3.6), (0.0, 1.0), art="sign_inn")
 town.decal(
     "sign_guildhall", "sign_guildhall", (gx1 + 0.02, 25.5, 3.85), 90.0, (2.4, 0.9)
 )
 town.decal("sign_workshop", "sign_workshop", (18.5, wy0 - 0.02, 6.1), 0.0, (1.65, 1.1))
 town.decal("dial_shop", "dial_shop", (wx0 - 0.02, 16.0, 6.4), -90.0, (1.2, 1.2))
-town.spot(
-    "decal",
+# Street name plates, between the ground floor's lintels and the first floor's sills.
+town.decal(
     "street_name_south",
-    (4.0, -1.0 + 0.06, 3.0),
-    (90.0, 0.0, 180.0),
-    (1.0, 0.02, 0.3),
-    "street name plate",
+    "street_name_south",
+    (4.55, -1.0 + 0.02, 3.5),
+    180.0,
+    (1.0, 0.32),
 )
-town.spot(
-    "decal",
-    "street_name_east",
-    (14.5 - 0.06, 13.0, 3.0),
-    (90.0, 0.0, -90.0),
-    (1.0, 0.02, 0.3),
-    "street name plate",
+town.decal(
+    "street_name_east", "street_name_east", (wx0 - 0.02, 13.0, 3.0), -90.0, (1.0, 0.28)
 )
+# Notices: a market bill by the guildhall's door, and the clockmaker's notice by his door.
+town.decal("notice_market", "notice_market", (gx1 + 0.02, 27.0, 1.5), 90.0, (0.6, 0.8))
+town.decal("notice_clock", "notice_clock", (wx0 - 0.02, 22.2, 1.5), -90.0, (0.6, 0.8))
+# Grime: damp at the foot of the walls round the square, and rain streaks under sills.
+GRIME_BASE = [
+    ((bx1 + 0.015, 9.0, 0.4), 90.0),
+    ((bx1 + 0.015, 12.0, 0.4), 90.0),
+    ((bx1 + 0.015, 15.0, 0.4), 90.0),
+    ((wx0 - 0.015, 26.5, 0.4), -90.0),
+    ((wx0 - 0.015, 17.0, 0.4), -90.0),
+    ((wx0 - 0.015, 12.0, 0.4), -90.0),
+    ((gx1 + 0.015, 22.0, 0.4), 90.0),
+    ((gx1 + 0.015, 29.5, 0.4), 90.0),
+]
+for i, (at, yaw) in enumerate(GRIME_BASE):
+    town.decal(f"grime_base_{i}", "grime_base", at, yaw, (3.0, 0.8), soft=True)
+GRIME_STREAKS = [
+    ((wx0 - 0.015, 17.5, 3.35), -90.0),
+    ((wx0 - 0.015, 11.5, 3.35), -90.0),
+    ((gx1 + 0.015, 29.0, 1.05), 90.0),
+]
+for i, (at, yaw) in enumerate(GRIME_STREAKS):
+    town.decal(f"grime_streaks_{i}", "grime_streaks", at, yaw, (1.2, 1.0), soft=True)
 # Props: decoration from the art trial (#96). Each has a simple collider, so the marble meets it
 # as it looks; none stands on a way up.
 PROPS: list[tuple[str, Place, float, str]] = [
     ("bread_cart", (6.0, 3.0, 0.0), 30.0, "box"),
-    ("barrels", (-17.4, 16.6, 0.0), 0.0, "cylinder"),
+    ("barrels", (-17.3, 19.0, 0.0), 0.0, "cylinder"),
     ("barrels", (13.6, 25.6, 0.0), 0.0, "cylinder"),
     ("barrels", (-10.2, -0.3, 0.0), 0.0, "cylinder"),
     ("barrels", (24.2, 15.6, 0.0), 0.0, "cylinder"),
@@ -1401,39 +1428,21 @@ PROPS: list[tuple[str, Place, float, str]] = [
 ]
 for name, at, yaw, collider in PROPS:
     kit.prop(name, at=at, rotation=(0.0, 0.0, yaw), collider=collider)
-# Prop spots: props whose art comes later (docs/levels/ascent-z1.md). None is on a way up.
-PROP_SPOTS = {
-    "bench_1": ((-10.5, 30.8, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
-    "bench_2": ((10.5, 29.6, 0.0), 180.0, (1.8, 0.6, 0.9), "bench, back to the tower"),
-    "bench_3": (
-        (-15.8, 26.0, 0.0),
-        90.0,
-        (1.8, 0.6, 0.9),
-        "bench by the guildhall lane",
-    ),
-    "goods_stall_2": (
-        (-12.5, 9.95, 0.95),
-        0.0,
-        (2.6, 0.6, 0.5),
-        "bread on the counter",
-    ),
-    "goods_stall_3": (
-        (-16.0, 9.95, 0.95),
-        0.0,
-        (2.6, 0.6, 0.5),
-        "fruit on the counter",
-    ),
-    "clock_parts": ((13.8, 22.5, 0.0), -90.0, (1.2, 0.8, 1.0), "crate of clock parts"),
-    "hay_cart": (
-        (0.0, -5.0, 0.0),
-        0.0,
-        (1.8, 3.2, 1.6),
-        "hay cart in the south street",
-    ),
-    "anvil": ((25.0, 14.0, 0.0), 0.0, (0.8, 0.5, 0.8), "anvil by the waterwheel"),
-}
-for name, (at, yaw, size, note) in PROP_SPOTS.items():
-    town.spot("prop", name, at, (0.0, 0.0, yaw), size, note)
+# The props of the art pass: benches with their backs to the tower, goods on the counters of
+# the bakery's and the fruit seller's stalls, a crate of clock parts by the workshop, a hay
+# cart in the south street and an anvil by the waterwheel. None is on a way up.
+ART_PROPS: list[tuple[str, Place, float, str]] = [
+    ("bench", (-10.5, 30.8, 0.0), 180.0, "box"),
+    ("bench", (10.5, 29.6, 0.0), 180.0, "box"),
+    ("bench", (-15.8, 26.0, 0.0), 90.0, "box"),
+    ("stall_bread", (-12.5, 9.95, 0.95), 0.0, "none"),
+    ("stall_fruit", (-16.0, 9.95, 0.95), 0.0, "none"),
+    ("clock_parts", (13.8, 22.5, 0.0), -90.0, "box"),
+    ("hay_cart", (0.0, -5.0, 0.0), 0.0, "box"),
+    ("anvil", (25.0, 14.0, 0.0), 0.0, "box"),
+]
+for name, at, yaw, collider in ART_PROPS:
+    kit.prop(name, at=at, rotation=(0.0, 0.0, yaw), collider=collider)
 
 # --- Routes: section 1 -------------------------------------------------------------------------
 

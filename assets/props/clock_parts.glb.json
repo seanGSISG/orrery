@@ -1,0 +1,143 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"028251de-35b1-4c73-a46d-75ff382cbc3d\"",
+  "settings": {
+    "input": "028251de-35b1-4c73-a46d-75ff382cbc3d",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "image": "build/art/images/zone1-art/props/clock_parts-final.png"
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "c6ecd2b3-7406-4cbb-a05c-33353fa268a8",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1-art/props/clock_parts-draft.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0453
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1-art/props/clock_parts-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0629,
+      "refs": [
+        "build/art/images/zone1-art/props/clock_parts-draft.png"
+      ]
+    },
+    "views": null,
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-art-clock_parts-shape-s2.glb.json",
+      "service": "Tripo API /generation/image-to-model",
+      "model": "P1-20260311",
+      "task_id": "028251de-35b1-4c73-a46d-75ff382cbc3d",
+      "seed": 2,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "input": "build/art/images/zone1-art/props/clock_parts-final.png",
+        "face_limit": 4000,
+        "model_seed": 2
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-art-clock_parts2.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "c6ecd2b3-7406-4cbb-a05c-33353fa268a8",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "superseded": [
+      {
+        "file": "build/art/models/zone1-art-clock_parts-views.json",
+        "service": "Tripo API /generation/image-to-multiview",
+        "model": "",
+        "task_id": "dbc6ab0b-7843-4932-8897-6d44c7450ec1",
+        "seed": null,
+        "billed_usd": 0.1,
+        "settings": {
+          "input": "build/art/images/zone1-art/props/clock_parts-final.png"
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-clock_parts-shape.glb.json",
+        "service": "Tripo API /generation/multiview-to-model",
+        "model": "P1-20260311",
+        "task_id": "ae88dbec-558a-40db-ba61-67ee217573dc",
+        "seed": 1,
+        "billed_usd": 0.4,
+        "settings": {
+          "model": "P1-20260311",
+          "texture": false,
+          "pbr": false,
+          "inputs": [
+            {
+              "task_id": "dbc6ab0b-7843-4932-8897-6d44c7450ec1"
+            }
+          ],
+          "face_limit": 4000,
+          "model_seed": 1
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-clock_parts.glb.json",
+        "service": "Tripo API /models/texture",
+        "model": "v3.5-20260815",
+        "task_id": "a909cecb-8442-4373-98c5-bb7cc750462c",
+        "seed": 1,
+        "billed_usd": 0.1,
+        "settings": {
+          "input": "ae88dbec-558a-40db-ba61-67ee217573dc",
+          "model": "v3.5-20260815",
+          "pbr": true,
+          "delight": true,
+          "bake": true,
+          "texture_quality": "standard",
+          "texture_prompt": {
+            "images": [
+              {
+                "front": "build/art/models/zone1-art-clock_parts-views.front.jpeg"
+              },
+              {
+                "left": "build/art/models/zone1-art-clock_parts-views.left.jpeg"
+              },
+              {
+                "back": "build/art/models/zone1-art-clock_parts-views.back.jpeg"
+              },
+              {
+                "right": "build/art/models/zone1-art-clock_parts-views.right.jpeg"
+              }
+            ]
+          },
+          "texture_seed": 1
+        }
+      }
+    ]
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name clock_parts --stone 1.0 --metal-threshold 0.6 --yaw -90 --fit 1.2,0.85,0.9",
+  "total_billed_usd": 1.2082
+}

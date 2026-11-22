@@ -1,0 +1,44 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat backdrop picture for a game. It sits behind the glass of a house window to show the room inside. Straight-on view from the street, level camera, no tilt. The picture fills the whole frame from edge to edge.\nSUBJECT: A dim living room in an old stone town house, seen from just outside its window, about 1.0 m wide and 1.4 m tall. Close to the viewer, two white cotton lace curtains hang from the top edge of the frame, one at each side, half drawn, so that a gap about one third of the width stays open in the middle. They hang in soft vertical folds, and the lace has a simple flower pattern. Through the gap, and faintly through the lace, a dim room: a papered wall in a muted sage green, a dark timber dresser with a few plain plates, and a wooden chair. The lace curtains are gently lit and the room behind them is much darker. The room is empty of people.\nLIGHT: Soft dim daylight comes in from the viewer's side only. The middle is gently lit and the corners fall into soft shadow. No lamp is lit.\nSTYLE: Photographic realism with restraint. Muted colours: off-white lace, sage green, dark timber. Fine grain. No glow, no bloom.\nCONSTRAINTS: No window frame, no glazing bars, no glass, no reflections, no border and no vignette frame. No text, no numerals, no labels, no people, no animals, no watermark, no logos. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat backdrop picture for a game. It sits behind the glass of a house window to show the room inside. Straight-on view from the street, level camera, no tilt. The picture fills the whole frame from edge to edge.\nSUBJECT: A dim living room in an old stone town house, seen from just outside its window, about 1.0 m wide and 1.4 m tall. Close to the viewer, two white cotton lace curtains hang from the top edge of the frame, one at each side, half drawn, so that a gap about one third of the width stays open in the middle. They hang in soft vertical folds, and the lace has a simple flower pattern. Through the gap, and faintly through the lace, a dim room: a papered wall in a muted sage green, a dark timber dresser with a few plain plates, and a wooden chair. The lace curtains are gently lit and the room behind them is much darker. The room is empty of people.\nLIGHT: Soft dim daylight comes in from the viewer's side only. The middle is gently lit and the corners fall into soft shadow. No lamp is lit.\nSTYLE: Photographic realism with restraint. Muted colours: off-white lace, sage green, dark timber. Fine grain. No glow, no bloom.\nCONSTRAINTS: No window frame, no glazing bars, no glass, no reflections, no border and no vignette frame. No text, no numerals, no labels, no people, no animals, no watermark, no logos. Original design only.",
+    "size": "1120x1568",
+    "quality": "high",
+    "output_format": "png",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 327,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 327
+      },
+      "output_tokens": 1533,
+      "total_tokens": 1860,
+      "output_tokens_details": {
+        "image_tokens": 1533,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0477,
+  "billed_usd": 0.0476,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "final": "build/art/images/zone1-art/decals/window_room_a.png",
+    "draft": {
+      "file": "build/art/images/zone1-art/decals/window_room_a-draft.png.json",
+      "model": "gpt-image-2.6-flare",
+      "billed_usd": 0.0397
+    },
+    "superseded_finals": []
+  },
+  "total_billed_usd": 0.0873
+}

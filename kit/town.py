@@ -746,12 +746,15 @@ def window(
     door: bool = False,
     pane: Finish | None = None,
     shutters: bool = False,
+    room: str = "",
 ) -> None:
     """Adds one window or door on a wall face, `centre` m along it, from the height sill to
     head. A stone frame FRAME m wide and deep stands round it, with a lintel above and, under a
     window, a sill. Inside the frame: a door leaf; or the panel `pane` (for example iron
     louvres); or a window: a dark room behind near-white glass with a cross of sash bars, so
-    the glass sits back in the frame. shutters: two shutter leaves open flat beside it."""
+    the glass sits back in the frame. shutters: two shutter leaves open flat beside it.
+    room: the decal art of the room behind the glass (a shop window), in place of the dark
+    room; it is its own object, so give it to a few windows only."""
 
     def piece(
         s0: float, s1: float, o0: float, o1: float, z0: float, z1: float, finish: Finish
@@ -771,7 +774,18 @@ def window(
     elif pane is not None:
         piece(s0, s1, 0.0, 0.04, sill, head, pane)
     else:
-        panel(0.005, "interior")
+        if room:
+            x, y = face.at(centre, 0.006)
+            yaw = math.degrees(math.atan2(face.out[0], -face.out[1]))
+            decal(
+                f"room_{room}_{x:.0f}_{y:.0f}",
+                room,
+                (x, y, (sill + head) / 2),
+                yaw,
+                (width, head - sill),
+            )
+        else:
+            panel(0.005, "interior")
         panel(0.03, "glass")
         bar = 0.025
         piece(centre - bar, centre + bar, 0.0, 0.06, sill, head, "sash")
@@ -919,12 +933,18 @@ def clock_face(
 
 
 def decal(
-    name: str, art: str, at: Vec3, yaw: float, size: tuple[float, float]
+    name: str,
+    art: str,
+    at: Vec3,
+    yaw: float,
+    size: tuple[float, float],
+    soft: bool = False,
 ) -> bpy.types.Object:
     """Adds a flat picture: the art `assets/decals/<art>.png` on an upright quad `size`
     (width, height) m whose middle is `at`, facing -y turned by yaw degrees, as a clock dial
-    does. Put it a few millimetres proud of its wall. Its alpha cuts the outline at 0.5. It
-    does not collide; decals of one art share one material."""
+    does. Put it a few millimetres proud of its wall. Its alpha cuts the outline at 0.5; a
+    soft decal (grime, stains) blends by its alpha instead. It does not collide; decals of one
+    art share one material."""
     a = math.radians(yaw)
     right = Vector((math.cos(a), math.sin(a), 0.0))
     up = Vector((0.0, 0.0, 1.0))
@@ -940,13 +960,14 @@ def decal(
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
-    mesh.materials.append(_decal_material(art))
+    mesh.materials.append(_decal_material(art, soft))
     return add_object(name, mesh)
 
 
-def _decal_material(art: str) -> bpy.types.Material:
-    """Returns the material of a decal art: its picture as the colour, its alpha cut at 0.5
-    (a Round node, which the glTF export writes as alpha mode MASK), made once per level."""
+def _decal_material(art: str, soft: bool = False) -> bpy.types.Material:
+    """Returns the material of a decal art, made once per level: its picture as the colour,
+    and its alpha cut at 0.5 (a Round node, which the glTF export writes as alpha mode MASK),
+    or for a soft decal its alpha as it is (alpha mode BLEND)."""
     found = bpy.data.materials.get(f"decal_{art}")
     if found is not None:
         return found
@@ -957,10 +978,14 @@ def _decal_material(art: str) -> bpy.types.Material:
     picture = tree.nodes.new("ShaderNodeTexImage")
     picture.image = bpy.data.images.load(str(DECALS / f"{art}.png"))
     tree.links.new(picture.outputs["Color"], bsdf.inputs["Base Color"])
-    cut = tree.nodes.new("ShaderNodeMath")
-    cut.operation = "ROUND"
-    tree.links.new(picture.outputs["Alpha"], cut.inputs[0])
-    tree.links.new(cut.outputs["Value"], bsdf.inputs["Alpha"])
+    if soft:
+        found.surface_render_method = "BLENDED"
+        tree.links.new(picture.outputs["Alpha"], bsdf.inputs["Alpha"])
+    else:
+        cut = tree.nodes.new("ShaderNodeMath")
+        cut.operation = "ROUND"
+        tree.links.new(picture.outputs["Alpha"], cut.inputs[0])
+        tree.links.new(cut.outputs["Value"], bsdf.inputs["Alpha"])
     bsdf.inputs["Roughness"].default_value = 0.65
     return found
 
