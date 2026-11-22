@@ -33,6 +33,8 @@ Gap = tuple[str, float, float]
 # The spire cap of zone 2: its middle and radius. Zone 3 does not build it.
 CAP = (0.0, 39.0)
 CAP_RADIUS = 5.0
+# The fins of a ship with a deck on its back: no fin on top, where it would cross the deck.
+LOW_FINS = (0.0, 180.0, 270.0)
 # A floating house: the overhang of its terrace past its walls, and the terrace slab, m.
 EAVE = 0.15
 TERRACE = 0.25
@@ -340,7 +342,7 @@ harbour.gondola(
 deck("tender_sponson", SPONSON[:2], (SPONSON[2], 32.8), TENDER_DECK, "sw")
 TENDER_VENT = (19.2, 29.8)
 vent("vent_tender", (*TENDER_VENT, TENDER_DECK), 10.8)
-FIN = harbour.fins(TENDER, root=5.0, span=4.0, floors=True)
+FIN = harbour.fins(TENDER, root=5.0, span=4.0, floors=True, angles=LOW_FINS)
 # Brass kerbs on the trailing edge and the tip of the south fin: the vent throws the marble
 # east along it.
 harbour.kerb(
@@ -776,13 +778,131 @@ house(
     SIGNAL_TOP,
     height=4.5,
     seed=11,
-    gaps=[("w", 100.5, 110.0)],
+    gaps=[("w", 100.5, 110.0), ("n", 20.8, 22.2), ("n", 24.2, 27.4)],
 )
 harbour.lamp("signal_lamp", (26.9, 99.7, SIGNAL_TOP))
 
+# --- Part 4: the flotilla, +382 to +419 ---------------------------------------------------------
+
+
+def span(length: float, angle: float) -> tuple[float, float]:
+    """Returns the plan distance between the two floor edges that a rope of `length` m at
+    `angle` degrees joins (its slope and both heels), and its rise."""
+    a = math.radians(angle)
+    return length * math.cos(a) + 2 * harbour.HEEL, length * math.sin(a)
+
+
+def gangplank(name: str, low: Place, high: Place) -> None:
+    """Places a gangplank: a moving deck 3 m square from low to high, 10 s a cycle."""
+    kit.marker(
+        "moving_platform",
+        at=low,
+        points=[high],
+        period=10.0,
+        stop=1.0,
+        width=3.0,
+        depth=3.0,
+        finish="wood",
+        name=name,
+    )
+
+
+def skiff(ship: Ship, deck_x: tuple[float, float], width: float, top: float) -> None:
+    """Adds an airship whose back carries a flat deck of `width` m at `top` from deck_x[0] to
+    deck_x[1], with brass kerbs along both sides, and a gondola and two engines under it."""
+    harbour.envelope(ship)
+    harbour.fins(ship, root=ship.length * 0.22, span=ship.radius * 0.6, angles=LOW_FINS)
+    harbour.promenade(ship, [(deck_x[0], top), (deck_x[1], top)], width)
+    x0 = ship.nose[0] + ship.length * 0.25
+    x1 = ship.nose[0] + ship.length * 0.6
+    harbour.gondola(ship, x0, x1, ship.bottom(ship.widest) - 1.2, 2.4, windows=True)
+    for side in (-1.0, 1.0):
+        y = ship.nose[1] + side * (ship.radius + 0.7)
+        harbour.engine(
+            f"{ship.name}_engine_{int(side + 1)}", (x1 - 1.0, y, ship.nose[2] - 1.0)
+        )
+
+
+# Rope 1 and gangplank 1: from the Signal roof north to Skiff 1.
+ROPE_COL_1 = 21.5
+_plan_1, _rise_1 = span(24.0, 30.0)
+SKIFF_1_TOP = SIGNAL_TOP + _rise_1
+SKIFF_1_Y = (SIGNAL[3] + _plan_1, SIGNAL[3] + _plan_1 + 6.0)
+SKIFF_1 = Ship("skiff_1", (14.5, sum(SKIFF_1_Y) / 2, SKIFF_1_TOP - 3.85), 19.0, 3.4)
+skiff(SKIFF_1, (17.0, 31.0), 6.0, SKIFF_1_TOP)
+ROPE_2_FLOOR = harbour.rope(
+    "rope_2",
+    (ROPE_COL_1, SIGNAL[3], SIGNAL_TOP),
+    (ROPE_COL_1, SKIFF_1_Y[0], SKIFF_1_TOP),
+)
+GANGPLANK_1 = (25.8, (SIGNAL[3] + 1.6, SIGNAL_TOP), (SKIFF_1_Y[0] - 1.6, SKIFF_1_TOP))
+gangplank(
+    "gangplank_1",
+    (GANGPLANK_1[0], *GANGPLANK_1[1]),
+    (GANGPLANK_1[0], *GANGPLANK_1[2]),
+)
+# Rope 2 and gangplank 2: from Skiff 1 west to Skiff 2.
+ROPE_ROW_2 = SKIFF_1_Y[0] + 1.35
+GANGPLANK_ROW_2 = SKIFF_1_Y[1] - 1.25
+_plan_2, _rise_2 = span(22.5, 32.0)
+SKIFF_2_TOP = SKIFF_1_TOP + _rise_2
+SKIFF_2_X = (17.0 - _plan_2 - 14.0, 17.0 - _plan_2)
+SKIFF_2_Y = (ROPE_ROW_2 - 2.1, GANGPLANK_ROW_2 + 2.1)
+SKIFF_2 = Ship(
+    "skiff_2", (SKIFF_2_X[0] - 2.6, sum(SKIFF_2_Y) / 2, SKIFF_2_TOP - 4.25), 19.0, 3.8
+)
+skiff(SKIFF_2, SKIFF_2_X, SKIFF_2_Y[1] - SKIFF_2_Y[0], SKIFF_2_TOP)
+ROPE_3_FLOOR = harbour.rope(
+    "rope_3", (17.0, ROPE_ROW_2, SKIFF_1_TOP), (SKIFF_2_X[1], ROPE_ROW_2, SKIFF_2_TOP)
+)
+gangplank(
+    "gangplank_2",
+    (17.0 - 1.6, GANGPLANK_ROW_2, SKIFF_1_TOP),
+    (SKIFF_2_X[1] + 1.6, GANGPLANK_ROW_2, SKIFF_2_TOP),
+)
+# Rope 3 and gangplank 3: from Skiff 2 on west to the Tanker. The rope needs a run-up: the deck
+# of Skiff 2 gives 14 m in line with it.
+# The brief asks for 35°: the marble stalls about 20 m up a beam of 32° or more, so this rope is
+# as long and as steep as rope 3.
+_plan_3, _rise_3 = span(22.5, 32.0)
+TANKER_TOP = SKIFF_2_TOP + _rise_3
+TANKER_DECK = (
+    SKIFF_2_X[0] - _plan_3 - 24.0,
+    ROPE_ROW_2 - 5.0,
+    SKIFF_2_X[0] - _plan_3,
+    ROPE_ROW_2 + 5.0,
+)
+TANKER = Ship(
+    "tanker", (TANKER_DECK[0] - 4.0, ROPE_ROW_2, TANKER_TOP - 6.45), 32.0, 6.0
+)
+harbour.envelope(TANKER)
+harbour.fins(TANKER, root=7.0, span=3.6, angles=LOW_FINS)
+harbour.promenade(
+    TANKER,
+    [(TANKER_DECK[0], TANKER_TOP), (TANKER_DECK[2], TANKER_TOP)],
+    TANKER_DECK[3] - TANKER_DECK[1],
+    kerbs=[("s", TANKER_DECK[0], TANKER_DECK[2] - 4.0)],
+)
+_tx = TANKER.nose[0]
+harbour.gondola(TANKER, _tx + 9.0, _tx + 23.0, TANKER.bottom(TANKER.widest) - 1.4, 3.2)
+for i, x in enumerate((_tx + 15.0, _tx + 25.0)):
+    harbour.engine(
+        f"tanker_engine_{i}", (x, TANKER.nose[1] - 7.0, TANKER.nose[2] - 2.0)
+    )
+ROPE_4_FLOOR = harbour.rope(
+    "rope_4",
+    (SKIFF_2_X[0], ROPE_ROW_2, SKIFF_2_TOP),
+    (TANKER_DECK[2], ROPE_ROW_2, TANKER_TOP),
+)
+gangplank(
+    "gangplank_3",
+    (SKIFF_2_X[0] - 1.6, GANGPLANK_ROW_2, SKIFF_2_TOP),
+    (TANKER_DECK[2] + 1.6, GANGPLANK_ROW_2, TANKER_TOP),
+)
+
 # --- Routes ----------------------------------------------------------------------------------------
 
-FINISH: Place = (22.5, 104.5, SIGNAL_TOP)
+FINISH: Place = (TANKER_DECK[0] + 8.0, ROPE_ROW_2, TANKER_TOP)
 
 # Part 1, first run: the crates, Roof 1 and its vent, Roof 2, the dormers and gangway A.
 FIRST[1] = [
@@ -901,6 +1021,41 @@ EXPERT[3] = [
     ((BOW_VENT[0], 103.4, LAMP_PLATFORM_TOP), "speed 3"),
     ((PLATFORM_VENT[0] - 1.2, PLATFORM_VENT[1], LAMP_PLATFORM_TOP), "speed 3"),
     ((SIGNAL[0] + 2.4, PLATFORM_VENT[1], SIGNAL_TOP), "speed 3"),
+]
+
+# Part 4, first run: the three gangplanks.
+FIRST[4] = [
+    ((GANGPLANK_1[0], SIGNAL[3] - 1.5, SIGNAL_TOP), "wait_until gangplank_1 9.0 9.8"),
+    ((GANGPLANK_1[0], *GANGPLANK_1[1]), "speed 3; wait_until gangplank_1 5.2 5.9"),
+    ((GANGPLANK_1[0], SKIFF_1_Y[0] + 1.4, SKIFF_1_TOP), "speed 3"),
+    ((17.0 + 1.4, GANGPLANK_ROW_2, SKIFF_1_TOP), "wait_until gangplank_2 9.0 9.8"),
+    (
+        (17.0 - 1.6, GANGPLANK_ROW_2, SKIFF_1_TOP),
+        "speed 3; wait_until gangplank_2 5.2 5.9",
+    ),
+    ((SKIFF_2_X[1] - 1.4, GANGPLANK_ROW_2, SKIFF_2_TOP), "speed 3"),
+    (
+        (SKIFF_2_X[0] + 1.4, GANGPLANK_ROW_2, SKIFF_2_TOP),
+        "wait_until gangplank_3 9.0 9.8",
+    ),
+    (
+        (SKIFF_2_X[0] - 1.6, GANGPLANK_ROW_2, SKIFF_2_TOP),
+        "speed 3; wait_until gangplank_3 5.2 5.9",
+    ),
+    ((TANKER_DECK[2] - 1.4, GANGPLANK_ROW_2, TANKER_TOP), "speed 3"),
+]
+# Part 4, expert: the three mooring ropes.
+EXPERT[4] = [
+    ((ROPE_COL_1, SIGNAL[3] - 4.0, SIGNAL_TOP), "speed 5"),
+    (ROPE_2_FLOOR[0], ""),
+    (ROPE_2_FLOOR[1], ""),
+    ((ROPE_COL_1, ROPE_ROW_2, SKIFF_1_TOP), "speed 2.5"),
+    ((19.5, ROPE_ROW_2, SKIFF_1_TOP), "speed 3"),
+    (ROPE_3_FLOOR[0], ""),
+    (ROPE_3_FLOOR[1], ""),
+    (ROPE_4_FLOOR[0], ""),
+    (ROPE_4_FLOOR[1], ""),
+    ((TANKER_DECK[2] - 2.0, ROPE_ROW_2, TANKER_TOP), "speed 5"),
 ]
 
 # --- Start, finish, routes ------------------------------------------------------------------------

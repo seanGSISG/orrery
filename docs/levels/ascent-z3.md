@@ -90,24 +90,25 @@ M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 +
 
 ## As built
 
-**Progress (2026-11-21):** Parts 1 to 3 of `levels/ascent/zone_3.py` are built and drive with the route bot. The finish pad stands on the Signal roof (+382) for now: first run 92.3 s, expert 55.8 s (`just test-levels zone_3`). Parts 4 to 6, the egg test, the times, perf and gallery are next.
+**Progress (2026-11-21):** Parts 1 to 4 of `levels/ascent/zone_3.py` are built and drive with the route bot. The finish pad stands on the Tanker (+417.8) for now: first run 127.3 s, expert 70.7 s (`just test-levels zone_3`). Parts 5 and 6, the mast ramp, egg 2, the egg test, the times, perf and gallery are next.
 
 ### Handoff note
 
 - Ticket: seanGSISG/orrery#33. Branch: `t33-zone-3` (from `t31-zone-1-art`; merge `origin/plan-1` only after PR #101 merges). No PR: the coordinator runs the style review first.
-- Done and checked: parts 1 to 3 build and both routes reach the temporary finish. Nothing is running.
-- The script holds the layout as named constants; read it, not this note, for the numbers. Plan zones: part 1 at y 25 to 57, part 2 at y 46 to 78, part 3 at y 78 to 118. Put parts 4 to 6 north and east of the Signal roof (x 16.6 to 27.6, y 99 to 110, +382) so that no part hangs over another.
+- Done and checked: parts 1 to 4 build and both routes reach the temporary finish. Nothing is running.
+- The script holds the layout as named constants; read it, not this note, for the numbers. Plan zones: part 1 at y 25 to 57, part 2 at y 46 to 78, part 3 at y 78 to 118. Part 4 runs north from the Signal roof to Skiff 1 (x 17 to 31), then west to Skiff 2 and the Tanker (x about -90 to -60, y about 129 to 139, +417.8). Put parts 5 and 6 north or west of the Tanker so that no part hangs over another.
 - Part 1 east way (the Tender: planks, gondola, sponson vent, fin, deckhouse, three stern decks, gangway B) is on no route: drive it once with a temporary route before the end.
-- Deviations from the brief: Roof 2 has a wing for the rope (25°, 16.7 m); the Courier's hull ramps are a switchback on its north flank (3 × 12.5 m at 20.6°); the Lamplighter's "back" is a flying gangway beside the ship (16.5 m at 20°), because a ramp on the back of a round envelope is too steep near the tail; the gondola decks are at +351.
+- Deviations from the brief: Roof 2 has a wing for the rope (25°, 16.7 m); the Courier's hull ramps are a switchback on its north flank (3 × 12.5 m at 20.6°); the Lamplighter's "back" is a flying gangway beside the ship (16.5 m at 20°), because a ramp on the back of a round envelope is too steep near the tail; the gondola decks are at +351. The flotilla ropes are 24 m at 30° (Signal roof to Skiff 1) and 22.5 m at 32° twice (to Skiff 2, to the Tanker), so the Tanker is at +417.8, not +419: a 35° rope or a 32° rope longer than about 22 m stalls the marble. Ships with a deck on top have no top fin (`LOW_FINS`).
 
 **Rules found while building (vents and the bot).**
 
 - A vent throw needs lift = rise + 2.5 to 3 m when the next floor's edge is 2.2 to 2.5 m past the column's edge. With less, the marble meets the side of the floor and drops back into the column, where it hovers: the bot cannot push in the air with no speed ("stuck" at the column top).
 - Enter a vent from a straight approach of 1.5 m or more at speed 3, with the approach point 1.2 m before the vent's middle.
+- The marble climbs a beam of 30° for about 24 m and of 32° for about 22 m from a run-up at full speed. At 35° it stalls. Keep the run-up straight and in line with the beam; after a sharp turn the bot swings 0.8 m off the line, so slow it (`speed 2.5`, then `speed 3`) before a 0.6 m rope.
 - To see where the bot fails, copy `game/harness/route_bot.gd`, add a `print` in `_steer()` or at `falls += 1`, run `just test-levels zone_3`, then restore the file. `uv run --quiet --project tools/harness orrery-harness teleport --velocity vx vy vz x y z` (Godot axes: y up, z = -north) probes one throw.
 
 **Next 3 steps.**
 
-1. Add part 4 (Skiff 1, Skiff 2, the Tanker at +419; three gangplanks, period 10, or three rope beams at 30°, 32°, 35° with `harbour.rope`), then parts 5 and 6 and the mast ramp to the gate at +500, moving `FINISH` up each time; after each part run `just build-levels zone_3 && just test-levels zone_3`, then commit and push.
+1. Add part 5 (crow's nests and cargo lifts, Tanker to the Flagship deck at about +460), then part 6 and the mast ramp to the gate at +500, moving `FINISH` up each time; after each part run `just build-levels zone_3 && just test-levels zone_3`, then commit and push.
 2. Add egg 2 (`egg_fin`) and change `game/test/level/test_campaign_levels.gd` (Ascent zones: zone_1 1, zone_2 1, zone_3 2 eggs); `docs/secrets.md`; `just lint`, `just test`, `just suggest-times zone_3`.
 3. `just perf zone_3`, `just gallery zone_3`; look at every frame; fill "As built"; push.
