@@ -589,11 +589,17 @@ def grille(
     for face in bm.faces:
         face.smooth = len(face.verts) == 4
     for z in rails:
-        # A rail reaches across the doorway at its height, under the head of an arch.
+        # A rail, 2 GRILLE_BAR tall, reaches across the doorway at the height of its top
+        # edge, so that it stays under the head of an arch.
+        edge = z + GRILLE_BAR
+        if edge >= height:
+            raise ValueError(
+                f"kit.grille: a rail at {z} m does not fit under {height} m"
+            )
         across = (
             half
-            if z <= spring or not arched
-            else math.sqrt(half * half - (z - spring) ** 2)
+            if edge <= spring or not arched
+            else math.sqrt(half * half - (edge - spring) ** 2)
         )
         bmesh.ops.create_cube(
             bm,

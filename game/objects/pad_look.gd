@@ -18,11 +18,11 @@ const RIM_TOP: float = 0.045
 const STONE_TOP: float = 0.028
 const LENS_TOP: float = 0.04
 ## Radii as shares of the pad's radius: the top of the rim's outer bevel, the inner edge of the
-## rim, and the lens with its thin brass bezel.
+## rim, the top of the lens, and its foot on the stone.
 const RIM_OUTER: float = 0.96
 const RIM_INNER: float = 0.84
 const LENS: float = 0.42
-const BEZEL: float = 0.47
+const LENS_FOOT: float = 0.47
 ## Round sides of the mesh.
 const SIDES: int = 48
 ## The plate's stone against the kit limestone: a little lighter, and smoother.
@@ -37,8 +37,7 @@ static var _stone: ShaderMaterial = null
 static func mesh(radius: float) -> ArrayMesh:
 	var r: float = radius
 	var profiles: Array[PackedVector2Array] = [
-		# Rim: up the outer bevel, across the top, down the inner bevel to the stone, and the
-		# bezel round the lens.
+		# Rim: up the outer bevel, across the top, down the inner bevel to the stone.
 		PackedVector2Array(
 			[
 				Vector2(r, 0.0),
@@ -48,12 +47,14 @@ static func mesh(radius: float) -> ArrayMesh:
 				Vector2(RIM_INNER * r, STONE_TOP),
 			]
 		),
-		# Stone: flat from the rim to the bezel.
-		PackedVector2Array([Vector2(RIM_INNER * r, STONE_TOP), Vector2(BEZEL * r, STONE_TOP)]),
-		# Lens: the bezel, then a low dome.
+		# Stone: flat from the rim to the lens.
+		PackedVector2Array(
+			[Vector2(RIM_INNER * r, STONE_TOP), Vector2(LENS_FOOT * r, STONE_TOP)]
+		),
+		# Lens: a sloped glass edge up from the stone, then a low dome.
 		PackedVector2Array(
 			[
-				Vector2(BEZEL * r, STONE_TOP),
+				Vector2(LENS_FOOT * r, STONE_TOP),
 				Vector2(LENS * r, LENS_TOP),
 				Vector2(0.5 * LENS * r, LENS_TOP + 0.006),
 				Vector2(0.0, LENS_TOP + 0.008),

@@ -9,8 +9,8 @@ extends LevelObject
 ## The deck is a slab of the kit's stone in a frame of the kit's brass (KitMaterials): a band
 ## round its top edge and one round its foot.
 
-## The brass bands: their height, how far they stand out from the stone, and how far the top
-## band's top is below the deck's top face, m.
+## The brass bands: their height, how far they stand out from the stone, and how far each band
+## keeps from the deck's top face and underside, m.
 const BAND: float = 0.14
 const BAND_PROUD: float = 0.025
 const BAND_DROP: float = 0.02
@@ -60,11 +60,12 @@ func _ready() -> void:
 	var band: BoxMesh = BoxMesh.new()
 	var tall: float = minf(BAND, thickness / 3.0)
 	band.size = Vector3(width + 2.0 * BAND_PROUD, tall, depth + 2.0 * BAND_PROUD)
-	# The top band's top is BAND_DROP below the deck's top face; the foot band ends at its foot.
+	# The top band's top is BAND_DROP below the deck's top face, and the foot band's bottom is
+	# BAND_DROP above the deck's underside, so no face of a band lies on a face of the stone.
 	var top: MeshInstance3D = $Solid/Mesh/TopBand
 	var foot: MeshInstance3D = $Solid/Mesh/FootBand
 	top.position.y = thickness / 2.0 - BAND_DROP - tall / 2.0
-	foot.position.y = (tall - thickness) / 2.0
+	foot.position.y = BAND_DROP + (tall - thickness) / 2.0
 	for frame: MeshInstance3D in [top, foot]:
 		frame.mesh = band
 		frame.material_override = KitMaterials.find("brass")
