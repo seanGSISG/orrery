@@ -20,7 +20,7 @@ Terms used in this file:
 2. **Jolt only answers questions.** The marble is not a physics body. Only `WorldQuery` calls Jolt. It uses `intersect_shape`, `collide_shape` and `cast_motion`.
 3. **Movers move their own Solids.** A `Solid` is a `StaticBody3D`. `Solid.move()` sets the server transform at once, and it records the surface velocity in `constant_linear_velocity` and `constant_angular_velocity`. The solver reads `Solid.velocity_at(point)`. The design does not use `AnimatableBody3D` (plan deviation A, §10).
 4. **One boundary.** `MarbleInput` goes in and `GameState` comes out. GUT tests and the harness read the same `GameState`. The harness sends `GameState.to_dict()` as JSON.
-5. **Objects are scenes with `@export` settings and four hooks.** The importer writes the marker settings into the `@export` vars. Objects emit `feedback(kind, strength, at)` for rumble and sound.
+5. **Objects are scenes with `@export` settings and four hooks.** The importer writes the marker settings into the `@export` vars. A `Material` export takes a kit material name (`KitMaterials.find`), and an unknown name fails the import. Objects emit `feedback(kind, strength, at)` for rumble and sound.
 6. **Contract first.** The contract PR adds all shared types, stubs and placeholder objects. After it merges, #8 to #13 work in parallel and do not edit the same files.
 7. **Turn on `physics/jolt_physics_3d/queries/use_enhanced_internal_edge_removal`.** Without it, the marble drifts on flat trimesh floors (F7).
 8. **Set `physics/jolt_physics_3d/collisions/collision_margin_fraction` to 0** (2026-11-20). Else Jolt rounds every box edge, and two flush boxes make a groove that throws a fast marble up (F25).

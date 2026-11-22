@@ -57,8 +57,6 @@ const VOLUMETRIC_FOG_SHARE: float = 0.5
 	DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 )
 @export var sun_shadow_distance: float = 80.0
-## Degrees. Above 0 the sun casts soft PCSS shadows.
-@export var sun_angular_size: float = 0.0
 @export var lightmap_bicubic: bool = true
 
 
@@ -90,7 +88,6 @@ func apply(viewport: Viewport) -> void:
 		var sun: DirectionalLight3D = node as DirectionalLight3D
 		sun.directional_shadow_mode = sun_shadow_mode
 		sun.directional_shadow_max_distance = sun_shadow_distance
-		sun.light_angular_distance = sun_angular_size
 
 
 ## Turns the environment's real-time effects on or off, and shares its haze between the

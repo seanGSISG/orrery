@@ -26,6 +26,18 @@ func test_egg_has_a_small_warm_light() -> void:
 	assert_eq(light.light_bake_mode, Light3D.BAKE_DISABLED)
 
 
+## The egg's light stops at walls (it casts shadows), but the egg casts none, so its own
+## shell does not put its foot in shadow.
+func test_egg_light_casts_shadows_but_not_the_eggs_own() -> void:
+	var light: OmniLight3D = _egg.find_children("*", "OmniLight3D", true, false)[0]
+	assert_true(light.shadow_enabled, "the light stops at walls")
+	var shapes: Array[Node] = _egg.get_node("Model").find_children("*", "GeometryInstance3D")
+	assert_gt(shapes.size(), 0)
+	for node: Node in shapes:
+		var shape: GeometryInstance3D = node as GeometryInstance3D
+		assert_eq(shape.cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, shape.name)
+
+
 ## The egg starts closed with the clockwork hidden, opens when the marble finds it, and a
 ## restart closes it again.
 func test_egg_opens_when_found_and_closes_at_restart() -> void:
