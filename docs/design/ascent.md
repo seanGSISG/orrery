@@ -94,7 +94,7 @@ The next `Ascent.start()` continues the spot with `LevelRun.resume()`. The run s
 
 **Eggs.** The save keeps the found eggs of a level as a set of egg ids (`LevelRecord.eggs`); the id of an egg is its node name, which is its marker name in the level script. A level has every egg found when each of its egg ids is in the set, so an egg that gets a new name must be found again. An egg of a climb saves under the id of its zone (`zone_3`), not of the climb, so it stays found when the climb gets more zones, and it is the same egg when the zone is played alone. Give each egg of a zone its own marker name. After a continue, an egg is closed again; to find it again changes nothing.
 
-**Restart.** A climb is not restartable (`LevelRun.restartable` is false): the `restart` action does nothing, so one press cannot lose a long climb. New climb in the Ascent menu starts at the bottom. `LevelRun.restart()` itself (the route bot, the harness) starts a new climb with new stats.
+**Restart.** A climb is not restartable (`LevelRun.restartable` is false): the `restart` action does nothing, so one press cannot lose a long climb. New climb in the Ascent menu starts at the bottom and drops the saved spot at once, so a save before the next `save_spot()` (a found egg) keeps no old spot. `LevelRun.restart()` itself (the route bot, the harness) starts a new climb with new stats.
 
 ## 4. Light
 
