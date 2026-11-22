@@ -240,8 +240,9 @@ model *args:
     @uv run --quiet --project tools/art orrery-art model "$@"
 
 # Clean a generated GLB into assets/props/<name>.glb for kit.prop: real height in m, the origin
-# on the base centre, a triangle budget, optionally one kit material. For example
-# `just prop-cleanup build/art/models/lamp.glb lamp --height 1.8 --triangles 4000 --material brass`
+# on the base centre, the triangle budget and texture size of its class, and materials inside
+# the limits of visual-quality.md §6. For example
+# `just prop-cleanup build/art/models/lamp.glb lamp --height 3.2 [--class hero] [--stone] [--material brass:1,2]`
 [positional-arguments]
 [script("bash")]
 prop-cleanup source name *args:
@@ -271,6 +272,29 @@ prop-cleanup source name *args:
     rm -f "$dest.json"
     if [[ -f "$source.json" ]]; then cp "$source.json" "$dest.json"; fi
     echo "$dest"
+
+# Render the review sheet of assets/props/<id>.glb to build/props/<id>.png: four views of the
+# prop beside the marble and the kit materials, in neutral light (headless Cycles on the CPU)
+[positional-arguments]
+[script("bash")]
+render-prop id *args:
+    set -euo pipefail
+    id=$1
+    shift
+    if [[ ! $id =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just render-prop: the id must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    out="build/props/$id.png"
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/render_prop.py -- "assets/props/$id.glb" "$out" "$@" >"$log" 2>&1; then
+        cat "$log" >&2
+        echo "just render-prop: Blender failed" >&2
+        exit 1
+    fi
+    echo "$out"
 
 # Run the asset tool tests: mocked APIs, no paid call. The prop tests need blender-5.2
 [positional-arguments]
