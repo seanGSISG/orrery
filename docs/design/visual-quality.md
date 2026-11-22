@@ -261,6 +261,7 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 | Ultra | 4K | GPU time | The 99th-percentile GPU time on the RTX 5090 is above 16.7 ms (60 fps) |
 
 - The check also fails when Low, Medium, High and Ultra do not use more VRAM in that order at 1080p. This proves that the presets change real settings (#24). The check does not compare GPU time between presets: on a small level, the GPU time of Low and Medium changes by 2x from run to run on a shared GPU, and Medium and High cost about the same.
+- Other agents' games share the GPU and inflate the times. Before each run, `just perf` waits until no other Godot game runs (editors and `--headless` runs do not count) and gives up after 20 minutes. If a game starts during a run, the run counts as disturbed and the tool repeats it, at most 2 times. The report and each run's JSON give the number of disturbed runs, and a run that is still disturbed after the last try fails with its own message.
 - The camera path includes one fast orbit around the marble. During that orbit, the check saves two frames 1/60 s apart as the `motion` pair for rubric check 3.
 
 ## 9. Not verified
