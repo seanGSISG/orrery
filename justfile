@@ -138,14 +138,15 @@ test: fresh-levels import
     count=$(grep -oE '^Tests +[0-9]+' "$log" | grep -oE '[0-9]+' || true)
     if (( ${count:-0} == 0 )); then echo "just test: zero tests ran" >&2; exit 1; fi
 
-# Lint GDScript (gdlint, and a Godot compile check), Python (Ruff; ty outside Blender
-# scripts) and shell scripts (shellcheck). Tool versions come from tools/setup/pins.env
+# Lint GDScript, Python and shell scripts (lint-game and lint-scripts)
+lint: lint-game lint-scripts
+
+# Lint GDScript: gdlint, and a Godot compile check. Tool versions come from tools/setup/pins.env
 [script("bash")]
-lint: import
+lint-game: import
     set -euo pipefail
     source tools/setup/pins.env
-    files() { git ls-files --cached --others --exclude-standard "$@"; }
-    mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
+    mapfile -t gd < <(git ls-files --cached --others --exclude-standard 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
     # Compile every game script, also the ones that no test loads. Load them from a running
     # SceneTree, not with --check-only, so that references to autoloads resolve.
@@ -163,9 +164,17 @@ lint: import
     log=$("{{ godot }}" --headless --path game --script "$check" -- "${gd[@]}" 2>&1) || status=$?
     if (( status != 0 )) || grep -q 'SCRIPT ERROR' <<<"$log"; then
         echo "$log" >&2
-        echo "just lint: a game script does not compile" >&2
+        echo "just lint-game: a game script does not compile" >&2
         exit 1
     fi
+
+# Lint Python (Ruff; ty outside Blender scripts) and shell scripts (shellcheck). It needs no
+# Godot. Tool versions come from tools/setup/pins.env
+[script("bash")]
+lint-scripts:
+    set -euo pipefail
+    source tools/setup/pins.env
+    files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t py < <(files '*.py')
     uvx "ruff@$RUFF_VERSION" check "${py[@]}"
     uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
@@ -187,8 +196,8 @@ lint: import
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
-# Build the Linux and Windows release exports into build/
-export: import
+# Build the Linux and Windows release exports, with every level, into build/
+export: fresh-levels import
     mkdir -p build/linux build/windows
     "{{ godot }}" --headless --path game --export-release "Linux" ../build/linux/orrery.x86_64
     "{{ godot }}" --headless --path game --export-release "Windows Desktop" ../build/windows/orrery.exe
