@@ -90,7 +90,7 @@ M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 +
 
 ## As built
 
-**Progress (2026-11-21):** the harbour kit (`kit/harbour.py`) and four new materials are written and pushed, but they are not built or tested yet. `levels/ascent/zone_3.py` does not exist yet. No check has run on zone 3.
+**Progress (2026-11-21):** Parts 1 and 2 of `levels/ascent/zone_3.py` are built and drive with the route bot (finish pad on the Sailmakers' roof for now): first run 57.3 s, expert 34.2 s. Parts 3 to 6 are next.
 
 ### Handoff note
 
