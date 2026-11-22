@@ -128,7 +128,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 
 ## 4. Types
 
-These are the shapes only; the bodies are left out. They match the code in `game/core/` on `plan-1` at the second docs sync (2026-11-21). Two types live elsewhere: `Palette` in `game/objects/` and `Ascent` in `game/modes/ascent/` (`docs/design/ascent.md`). Numbers such as #13 are tickets. Where this section and the code differ, the code wins; `git log -S` finds the PR of a change.
+These are the shapes only; the bodies are left out. They match the code in `game/core/` on `plan-1` at the third docs sync (2026-11-22). Two types live elsewhere: `Palette` in `game/objects/` and `Ascent` in `game/modes/ascent/` (`docs/design/ascent.md`). Numbers such as #13 are tickets. Where this section and the code differ, the code wins; `git log -S` finds the PR of a change.
 
 ```gdscript
 # core/input/marble_input.gd
@@ -365,6 +365,7 @@ func snapshot() -> GameState        # run.state (or a new GameState) with screen
 # core/camera/follow_camera.gd (#7 basic, #11 orbit camera); core/camera/blob_shadow.gd (#11)
 class_name FollowCamera
 extends Camera3D
+const FAR: float = 50000.0              # m; the far plane of every level camera: this one, the gallery shots and the perf flight (Godot's default of 4 km cut the Ascent land below the horizon)
 static var shake_enabled: bool = true   # Settings.camera_shake
 var run: LevelRun
 func follow(state: GameState, input: MarbleInput, dt: float) -> void   # the one seam; called each physics frame
@@ -469,7 +470,7 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 ## 5. Object contract
 
 - **Files:** `game/objects/<type>/<type>.tscn` and `<type>.gd`. `<type>` is the marker type, for example `gem`, `start`, `finish`, `moving_platform`, `coil_spring`, `route`. The root script extends `LevelObject`. The class name can differ from the type (`StartPad` in `objects/start/`). The importer finds the scene by this name rule, so there is no registry file.
-- **Settings:** the `@export` vars of the root are the typed settings. The importer (#8) reads each key of the marker dictionary except `type`. The key must name an `@export` var, and the value must convert to the var's type (int to float is allowed). If not, the import fails and gives the level id and the node name. The run never sees the dictionary.
+- **Settings:** the `@export` vars of the root are the typed settings. The importer (#8) reads each key of the marker dictionary except `type`. The key must name an `@export` var, and the value must convert to the var's type (int to float is allowed; a `Material` var takes the name of a kit material). If not, the import fails and gives the level id and the node name. The run never sees the dictionary.
 - **Positions and paths:** use the marker's own transform and its child empties, not vector settings (A1). The importer turns the child empties into `Marker3D` children of the object, in name order. A platform path is a list of these children.
 - **Colliders:** use a `Solid` for every part the marble touches. Use an `Area3D` on the trigger layer, with `monitoring` and `monitorable` off, for each volume (F4).
 - **Time:** an object that moves calculates its pose from `t` in `advance()`. It does not drive collision with `AnimationPlayer` or timers. `restart()` sets `t` to 0, so movers return to their start pose without extra code.
@@ -487,6 +488,8 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 | Gem, checkpoint, egg | `cut` for the gem | `on_overlap`: `run.rules.collect_gem()`, `reach_checkpoint(self)` and `find_egg(self)`. The object reacts only when the call returns true. A level can have several eggs: each counts once |
 | Finish (`Finish`) | none | `on_overlap`: `run.rules.reach_finish(self)` each tick; `advance`: opens when all gems are collected, emits `finish.open` unless the run has finished. Rules emits the finish's `finish.reach` in the tick that finishes the run |
 | Coil Spring (`CoilSpring`) | `launch_speed` 20 m/s, `respawn_delay` 5 s | `on_overlap`: `run.slot.take(CoilSpringPowerUp.new(launch_speed))`; hide the pickup for `respawn_delay` s only if `take()` returns true; emit `coil_spring.pickup` (changed in #54) |
+| Land (`Land`) | none | `on_touch`: `run.rules.leave_bounds()`. The marker is a square of country, 120 km wide, just under a town's ground; it holds the marble and puts it out of bounds (`game/objects/land/land.gd`) |
+| Room probe (`RoomProbe`) | `width` 10 m, `depth` 10 m, `height` 6 m, `energy` 0.2 | None. `_ready` sizes an interior `ReflectionProbe` to the room and gives it a warm ambient colour. The Ascent mode keeps this probe (`docs/design/ascent.md` §2) |
 | Start (`StartPad`), Route (`Route`) | `kind`, `actions` for the route | None. The run reads the start pad (`LevelRun.start`). The route bot reads the route (`docs/plan.md` §4.6) |
 
 ## 6. Observable state
@@ -555,6 +558,7 @@ game/
 │   ├── trapdoor/ crumbling_tiles/         #16
 │   ├── coil_spring/                       #17
 │   ├── turning_arm/                       #32
+│   ├── land/ room_probe/                  #31: the open country round an Ascent town; the light of an indoor room
 │   └── route/                             #14
 ├── levels/                    #8: level_import.gd (post-import script), built/ (ignored by git)
 ├── harness/                   #9; the route bot and the level test scene from #14

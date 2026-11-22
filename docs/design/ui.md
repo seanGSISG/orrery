@@ -119,4 +119,4 @@ All text is a key of `game/ui/text/en.po` (`TITLE_PLAY`). A `Label` translates i
 
 1. **Level catalogue:** `LevelInfo.read()` loads the scene of a level to read its name and times. This is fast for the M1 levels. With 60 levels, the build must write these values into one small file.
 2. **Harness:** agents cannot drive the menus through the harness. A command that presses an input action (`press {action}`) fits the one-input-path rule.
-3. **Backdrop:** `Backdrop.LEVEL` is still the test level `core_loop`, although the first campaign levels (`b01`, `b02`) are built.
+3. **Backdrop:** `Backdrop.LEVEL` is still the test level `core_loop`, although the first campaign levels (`b01`, `b02`, `b03`) are built.

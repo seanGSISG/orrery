@@ -110,7 +110,7 @@ Reasons:
   - Reason: with `BAKE_STATIC`, the light "doesn't display a specular lobe on static lightmapped meshes". Brass, gold and glass would lose their sun highlight. Shadowmasking also needs a directional light with the Dynamic bake mode (manual, "Using Lightmap GI"; `lightmapper_rd.cpp` warns "Shadowmask disabled: no directional light with their bake mode set to dynamic exists").
 - Fill light comes from the sky and from baked bounce light. Do not add fill lights.
 - Accent lights (lamps, emissive glass) use `BAKE_STATIC` and cast no real-time shadows.
-  - Exception: the light below a gem and the light above the Clockwork Egg (section 11) are real time: `light_bake_mode = BAKE_DISABLED`, no shadows. Reason: they belong to objects, not to the level. A collected gem hides, and a lightmap would keep its light on the floor. The egg's light is there so that the room that hides the egg is not dark; it is the one light in a level that does the work of a fill light.
+  - Exception: the light below a gem and the light above the Clockwork Egg (section 11) are real time: `light_bake_mode = BAKE_DISABLED`. The gem's light casts no shadows. The egg's light casts shadows, so it does not shine through the walls of the room that hides the egg; the egg itself casts none, so it does not shadow its own foot (#106). Reason: they belong to objects, not to the level. A collected gem hides, and a lightmap would keep its light on the floor. The egg's light is there so that the room that hides the egg is not dark; it is the one light in a level that does the work of a fill light.
 - `rendering/lights_and_shadows/use_physical_light_units` stays `false`. We do not need physical units to meet the bar.
 
 ### Bake settings (every level)
@@ -130,7 +130,7 @@ Reasons:
 | `shadowmask_mode` | `SHADOWMASK_MODE_REPLACE` | Real-time sun shadows up close; baked shadows beyond `directional_shadow_max_distance`, so far islands keep their shadows on Low |
 | `generate_probes_subdiv` | `GENERATE_PROBES_SUBDIV_8` (default) | Lightmap probes light the marble and the moving platforms |
 | Lightmap texel size (import option `meshes/lightmap_texel_size`) | 0.1 m on level `.glb` files | Track, rails and props near the route |
-| `GeometryInstance3D.gi_lightmap_texel_scale` | 0.25 on far scenery | Far scenery bakes at 0.4 m per texel |
+| `GeometryInstance3D.gi_mode` | `GI_MODE_DISABLED` on a mesh named `<name>-far` | Far scenery stays out of the lightmap and costs no bake time or file size. Every other mesh bakes at the texel size above |
 
 Godot writes the lightmap as `.exr` and the shadowmask as `.png` (`scene/3d/lightmap_gi.cpp`). A bake must run in an editor with a real GPU, because `--headless` uses a dummy renderer. `LightmapGI.bake()` is not exposed to scripts in 4.7.2 (its binding is commented out in `scene/3d/lightmap_gi.cpp`); only the editor plugin bakes. The `just` bake command in #24 must work around this.
 
@@ -267,7 +267,7 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 ## 9. Not verified
 
 - The Git LFS numbers for the whole scope are estimates. Section 10 has the numbers that #24 measured on the two fixture levels.
-- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 4.6 MB with every mesh at 0.1 m (section 10).
+- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 4.7 MB with every mesh at 0.1 m (section 10).
 - The material ranges in section 6 are common PBR practice, not values from a Godot source.
 - We did not test how much MSAA 2× costs on a real GTX 1660. The plan's 5090 budget stands in for it.
 - We did not test HDR output on Sean's KDE Wayland session, or in `gamescope`.
@@ -347,11 +347,11 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 
 | Item | Value |
 |---|---|
-| Lightmap files, `fixture` (three 4 m by 8 m pieces) | 158 KB |
-| Lightmap files, `core_loop` (four 8 m wide pieces) | 269 KB |
-| Kit textures in Git LFS (sets A, B and C, and gold) | 47 MB |
-| Tier skies in Git LFS (dawn, noon, dusk) | 35 MB |
-| Sky sources in Git LFS (3 HDRIs, the planet map) | 14 MB |
+| Lightmap files, `fixture` (three 4 m by 8 m pieces; 2026-11-22, after the brass change of #112) | 147 KB |
+| Lightmap files, `core_loop` (four 8 m wide pieces; 2026-11-22) | 259 KB |
+| Kit textures in Git LFS (`assets/textures/` without `sky/` and `planet/`: sets A, B and C, the gold, the town, harbour and land textures; 2026-11-22) | 147 MB |
+| Tier skies in Git LFS (dawn, ground_dawn, noon, dusk; 2026-11-22) | 48 MB |
+| Sky sources in Git LFS (4 HDRIs, the planet map; 2026-11-22) | 21 MB |
 | Lightmap files, `b01` (#28: 96 meshes, 83,300 triangles with the round 0.02 m chamfers of #30, every mesh at 0.1 m per texel; bake 39 s) | 4.7 MB |
 | VRAM, `fixture`, Medium at 1080p | 875 MB |
 | VRAM, `b01`, Medium at 1080p | 892 MB |
@@ -400,7 +400,7 @@ One scene, `game/objects/gem/gem.tscn`, and four cuts. `GemCut` holds each cut a
 
 - `tools/blender/egg.py` builds the egg, and `just build-egg` writes `game/objects/egg/egg.glb` (21 266 triangles, 589 KB). The file is committed, like the baked skies, so that only a change to the script needs Blender. It is in plain git, not in Git LFS.
 - The `.glb` holds three objects, which `egg.gd` moves: `shell`, `lid` with its origin on the hinge, and `gear` with its origin on its axis. It holds no texture. `egg.glb.import` gives the material `brass` the look of `game/objects/egg/brass.tres`: the kit shader with the Metal048A maps, tint (0.9, 0.76, 0.5), metallic 1. The jewels are plain PBR materials from the script: mirrors with the hue of the board's gem colours and a small glow.
-- The light: one `OmniLight3D` 1 m above the marker, colour (1.0, 0.78, 0.5), energy 1.2, range 4 m, no shadows, not baked (the exception in section 4).
+- The light: one `OmniLight3D` 1 m above the marker, colour (1.0, 0.78, 0.5), energy 1.2, range 4 m, shadows on (the egg's own meshes cast none), not baked (the exception in section 4).
 
 ### Measured (RTX 5090, 2026-11-21)
 

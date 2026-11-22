@@ -25,10 +25,12 @@ Terms used in this file:
 | `game/ui/screens/ascent_stats_screen.gd` | The stats screen at the gate. |
 | `levels/test/ascent_fixture_<n>.py` | Three fixture zones, 12 m each, for the tests. |
 | `levels/ascent/zone_1.py`, `kit/town.py` | Zone 1, Clockmaker's Square (#31, `docs/levels/ascent-z1.md`), and the kit pieces of its town and tower: spiral ramps, lift gears, facades, houses. |
+| `levels/ascent/zone_2.py`, `kit/clockwork.py` | Zone 2, The Broken Tower (#32, `docs/levels/ascent-z2.md`), and the kit pieces of its broken tower: fragments with their broken mass, discs, rims, numerals, helix walls, the spire. |
+| `levels/ascent/zone_3.py`, `kit/harbour.py` | Zone 3, Sky Harbour (#33, `docs/levels/ascent-z3.md`), and the kit pieces of its roofs and airships: slabs, slopes, ropes, envelopes, gondolas, fins, engines, propellers, masts. |
 
 ## 2. How a zone plugs in
 
-A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The game climbs the built zones from the bottom up to the first one that is not built (`Ascent.zones()`), so the climb works while only some zones exist. A zone above a gap waits for the zone below it. While none is built, New climb in the Ascent menu is off. The game never climbs the fixture zones: its save is of its own zones.
+A zone is a level like any other: `levels/ascent/zone_<n>.py`, built to `zone_<n>.glb`. `Ascent.ZONES` lists the zone ids from the bottom. The game climbs the built zones from the bottom up to the first one that is not built (`Ascent.zones()`, which calls `Ascent.built_from_bottom(ids)`), so the climb works while only some zones exist. A zone above a gap waits for the zone below it. While none is built, New climb in the Ascent menu is off. The game never climbs the fixture zones: its save is of its own zones.
 
 Rules for a zone script:
 
@@ -134,7 +136,7 @@ The ground dawn is the sky of a town on the ground at dawn: the photograph of th
 
 - `game/test/modes/ascent/` drives the fixture climb through `MarbleInput` and `LevelRun.teleport()`, and reads `GameState`, the `Ascent` node and the save. `AscentTest` (`game/test/support/ascent_test.gd`) is the base.
 - `test_route_bot_climbs_to_the_gate` lets the route bot play the first-run route of each zone in turn, from the climb start through the gate.
-- `test_ascent_climb.gd` does the same on the real zones 1 to 3, once with the expert routes and once with the first-run routes: no fall, and the bot of zone 3 reaches the gate. It takes about 15 s of `just test` for each route kind.
+- `test_ascent_climb.gd` does the same on the real zones 1 to 3, once with the expert routes and once with the first-run routes: no fall, and the bot of zone 3 reaches the gate. It takes about 8 s of `just test` for the expert routes and about 12 s for the first-run routes.
 - `game/test/ui/test_ascent_screens.gd` drives the menus with the pad.
 - `just test-levels ascent_fixture_1 ascent_fixture_2 ascent_fixture_3` drives both routes of each fixture zone.
 - `just ui-shots` saves the Ascent menu, the HUD of a climb, its pause menu and the stats screen.
