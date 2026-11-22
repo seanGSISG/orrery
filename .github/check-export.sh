@@ -9,7 +9,9 @@ shopt -s nullglob
 exe=$1
 data=$(mktemp -d)
 trap 'rm -rf "$data"' EXIT
-# An empty user:// that the trap deletes, so a check never writes the player's save.
+# An empty user:// that the trap deletes, so a check on Linux never writes the player's save.
+# Windows (CI) has no XDG_DATA_HOME: Godot writes to APPDATA there, which is harmless on a
+# runner, as in `just test`.
 export XDG_DATA_HOME=$data
 
 levels=0 problems=0
