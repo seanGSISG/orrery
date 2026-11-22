@@ -48,6 +48,8 @@ func _ready() -> void:
 	look.position = shape.position
 	if finish != "":
 		look.material_override = KitMaterials.find(finish)
+		if look.material_override == null:
+			push_error("moving_platform `%s`: no kit material `%s`" % [name, finish])
 	_plan()
 
 

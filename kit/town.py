@@ -528,19 +528,25 @@ def stall(
         parts.box((x0 + 0.1, y0 + 0.1, 0.0), (x1 - 0.1, y1 - 0.1, under), "wood")
     drop = min(0.35, under - 0.1)
     skirt = 0.03
+    # The valance: its stripes are a mesh of their own that does not collide, and one plain
+    # slab a side collides, so the marble meets no seam between two stripes.
     z = (under - drop, under)
+    stripes, shell = Parts(), Parts()
     for at, along, length in (
         ((x0 - skirt, y0 - skirt), (1.0, 0.0), x1 - x0 + 2 * skirt),
         ((x1 + skirt, y1 + skirt), (-1.0, 0.0), x1 - x0 + 2 * skirt),
         ((x0 - skirt, y1), (0.0, -1.0), y1 - y0),
         ((x1 + skirt, y0), (0.0, 1.0), y1 - y0),
     ):
+        shell.slab(at, along, length, skirt, z, canvas)
         count = max(1, round(length / STRIPE))
         step = length / count
         for i in range(count):
             start = (at[0] + along[0] * step * i, at[1] + along[1] * step * i)
             finish = canvas if i % 2 == 0 else "canvas_cream"
-            parts.slab(start, along, step, skirt, z, finish)
+            stripes.slab(start, along, step, skirt, z, finish)
+    stripes.add(f"{name}_valance", collide=False)
+    shell.add(f"{name}_valance-colonly", collide=False)
     return parts.add(name)
 
 
@@ -688,14 +694,14 @@ def band(
     out: float,
 ) -> None:
     """Adds a stone band `out` m proud of each shown face of a box, between the heights
-    bottom and top. At a corner where the next face is shown too, the band runs on round it."""
+    bottom and top. At a corner between two shown faces, the band of the later face (in the
+    order of faces()) fills the corner, so the two do not overlap."""
     order = list(sides)
     for key, face in shown.items():
         before = order[order.index(key) - 1]
-        after = order[(order.index(key) + 1) % 4]
         s0 = -out if before in shown else 0.0
-        s1 = face.length + (out if after in shown else 0.0)
-        corners = [face.at(s0), face.at(s1), face.at(s1, out), face.at(s0, out)]
+        corners = [face.at(s0), face.at(face.length), face.at(face.length, out)]
+        corners.append(face.at(s0, out))
         parts.solid(_counter_clockwise(corners), bottom, top, "dressed")
 
 
