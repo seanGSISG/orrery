@@ -220,15 +220,15 @@ Estimate from typical Poly Haven and ambientCG file sizes; not measured. One 2K 
 | Stone, rough (cliffs, islands) | 0 | 0.70–0.95 | 40–200 |
 | Stone, polished (accents only) | 0 | 0.15–0.30 | 50–220 |
 | Brass, polished | 1 | 0.15–0.30 | Warm yellow; brightest channel 200–245 |
-| Brass, aged or brushed | 1 (0.85 with tarnish) | 0.30–0.55 | Same hue, 10–20% darker |
+| Brass, aged or brushed | 1 | 0.30–0.55 | Same hue, 10–20% darker |
 | Gold | 1 | 0.10–0.45 | Warm yellow-orange; brightest channel 230–250 |
 | Glass | 0 | 0.00–0.08 | Near white; tint comes from transparency |
 
 These ranges are starting values from common PBR practice. We did not take them from a Godot source.
 
 - No pure black or pure white albedo. Dielectrics stay between sRGB 30 and 240. Metals stay between sRGB 180 and 250 in their brightest channel.
-- Metallic is 0 or 1. Use values between only for dust or dirt masks. The aged brass of set A is 0.85, as on the approved style board: the tarnish is a thin dielectric layer, and it keeps the brass golden where it reflects the blue sky.
-- A flat metal under the open sky reflects mostly sky. Gold below roughness 0.4 looks olive where it reflects blue sky, so the gold inlay is 0.43.
+- Metallic is 0 or 1. Use values between only for dust or dirt masks.
+- A flat metal under the open sky reflects mostly sky. Gold and brass below roughness 0.4 look olive where they reflect blue sky, so the gold inlay and the kit brass are 0.43.
 - A roughness below 0.2 with a high-frequency normal map causes specular shimmer. Raise the roughness, or set `roughness/src_normal` on import.
 - Use `anisotropy_enabled` only on brushed brass. Use `clearcoat_enabled` only on lacquered parts.
 
@@ -301,11 +301,13 @@ A level script names a kit material, and the importer gives those faces the game
 
 | Set | Limestone | Tint, repeat | Brass | Tint, repeat, roughness scale |
 |---|---|---|---|---|
-| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal007`, metallic 0.85, detail normal at 0.25 m | (1.0, 1.1, 1.4), 2.0 m, × 2.4 |
+| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal048C`, metallic 1, detail normal at 0.25 m | (0.764, 0.665, 0.471), 2.0 m, × 1.59 |
 | `b` | Poly Haven `concrete_wall_008` | (2.3, 2.45, 3.0), 1.6 m | ambientCG `Metal048A` | (0.9, 0.8, 0.62), 1.0 m, × 3.0 |
 | `c` | Poly Haven `dirty_concrete` | (1.6, 1.7, 1.9), 1.6 m | ambientCG `Metal008` | (1.0, 1.0, 1.0), 1.2 m, × 1.3 |
 
 - The brass of set A repeats every 2 m: with the 2K maps that is 1024 px/m, the close-zone target (section 6). Before, it repeated every 0.7 m. A bar 0.09 m wide then showed a narrow strip of the map's dark blotches, which read as wood grain, and a dark pit fell every 0.7 m along a rail (B3 style review). The detail normal at 0.25 m gives the fine grain close to the camera.
+- Sean picked Metal048C for the brass of set A on 2026-11-22, from the brass study (branch `brass-study`, `tools/brass_study/`). Before, it was Metal007 (metallic 0.85, tint (1.0, 1.1, 1.4), roughness × 2.4). On flat boxes at 5 to 15 m, the blotches of Metal007 read as wood or cork, in shade and in sun. The blotches of Metal048C vary about half as much. Its tinted albedo is about sRGB (222, 186, 108), and its median roughness is 0.271 × 1.59 = 0.43, so faces that look up at the sky do not turn olive (section 6).
+- The polished brass (`brass_polished`) and the gold stay on `Metal048A`. The kit brass differs from them by its texture (Metal048C), its tint (less saturated than the gold) and its roughness (0.43, against 0.23 for the polished brass).
 - Gear teeth (`kit.teeth()`) and grille rails have 0.02 m chamfers on their edges, so each edge catches a highlight and the piece reads as cast metal, not as a sawn block. The teeth's chamfers are round, in two segments: with one flat segment, the small triangle at each corner caught the sun as a near-white point. The brass that objects build in code (turning-gear teeth, the carriage bands) gets the same 0.02 m chamfers from `Chamfer.box()` (`game/objects/chamfer.gd`); their colliders stay plain boxes.
 - Gold is the same in every set: `Metal048A`, tint (1.0, 0.82, 0.5), 0.6 m, roughness × 5.
 - Every limestone is paved: slabs of 1.0 m by 1.5 m in a running bond, joints 12 mm wide, the detail normal at 0.25 m.
