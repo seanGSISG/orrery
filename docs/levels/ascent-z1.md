@@ -124,7 +124,7 @@ The look follows a concept board of the square at dawn (GPT-Image, not in the ga
 - The fountain is 4 m across: a low stone basin of still water, with the trial fountain raised in its middle as the upper tier.
 - Moving decks are timber (`finish="wood"` of `moving_platform`).
 
-Past the town: a `land` marker (`game/objects/land/`) gives 12 km of flat country just under the town's ground: grass at its true size, then fields of several crops with hedges between them, faded by the sky's distance fog into the horizon. A far town of plain houses (`town.house(plain=True)`) stands round the ground out to a ragged edge 150 to 260 m from the square: one mesh, `far_town-far`, with no collision, no lightmap and no probe.
+Past the town: a `land` marker (`game/objects/land/`) gives 12 km of flat country just under the town's ground: grass at its true size, then fields of several crops with hedges between them, faded by the sky's distance fog into the horizon. The four streets of the outer ring meet at the corners, so a marble on the ground cannot leave the town. A marble that falls past the ring from the tower lands on the grass, and the touch puts it out of bounds: it comes back on the start pad (with Assist, on the last checkpoint). A far town of plain houses (`town.house(plain=True)`) stands round the ground out to a ragged edge 150 to 260 m from the square: one mesh, `far_town-far`, with no collision, no lightmap and no probe.
 
 ### Routes and times
 

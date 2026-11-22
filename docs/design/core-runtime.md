@@ -298,6 +298,7 @@ func after_step() -> void           # the clock, the finish, out of bounds and t
 func collect_gem() -> bool          # (changed in #50: returns true when the gem counts) false unless status is playing
 func reach_checkpoint(reached: LevelObject) -> bool   # (changed in #50) true when it becomes the last checkpoint
 func reach_finish(finish: LevelObject) -> void  # the finish calls it each tick that the marble is on it
+func leave_bounds() -> void         # (added in #31) the land calls it on a touch; out of bounds at the end of the tick
 func find_egg() -> bool             # (changed in #50) true when the egg counts as found
 
 # core/powerups/power_up.gd (#17): what the slot holds; one subclass per power-up type

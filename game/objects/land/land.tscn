@@ -4,6 +4,7 @@
 [ext_resource type="Shader" path="res://objects/land/land.gdshader" id="2"]
 [ext_resource type="Texture2D" path="res://materials/textures/Grass004_2K-JPG_Color.jpg" id="3"]
 [ext_resource type="Texture2D" path="res://materials/textures/Grass004_2K-PNG_NormalGL.png" id="4"]
+[ext_resource type="Script" path="res://core/level/solid.gd" id="5"]
 
 [sub_resource type="ShaderMaterial" id="look"]
 shader = ExtResource("2")
@@ -14,6 +15,8 @@ shader_parameter/normal_map = ExtResource("4")
 material = SubResource("look")
 size = Vector2(12000, 12000)
 
+[sub_resource type="WorldBoundaryShape3D" id="ground"]
+
 [node name="Land" type="Node3D"]
 script = ExtResource("1")
 
@@ -21,3 +24,9 @@ script = ExtResource("1")
 mesh = SubResource("plane")
 cast_shadow = 0
 gi_mode = 0
+
+[node name="Solid" type="StaticBody3D" parent="."]
+script = ExtResource("5")
+
+[node name="Shape" type="CollisionShape3D" parent="Solid"]
+shape = SubResource("ground")

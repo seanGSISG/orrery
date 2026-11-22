@@ -1218,7 +1218,8 @@ street(
     "w",
 )
 street("town_east_inner", [((19.5, -1.0), (27.5, 6.5), 8.0, "")], "x", "s")
-# The outer ring: streets of plainer houses out to the edge of the ground.
+# The outer ring: streets of plainer houses out to the edge of the ground. Its four sides meet
+# at the corners, so a marble on the ground cannot roll out of the town.
 street(
     "town_ring_s",
     row(
@@ -1259,7 +1260,7 @@ street(
     "town_ring_n",
     row(
         -47.0,
-        [9, 10, 8, 9, 10, 9, 8, 10, 9, 10],
+        [9, 10, 8, 9, 10, 9, 8, 10, 9, 12],
         [8, 9, 7, 8.5, 9, 7.5, 8, 9, 7, 8],
         (66.0, 75.0),
         "x",
@@ -1268,7 +1269,8 @@ street(
     "s",
 )
 
-# Open country round the town (objects/land), just under the town's ground.
+# Open country round the town (objects/land), just under the town's ground. It holds a marble
+# that falls past the ring and puts it out of bounds.
 kit.marker("land", at=(0.0, 20.0, -0.03), name="land")
 
 

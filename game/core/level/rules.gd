@@ -15,9 +15,10 @@ extends RefCounted
 ##   counts the finishing tick. The medal is &"gold" at or under Level.gold, &"qualified" at
 ##   or under Level.par, else &"none". The finish sounds `finish.reach` in that tick, because
 ##   the results screen can stop the run before the next one.
-## - Out of bounds is a marble centre below kill_height. The status is &"respawning" for
-##   RESPAWN_DELAY, then the marble comes back still on the last checkpoint, else on the start
-##   pad. Collected gems, the egg and the held power-up stay.
+## - Out of bounds is a marble centre below kill_height, or a touch of ground past the play
+##   space (the land calls leave_bounds()). after_step() decides it, like the finish. The status
+##   is &"respawning" for RESPAWN_DELAY, then the marble comes back still on the last
+##   checkpoint, else on the start pad. Collected gems, the egg and the held power-up stay.
 
 ## Out of bounds starts this far below the lowest Solid of the level, m.
 const KILL_DEPTH: float = 5.0
@@ -37,6 +38,8 @@ var _run: LevelRun
 var _dt: float = 1.0 / Engine.physics_ticks_per_second
 ## The finish that the marble was on in this tick, else null.
 var _finish: LevelObject = null
+## True when an object put the marble out of bounds in this tick (leave_bounds()).
+var _left: bool = false
 ## Ticks since the clock started; -1 before the first input.
 var _clock: int = -1
 ## Ticks left until the respawn while the status is &"respawning".
@@ -65,6 +68,7 @@ func reset() -> void:
 	checkpoint = null
 	found_eggs.clear()
 	_finish = null
+	_left = false
 	_clock = -1
 	_respawn_left = 0
 
@@ -82,6 +86,8 @@ func after_step() -> void:
 		state.timer = _clock * _dt
 	var finish: LevelObject = _finish
 	_finish = null
+	var left: bool = _left
+	_left = false
 	if state.status == &"playing" and finish != null and state.gems_collected >= state.gems_total:
 		state.status = &"finished"
 		finish.feedback.emit(&"finish.reach", 1.0, finish.global_position)
@@ -94,7 +100,7 @@ func after_step() -> void:
 		if _respawn_left <= 0:
 			_run.respawn(_run.spawn_point(checkpoint if checkpoint != null else _run.start))
 			state.status = &"playing"
-	elif state.status == &"playing" and _run.marble.position.y < kill_height:
+	elif state.status == &"playing" and (left or _run.marble.position.y < kill_height):
 		state.status = &"respawning"
 		_respawn_left = roundi(RESPAWN_DELAY / _dt)
 
@@ -130,6 +136,12 @@ func reach_checkpoint(reached: LevelObject) -> bool:
 ## if every gem is collected by then.
 func reach_finish(finish: LevelObject) -> void:
 	_finish = finish
+
+
+## The land calls this when the marble touches it: the marble is out of bounds at the end of
+## the tick, as below kill_height.
+func leave_bounds() -> void:
+	_left = true
 
 
 ## An egg calls this with itself when the marble touches it. Returns true when the egg
