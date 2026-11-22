@@ -42,6 +42,7 @@ jobs:
       export: ${{ steps.pick.outputs.export }}
       music: ${{ steps.pick.outputs.music }}
       art: ${{ steps.pick.outputs.art }}
+      perf: ${{ steps.pick.outputs.perf }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -70,7 +71,7 @@ jobs:
             if [[ $picked != *=true* ]]; then
               echo 'Docs-only change: no job runs beyond this one.'
             else
-              echo "Outputs set to true (windows-boot follows export; the tools job runs music and art): $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
+              echo "Outputs set to true (windows-boot follows export; the tools job runs music, art and perf): $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -249,12 +250,12 @@ jobs:
         timeout-minutes: 3
         run: .github/check-export.sh build/windows/orrery.exe
 
-  # The music pipeline's and the asset tools' pytest suites. They need no Godot and no LFS files;
-  # the music tests measure loudness with ffmpeg.
+  # The pytest suites of the music pipeline, the asset tools and the perf tool. They need no Godot
+  # and no LFS files; the music tests measure loudness with ffmpeg.
   tools:
     name: Tool tests
     needs: changes
-    if: needs.changes.outputs.music == 'true' || needs.changes.outputs.art == 'true'
+    if: needs.changes.outputs.music == 'true' || needs.changes.outputs.art == 'true' || needs.changes.outputs.perf == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -268,3 +269,5 @@ jobs:
           just test-music
       - if: needs.changes.outputs.art == 'true'
         run: just test-art
+      - if: needs.changes.outputs.perf == 'true'
+        run: just test-perf

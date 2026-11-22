@@ -88,9 +88,34 @@ kit-textures:
         cp -u "${sources[0]}" "game/materials/textures/$name"
     done
 
-# Import the Godot project headless (fills game/.godot)
+# Import the Godot project headless (fills game/.godot). Godot 4.7.2 sometimes hangs in a fresh
+# import on a CI runner and prints nothing new from then on. A good import prints a new line at
+# least once a minute, so after 3 minutes with no new line the recipe stops Godot and imports
+# once more; the second import continues from the files that the first one finished.
+[script("bash")]
 import: fresh-marble kit-textures
-    "{{ godot }}" --headless --path game --import
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    for attempt in 1 2; do
+        "{{ godot }}" --headless --path game --import > >(tee "$log") 2>&1 &
+        pid=$!
+        lines=0 still=0
+        while kill -0 "$pid" 2>/dev/null && (( still < 180 )); do
+            sleep 5
+            # Count distinct lines: a hung import can print the same progress lines again and again.
+            now=$(LC_ALL=C sort -u "$log" | wc -l)
+            if (( now == lines )); then still=$((still + 5)); else still=0 lines=$now; fi
+        done
+        # Godot can exit during the last sleep: then its exit status counts, not the stall.
+        if ! kill -0 "$pid" 2>/dev/null; then
+            wait "$pid"
+            exit
+        fi
+        { kill -9 "$pid"; wait "$pid"; } 2>/dev/null || true
+        echo "just import: godot --import printed nothing new for 3 minutes, so it hung (attempt $attempt of 2)" >&2
+    done
+    exit 1
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
 [positional-arguments]

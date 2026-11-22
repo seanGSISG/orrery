@@ -5,7 +5,7 @@
 # Try it: git diff --name-only --no-renames origin/plan-1 | .github/pick-jobs.sh
 set -euo pipefail
 
-jobs=(lint-game lint-scripts test harness export music art)
+jobs=(lint-game lint-scripts test harness export music art perf)
 declare -A need
 for job in "${jobs[@]}"; do need[$job]=false; done
 run() { for job in "$@"; do need[$job]=true; done; }
@@ -26,6 +26,7 @@ while IFS= read -r path; do
         tools/harness/*) run lint-scripts harness ;;
         tools/audio/music/*) run lint-scripts music ;;
         tools/art/*) run lint-scripts art ;;
+        tools/perf/*) run lint-scripts perf ;;
         # The other tool scripts and the ShellCheck config: the script lint.
         tools/* | .shellcheckrc) run lint-scripts ;;
         *) run "${jobs[@]}" ;;
