@@ -325,7 +325,7 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Preset | Backdrop | Sun elevation | Sun colour (sRGB) | Sun energy | Sky energy | Fill | Haze (1/m) |
 |---|---|---|---|---|---|---|---|
 | `dawn` | A photographed dawn sky over a sea of clouds. No planets | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
-| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
+| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | a fifth of the ambient light is a warm stone colour; in the Ascent climb it grows with the sun (`docs/design/ascent.md` §4) | 0.001 |
 | `noon` | The sky from 16 km: deep blue, clouds far below. No planets | 58° | (1, 0.99, 0.96) | 1.35 | 0.177 | none | 0.0005 |
 | `dusk` | The sky from 80 km: the curve of the Earth, faint stars, one pale planet | 7° | (1, 0.77, 0.58) | 4.39 | 1.15 | half of the ambient light is a cool blue | 0.0003 |
 
