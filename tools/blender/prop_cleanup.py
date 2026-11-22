@@ -178,16 +178,16 @@ def fit(obj: bpy.types.Object, height: float) -> None:
 
 
 def decimate(obj: bpy.types.Object, budget: int) -> None:
-    """Collapses edges until the mesh has at most budget triangles."""
-    ratio = 1.0
+    """Collapses edges until the mesh has at most budget triangles. Each pass aims at 98 % of
+    the budget from the mesh that the last pass left, so a pass that just misses the budget
+    is followed by a small one."""
     for _ in range(8):
         count = triangles(obj.data)
         if count <= budget:
             return
-        ratio = min(ratio, budget / count) * 0.98
         modifier = obj.modifiers.new("decimate", "DECIMATE")
         modifier.decimate_type = "COLLAPSE"
-        modifier.ratio = ratio
+        modifier.ratio = 0.98 * budget / count
         evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
         mesh = bpy.data.meshes.new_from_object(evaluated)
         obj.modifiers.remove(modifier)
@@ -195,6 +195,8 @@ def decimate(obj: bpy.types.Object, budget: int) -> None:
         obj.data = mesh
         mesh.name = old.name
         bpy.data.meshes.remove(old)
+    if triangles(obj.data) <= budget:
+        return
     raise PropError(
         f"could not decimate to {budget} triangles ({triangles(obj.data)} left); "
         "give a larger --triangles or a lower Tripo face_limit"
