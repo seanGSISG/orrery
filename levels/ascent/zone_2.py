@@ -359,8 +359,8 @@ CHAMBER = (-2.2, _cl + 2.0, -2.2, 2.2)  # u0, u1, v0, v1: the inside
 
 
 def build_chamber() -> None:
-    """Builds the movement chamber: a stone floor and four walls whose tops follow the dial's
-    underside, so that no light shows between them."""
+    """Builds the movement chamber: a stone floor and four walls of coursed ashlar whose tops
+    follow the dial's underside, so that no light shows between them."""
     u0, u1, v0, v1 = CHAMBER
     wall = 0.45
     parts = town.Parts()
@@ -389,7 +389,7 @@ def build_chamber() -> None:
     for i in range(4):
         j = (i + 1) % 4
         parts.faces([[o[i][0], o[j][0], o[j][1], o[i][1]]], "wall")
-        parts.faces([[n[j][0], n[i][0], n[i][1], n[j][1]]], "dressed")
+        parts.faces([[n[j][0], n[i][0], n[i][1], n[j][1]]], "wall")
         parts.faces([[o[i][1], o[j][1], n[j][1], n[i][1]]], "dressed")
     parts.faces([[o[3][0], o[2][0], o[1][0], o[0][0]]], "wall")
     parts.faces([[n[0][0], n[1][0], n[2][0], n[3][0]]], "limestone")
@@ -981,7 +981,10 @@ def spire_ramp(along: float, radius: float = 6.0) -> Place:
 # The balcony: a broken floor east of the spire at the ramp's top. The marble rolls round the
 # spire vent and into it westward, and the vent throws it onto the cap's east half.
 clockwork.fragment(
-    "spire_balcony", clockwork.sector(AXIS, 3.1, 13.0, -45.0, 90.0), BALCONY
+    "spire_balcony",
+    clockwork.sector(AXIS, 3.1, 13.0, -45.0, 90.0),
+    BALCONY,
+    under=1.2,
 )
 SPIRE_VENT: Place = (8.0, AXIS[1], BALCONY)
 kit.marker("steam_vent", at=SPIRE_VENT, lift=11.5, name="vent_spire")
