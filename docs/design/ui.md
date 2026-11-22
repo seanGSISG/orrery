@@ -16,14 +16,14 @@ Terms used in this file:
 | `game/ui/screens/` | `Screen` (the base) and one script per menu: title, level select, settings, pause, results, the Ascent menu and the Ascent stats. |
 | `game/ui/hud/` | `Hud`: the gems, the timer and the power-up slot of a level. `HeightMeter`: the height of an Ascent climb. |
 | `game/ui/settings/` | The parts of the settings screen: `SettingsTabs`, `SettingRow`, `OptionRow`, `BindRow`, `ValueMark`. |
-| `game/ui/widgets/` | The parts of the screens: `MenuItem`, `FocusButton`, `LevelNode`, `Dial`, `OrbitMap`, `OrreryDiagram`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`, `ParBar`, `StatTable`, `HeightScale`, and the text helpers `TimeText` and `HeightText`. |
+| `game/ui/widgets/` | The parts of the screens: `MenuItem`, `FocusButton`, `LevelNode`, `Dial`, `OrbitMap`, `OrreryDiagram`, `GlassPanel`, `Wash`, `Hints`, `Icon`, `Readout`, `ParBar`, `StatTable`, `HeightScale`, `TickRule`, and the text helpers `TimeText` and `HeightText`. |
 | `game/ui/draw/` | `Chart` (rings, arcs, tick marks) and `Icons`: shapes drawn in code, so they stay sharp at any size. |
 | `game/ui/look/` | `UiLook` (the look), `UiTheme` (builds the `Theme`), the focus style and the two shaders. |
 | `game/ui/levels/` | `LevelCatalog` (the tiers and levels of the level select) and `LevelInfo` (name and target times of a level). |
 | `game/ui/backdrop.gd` | `Backdrop`: the live level behind the menus while no level runs. |
 | `game/ui/text/en.po` | All English text. |
 | `game/ui/fonts/` | Instrument Serif and IBM Plex Mono, with their licenses. |
-| `game/core/input/input_glyph.gd` | `InputGlyph`: the button icon of an input action, for the device used last. |
+| `game/core/input/input_glyph.gd` | `InputGlyph`: the button icon of an input action, for the device used last, or for its own device. |
 
 ## 2. Screens and flow
 
@@ -61,7 +61,7 @@ The harness steps a run by itself, also under `pause` and `results`: it owns tim
 
 - `SettingsScreen` builds the rows of one tab at a time from `Save.settings`. The tabs and their rows:
   - graphics: the preset, the ghost;
-  - display: the window mode, the resolution (on only in windowed mode), the frame cap, V-Sync, HDR output (shown only where the display supports it);
+  - display: the window mode, the resolution (it works only in windowed mode), the frame cap, V-Sync, HDR output (shown only where the display supports it);
   - audio: the master, music, effects and interface volumes;
   - controls: look sensitivity, invert Y, the stick dead zone, rumble, and one `BindRow` for each action of `Bindings.ACTIONS`;
   - accessibility: camera shake, the colourblind palette.

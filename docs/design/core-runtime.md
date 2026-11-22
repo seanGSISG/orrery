@@ -128,7 +128,7 @@ Each fact comes from a prototype: Godot 4.7.2, Jolt, 120 ticks per second, headl
 
 ## 4. Types
 
-These are the shapes only; the bodies are left out. They match the code in `game/core/` on `plan-1` at the second docs sync (2026-11-21). Two types live elsewhere: `Palette` in `game/objects/` and `Ascent` in `game/modes/ascent/` (`docs/design/ascent.md`). A change after the contract PR carries the PR that made it, for example "(changed in #50)". Other numbers, such as #13, are tickets. Where this section and the code differ, the code wins.
+These are the shapes only; the bodies are left out. They match the code in `game/core/` on `plan-1` at the second docs sync (2026-11-21). Two types live elsewhere: `Palette` in `game/objects/` and `Ascent` in `game/modes/ascent/` (`docs/design/ascent.md`). Numbers such as #13 are tickets. Where this section and the code differ, the code wins; `git log -S` finds the PR of a change.
 
 ```gdscript
 # core/input/marble_input.gd
@@ -396,7 +396,7 @@ static func previous(id: StringName) -> StringName          # the level before i
 class_name SaveRecord
 extends RefCounted
 func to_dict() -> Dictionary[String, Variant]   # JSON values: vectors as arrays, names as strings
-func fill(data: Dictionary) -> void             # reads such a dictionary back; a missing key or a value of another type keeps the default
+func fill(data: Dictionary) -> void             # reads such a dictionary back; a missing key or a value of another type keeps the var as it is
 
 # core/save/level_record.gd
 class_name LevelRecord
@@ -424,7 +424,7 @@ var spot_floor: float = 0.0           # AscentFalls.floor_height and low_height 
 var spot_low: float = 0.0
 var falls: int = 0                    # stats of the current climb
 var fallen: float = 0.0
-var best_height: float = 0.0          # best height in any climb, and the marble centre there
+var best_height: float = 0.0          # best height in any climb (m above the climb start), and the floor point under the marble there; the flag stands there
 var best_position: Vector3 = Vector3.ZERO
 # The best time and the ghost of the best climb are not here: Save.finish() keeps them under Ascent.record_id().
 

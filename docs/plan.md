@@ -118,7 +118,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 - **Concept:** start in a clockmaker's town square on Earth at dawn. Climb through the pieces of a broken clock tower, rooftops and airships, the cloud sea, the sky-clockwork world, thin air with strong wind gusts, and finally space with low gravity and stars, where the Orrery's gate waits.
 - **Structure:** one continuous, hand-designed climb in 8 zones, each zone its own level script. A first climb takes about 60 minutes; a skilled run takes about 10–12 minutes.
 - **Light:** the time of day follows height, from dawn through day and sunset to the starfield.
-- **Falls:** no checkpoints by default. A fall can drop the marble several zones. The game saves the exact spot on quit and continues from there. **Assist** adds a checkpoint at each zone start, and stats mark assisted runs. An assisted climb never replaces a record: it saves no best time, no ghost and no best height (Sean, 2026-11-21).
+- **Falls:** no checkpoints by default. A fall can drop the marble several zones. The game saves the exact spot on quit and continues from there. **Assist** adds a checkpoint at each zone start, and the stats mark an assisted climb. An assisted climb never replaces a record: it saves no best time, no ghost and no best height (Sean, 2026-11-21).
 - **Stats:** height meter on screen, a flag in the world at your best height, time to the top, falls, total meters fallen, a stats screen at the end, and a ghost of your best climb.
 - **Objects:** no carried power-ups. Only objects built into the world (bumpers, steam vents, cannons, gears, wind, low gravity).
 - **Loading:** start simple. Load all zones at the start and use Godot's visibility ranges for far geometry. Add zone streaming only if the memory or performance checks fail.
@@ -145,8 +145,8 @@ Each object and power-up is introduced in a level that focuses on it, before any
   - Gems are 0.5 m wide and float 0.3 m above the floor. Each colour has its own cut. A faint beam shows each gem across the level.
 - **HUD and menus** (Sean, 2026-11-21; ticket #6; `docs/ui-mockups/README.md`): direction B (glass and light) for the in-level HUD and the Ascent HUD; direction C (orrery chart) for the title, level select, pause, settings and results screens. The HUD takes the coral accent and the numerals of C.
 - The marble always casts a crisp blob shadow straight down, so the player can judge jumps.
-- Geometry comes from Blender scripts (`bpy` and geometry nodes). Base tiling materials and skies start from CC0 libraries (Poly Haven, ambientCG). Textures are 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6). 2D art (logo, menu art) comes from the local ComfyUI or from GPT-Image.
-- **AI art** (Sean, 2026-11-21): AI art is allowed where it looks better than a CC0 or scripted piece. GPT-Image makes decals, signage and concept images. Tripo makes decorative props from an image. Both run through `tools/art` (4.3). The base tiling materials still start from CC0 PBR sets. Every AI asset gets a row in `docs/licenses.md`. Prompts never name games, brands, characters or living artists (`docs/research/asset-prompting.md`).
+- Geometry comes from Blender scripts (`bpy` and geometry nodes). Base tiling materials start from CC0 libraries (Poly Haven, ambientCG). The tier skies are our own Cycles renders (`just bake-skies`) of CC0 HDRIs or Blender's sky model. Textures are 2K by default, with a short list of 4K exceptions (`docs/design/visual-quality.md` §6). 2D art (logo, menu art) comes from the local ComfyUI or from GPT-Image.
+- **AI art** (Sean, 2026-11-21): AI art is allowed where it looks better than a CC0 or scripted piece. GPT-Image makes decals, signage and concept images. Tripo makes decorative props from an image. Both run through `tools/art` (4.3). Every AI asset gets a row in `docs/licenses.md`. Prompts never name games, brands, characters or living artists (`docs/research/asset-prompting.md`).
 - **Look review:** before any final art, Sean approves a style board (ComfyUI concept images of the world, the M1 Ascent zones and the marble, plus 3 Blender test renders of a piece of track in final materials and lighting). The HUD and each menu get 3 distinct static mockups for Sean to pick from. Both are done (2026-11-21): see above, `docs/style/README.md` and `docs/ui-mockups/README.md`.
 
 ### 2.12 Audio and music
@@ -165,7 +165,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 
 - English only. All text goes through Godot's translation system so other languages can come later.
 - No analytics, telemetry or network access in the game.
-- Accessibility: gem and hazard colours that colourblind players can tell apart (the colourblind palette), plus shape cues (each gem colour has its own cut); a camera shake toggle. A motion blur toggle and a reduced-flashing option are deferred: M1 has neither.
+- Accessibility: gem and hazard colours that colourblind players can tell apart (the colourblind palette), plus shape cues (each gem colour has its own cut); a camera shake toggle. A motion blur toggle and a reduced-flashing option are deferred: M1 has neither (#23, 2026-11-20). Add the reduced-flashing option with the first effect that flashes (for example the Spark Mine, M2).
 - Saves and settings live in Godot's `user://` folder (standard per OS).
 - Display: windowed, borderless or fullscreen; any resolution; ultrawide; frame-rate cap or uncapped; V-Sync toggle; HDR output where the display supports it; high-refresh monitors.
 - Graphics presets Low, Medium, High, Ultra (4.7).
@@ -189,6 +189,7 @@ Each object and power-up is introduced in a level that focuses on it, before any
 | Test display | `gamescope --backend headless` (fallback: a small window on the KDE desktop) | — |
 | CI | GitHub Actions on `ubuntu-latest` and `windows-latest`, `chickensoft-games/setup-godot@v2` | — |
 | Music models | ACE-Step 1.5 XL (MIT), Stable Audio 3 Medium (Stability Community License) in the local ComfyUI | — |
+| Art models | GPT-Image-2.6 (2D art) and Tripo (decorative 3D props), through `tools/art` | — |
 
 No third-party Godot MCP. The harness MCP covers running the game, screenshots, input and game state; the Godot command line covers imports, exports and tests; agents edit scene files as text. If agents struggle with menu or UI scene work, add `hi-godot/godot-ai` then.
 
@@ -234,7 +235,7 @@ orrery/
 │   ├── ascent/            zone_1.py … zone_8.py
 │   └── planetarium/
 ├── kit/                   shared Blender library: track pieces, props, materials, marker helpers
-├── assets/                Git LFS: textures/, decals/, props/ (the music is in game/audio/music/)
+├── assets/                Git LFS: textures/, decals/, props/ (the sounds and the music are in game/audio/)
 ├── tools/
 │   ├── blender/           build_level.py, look-dev renders
 │   ├── harness/           uv project: harness MCP server + CLI
@@ -247,7 +248,7 @@ orrery/
 └── scripts/               one-off scripts
 ```
 
-Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`.
+Never committed: `.blend` and `.glb` build outputs, `game/.godot/`, `build/`. The exception is `game/objects/egg/egg.glb`: `just build-egg` writes it, and it is committed, like the baked skies.
 
 Object tests live in `game/test/objects/<type>/`, not beside the object: the release exports leave out only `test/*`, and GUT scans only `res://test/`. The runtime design is in `docs/design/core-runtime.md`.
 
@@ -400,7 +401,7 @@ US copyright protects only the human-written parts of a track, which is why the 
 | `just test-pad` | Plays a short sequence on a virtual Xbox controller and checks the game's response (local only) |
 | `just ui-shots` | Saves a screenshot of each HUD and menu screen at 1080p and 4K into `build/ui/` |
 | `just build-sfx [--montage PATH]` | Synthesises the sound effects and the test music loops, and checks them. `--montage` also joins the sounds into one OGG |
-| `just art …` / `just prop-cleanup <source> <name>` | GPT-Image art and Tripo props through `tools/art`; paid calls need `--yes`, `--dry-run` sends nothing. `prop-cleanup` turns a generated model into `assets/props/<name>.glb` (4.3) |
+| `just art …` / `just model …` / `just prop-cleanup <source> <name>` | GPT-Image art and Tripo props through `tools/art`; paid calls need `--yes`, `--dry-run` sends nothing. `prop-cleanup` turns a generated model into `assets/props/<name>.glb` (4.3) |
 | `just test-music` / `just test-art` | The tests of the music pipeline and of the asset tools (mocked APIs, no paid call) |
 | `just bake-skies [name…]` | Bakes the tier skies into `game/skies/<name>.hdr` with Cycles on this GPU |
 | `just build-marble` / `just build-egg` | Builds the marble's brass core (`game/core/marble/built/`, ignored by git) and the Clockwork Egg (`game/objects/egg/egg.glb`, committed) from `tools/blender/` |

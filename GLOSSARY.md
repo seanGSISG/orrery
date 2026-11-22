@@ -91,7 +91,7 @@ The low brass edge, 0.3 m high, on an outer edge of a floor. It stops a marble t
 _Avoid_: rail, border, lip
 
 **Sky preset**:
-One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. A level's `sky` names it, or else the level's tier picks it.
+One baked sky and its sun: `game/skies/dawn.tres`, `noon.tres` or `dusk.tres`. `ground_dawn.tres` is the sky of the Ascent climb start. A level's `sky` names it, or else the level's tier picks it.
 _Avoid_: skybox, environment
 
 ## Scoring and progress
@@ -149,7 +149,7 @@ _Avoid_: recorder, stats tracker
 ## Settings and input
 
 **Settings tab**:
-One of the five pages of the settings screen: graphics, display, audio, controls or accessibility. A tab shows the rows of its `Settings` vars. `tab_prev` and `tab_next` change the tab.
+One of the five parts of the settings screen: graphics, display, audio, controls or accessibility. A tab shows the rows of its `Settings` vars. `tab_prev` and `tab_next` change the tab.
 _Avoid_: page, category
 
 **Binding**:
@@ -167,7 +167,7 @@ _Avoid_: theme (a theme is the Godot `Theme` of the look), colour scheme
 ## Ascent
 
 **Climb**:
-One play of Ascent, from the climb start to the gate. A climb can have many sessions. Its level id is `ascent:<zone ids, joined by +>`, and its best time and ghost are kept under it.
+One play of Ascent, from the climb start to the gate. A quit saves the spot, and the next start continues the same climb. Its level id is `ascent:<zone ids, joined by +>`, and its best time and ghost are kept under it.
 _Avoid_: run (a run is one `LevelRun`), attempt
 
 **Zone**:
@@ -191,7 +191,7 @@ A drop of more than 3 m below the floor that the marble was on, in a climb. It c
 _Avoid_: death, respawn (a respawn is the return after out of bounds)
 
 **Assist**:
-The Ascent switch (`Save.ascent.assist`). With it on, the climb has a checkpoint at each zone start, and a fall of 10 m below the last one puts the marble back on it. A climb that used Assist is marked, and it never replaces a record.
+The Ascent switch (`Save.ascent.assist`). With it on, the climb has a checkpoint at each zone start. 10 m below the last checkpoint is out of bounds, and the marble respawns on that checkpoint. A climb that used Assist is marked, and it never replaces a record: it saves no best time, no ghost and no best height.
 _Avoid_: easy mode, cheat
 
 ## Audio
