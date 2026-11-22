@@ -183,6 +183,18 @@ def numeral(
     return objects[0]
 
 
+def sector(
+    centre: Point, inner: float, outer: float, start: float, end: float
+) -> list[Point]:
+    """Returns the outline of the part of a ring between the radii inner and outer round
+    centre, from the angle `start` to `end` (degrees from +x, counter-clockwise)."""
+    count = max(2, math.ceil(abs(end - start) / 3.0))
+    return [
+        *kit.arc(centre, outer, start, end, count),
+        *kit.arc(centre, inner, end, start, count),
+    ]
+
+
 def union(
     polygon: Sequence[Point], centre: Point, radius: float, segments: int = 96
 ) -> list[Point]:

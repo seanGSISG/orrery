@@ -49,7 +49,7 @@ CAP = 300.0
 
 # For work on one part: the start pad and both routes begin at the foot of this part (FOOT).
 # Keep it at 1.
-TEST_FROM = 1
+TEST_FROM = 3
 FOOT: dict[int, Place] = {}
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
@@ -597,8 +597,177 @@ clockwork.fragment(
     under=2.2,
 )
 
-FINISH: Place = (-3.0, 56.5, LID)
+
+# --- 3. Shards and rod ---------------------------------------------------------------------------
+
+# The Dial ring: the brass rim of a second dial, flat in the air round the axis, 50 m across.
+RING_IN, RING_OUT = 23.0, 27.0
+RING_MID = (RING_IN + RING_OUT) / 2
+# Where the two ways of part 3 arrive, degrees round the axis: the west way (and the vent chain
+# of part 4) at RING_WEST, the east way (and the roof slabs of part 4) at RING_EAST.
+RING_WEST, RING_EAST = 156.0, -25.0
+
+# The west way: six steps south from the lid, a lift, five steps west, a vent ledge, a ledge,
+# and six steps that follow the ring's outside round to RING_WEST.
+SHARD_X = -9.0
+SHARDS_1 = step_row("shard_a", (SHARD_X, COIL[1] - STEP_GAP), 270.0, LID + 1.0, 6)
+SHARD_LIFT: Place = (SHARD_X, SHARDS_1[-1][1] - STEP / 2 - 0.15 - 1.5, LID + 6.0)
+kit.marker(
+    "moving_platform",
+    at=SHARD_LIFT,
+    points=[(SHARD_LIFT[0], SHARD_LIFT[1], LID + 14.0)],
+    period=10.0,
+    stop=1.5,
+    width=3.0,
+    depth=3.0,
+    name="lift_shards",
+)
+SHARD_Y = SHARD_LIFT[1]
+SHARDS_2 = step_row("shard_b", (SHARD_X - 1.5 - 0.15, SHARD_Y), 180.0, LID + 15.0, 5)
+SHARD_VENT_LEDGE = LID + 20.0
+_vl_east = SHARDS_2[-1][0] - STEP / 2 - STEP_GAP
+clockwork.fragment(
+    "shard_vent_ledge",
+    kit.rect(-29.4, 27.0, _vl_east, SHARD_Y + 1.5),
+    SHARD_VENT_LEDGE,
+    under=2.0,
+)
+SHARD_VENT_AT = 196.5
+SHARD_VENT: Place = (*ring(28.8, SHARD_VENT_AT), SHARD_VENT_LEDGE)
+kit.marker("steam_vent", at=SHARD_VENT, lift=9.5, name="vent_shards")
+SHARD_TOP = LID + 28.0
+clockwork.fragment(
+    "shard_landing",
+    clockwork.sector(AXIS, 27.3, 30.3, 185.0, 193.6),
+    SHARD_TOP,
+    under=1.8,
+)
+_s3_step = math.degrees(STEP / 28.8)
+_s3_gap = math.degrees(STEP_GAP / 28.8)
+SHARDS_3 = []
+for i in range(6):
+    a0 = 185.0 - _s3_gap - i * (_s3_step + _s3_gap)
+    clockwork.fragment(
+        f"shard_c_{i + 1}",
+        clockwork.sector(AXIS, 27.3, 30.3, a0 - _s3_step, a0),
+        SHARD_TOP + 1.0 + i,
+        under=1.6,
+    )
+    SHARDS_3.append(a0 - _s3_step / 2)
+
+# The east way: the fallen pendulum rod, a brass beam from the lid's rim up to its bob, then a
+# straight chain of three vents and three steps round the ring's inside to RING_EAST.
+BOB_CENTRE: Place = (17.46, 49.0, LID + 7.0)
+_rod_u = (BOB_CENTRE[0] - LID_CENTRE[0], BOB_CENTRE[1] - LID_CENTRE[1])
+_rod_len = math.hypot(*_rod_u)
+_rod_u = (_rod_u[0] / _rod_len, _rod_u[1] / _rod_len)
+ROD_HEADING = math.degrees(math.atan2(_rod_u[1], _rod_u[0]))
+ROD_LENGTH = 17.5
+ROD_RISE = BOB_CENTRE[2] - LID
+ROD_RUN = math.sqrt(ROD_LENGTH**2 - ROD_RISE**2)
+ROD_FOOT: Place = (
+    LID_CENTRE[0] + _rod_u[0] * LID_R,
+    LID_CENTRE[1] + _rod_u[1] * LID_R,
+    LID,
+)
+BOB_R = 3.0
+_bob = along(ROD_FOOT[:2], ROD_HEADING, ROD_RUN + BOB_R)
+BOB: Place = (*_bob, BOB_CENTRE[2])
+kit.ramp(
+    at=ROD_FOOT,
+    width=1.2,
+    length=ROD_RUN,
+    rise=ROD_RISE,
+    yaw=ROD_HEADING - 90.0,
+    name="pendulum_rod",
+    material="polished_brass",
+    trim="gold",
+)
+clockwork.disc("pendulum_bob", BOB, BOB_R, depth=0.9)
+clockwork.rim("pendulum_bob_rim", BOB, BOB_R, 0.9, width=0.1, finish="gold")
+ROD_VENT_HEADING = -75.0
+_rd = (
+    math.cos(math.radians(ROD_VENT_HEADING)),
+    math.sin(math.radians(ROD_VENT_HEADING)),
+)
+ROD_VENTS: list[Place] = []
+for i, z in enumerate((BOB[2], LID + 15.0, LID + 23.0)):
+    at = (BOB[0] + _rd[0] * (1.5 + 3.5 * i), BOB[1] + _rd[1] * (1.5 + 3.5 * i))
+    kit.marker("steam_vent", at=(*at, z), lift=9.5, name=f"vent_rod_{i + 1}")
+    ROD_VENTS.append((*at, z))
+    if i > 0:
+        clockwork.fragment(
+            f"rod_ledge_{i}",
+            block(along(at, ROD_VENT_HEADING, 1.6), ROD_VENT_HEADING, 3.0, 5.4),
+            z,
+            under=1.5,
+        )
+ROD_TOP = LID + 31.0
+_rod_land = along(ROD_VENTS[-1][:2], ROD_VENT_HEADING, 3.0)
+_land_angle = math.degrees(math.atan2(_rod_land[1] - AXIS[1], _rod_land[0] - AXIS[0]))
+clockwork.fragment(
+    "rod_landing",
+    clockwork.sector(AXIS, 18.7, 21.7, _land_angle - 4.5, _land_angle + 4.5),
+    ROD_TOP,
+    under=1.8,
+)
+_e_step = math.degrees(STEP / 21.2)
+_e_gap = math.degrees(STEP_GAP / 21.2)
+ROD_STEPS = []
+for i in range(3):
+    a0 = _land_angle - 4.5 - _e_gap - i * (_e_step + _e_gap)
+    clockwork.fragment(
+        f"rod_step_{i + 1}",
+        clockwork.sector(AXIS, 19.7, RING_IN - STEP_GAP, a0 - _e_step, a0),
+        ROD_TOP + 1.0 + i,
+        under=1.6,
+    )
+    ROD_STEPS.append(a0 - _e_step / 2)
+
+# The ring: polished brass, 4 m wide, with a brass bead on each edge, open where the ways meet it.
+kit.deck(
+    kit.arc(AXIS, RING_OUT, 0.0, 360.0, 240),
+    RING,
+    0.8,
+    holes=[kit.arc(AXIS, RING_IN, 0.0, 360.0, 240)],
+    through=True,
+    name="dial_ring",
+    material="polished_brass",
+)
+RING_GAPS = [(RING_WEST, 9.0), (RING_EAST, 9.0)]
+for edge, r, side in (("outer", RING_OUT, "right"), ("inner", RING_IN, "left")):
+    spans = [
+        (RING_EAST + 9.0, RING_WEST - 9.0),
+        (RING_WEST + 9.0, RING_EAST + 360.0 - 9.0),
+    ]
+    for k, (a0, a1) in enumerate(spans):
+        kit.wall(
+            [(x, y, RING) for x, y in kit.arc(AXIS, r, a0, a1, int((a1 - a0) / 2))],
+            0.28,
+            width=0.3,
+            side="left" if side == "right" else "right",
+            bevel=0.06,
+            name=f"dial_ring_bead_{edge}_{k + 1}",
+            material="polished_brass",
+        )
+for hour in range(12):
+    a = 90.0 - hour * 30.0
+    c, s_ = math.cos(math.radians(a)), math.sin(math.radians(a))
+    kit.inlay(
+        block(
+            (AXIS[0] + c * RING_MID, AXIS[1] + s_ * RING_MID),
+            a,
+            0.5 if hour % 3 else 0.9,
+            2.6,
+        ),
+        RING,
+        name=f"dial_ring_hour_{hour:02d}",
+        material="blued_steel",
+    )
+
+FINISH: Place = (*ring(RING_MID, RING_EAST + 8.0), RING)
 FOOT[2] = (-8.0, 49.5, BELL_LEDGE)
+FOOT[3] = (-5.6, 51.2, LID)
 kit.marker("start", at=START if TEST_FROM == 1 else FOOT[TEST_FROM])
 kit.marker("finish", at=FINISH)
 
@@ -679,6 +848,97 @@ EXPERT[2] = [
     ((CHAIN_X + 1.6, 58.9, CHAIN_TOP), "jump; speed 3"),
     ((-10.5, 58.4, LID), "speed 3"),
 ]
+
+
+# --- Routes: part 3 -------------------------------------------------------------------------------
+
+
+def on_ring(radius: float, angle: float, z: float) -> Place:
+    """Returns the point at `angle` degrees round the axis at `radius`, at the height z."""
+    return (*ring(radius, angle), z)
+
+
+FIRST[3] = [
+    ((SHARD_X, COIL[1] + 2.4, LID), "speed 3"),
+    ((SHARD_X, COIL[1] + 0.9, LID), "jump; speed 3"),
+]
+for i, (x, y) in enumerate(SHARDS_1):
+    FIRST[3] += [
+        ((x, y, LID + 1.0 + i), "speed 3"),
+        ((x, y - 0.25, LID + 1.0 + i), "jump; speed 3" if i < 5 else "speed 3"),
+    ]
+FIRST[3][-1] = (
+    (SHARD_X, SHARDS_1[-1][1] - 0.6, LID + 6.0),
+    "speed 2; wait_until lift_shards 9.6 0.3",
+)
+FIRST[3] += [
+    (SHARD_LIFT, "speed 2; wait_until lift_shards 5.0 6.2"),
+    ((SHARD_X - 0.6, SHARD_Y, LID + 14.0), "jump; speed 3"),
+]
+for i, (x, y) in enumerate(SHARDS_2):
+    FIRST[3] += [
+        ((x, y, LID + 15.0 + i), "speed 3"),
+        ((x - 0.25, y, LID + 15.0 + i), "jump; speed 3"),
+    ]
+_t = (math.sin(math.radians(SHARD_VENT_AT)), -math.cos(math.radians(SHARD_VENT_AT)))
+FIRST[3] += [
+    ((_vl_east - 1.2, SHARD_Y, SHARD_VENT_LEDGE), "speed 3"),
+    (
+        (SHARD_VENT[0] - _t[0] * 3.4, SHARD_VENT[1] - _t[1] * 3.4, SHARD_VENT_LEDGE),
+        "speed 2.5",
+    ),
+    (
+        (SHARD_VENT[0] - _t[0] * 1.8, SHARD_VENT[1] - _t[1] * 1.8, SHARD_VENT_LEDGE),
+        "speed 3",
+    ),
+    (on_ring(28.8, 189.0, SHARD_TOP), "speed 3"),
+    (on_ring(28.8, 186.2, SHARD_TOP), "jump; speed 2.5"),
+]
+for i, a in enumerate(SHARDS_3):
+    last = i == len(SHARDS_3) - 1
+    FIRST[3] += [
+        (
+            on_ring(28.8, a, SHARD_TOP + 1.0 + i),
+            "speed 2.5" if not last else "speed 1.5",
+        ),
+        (
+            on_ring(28.8, a - 1.1, SHARD_TOP + 1.0 + i)
+            if not last
+            else on_ring(28.0, a, SHARD_TOP + 6.0),
+            "jump; speed 2.5",
+        ),
+    ]
+FIRST[3] += [(on_ring(RING_MID, SHARDS_3[-1], RING), "speed 3")]
+for a in range(int(SHARDS_3[-1]) + 20, int(RING_EAST + 360.0) - 5, 22):
+    FIRST[3].append((on_ring(RING_MID, a, RING), "speed 12"))
+EXPERT[3] = [
+    ((ROD_FOOT[0] - _rod_u[0] * 2.0, ROD_FOOT[1] - _rod_u[1] * 2.0, LID), "speed 4"),
+    (
+        (ROD_FOOT[0] + _rod_u[0] * ROD_RUN, ROD_FOOT[1] + _rod_u[1] * ROD_RUN, BOB[2]),
+        "speed 5",
+    ),
+    ((BOB[0] - _rd[0] * 1.1, BOB[1] - _rd[1] * 1.1, BOB[2]), "speed 2; wait 0.2"),
+    (
+        (ROD_VENTS[0][0] - _rd[0] * 1.8, ROD_VENTS[0][1] - _rd[1] * 1.8, BOB[2]),
+        "speed 3",
+    ),
+    ((*_rod_land, ROD_TOP), "speed 3"),
+    (on_ring(20.2, _land_angle - 3.0, ROD_TOP), "jump; speed 2.5"),
+]
+for i, a in enumerate(ROD_STEPS):
+    last = i == len(ROD_STEPS) - 1
+    EXPERT[3] += [
+        (on_ring(21.2, a, ROD_TOP + 1.0 + i), "speed 2.5" if not last else "speed 1.5"),
+        (
+            on_ring(21.2, a - 1.5, ROD_TOP + 1.0 + i)
+            if not last
+            else on_ring(21.6, a, ROD_TOP + 3.0),
+            "jump; speed 2.5",
+        ),
+    ]
+EXPERT[3] += [(on_ring(RING_MID, ROD_STEPS[-1], RING), "speed 3")]
+for a in range(int(ROD_STEPS[-1]) + 20, int(RING_WEST) - 5, 22):
+    EXPERT[3].append((on_ring(RING_MID, a, RING), "speed 12"))
 
 
 def route(kind: str, legs: list[Leg]) -> None:
