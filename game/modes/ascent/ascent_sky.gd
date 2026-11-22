@@ -9,9 +9,14 @@ extends Node3D
 ##
 ## The presets are SkyPresets (res://skies/). The environment and the sun are those that the
 ## first preset makes, so the tonemap, the glow and the haze are as in a level. _apply() is the
-## one place that blends two presets: the panoramas (ascent_sky.gdshader), the sun, the fill
-## light, the exposure and the haze. The Graphics autoload gives the environment and the sun the
-## graphics preset, as it does for a level's own.
+## one place that blends two presets: the panoramas (ascent_sky.gdshader), the sun, the exposure
+## and the haze. The Graphics autoload gives the environment and the sun the graphics preset, as
+## it does for a level's own.
+##
+## The climb has no lightmap, so no bounce light. The fill of the first preset stands in for it
+## at every height: the light that sunlit stone throws into the shade. Bounce light grows with
+## the sunlight on the ground, so _apply() scales the fill by the sunlight on a floor. The noon
+## sky gives a floor little light, so without this the shade goes near black as the sun rises.
 
 const SHADER: Shader = preload("res://modes/ascent/ascent_sky.gdshader")
 const GROUND_DAWN: SkyPreset = preload("res://skies/ground_dawn.tres")
@@ -34,6 +39,8 @@ var _environment: Environment = _first.environment()
 var _material: ShaderMaterial = ShaderMaterial.new()
 ## The sun angles of now, in a preset, so that SkyPreset.to_sun() gives the direction.
 var _now: SkyPreset = SkyPreset.new()
+## The sunlight on a floor at the first stop: the sun's energy times the sine of its elevation.
+var _first_light: float = _first.sun_energy * _first.to_sun().y
 ## The heights of the first and the last stop, m.
 var _bottom: float = STOPS.keys().front()
 var _top: float = STOPS.keys().back()
@@ -92,8 +99,9 @@ func _apply(height: float) -> void:
 	_sun.basis = Basis.looking_at(-_now.to_sun())
 	_sun.light_color = lower.sun_color.lerp(upper.sun_color, weight)
 	_sun.light_energy = lerpf(lower.sun_energy, upper.sun_energy, weight)
-	_environment.ambient_light_sky_contribution = lerpf(lower.sky_share, upper.sky_share, weight)
-	_environment.ambient_light_color = lower.fill_color.lerp(upper.fill_color, weight)
+	# The fill of the first preset, scaled by the sunlight on a floor. The energy scales the fill
+	# colour only, not the light of the sky.
+	_environment.ambient_light_energy = _sun.light_energy * _now.to_sun().y / _first_light
 	_environment.tonemap_exposure = lerpf(lower.exposure, upper.exposure, weight)
 	# The haze, shared between the distance fog and the volumetric fog as GraphicsPreset does.
 	var haze: float = lerpf(lower.fog_density, upper.fog_density, weight)
