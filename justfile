@@ -88,9 +88,17 @@ kit-textures:
         cp -u "${sources[0]}" "game/materials/textures/$name"
     done
 
-# Import the Godot project headless (fills game/.godot)
+# Import the Godot project headless (fills game/.godot). A fresh import takes up to 9 minutes on a
+# CI runner, so an import that runs 15 minutes has hung: the recipe stops it and says so.
+[script("bash")]
 import: fresh-marble kit-textures
-    "{{ godot }}" --headless --path game --import
+    set -euo pipefail
+    status=0
+    timeout --kill-after=10 900 "{{ godot }}" --headless --path game --import || status=$?
+    if (( status == 124 || status == 137 )); then
+        echo "just import: godot --import hung and was stopped after 15 minutes" >&2
+    fi
+    exit "$status"
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
 [positional-arguments]
