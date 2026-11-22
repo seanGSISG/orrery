@@ -91,8 +91,8 @@ Level script: `levels/ascent/zone_2.py`. Kit: `kit/clockwork.py`. The script use
 | Item | Value |
 |---|---|
 | Spire cap | A round floor 10 m across (radius 5.0 m), top face at +300.0 m, centre at plan (0.0, 39.0). The finish pad stands in its middle. Nothing of the spire rises above the cap: the broken tip is the lightning rod |
-| Lightning rod arrival | The rod's top end meets the cap's west edge at (-5.0, 39.0, +300.0). The rod runs east from (-24.0, 39.0, +292.0) |
-| Spire vent arrival | The vent stands on a ledge east of the spire at (7.8, 39.0, +292.0). Its throw lands on the east half of the cap at about (3.5, 39.0, +300.0), toward the west |
+| Lightning rod arrival | The rod's top end meets the cap's west-north-west edge at (-4.7, 40.7, +300.0), 160° round the axis. The rod runs east-south-east from (-22.6, 47.2, +292.0) |
+| Spire vent arrival | The vent stands on the balcony east of the spire at (8.0, 39.0, +292.0). Its throw lands on the east half of the cap at about (3.3, 39.0, +300.0), toward the west |
 | Zone 3 quay | Zone 3 builds its start floor south of the cap: x -7.0 to 5.5, y 25.0 to 35.0, top +300.0 m. Every part of zone 2 inside that plan rectangle stays below +297.0 m, apart from the cap disc |
 
 Progress (work notes, to be replaced by the final As built): parts 1 and 2 are built and both routes pass on them (`TEST_FROM` in the script starts the pad and the routes at the foot of one part). Next: part 3 (stair shards west, pendulum rod east, Dial ring at +235 round the axis, radius 23 to 27; the west way arrives at ring angle 156°, the east way at -25°), part 4, part 5, then the art pass (fragment undersides, decoration, props), the egg check, `just suggest-times`, the climb test, perf and gallery. The clock hands wait for the coordinator's answer (a new turning arm object or not).
