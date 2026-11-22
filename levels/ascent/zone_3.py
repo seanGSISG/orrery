@@ -823,13 +823,15 @@ for edge, side in ((FLYING_ROW - 1.2, "left"), (FLYING_ROW + 1.2, "right")):
         side=side,
     )
 deck("bow_gallery", BOW_GALLERY[:2], BOW_GALLERY[2:], BOW_TOP, "ws")
-# Ropes from the envelope hold the gangway and the galleries.
+# Ropes from the envelope hold the gangway and the galleries. A rope on a gallery meets the
+# gallery's floor; one on the gangway meets the slope.
 _hangers = town.Parts()
 for x in (31.0, 25.0, 19.0, 13.0, 10.0):
     hull = LAMPLIGHTER.point(x, 45.0)
-    z = GALLERY_TOP + (STERN_GALLERY[0] - min(x, STERN_GALLERY[0])) * (
-        BOW_TOP - GALLERY_TOP
-    ) / (STERN_GALLERY[0] - BOW_GALLERY[2])
+    on_slope = min(max(x, BOW_GALLERY[2]), STERN_GALLERY[0])
+    z = GALLERY_TOP + (STERN_GALLERY[0] - on_slope) * (BOW_TOP - GALLERY_TOP) / (
+        STERN_GALLERY[0] - BOW_GALLERY[2]
+    )
     for y in (FLYING_ROW - 1.1, FLYING_ROW + 1.1):
         harbour.line(_hangers, (x, y, z), (hull.x, hull.y, hull.z))
 _hangers.add("flying_gangway_hangers", collide=False)

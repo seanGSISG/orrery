@@ -489,13 +489,18 @@ def gondola(
                 (x1 - 0.6, max(yy, yy + side * 0.04), deck - PLANK),
                 "brass_polished",
             )
-    # Struts from the hull sides up to the envelope, outside the deck.
+    # Struts from the hull sides up to the envelope. Each one starts on the hull side `drop` m
+    # under the deck: the side narrows from w at the top to 0.96 w at keel * 0.6 below it.
+    drop = 0.4
     for x in (x0 + 1.2, (x0 + x1) / 2, x1 - 1.2):
         r = ship.r(x)
         if r <= 0.0:
             continue
+        w = half * rounding(x)
+        keel = depth * rounding(x)
+        hull = w * (1.0 - 0.04 * min(1.0, drop / (keel * 0.6)))
         for side in (-1.0, 1.0):
-            low = Vector((x, y + side * (half + 0.08), deck - PLANK - 0.4))
+            low = Vector((x, y + side * hull, deck - PLANK - drop))
             # The strut meets the envelope 40 degrees round from its bottom, on its side.
             high = ship.point(x, 270.0 + side * 40.0)
             dress.bar(low, high, 0.09, "iron")

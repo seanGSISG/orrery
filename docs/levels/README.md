@@ -66,16 +66,16 @@ Until the bot runs, each brief estimates a route time T like this:
 - A Steam Vent lifts 8 m in 1.6 s. (The vent code reaches 8 m in about 1.1 s with the default `push`. The briefs keep 1.6 s, which includes the entry, until the route bot gives real times.)
 - The wait for a moving platform is half its period.
 
-B1, B2, B3 and Ascent 1 are built, so their rows have the bot's times; the other rows are estimates. The estimate for Ascent 1 was 122 s and 67 s. Ascent has no par time. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
+Every row has the route bot's times. Before the build, the estimates were 122 s and 67 s for Ascent 1, and 112 s and 59 s for Ascent 2. Ascent has no par time: the par and gold of a zone are only the limits of `just test-levels`. Each zone script also carries both routes, and each zone brief gives both times as targets for the split timer.
 
 | Level | First-run route | Expert route | Par | Gold |
 |---|---|---|---|---|
 | B1 (route bot, 2026-11-21) | 34.2 s | 22.2 s | 51.3 s | 25.6 s |
 | B2 (route bot, 2026-11-21) | 32.8 s | 24.2 s | 49.3 s | 27.9 s |
 | B3 (route bot, 2026-11-21) | 62.4 s | 24.2 s | 93.6 s | 27.8 s |
-| Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | | |
-| Ascent 2 (150 to 300 m) | 112 s | 59 s | | |
-| Ascent 3 (route bot, 2026-11-22) | 214.0 s | 128.1 s | | |
+| Ascent 1 (route bot, 2026-11-21) | 175.5 s | 104.0 s | 263.2 s | 119.7 s |
+| Ascent 2 (route bot, 2026-11-22) | 169.2 s | 73.4 s | 253.8 s | 84.1 s |
+| Ascent 3 (route bot, 2026-11-22) | 214.0 s | 128.1 s | 321.2 s | 147.3 s |
 
 ## Rules from B1 and B2
 

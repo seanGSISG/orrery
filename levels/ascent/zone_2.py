@@ -1399,18 +1399,19 @@ EXPERT[5] = [
 
 
 def route(kind: str, legs: list[Leg]) -> None:
-    """Places the route of `kind` through the legs, from the start pad to the finish pad. In
-    the climb the marble comes from zone 1's finish, so the route first goes to the pad: the
-    way from there to the first jump is then the same as in the zone on its own."""
+    """Places the route of `kind` through the legs, from the start pad to a stop on the finish
+    pad. In the climb the marble comes from zone 1's finish, so the route first goes to the
+    pad: the way from there to the first jump is then the same as in the zone on its own. The
+    climb has no finish on the cap, so the route ends at rest there, and zone 3's route starts
+    from rest (docs/design/ascent.md §8.2)."""
     first = START if TEST_FROM == 1 else FOOT[TEST_FROM]
-    legs = [(first, "speed 3"), *legs]
+    legs = [(first, "speed 3"), *legs, (FINISH, "wait 0")]
     actions = [
         f"{i} {action.strip()}"
         for i, (_, text) in enumerate(legs)
         for action in text.split(";")
         if action.strip()
     ]
-    legs = [*legs, (FINISH, "")]
     kit.marker(
         "route",
         at=first,
