@@ -81,3 +81,18 @@ Ascent has no par time. The level script carries the first-run route and the exp
 - The Dial ring is a long fast roll in the middle of a climb, with the whole zone in view.
 - The vent chains are three and four launches in a row. A clean chain feels like flight.
 - The last move of the expert route is a narrow rod to the top of the spire.
+
+## As built
+
+Level script: `levels/ascent/zone_2.py`. Kit: `kit/clockwork.py`. The script uses the coordinates of the climb: x east, y north, z up, the tower axis at plan (0.0, 39.0) as in zone 1.
+
+### Handover to zone 3
+
+| Item | Value |
+|---|---|
+| Spire cap | A round floor 10 m across (radius 5.0 m), top face at +300.0 m, centre at plan (0.0, 39.0). The finish pad stands in its middle. Nothing of the spire rises above the cap: the broken tip is the lightning rod |
+| Lightning rod arrival | The rod's top end meets the cap's west edge at (-5.0, 39.0, +300.0). The rod runs east from (-24.0, 39.0, +292.0) |
+| Spire vent arrival | The vent stands on a ledge east of the spire at (7.8, 39.0, +292.0). Its throw lands on the east half of the cap at about (3.5, 39.0, +300.0), toward the west |
+| Zone 3 quay | Zone 3 builds its start floor south of the cap: x -7.0 to 5.5, y 25.0 to 35.0, top +300.0 m. Every part of zone 2 inside that plan rectangle stays below +297.0 m, apart from the cap disc |
+
+Progress: layout in work.
