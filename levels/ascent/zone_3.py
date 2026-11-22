@@ -900,9 +900,132 @@ gangplank(
     (TANKER_DECK[2] + 1.6, GANGPLANK_ROW_2, TANKER_TOP),
 )
 
+# --- Part 5: rigging, +417.8 to +460 ------------------------------------------------------------
+
+# The Flagship, the biggest ship of the harbour, lies west of the Tanker. Its gondola deck
+# (+460) is the last rest ledge; both ways of part 5 climb to its east end, the crow's nests on
+# NEST_ROW and the cargo lifts on CARGO_ROW.
+FLAG_DECK_TOP = 460.0
+NEST_ROW = ROPE_ROW_2 - 2.9
+CARGO_ROW = GANGPLANK_ROW_2
+FLAG_ROW = (NEST_ROW + CARGO_ROW) / 2
+# A vent stands 1.6 m from the west end of its floor and throws the marble NEST_RISE m up onto
+# the next floor, whose east end is THROW m west of the vent.
+NEST_RISE = 9.5
+THROW = 3.2
+NEST_LENGTH = 8.0
+NEST_HALF = 1.75
+VENT_1 = TANKER_DECK[2] - 6.5
+vent("vent_tanker", (VENT_1, NEST_ROW, TANKER_TOP), NEST_RISE + 2.8)
+# Nests 1 and 2 stand on masts on the Tanker; the yardarm joins nest 2 to nest 3.
+NESTS: list[tuple[float, float, float]] = []
+_east, _top = VENT_1 - THROW, TANKER_TOP
+for i in range(4):
+    if i == 2:
+        _plan_y, _rise_y = span(9.8, 24.0)
+        _east, _top = _east - _plan_y, _top + _rise_y
+    else:
+        _top += NEST_RISE
+    NESTS.append((_east - NEST_LENGTH, _east, _top))
+    _east -= NEST_LENGTH if i == 1 else NEST_LENGTH - 1.6 + THROW
+for i, (x0, x1, top) in enumerate(NESTS):
+    deck(
+        f"nest_{i + 1}",
+        (x0, NEST_ROW - NEST_HALF),
+        (x1, NEST_ROW + NEST_HALF),
+        top,
+        "ns",
+    )
+    if i != 1:
+        rise = NEST_RISE if i < 3 else FLAG_DECK_TOP - top
+        vent(f"vent_nest_{i + 1}", (x0 + 1.6, NEST_ROW, top), rise + 2.8)
+for i in (0, 1):
+    x0, x1, top = NESTS[i]
+    harbour.mast(f"nest_{i + 1}_mast", (x1 - 3.0, NEST_ROW, TANKER_TOP), top - 0.3)
+YARDARM = harbour.rope(
+    "yardarm",
+    (NESTS[1][0], NEST_ROW, NESTS[1][2]),
+    (NESTS[2][1], NEST_ROW, NESTS[2][2]),
+)
+FLAG_E = NESTS[3][0] + 1.6 - THROW
+FLAGSHIP = Ship(
+    "flagship", (FLAG_E - 10.0 - 25.2, FLAG_ROW, FLAG_DECK_TOP + 14.0), 84.0, 9.0
+)
+harbour.envelope(FLAGSHIP)
+harbour.gondola(
+    FLAGSHIP,
+    FLAG_E - 20.0,
+    FLAG_E,
+    FLAG_DECK_TOP,
+    10.0,
+    kerbs=[("s", FLAG_E - 20.0, FLAG_E)],
+)
+
+# The cargo way: three lifts (moving platforms) west and up, a walkway with two cargo hooks
+# (pendulums) between lifts 1 and 2, and a pallet deck between lifts 2 and 3.
+WALK_LENGTH = 15.5
+PALLET_LENGTH = 4.5
+CARGO_RISE = (13.0, 12.5)
+WALK_TOP = TANKER_TOP + CARGO_RISE[0]
+PALLET_TOP = WALK_TOP + CARGO_RISE[1]
+_drift = (TANKER_DECK[0] - FLAG_E - WALK_LENGTH - PALLET_LENGTH) / 3 - 3.2
+LIFTS: list[float] = []  # the x of each lift's low end
+
+
+def cargo_lift(i: int, west: float, low: float, high: float) -> float:
+    """Places cargo lift i from beside the west end `west` of a floor at `low` up to `high`,
+    _drift m further west. Returns the x of the east end of the floor it serves above."""
+    x = west - 1.6
+    LIFTS.append(x)
+    gangplank(f"cargo_lift_{i}", (x, CARGO_ROW, low), (x - _drift, CARGO_ROW, high))
+    return x - _drift - 1.6
+
+
+_walk_e = cargo_lift(1, TANKER_DECK[0], TANKER_TOP, WALK_TOP)
+WALK = (_walk_e - WALK_LENGTH, _walk_e)
+_pallet_e = cargo_lift(2, WALK[0], WALK_TOP, PALLET_TOP)
+PALLETS = (_pallet_e - PALLET_LENGTH, _pallet_e)
+cargo_lift(3, PALLETS[0], PALLET_TOP, FLAG_DECK_TOP)
+for name, (x0, x1), top in (
+    ("cargo_walk", WALK, WALK_TOP),
+    ("pallets", PALLETS, PALLET_TOP),
+):
+    deck(name, (x0, CARGO_ROW - 1.5), (x1, CARGO_ROW + 1.5), top, "ns")
+HOOKS = (WALK[1] - 5.5, WALK[1] - 11.5)
+_gantry = town.Parts()
+for i, x in enumerate(HOOKS):
+    kit.marker(
+        "pendulum",
+        at=(x, CARGO_ROW, WALK_TOP + 4.6),
+        rotation=(0, 0, -90.0),
+        period=4.0,
+        swing=45.0,
+        name=f"cargo_hook_{i + 1}",
+    )
+    for side in (-1.0, 1.0):
+        y = CARGO_ROW + side * 1.75
+        _gantry.bar((x, y, WALK_TOP - 0.3), (x, y, WALK_TOP + 4.8), 0.1, "iron")
+    _gantry.bar(
+        (x, CARGO_ROW - 1.75, WALK_TOP + 4.8),
+        (x, CARGO_ROW + 1.75, WALK_TOP + 4.8),
+        0.12,
+        "iron",
+    )
+# The rigging: ropes from the corners of the hanging floors up to the keel of the Flagship.
+_floors = [(x0, x1, NEST_ROW, NEST_HALF, top) for x0, x1, top in NESTS[2:]] + [
+    (*WALK, CARGO_ROW, 1.5, WALK_TOP),
+    (*PALLETS, CARGO_ROW, 1.5, PALLET_TOP),
+]
+for x0, x1, row, half, top in _floors:
+    for x in (x0 + 0.3, x1 - 0.3):
+        keel = FLAGSHIP.point(x, 270.0)
+        for y in (row - half + 0.1, row + half - 0.1):
+            harbour.line(_gantry, (x, y, top - 0.3), (x, keel.y, keel.z + 0.2), 0.04)
+_gantry.add("rigging", collide=False)
+
 # --- Routes ----------------------------------------------------------------------------------------
 
-FINISH: Place = (TANKER_DECK[0] + 8.0, ROPE_ROW_2, TANKER_TOP)
+FINISH: Place = (FLAG_E - 10.0, FLAG_ROW, FLAG_DECK_TOP)
 
 # Part 1, first run: the crates, Roof 1 and its vent, Roof 2, the dormers and gangway A.
 FIRST[1] = [
@@ -1055,8 +1178,45 @@ EXPERT[4] = [
     (ROPE_3_FLOOR[1], ""),
     (ROPE_4_FLOOR[0], ""),
     (ROPE_4_FLOOR[1], ""),
-    ((TANKER_DECK[2] - 2.0, ROPE_ROW_2, TANKER_TOP), "speed 5"),
+    ((TANKER_DECK[2] - 2.0, ROPE_ROW_2, TANKER_TOP), "speed 3"),
 ]
+
+# Part 5, first run: the three cargo lifts, the walkway with its two hooks and the pallets.
+FIRST[5] = [
+    ((TANKER_DECK[0] + 1.4, CARGO_ROW, TANKER_TOP), "wait_until cargo_lift_1 9.0 9.8"),
+    ((LIFTS[0], CARGO_ROW, TANKER_TOP), "speed 3; wait_until cargo_lift_1 5.2 5.9"),
+    ((WALK[1] - 1.4, CARGO_ROW, WALK_TOP), "speed 3"),
+    (
+        (HOOKS[0] + 3.25, CARGO_ROW, WALK_TOP),
+        "speed 3; wait_until cargo_hook_1 1.6 2.0",
+    ),
+    (
+        (HOOKS[1] + 3.25, CARGO_ROW, WALK_TOP),
+        "speed 3; wait_until cargo_hook_2 1.6 2.0",
+    ),
+    ((WALK[0] + 1.4, CARGO_ROW, WALK_TOP), "speed 3; wait_until cargo_lift_2 9.0 9.8"),
+    ((LIFTS[1], CARGO_ROW, WALK_TOP), "speed 3; wait_until cargo_lift_2 5.2 5.9"),
+    ((PALLETS[1] - 1.4, CARGO_ROW, PALLET_TOP), "speed 3"),
+    ((PALLETS[0] + 1.4, CARGO_ROW, PALLET_TOP), "wait_until cargo_lift_3 9.0 9.8"),
+    ((LIFTS[2], CARGO_ROW, PALLET_TOP), "speed 3; wait_until cargo_lift_3 5.2 5.9"),
+    ((FLAG_E - 1.4, CARGO_ROW, FLAG_DECK_TOP), "speed 3"),
+]
+# Part 5, expert: four vents, the nests and the yardarm.
+EXPERT[5] = [
+    ((VENT_1 + 3.4, NEST_ROW, TANKER_TOP), "speed 3"),
+    ((VENT_1 + 1.2, NEST_ROW, TANKER_TOP), "speed 3"),
+    ((VENT_1 - 5.6, NEST_ROW, NESTS[0][2]), "speed 3"),
+    ((NESTS[0][0] + 2.8, NEST_ROW, NESTS[0][2]), "speed 3"),
+    ((NESTS[0][0] - 4.0, NEST_ROW, NESTS[1][2]), "speed 4"),
+    (YARDARM[0], ""),
+    (YARDARM[1], ""),
+]
+for x0, _, top in NESTS[2:]:
+    EXPERT[5] += [
+        ((x0 + 2.8, NEST_ROW, top), "speed 3"),
+        ((x0 - 4.0, NEST_ROW, top + NEST_RISE), "speed 3"),
+    ]
+EXPERT[5][-1] = ((FLAG_E - 2.4, NEST_ROW, FLAG_DECK_TOP), "speed 3")
 
 # --- Start, finish, routes ------------------------------------------------------------------------
 
