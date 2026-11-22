@@ -353,10 +353,12 @@ func _begin(run: LevelRun, new_climb: bool) -> void:
 
 
 
-## Starts the stats of a new climb. The spot of the last climb is gone at the next save.
+## Starts the stats of a new climb. The spot of the last climb is gone at once, so a save that
+## is not of the spot (a found egg) cannot keep it with the Assist flag of the new climb.
 func _new_climb() -> void:
 	_falls = AscentFalls.new()
 	_ended = false
+	Save.ascent.has_spot = false
 	Save.ascent.assisted = Save.ascent.assist
 	_run.keeps_records = not Save.ascent.assisted
 

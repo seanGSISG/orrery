@@ -127,6 +127,26 @@ func test_new_climb_starts_at_the_bottom() -> void:
 	assert_true(ascent.flag.visible, "the flag of the last climb stands")
 
 
+## A new climb drops the spot of the last one at once: a save that is not of the spot (a found
+## egg) keeps no old spot, so an assisted spot cannot come back as a climb without Assist.
+func test_new_climb_drops_the_old_spot_at_any_save() -> void:
+	Save.ascent.assist = true
+	if not climb(true):
+		return
+	put(ZONE_2)
+	quit_climb()
+	assert_true(Save.ascent.has_spot, "the assisted climb has a spot before the restart")
+	Save.ascent.assist = false
+	if not climb(true):
+		return
+	Save.write()
+	var saved: SaveGame = SaveGame.new()
+	saved.dir = ROOT
+	saved.read()
+	autofree(saved)
+	assert_false(saved.ascent.has_spot, "no spot of the assisted climb")
+
+
 ## The gate ends the run: the climb has no spot any more, and its time is the best time.
 func test_gate_ends_the_run() -> void:
 	if not climb():

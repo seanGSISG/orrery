@@ -24,6 +24,7 @@ defaults:
 # Every job imports the project, with its Git LFS files (textures, skies, lightmaps, music).
 # The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
 # downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
+# The setup action also writes game/override.cfg to turn off GPU texture compression (godotengine/godot#114121); to revert, remove its last step.
 jobs:
   # Lists the changed files and picks the jobs they need (.github/pick-jobs.sh holds the rules).
   # A pull request compares with its base, a push with the commit before it. A new branch, a
