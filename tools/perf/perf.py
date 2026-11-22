@@ -31,6 +31,7 @@ Environment: GODOT (default godot) is the Godot binary.
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -173,11 +174,16 @@ def wait_for_quiet(label: str) -> None:
 
 def run_watched(command: list[str]) -> tuple[subprocess.CompletedProcess[str], bool]:
     """Runs a command (timeout RUN_TIMEOUT_S) and returns it with whether another Godot game
-    started while it ran. Checks every WATCH_S seconds."""
+    started while it ran. Checks every WATCH_S seconds. The command runs in its own process
+    group, so a timeout kills gamescope and the game it started."""
     start = time.monotonic()
     disturbed = False
     with subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
     ) as process:
         while True:
             try:
@@ -185,7 +191,7 @@ def run_watched(command: list[str]) -> tuple[subprocess.CompletedProcess[str], b
                 break
             except subprocess.TimeoutExpired as error:
                 if time.monotonic() - start > RUN_TIMEOUT_S:
-                    process.kill()
+                    os.killpg(process.pid, signal.SIGKILL)
                     process.communicate()
                     raise subprocess.TimeoutExpired(command, RUN_TIMEOUT_S) from error
                 disturbed = disturbed or bool(other_games())
