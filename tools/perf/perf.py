@@ -316,9 +316,8 @@ def main() -> None:
             print(
                 f"  {r.run.name:12} {r.mean:6.3f} {r.p50:6.3f} {r.p99:6.3f} {r.vram_mb:7.0f}{note}"
             )
-        print(
-            f"  disturbed runs: {sum(r.disturbed for r in results)} of {len(results)}"
-        )
+        count = sum(r.disturbed > 0 for r in results)
+        print(f"  runs disturbed at least once: {count} of {len(results)}")
         failed += problems(level, results)
     for problem in failed:
         print(f"FAIL {problem}", file=sys.stderr)
