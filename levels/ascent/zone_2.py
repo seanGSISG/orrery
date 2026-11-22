@@ -146,6 +146,23 @@ FACE_POSE = clockwork.frame(FACE, FACE_YAW, FACE_TILT)
 HUB_HOLE = 0.5
 WIND_HOLE = 0.85
 WIND_AT = (5.2 * math.sin(math.radians(120.0)), 5.2 * math.cos(math.radians(120.0)))
+# The hands: name, dial angle, blade and tail outlines as (along, across) from the hub, m.
+HANDS = [
+    (
+        "minute",
+        60.0,
+        [(0.7, 0.16), (5.4, 0.12), (5.9, 0.32), (6.4, 0.12), (8.1, 0.0)]
+        + [(6.4, -0.12), (5.9, -0.32), (5.4, -0.12), (0.7, -0.16)],
+        [(-0.7, -0.16), (-0.7, 0.16), (-1.9, 0.34), (-2.15, 0.0), (-1.9, -0.34)],
+    ),
+    (
+        "hour",
+        305.0,
+        [(0.7, 0.24), (3.6, 0.2), (4.2, 0.55), (4.8, 0.2), (5.4, 0.0)]
+        + [(4.8, -0.2), (4.2, -0.55), (3.6, -0.2), (0.7, -0.24)],
+        [(-0.7, -0.2), (-0.7, 0.2), (-1.4, 0.36), (-1.6, 0.0), (-1.4, -0.36)],
+    ),
+]
 # The bezel's gaps: at VI for the stairs and at XII for the vent landing, degrees of the dial
 # (0 at XII, clockwise).
 BEZEL_GAPS = {"vi": (180.0, 13.0), "xii": (0.0, 9.0)}
@@ -233,6 +250,25 @@ def build_face() -> None:
         holes=[holes[1]],
         name="face_winding",
         material="polished_brass",
+    )
+    # The hands, stopped at ten past ten: blued steel, each a blade with a lozenge, a tail
+    # and a collar round the axle hole. They lie just above the boss and do not collide.
+    for tag, clock, blade, tail in HANDS:
+        a = math.radians(dial_angle(clock))
+        c, s = math.cos(a), math.sin(a)
+        for part, shape in (("blade", blade), ("tail", tail)):
+            kit.inlay(
+                [(u * c - v * s, u * s + v * c) for u, v in shape],
+                0.02,
+                name=f"face_hand_{tag}_{part}",
+                material="blued_steel",
+            )
+    kit.inlay(
+        kit.arc((0.0, 0.0), 0.85, 0.0, 360.0, 48),
+        0.03,
+        holes=[holes[0]],
+        name="face_hand_collar",
+        material="blued_steel",
     )
     # The bezel: a brass kerb round the rim, open at VI and at XII.
     gaps = sorted(
