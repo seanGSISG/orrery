@@ -430,13 +430,14 @@ for i, ((x, y), top) in enumerate(GEARS):
         clockwise=i % 2 == 1,
         thickness=GEAR_THICKNESS,
     )
-    # The brass axle that holds the gear, from the court floor to its underside.
+    # The brass axle that holds the gear, from the court floor to its underside. The shoulder
+    # stays below the neck, so the profile rises all the way on the shortest axle too.
     kit.lathe(
         at=(x, y, 0.0),
         profile=[
             (0.55, 0.0),
             (0.55, 0.25),
-            (0.3, 0.4),
+            (0.3, min(0.4, top - GEAR_THICKNESS - 0.2)),
             (0.26, top - GEAR_THICKNESS - 0.15),
             (0.4, top - GEAR_THICKNESS),
         ],

@@ -567,9 +567,10 @@ def grille(
             return height
         return spring + math.sqrt(half * half - x * x) - GRILLE_CLEAR
 
-    # Enough bars that the gap at each side of the row is no wider than the gap between bars.
+    # Enough bars that the gap at each side of the row is no wider than the gap between bars,
+    # and one bar in a doorway narrower than a gap.
     pitch = GRILLE_BAR + GRILLE_GAP
-    count = math.ceil((width - GRILLE_GAP) / pitch)
+    count = max(1, math.ceil((width - GRILLE_GAP) / pitch))
     first = -(count - 1) * pitch / 2
     bm = bmesh.new()
     for i in range(count):
