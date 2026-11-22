@@ -767,6 +767,8 @@ for hour in range(12):
 # The roof slab: the broken top of the belfry roof at +270, round the axis, with a wing to the
 # west-south-west where the vent chain and the weight lift arrive.
 ROOF_WING_X = -12.6
+# The west edge of the wing, and the east edge of the floor west of it.
+ROOF_WEST_X = -24.6
 ROOF_CORE = [
     (12.4, 35.0),
     (12.9, 41.5),
@@ -887,15 +889,140 @@ ROOF_WING = [
     (ROOF_WING_X, 29.0),
     (ROOF_WING_X, 40.0),
     (-21.0, ROOF_WING_Y),
-    (-24.4, ROOF_WING_Y),
-    (-25.0, 31.6),
+    (ROOF_WEST_X, ROOF_WING_Y),
+    (ROOF_WEST_X, 31.3),
 ]
 clockwork.fragment("roof_slab_wing", ROOF_WING, ROOF, under=3.5)
 
-FINISH: Place = (-6.0, 40.0, ROOF)
+# --- 5. The spire --------------------------------------------------------------------------------
+
+# The spire: eight sides of slate round the axis, broken off flat under the cap. The cap is the
+# round floor at the top of the climb, where zone 3 starts (docs/levels/ascent-z2.md, As built).
+CAP_R = 5.0
+CAP_DEPTH = 0.7
+clockwork.spire("spire", (*AXIS, ROOF - 0.5), 4.0, 3.2, CAP - CAP_DEPTH - ROOF + 0.5)
+clockwork.disc("spire_cap", (*AXIS, CAP), CAP_R, depth=CAP_DEPTH, finish="limestone")
+clockwork.rim("spire_cap_rim", (*AXIS, CAP), CAP_R, CAP_DEPTH, width=0.12)
+
+# The spire ramp: a slate band that winds four half turns clockwise round the spire, from the
+# north point of the roof slab up to the north point of the balcony.
+SPIRE_IN, SPIRE_OUT = 4.3, 6.8
+SPIRE_START = 90.0
+SPIRE_TURN = -720.0
+BALCONY = 292.0
+SPIRE_AT: Place = (*AXIS, ROOF)
+clockwork.refinish(
+    town.helix(
+        SPIRE_AT,
+        SPIRE_IN,
+        SPIRE_OUT,
+        SPIRE_START,
+        SPIRE_TURN,
+        BALCONY - ROOF,
+        name="spire_ramp",
+    ),
+    "slate",
+)
+for radius, inside in ((SPIRE_IN, False), (SPIRE_OUT, True)):
+    clockwork.helix_wall(
+        SPIRE_AT,
+        radius,
+        SPIRE_START,
+        SPIRE_TURN,
+        BALCONY - ROOF,
+        inside=inside,
+        name=f"spire_ramp_kerb_{'in' if not inside else 'out'}",
+    )
+
+
+def spire_ramp(along: float, radius: float = 6.0) -> Place:
+    """Returns the point `along` degrees up the spire ramp from its foot, at `radius`."""
+    return town.helix_point(
+        SPIRE_AT, radius, SPIRE_START, SPIRE_TURN, BALCONY - ROOF, SPIRE_START - along
+    )
+
+
+# The balcony: a broken floor east of the spire at the ramp's top. The marble rolls round the
+# spire vent and into it westward, and the vent throws it onto the cap's east half.
+clockwork.fragment(
+    "spire_balcony", clockwork.sector(AXIS, 3.1, 13.0, -45.0, 90.0), BALCONY
+)
+SPIRE_VENT: Place = (8.0, AXIS[1], BALCONY)
+kit.marker("steam_vent", at=SPIRE_VENT, lift=11.5, name="vent_spire")
+
+# The lightning rod way: a vent west off the roof slab's wing, a loose slope of slate north, a
+# vent east, then the fallen lightning rod, 0.8 m wide, from its ledge up to the cap's west
+# edge at ROD_ANGLE round the axis. Floors at +270 under the way catch a fall.
+ROOF_WEST = [(-37.0, 30.8), (ROOF_WEST_X, 31.3), (ROOF_WEST_X, 50.5), (-36.5, 50.5)]
+clockwork.fragment("roof_slab_west", ROOF_WEST, ROOF, under=3.0)
+clockwork.fragment(
+    "roof_slab_north",
+    [
+        (ROOF_WEST_X, 41.6),
+        (ROOF_WING_X, 41.0),
+        (-10.2, 47.8),
+        (-16.0, 50.5),
+        (ROOF_WEST_X, 50.5),
+    ],
+    ROOF,
+    under=3.0,
+)
+BOLT_1: Place = (-26.6, 33.4, ROOF)
+kit.marker("steam_vent", at=BOLT_1, lift=11.5, name="vent_lightning_1")
+BOLT_LEDGE = 280.0
+clockwork.fragment("lightning_ledge_1", kit.rect(-37.0, 31.0, -29.5, 36.5), BOLT_LEDGE)
+BOLT_X = -33.7
+BOLT_RISE = 4.0
+BOLT_SLOPE = 34.0
+_slope_run = BOLT_RISE / math.tan(math.radians(BOLT_SLOPE))
+# Tiles 1.2 m long that break 0.7 s after a touch: a marble that climbs at 1.7 m/s or more gets
+# up, and one that stops on the slope drops to the floor below.
+kit.marker(
+    "crumbling_tiles",
+    at=(BOLT_X, 36.5 + _slope_run / 2, BOLT_LEDGE + BOLT_RISE / 2),
+    rotation=(BOLT_SLOPE, 0.0, 0.0),
+    width=3.6,
+    depth=BOLT_RISE / math.sin(math.radians(BOLT_SLOPE)),
+    tile=1.2,
+    delay=0.7,
+    name="lightning_slope",
+)
+BOLT_TOP = BOLT_LEDGE + BOLT_RISE
+BOLT_TOP_Y = 36.5 + _slope_run
+clockwork.fragment(
+    "lightning_ledge_2", kit.rect(-37.0, BOLT_TOP_Y, -27.9, 50.2), BOLT_TOP
+)
+ROD_ANGLE = 160.0
+_rod = ring(CAP_R + 19.0, ROD_ANGLE)
+ROD_FOOT_2: Place = (*_rod, BALCONY)
+ROD_TOP_2: Place = (*ring(CAP_R, ROD_ANGLE), CAP)
+_rod_d = ((ROD_TOP_2[0] - _rod[0]) / 19.0, (ROD_TOP_2[1] - _rod[1]) / 19.0)
+# The marble lands 2.8 m before the rod's foot, on the rod's line; the second vent throws it
+# east from 4.1 m west of there.
+BOLT_LAND: Place = (_rod[0] - _rod_d[0] * 2.8, _rod[1] - _rod_d[1] * 2.8, BALCONY)
+BOLT_2: Place = (BOLT_LAND[0] - 4.1, BOLT_LAND[1], BOLT_TOP)
+kit.marker("steam_vent", at=BOLT_2, lift=9.5, name="vent_lightning_2")
+clockwork.fragment(
+    "lightning_ledge_3",
+    kit.rect(BOLT_2[0] + 1.9, BOLT_LAND[1] - 2.9, _rod[0] + 0.6, BOLT_LAND[1] + 2.1),
+    BALCONY,
+)
+kit.ramp(
+    at=ROD_FOOT_2,
+    width=0.8,
+    length=19.0,
+    rise=CAP - BALCONY,
+    yaw=ROD_ANGLE + 180.0 - 90.0,
+    name="lightning_rod",
+    material="polished_brass",
+    trim="gold",
+)
+
+FINISH: Place = (*AXIS, CAP)
 FOOT[2] = (-8.0, 49.5, BELL_LEDGE)
 FOOT[3] = (-5.6, 51.2, LID)
 FOOT[4] = (*ring(RING_MID, RING_EAST + 4.0), RING)
+FOOT[5] = (CHAIN2_X, CHAIN2[-1][1] - 4.8, ROOF)
 kit.marker("start", at=START if TEST_FROM == 1 else FOOT[TEST_FROM])
 kit.marker("finish", at=FINISH)
 
@@ -959,15 +1086,19 @@ FIRST[2] = [
     ((-3.6, 53.6, BELL_LEDGE), "speed 3"),
     (coil(5.0), "speed 5"),
 ]
-_coil_points = [a for a in range(60, 990, 66) if abs(a - (BELL_ALONG - 45.0)) > 20.0]
-_coil_points.append(int(BELL_ALONG - 45.0))
-for a in sorted(_coil_points):
-    FIRST[2].append(
-        (
-            coil(a),
-            "wait_until pendulum_spring 0.1 0.4" if a == BELL_ALONG - 45.0 else "",
-        )
+# Up the coil the points lie 70 degrees apart. Past the bell they lie 45 degrees apart in the
+# outer lane, so the line between them stays clear of the bell's lane on the inner half; the bot
+# waits for the bell 45 degrees before it.
+_bell_lane = (BELL_ALONG - 45.0, BELL_ALONG, BELL_ALONG + 45.0)
+FIRST[2] += [(coil(a), "speed 7") for a in range(60, int(_bell_lane[0]) - 30, 70)]
+FIRST[2] += [
+    (
+        coil(a, 5.35),
+        "speed 7; wait_until pendulum_spring 0.1 0.4" if i == 0 else "speed 7",
     )
+    for i, a in enumerate(_bell_lane)
+]
+FIRST[2] += [(coil(a), "speed 7") for a in range(int(_bell_lane[-1]) + 65, 960, 70)]
 FIRST[2] += [(coil(975.0), ""), ((-5.6, 51.2, LID), "")]
 EXPERT[2] = [
     ((CHAIN_X - 0.6, 46.3, BELL_LEDGE), "speed 3"),
@@ -1034,7 +1165,7 @@ FIRST[3] += [
 # clear of the vent. Then it rolls clockwise round the north half to RING_EAST: the roof slabs
 # climb over the south half, and the first slab starts at the ring's own height.
 FIRST[3] += [(on_ring(26.0, SHARDS_3[-1], RING), "speed 2")]
-for a in range(int(SHARDS_3[-1]) - 20, int(RING_EAST), -22):
+for a in range(int(SHARDS_3[-1]) - 20, int(RING_EAST), -33):
     FIRST[3].append((on_ring(RING_MID, a, RING), "speed 12"))
 EXPERT[3] = [
     ((ROD_FOOT[0] - _rod_u[0] * 2.0, ROD_FOOT[1] - _rod_u[1] * 2.0, LID), "speed 4"),
@@ -1068,7 +1199,7 @@ for a in range(int(ROD_STEPS[-1]) + 20, int(RING_WEST) - 5, 22):
 
 # --- Routes: part 4 -------------------------------------------------------------------------------
 
-FIRST[4] = [(on_ring(SLAB_R, RING_EAST - 3.0, RING), "speed 4")]
+FIRST[4] = []
 for i, (p0, p1) in enumerate(SLABS):
     pre = ""
     if i in (1, 2):
@@ -1090,6 +1221,29 @@ EXPERT[4] = [
     ((CHAIN2_X + 0.6, CHAIN2[0][1] + 3.4, RING), "speed 3"),
     ((CHAIN2_X, CHAIN2[0][1] + 1.8, RING), "speed 3"),
     ((CHAIN2_X, CHAIN2[-1][1] - 4.8, ROOF), "speed 3"),
+]
+
+
+# --- Routes: part 5 -------------------------------------------------------------------------------
+
+FIRST[5] = [((-4.0, spire_ramp(0.0)[1], ROOF), "speed 4")]
+FIRST[5] += [(spire_ramp(a), "") for a in range(0, 721, 72)]
+FIRST[5] += [
+    ((9.5, 43.6, BALCONY), "speed 3"),
+    ((11.8, 41.0, BALCONY), "speed 3"),
+    ((11.6, AXIS[1], BALCONY), "speed 2.5"),
+    ((SPIRE_VENT[0] + 2.3, AXIS[1], BALCONY), "speed 3"),
+    ((3.0, AXIS[1], CAP), "speed 3"),
+]
+EXPERT[5] = [
+    ((BOLT_1[0] + 2.0, BOLT_1[1], ROOF), "speed 3"),
+    ((BOLT_1[0] - 4.7, BOLT_1[1], BOLT_LEDGE), "speed 3"),
+    ((BOLT_X, 35.6, BOLT_LEDGE), "speed 4"),
+    ((BOLT_X, BOLT_TOP_Y + 0.8, BOLT_TOP), "speed 6"),
+    ((BOLT_2[0] - 2.9, BOLT_2[1], BOLT_TOP), "speed 3"),
+    (BOLT_LAND, "speed 3"),
+    (ROD_FOOT_2, "speed 4"),
+    (ROD_TOP_2, "speed 8"),
 ]
 
 

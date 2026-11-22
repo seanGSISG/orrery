@@ -280,6 +280,35 @@ def frame(at: Vec3, yaw: float, tilt: float) -> Matrix:
     )
 
 
+def spire(
+    name: str,
+    at: Vec3,
+    base: float,
+    top: float,
+    height: float,
+    sides: int = 8,
+    finish: town.Finish = "slate",
+) -> bpy.types.Object:
+    """Adds a spire with `sides` flat faces round the vertical axis through `at`: its corners
+    at the radius `base` at the bottom and `top` at `height` m above, where it ends flat. It
+    collides."""
+    parts = town.Parts()
+    angles = [math.tau * (i + 0.5) / sides for i in range(sides)]
+    loops = [
+        [
+            parts.bm.verts.new((at[0] + r * math.cos(a), at[1] + r * math.sin(a), z))
+            for a in angles
+        ]
+        for r, z in ((base, at[2]), (top, at[2] + height))
+    ]
+    sides_loops = [
+        [loops[0][i], loops[0][(i + 1) % sides], loops[1][(i + 1) % sides], loops[1][i]]
+        for i in range(sides)
+    ]
+    parts.faces([*sides_loops, loops[1], loops[0][::-1]], finish)
+    return parts.add(name)
+
+
 def at(matrix: Matrix, point: Vec3) -> Vec3:
     """Returns the world position of a point of a piece's own frame, for a pose from frame()."""
     p = matrix @ Vector(point)
