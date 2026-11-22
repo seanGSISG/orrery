@@ -33,7 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       levels: ${{ steps.pick.outputs.levels }}
-      lint: ${{ steps.pick.outputs.lint }}
+      lint-game: ${{ steps.pick.outputs.lint-game }}
+      lint-scripts: ${{ steps.pick.outputs.lint-scripts }}
       test: ${{ steps.pick.outputs.test }}
       harness: ${{ steps.pick.outputs.harness }}
       export: ${{ steps.pick.outputs.export }}
@@ -71,10 +72,11 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-  lint:
-    name: Lint
+  # GDScript: gdlint and a compile check, which imports the game.
+  lint-game:
+    name: Lint GDScript
     needs: [changes, levels]
-    if: needs.changes.outputs.lint == 'true'
+    if: needs.changes.outputs.lint-game == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -84,15 +86,27 @@ jobs:
         with:
           name: marble
           path: game/core/marble/built/
-      - run: just lint
+      - run: just lint-game
 
-  # Builds the marble's core and every level script with Blender and checks the import. Every
-  # other job that runs the game gets the core, because the marble scene needs it; the test
-  # jobs get the levels too. When no test job runs, it builds only the core.
+  # Python and shell scripts. It needs no Godot and no LFS files, so a tool change lints fast.
+  lint-scripts:
+    name: Lint scripts
+    needs: changes
+    if: needs.changes.outputs.lint-scripts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: extractions/setup-just@v4
+      - run: just lint-scripts
+
+  # Builds the marble's core with Blender, and for the tests and the export every level script
+  # too, and checks the import. Every other job that runs the game gets the core, because the
+  # marble scene needs it. The levels output is `all`, `core` or `false` (.github/pick-jobs.sh).
   levels:
     name: Build levels
     needs: changes
-    if: needs.changes.outputs.levels == 'true'
+    if: needs.changes.outputs.levels != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -108,16 +122,16 @@ jobs:
           path: ~/.local/opt
           key: ${{ steps.pins.outputs.key }}
       - run: tools/blender/install-ci.sh
-      - if: needs.changes.outputs.test == 'true'
+      - if: needs.changes.outputs.levels == 'all'
         run: just build-levels
-      - if: needs.changes.outputs.test != 'true'
+      - if: needs.changes.outputs.levels != 'all'
         run: just build-marble
       - uses: actions/upload-artifact@v7
         with:
           name: marble
           path: game/core/marble/built/
           if-no-files-found: error
-      - if: needs.changes.outputs.test == 'true'
+      - if: needs.changes.outputs.levels == 'all'
         uses: actions/upload-artifact@v7
         with:
           name: levels
@@ -177,10 +191,17 @@ jobs:
         with:
           name: marble
           path: game/core/marble/built/
+      - uses: actions/download-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
       - run: just export
       - name: Boot the Linux export
         timeout-minutes: 2
-        run: build/linux/orrery.x86_64 --headless -- --smoke | grep '^ORRERY boot ok'
+        run: build/linux/orrery.x86_64 --headless --audio-driver Dummy -- --smoke | grep '^ORRERY boot ok'
+      - name: Play every level in the Linux export
+        timeout-minutes: 3
+        run: .github/check-export.sh build/linux/orrery.x86_64
       # Artifact zips drop the executable bit; a tarball keeps it.
       - run: tar -czf build/orrery-linux.tar.gz -C build/linux .
       - uses: actions/upload-artifact@v7
@@ -194,19 +215,30 @@ jobs:
           path: build/windows/
           if-no-files-found: error
 
-  # Boots the Windows export that the export job uploads. It is skipped when the export is.
+  # Boots the Windows export that the export job uploads and plays every level in it. It is
+  # skipped when the export is. The check needs only the names of the level scripts and the
+  # bakes, so the checkout is sparse and has no LFS files.
   windows-boot:
     name: Boot the Windows export
     needs: export
     runs-on: windows-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            .github
+            levels
+            game/levels/lightmaps
       - uses: actions/download-artifact@v7
         with:
           name: orrery-windows
           path: build/windows/
       - name: Boot the Windows export
         timeout-minutes: 2
-        run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'
+        run: build/windows/orrery.exe --headless --audio-driver Dummy -- --smoke | grep '^ORRERY boot ok'
+      - name: Play every level in the Windows export
+        timeout-minutes: 3
+        run: .github/check-export.sh build/windows/orrery.exe
 
   # The music pipeline's and the asset tools' pytest suites. They need no Godot and no LFS files;
   # the music tests measure loudness with ffmpeg.
