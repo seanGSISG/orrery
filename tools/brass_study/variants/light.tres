@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Brass study, measurement only: white matte that takes only the sun's direct light (no
+; ambient light, lightmap, reflections or fog). A brass pixel in shade is black in this frame.
+
+[sub_resource type="Shader" id="1"]
+code = "shader_type spatial;
+render_mode ambient_light_disabled, specular_disabled, fog_disabled;
+
+void fragment() {
+	ALBEDO = vec3(1.0);
+	ROUGHNESS = 1.0;
+	METALLIC = 0.0;
+}
+"
+
+[resource]
+shader = SubResource("1")

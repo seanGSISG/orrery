@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Brass study, measurement only: flat magenta with no light and no fog. The shoot compares
+; this frame with the control frame to find the brass pixels.
+
+[sub_resource type="Shader" id="1"]
+code = "shader_type spatial;
+render_mode unshaded, fog_disabled;
+
+void fragment() {
+	ALBEDO = vec3(1.0, 0.0, 1.0);
+}
+"
+
+[resource]
+shader = SubResource("1")

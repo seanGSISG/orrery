@@ -1,0 +1,22 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Brass study, lever: base texture. ambientCG Metal048C (rough, impure gold: about half the
+; large-scale colour variation of Metal007, so a narrow bar shows no grain), metallic 1. Tint
+; gives the albedo of the "bright" variant, about sRGB (222, 186, 108); median roughness
+; 0.271 x 1.39 = 0.38, as the control.
+
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048C_2K-JPG_Color.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048C_2K-JPG_Roughness.jpg" id="3"]
+[ext_resource type="Texture2D" path="res://materials/textures/Metal048C_2K-PNG_NormalGL.png" id="4"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/normal_map = ExtResource("4")
+shader_parameter/tint = Vector3(0.764, 0.665, 0.471)
+shader_parameter/tile = 2.0
+shader_parameter/roughness_scale = 1.39
+shader_parameter/metallic = 1.0
+shader_parameter/detail_tile = 0.25
