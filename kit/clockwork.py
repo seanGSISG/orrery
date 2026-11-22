@@ -202,6 +202,49 @@ def union(
     return sorted(points, key=lambda p: math.atan2(p[1] - hub[1], p[0] - hub[0]))
 
 
+def refinish(obj: bpy.types.Object, material: str) -> bpy.types.Object:
+    """Gives every face of obj the kit material `material` (kit/surfaces.py), for a town piece
+    such as town.helix() that takes only a town.Finish. Returns obj."""
+    look = kit.surface("default", material)
+    for i in range(len(obj.data.materials)):
+        obj.data.materials[i] = look
+    return obj
+
+
+def helix_wall(
+    at: Vec3,
+    radius: float,
+    start: float,
+    turn: float,
+    rise: float,
+    inside: bool,
+    height: float = 0.3,
+    width: float = 0.25,
+    name: str | None = None,
+    material: str = "polished_brass",
+) -> bpy.types.Object:
+    """Adds a kerb that stands on a town.helix() along the circle of `radius`: inside the
+    circle (the kerb of the ramp's outer edge) or outside it (of the inner edge). It
+    collides."""
+    path = [
+        town.helix_point(
+            at, radius, start, turn, rise, start + turn * i / max(8, int(abs(turn) / 5))
+        )
+        for i in range(max(8, int(abs(turn) / 5)) + 1)
+    ]
+    outer_side = "right" if turn > 0 else "left"
+    inner_side = "left" if turn > 0 else "right"
+    return kit.wall(
+        path,
+        height=height,
+        width=width,
+        side=inner_side if inside else outer_side,
+        bevel=0.03,
+        name=name,
+        material=material,
+    )
+
+
 def place(objects: Iterable[bpy.types.Object], matrix: Matrix) -> None:
     """Moves each object (built round the origin) by matrix: its world matrix becomes
     matrix @ its world matrix. Children move with their parents, so pass only the roots."""

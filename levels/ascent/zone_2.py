@@ -22,7 +22,6 @@ Each part has a west way and an east way:
 """
 
 import math
-from collections.abc import Sequence
 
 from mathutils import Vector
 
@@ -48,6 +47,10 @@ RING = 235.0
 ROOF = 270.0
 CAP = 300.0
 
+# For work on one part: the start pad and both routes begin at the foot of this part (FOOT).
+# Keep it at 1.
+TEST_FROM = 1
+FOOT: dict[int, Place] = {}
 FIRST: dict[int, list[Leg]] = {}
 EXPERT: dict[int, list[Leg]] = {}
 
@@ -498,8 +501,105 @@ kit.inlay(
     material="polished_brass",
 )
 
-FINISH: Place = (-9.0, 50.0, BELL_LEDGE)
-kit.marker("start", at=START)
+
+# --- 2. Mainspring -------------------------------------------------------------------------------
+
+# The mainspring ramp: a band of blued steel that coils 5.5 half turns clockwise round COIL, from
+# the north point of the barrel floor up to its west point at the barrel lid.
+COIL_IN, COIL_OUT = 3.35, 5.85
+COIL_MID = (COIL_IN + COIL_OUT) / 2
+COIL_START = 90.0
+COIL_TURN = -990.0
+COIL_RISE = LID - BELL_LEDGE
+clockwork.refinish(
+    town.helix(
+        COIL, COIL_IN, COIL_OUT, COIL_START, COIL_TURN, COIL_RISE, name="mainspring"
+    ),
+    "blued_steel",
+)
+clockwork.helix_wall(
+    COIL,
+    COIL_OUT,
+    COIL_START,
+    COIL_TURN,
+    COIL_RISE,
+    inside=True,
+    name="mainspring_kerb",
+)
+
+
+def coil(along: float, radius: float = 4.75) -> Place:
+    """Returns the point `along` degrees up the mainspring ramp from its start, at `radius`."""
+    return town.helix_point(
+        COIL, radius, COIL_START, COIL_TURN, COIL_RISE, COIL_START - along
+    )
+
+
+# The bell: it hangs inside the coil and swings along the ramp's inner half on the second turn,
+# at the east point.
+BELL_ALONG = 450.0
+_bell = coil(BELL_ALONG, 4.0)
+kit.marker(
+    "pendulum",
+    at=(_bell[0], _bell[1], _bell[2] + 4.6),
+    rotation=(0.0, 0.0, 90.0),
+    period=4.0,
+    swing=50.0,
+    name="pendulum_spring",
+)
+# The barrel lid: a brass disc 13 m across, cut straight where the ramp's end meets it, with the
+# teeth of the barrel's great wheel round its edge.
+LID_CENTRE: Place = (-7.0, 54.6, LID)
+LID_R = 6.5
+clockwork.disc(
+    "barrel_lid", LID_CENTRE, LID_R, depth=0.7, clip=((0.0, COIL[1]), (1.0, 0.0))
+)
+_lid_cut = math.degrees(math.asin((COIL[1] - LID_CENTRE[1]) / LID_R))
+_lid_arc = (180.0 - _lid_cut, 360.0 + _lid_cut)
+kit.teeth(
+    [
+        (x, y, LID - 0.12)
+        for x, y in kit.arc(LID_CENTRE[:2], LID_R, _lid_arc[1], _lid_arc[0], 120)
+    ],
+    side="left",
+    pitch=0.7,
+    name="barrel_lid_teeth",
+    material="polished_brass",
+)
+
+# The west way: three vents in a row north from the bell ledge. Each lifts the marble over the
+# next, and the last one onto a fragment beside the lid.
+CHAIN_X = -15.0
+CHAIN_VENTS = {
+    "vent_chain_1": (48.5, BELL_LEDGE, 9.5),
+    "vent_chain_2": (52.0, 181.0, 9.5),
+    "vent_chain_3": (55.5, 189.0, 11.5),
+}
+for name, (y, z, lift) in CHAIN_VENTS.items():
+    kit.marker("steam_vent", at=(CHAIN_X, y, z), lift=lift, name=name)
+for i, (y, z, _) in enumerate(list(CHAIN_VENTS.values())[1:]):
+    clockwork.fragment(
+        f"chain_fragment_{i + 1}",
+        kit.rect(CHAIN_X - 1.5, y - 1.1, CHAIN_X + 1.5, y + 4.3),
+        z,
+        under=1.4,
+    )
+CHAIN_TOP = LID - 1.0
+_lid_side = kit.arc(LID_CENTRE[:2], LID_R + STEP_GAP, 155.5, 124.6, 8)
+clockwork.fragment(
+    "chain_fragment_3",
+    [
+        (CHAIN_X - 1.6, _lid_side[0][1] - 0.1),
+        *_lid_side,
+        (CHAIN_X - 1.6, _lid_side[-1][1]),
+    ],
+    CHAIN_TOP,
+    under=2.2,
+)
+
+FINISH: Place = (-3.0, 56.5, LID)
+FOOT[2] = (-8.0, 49.5, BELL_LEDGE)
+kit.marker("start", at=START if TEST_FROM == 1 else FOOT[TEST_FROM])
 kit.marker("finish", at=FINISH)
 
 # --- Routes: part 1 -------------------------------------------------------------------------------
@@ -555,6 +655,32 @@ EXPERT[1] += [
 ]
 
 
+# --- Routes: part 2 -------------------------------------------------------------------------------
+
+FIRST[2] = [
+    ((1.2, 49.0, BELL_LEDGE), "speed 3"),
+    ((-3.6, 53.6, BELL_LEDGE), "speed 3"),
+    (coil(5.0), "speed 5"),
+]
+_coil_points = [a for a in range(60, 990, 66) if abs(a - (BELL_ALONG - 45.0)) > 20.0]
+_coil_points.append(int(BELL_ALONG - 45.0))
+for a in sorted(_coil_points):
+    FIRST[2].append(
+        (
+            coil(a),
+            "wait_until pendulum_spring 0.1 0.4" if a == BELL_ALONG - 45.0 else "",
+        )
+    )
+FIRST[2] += [(coil(975.0), ""), ((-5.6, 51.2, LID), "")]
+EXPERT[2] = [
+    ((CHAIN_X - 0.6, 46.3, BELL_LEDGE), "speed 3"),
+    ((CHAIN_X, 47.3, BELL_LEDGE), "speed 3"),
+    ((CHAIN_X, 58.6, CHAIN_TOP), "speed 3"),
+    ((CHAIN_X + 1.6, 58.9, CHAIN_TOP), "jump; speed 3"),
+    ((-10.5, 58.4, LID), "speed 3"),
+]
+
+
 def route(kind: str, legs: list[Leg]) -> None:
     """Places the route of `kind` through the legs, ending on the finish pad."""
     actions = [
@@ -566,7 +692,7 @@ def route(kind: str, legs: list[Leg]) -> None:
     legs = [*legs, (FINISH, "")]
     kit.marker(
         "route",
-        at=START,
+        at=START if TEST_FROM == 1 else FOOT[TEST_FROM],
         points=[point for point, _ in legs],
         name=f"route_{kind}",
         kind=kind,
@@ -574,8 +700,16 @@ def route(kind: str, legs: list[Leg]) -> None:
     )
 
 
-route("first_run", [leg for part in sorted(FIRST) for leg in FIRST[part]])
-route("expert", [leg for part in sorted(EXPERT) for leg in EXPERT[part]])
+# --- Both routes ---------------------------------------------------------------------------------
+
+route(
+    "first_run",
+    [leg for part in sorted(FIRST) if part >= TEST_FROM for leg in FIRST[part]],
+)
+route(
+    "expert",
+    [leg for part in sorted(EXPERT) if part >= TEST_FROM for leg in EXPERT[part]],
+)
 
 # --- Shots ----------------------------------------------------------------------------------------
 
@@ -593,3 +727,5 @@ kit.shot(
 )
 kit.shot("face", at=(2.0, 14.0, 162.0), rotation=(-12.0, 0.0, 40.0))
 kit.shot("gears", at=(6.0, 18.0, 156.0), rotation=(-2.0, 0.0, -30.0))
+kit.shot("debug_plan", at=(-4.0, 46.0, 215.0), rotation=(-90.0, 0.0, 0.0))
+kit.shot("debug_ledge", at=(-4.0, 30.0, 182.0), rotation=(-20.0, 0.0, 0.0))
