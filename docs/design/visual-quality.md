@@ -287,10 +287,11 @@ A level script names a kit material, and the importer gives those faces the game
 - `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
 - To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
 - A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
-- Seven objects take their look from `KitMaterials.find()` at run time: the Trapdoor and Crumbling Tiles (#29), and the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30). Each has a test that checks its kit materials.
+- Eight objects take their look from the kit materials: the Trapdoor and Crumbling Tiles (#29), the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30), and the Turning arm (#32). Each has a test that checks its kit materials. An object gets a fixed kit material from `KitMaterials.find()` at run time. A `finish` that the level script names is a `Material` export, which the importer sets, so an unknown name fails the import.
   - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
   - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot. A set `finish` (a kit material, for example `wood` in Ascent 1) replaces the stone; the brass bands stay.
   - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
+  - A Turning arm's bar is its `finish` (Ascent 2's clock hands are `blued_steel`), mapped in the arm's own space like the Turning gear.
   - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
   - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.
   - A Trapdoor's door is its own copy of the kit brass with one texture repeat across the door, so a large door shows no repeat.
@@ -325,7 +326,7 @@ A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goe
 | Preset | Backdrop | Sun elevation | Sun colour (sRGB) | Sun energy | Sky energy | Fill | Haze (1/m) |
 |---|---|---|---|---|---|---|---|
 | `dawn` | A photographed dawn sky over a sea of clouds. No planets | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
-| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
+| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | a fifth of the ambient light is a warm stone colour; in the Ascent climb it grows with the sun (`docs/design/ascent.md` §4) | 0.001 |
 | `noon` | The sky from 16 km: deep blue, clouds far below. No planets | 58° | (1, 0.99, 0.96) | 1.35 | 0.177 | none | 0.0005 |
 | `dusk` | The sky from 80 km: the curve of the Earth, faint stars, one pale planet | 7° | (1, 0.77, 0.58) | 4.39 | 1.15 | half of the ambient light is a cool blue | 0.0003 |
 

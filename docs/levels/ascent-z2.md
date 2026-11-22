@@ -81,3 +81,58 @@ Ascent has no par time. The level script carries the first-run route and the exp
 - The Dial ring is a long fast roll in the middle of a climb, with the whole zone in view.
 - The vent chains are three and four launches in a row. A clean chain feels like flight.
 - The last move of the expert route is a narrow rod to the top of the spire.
+
+## As built
+
+Level script: `levels/ascent/zone_2.py`. Kit: `kit/clockwork.py`. The script uses the coordinates of the climb: x east, y north, z up, the tower axis at plan (0.0, 39.0) as in zone 1.
+
+The script follows the map and the parts above, with the differences below.
+
+| Difference | Reason |
+|---|---|
+| The two hands are four turning arms (`turning_arm`) of blued steel: the blade and the tail of each hand, 0.25 m tall and 0.05 m above the dial. Both hands turn clockwise round the hub once in 20 s, together, so the 115° gap between them stays open. They show ten past ten 3 s into the run. They push the marble, and a marble can jump them | Clock Hands is an M3 object (plan.md §2.6); `turning_arm` came into M1 for this zone and is its base. Two hands at different speeds would cross, and a slow hour hand would make a climber wait up to its whole turn |
+| The expert line up the face passes 3.5 m from the hub on the IX side, and the bot waits for the hands on the last stair (`wait_until face_hand_minute_blade 4.0 5.5`) | On the IX side the marble moves the way the hands turn. When it reaches VI 0.7 to 5.3 s after the hands show ten past ten, its line stays 0.7 m or more clear of them, also for a crossing 30 % slower or faster |
+| The movement chamber's floor is at +152 m, not +154 m | The chamber sits under the tilted dial, whose low rim is at +154 m |
+| The gear landing is at +154 m, and the walkway at the lift gear's exit, about +161.2 m, not +163 m | The lift gear lets the marble off at its own exit height. The weight lift to the Bell ledge has a period of 8 s, not 6 s, so the marble can board at the low stop |
+| The Bell ledge joins the barrel round the mainspring: a polygon and a circle of radius 6.2 m | One floor holds the weight lift's landing and the foot of the coil |
+| The west vent chain of part 2 has fragments at +181, +189 and +199 m; the last one follows the barrel lid's arc | Each vent throws 8 m up and 3.5 m on, as in zone 1's weave |
+| The Dial ring is at +235 m, radius 23 to 27 m. The west way reaches it at 156°, the east way at -25° | The ring takes both ways of part 3 and starts both ways of part 4 |
+| The large flat parts are stone, with brass on their edges: the Dial ring is a limestone chapter ring with polished brass beads and blued-steel hour marks; the barrel lid and the pendulum bob are limestone discs with polished brass teeth or rim; the pendulum rod and the lightning rod are beams of the kit's brass with a limestone top | Polished brass on a large flat that looks up at the sky turns olive, and a long brass top mirrors the sun (`docs/design/visual-quality.md` §6; style review 1, B2 and F1) |
+| Part 3 east: the fallen pendulum rod (a beam 1.2 m wide) climbs from the lid's rim to the bob at +207 m, then three vents and three steps inside the ring | The rod is the expert's fast line; the vents carry the marble up to the ring |
+| Part 4 east: four slate roof slabs climb clockwise round above the ring's south half (4 m each), with a ridge stone after each and a bell on slabs 2 and 3. A weight lift (period 16 s) carries the marble from the last ridge to the roof slab's wing | The slabs keep the first run on wide floors over the ring, so a fall lands on the ring |
+| Part 4 west: the last of four vents (lift 12.5 m) throws the marble straight onto the roof slab's wing; there is no ledge at +269 m. Near that vent the wing's north edge keeps 2.8 m off | A vent throws the marble the way it enters; a closer edge stops the marble below the roof's top |
+| The spire ramp winds four half turns clockwise from the north point of the roof slab to the north point of a balcony at +292 m. The marble rolls round the spire vent on the balcony and enters it westward | A vent throws the marble the way it enters, so the throw onto the cap must start moving west |
+| The lightning rod way: a vent west off the wing (+270 to a ledge at +280), a loose slope north (34°, 4 m rise, tiles of 1.2 m that break 0.7 s after a touch), a vent east (+284 to +292), then the rod, 0.8 m wide and 20.6 m long at 23°, from 160° round the axis | The marble arrives on the wing moving south; the slope and the vents turn it in two right-angled turns on wide ledges. At 160° the rod's lower half is over a floor |
+| Two floors at +270 west and north-west of the wing, under the lightning rod way and the rod | A fall from the loose slope, the ledges or the rod lands on the roof, not 120 m lower |
+| The broken mass under each fragment is a few courses of ashlar about 1 m tall, each stepped in evenly toward the middle, on a dressed bed | A jagged point read as crumpled rock, and a step picked at each point gave each course a sawtooth edge (style review 1, F3) |
+| The bells of the mainspring and the roof slabs are the pendulum's round bob, not bell-shaped | `game/objects/pendulum/` builds its own look; a bell shape is a change to that shared object |
+| Wall panels with a belfry arch (8) and brass wheels (4) float round the climb, 30 m or more from the axis | They read as the rest of the tower. They are clear of every route |
+
+### Routes and times
+
+The route bot drives both routes (`just test-levels zone_2`): first run **169.2 s**, expert **73.3 s**. Par 253.8 s and gold 84.1 s come from `just suggest-times zone_2`. The bot is slower than the estimates (112 s and 59 s): it waits for each mover's window, rolls the mainspring at 7 m/s in the outer lane past the bell, and loops round the spire vent at 3 m/s. On the expert route it waits on the last face stair until the hands come round; in the zone on its own it arrives in the window. A route has at most 100 points (`kit.marker`), so the first run has no point of its own on each shard step: the bot jumps where it crosses a step's jump point. Both routes start on the start pad, so the bot reaches the first jump from the same side in the climb as in the zone on its own.
+
+### Climb with zone 1
+
+A temporary GUT test (not in the repository) drove the route bot through a new Ascent climb of zones 1 and 2, with zone 1's route and then zone 2's, from the climb start: expert then expert reaches the gate on the cap in 192.9 s, expert then first run in 281.2 s, both with no fall (with the turning hands, 2026-11-21). First run then first run reaches the crown with no fall and climbs to +243 m with no fall, where the bot's limit of 300 s of run time (`MAX_SECONDS` in `game/harness/route_bot.gd`) ends it.
+
+### Clockwork Egg as built
+
+The egg stands in the movement chamber under the dial, 0.9 m from the hub hole. Two polished brass wheels of the movement hang on the chamber's side walls, above the marble's reach. The marble drops through the hub hole (radius 0.5 m) and lands beside it. The hands do not hide the hole: they start 0.7 m out from the axle, so they only pass beside it. A vent (radius 0.5 m) under the winding hole at four o'clock (radius 0.85 m) lifts the marble back onto the face. Tested by hand in the harness: drop, egg found, vent out onto the face. `docs/secrets.md` has the row.
+
+### Look
+
+Floors are kit limestone with a chamfered, dressed coping; sides and broken masses are coursed ashlar with a dressed bed. Polished brass is zone 1's `brass_polished` (Metal048A), on trim and curved parts only: the chapter rings, hour bars, hub boss and bezel of the face, the arbors, the Dial ring's beads, the barrel lid's teeth, the bob and cap rims, the kerbs and the wheels. The barrel's foot ring and the sides of the two rods are the kit's `brass`. The mainspring, the hands and the Dial ring's hour marks are `blued_steel`: Metal008 tinted to a deep blue, about sRGB (80, 115, 195), with the PNG normal map. The roof slabs (no trim), the spire and its ramp are slate. No AI art and no props are used.
+
+Light (style review 1, P1): in the gallery the dial is in its own shade, because the zone's dawn sun is 12° high in the north-west and the dial tips 16° away from it; the bezel and the hands carry the read. In the climb the sun is about 26° high at +155 m (`docs/design/ascent.md` §4). The `overview` shot looks south-east, with the sun behind it.
+
+### Handover to zone 3
+
+| Item | Value |
+|---|---|
+| Spire cap | A round floor 10 m across (radius 5.0 m), top face at +300.0 m, centre at plan (0.0, 39.0). The finish pad stands in its middle. Nothing of the spire rises above the cap: the broken tip is the lightning rod. The cap's brass rim (radius 5.0 to 5.12 m, top at +300.0 m) runs from -50° to 230° round the axis, so it leaves out the cap's south edge, where the quay meets the cap |
+| Lightning rod arrival | The rod's top end meets the cap's west-north-west edge at (-4.7, 40.7, +300.0), 160° round the axis. The rod runs east-south-east from (-22.6, 47.2, +292.0) |
+| Spire vent arrival | The vent stands on the balcony east of the spire at (8.0, 39.0, +292.0). Its throw lands on the east half of the cap at about (3.3, 39.0, +300.0), toward the west |
+| Zone 3 quay | Zone 3 builds its start floor south of the cap: x -7.0 to 5.5, y 25.0 to 35.0, top +300.0 m. Every part of zone 2 inside that plan rectangle stays below +297.0 m, apart from the cap disc |
+| Zone 3 quay wrap | Zone 3's quay also wraps round the south half of the cap, from -22° to -158° round the cap axis, out to about y = 37.1. It follows the cap's 96-gon and the rim's square-cut ends, with every top at +300.0 m. This wrap is zone 3's space too: every part of zone 2 there stays below +297.0 m, apart from the cap disc and the rim. Zone 3 checked the junction: no gap wider than 1 mm, about 10 mm² of overlap, and 4 of 4 expert climbs and 2 of 2 first-run climbs from zone 2 reached zone 3's gate |
+| Numbers that zone 3 copies | The cap is a 96-gon (`clockwork.disc` `segments` 96, zone 3's `CAP_SIDES`). The rim spans -50° to 230° (`RIM_SPAN`), in steps of 4° (`clockwork.rim`, `RIM_STEP`), and is 0.12 m thick (`RIM_WIDTH`). Zone 3 copies these four numbers, so change any of them in both zones |

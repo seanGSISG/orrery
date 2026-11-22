@@ -481,7 +481,7 @@ The camera has one seam: `follow(state: GameState, input: MarbleInput, dt: float
 |---|---|---|
 | Bumper (`Bumper`) | `speed` 15 m/s, `radius` 0.5 m, `height` 1 m | `on_touch`: raise the marble's speed away from the drum axis to `speed`, relative to the drum, with `add_velocity` (changed in #53: the push is across the floor, not along the contact normal); emit `bumper.hit` |
 | Steam Vent (`SteamVent`) | `lift` 8 m, `radius` 1 m, `push` 60 m/s² | `on_overlap`: `add_velocity(axis * min(rise, push * dt))` each tick, until the marble coasts to `lift` m above the grate; emit `steam_vent.blow` on entry (changed in #53) |
-| Pendulum (`Pendulum`), Moving platform (`MovingPlatform`), Turning gear (`TurningGear`) | see `docs/levels/README.md` | `advance`: `Solid.move(pose(t), velocity, angular_velocity)`; the solver handles the hit or the carry. The pendulum's `on_touch` only emits `pendulum.hit` |
+| Pendulum (`Pendulum`), Moving platform (`MovingPlatform`), Turning gear (`TurningGear`), Turning arm (`TurningArm`) | see `docs/levels/README.md` | `advance`: `Solid.move(pose(t), velocity, angular_velocity)`; the solver handles the hit or the carry. The pendulum's `on_touch` only emits `pendulum.hit`. The turning gear and the turning arm share this motion in `Turner` (`game/objects/turner.gd`) |
 | Trapdoor (`Trapdoor`) | `delay` 0.5 s, `close_after` 5 s, `width` 4 m, `depth` 4 m, `thickness` 0.5 m | `on_touch`: start the drop on the first touch; `advance`: hinge pose, emit `trapdoor.open`; the door shuts again `close_after` s after it starts to open; `reset` shuts it |
 | Crumbling Tiles (`CrumblingTiles`) | `delay` 0.5 s, `tile` 2 m, `width` 4 m, `depth` 4 m, `thickness` 0.5 m | `on_touch`: start the timer of each touched tile, emit `tile.crack`; `advance`: after `delay` set that tile's `collision_layer = 0`, emit `tile.fall`; any `reset` brings the tiles back (changed in #55: a tile does not return by itself) |
 | Gem, checkpoint, egg | `cut` for the gem | `on_overlap`: `run.rules.collect_gem()`, `reach_checkpoint(self)` and `find_egg(self)`. The object reacts only when the call returns true. A level can have several eggs: each counts once |
@@ -547,12 +547,14 @@ game/
 │   ├── palette.gd             #23: Palette, the gem and hazard colours
 │   ├── pad_look.gd            #30: PadLook, the look of the checkpoint and the finish
 │   ├── chamfer.gd             #30: Chamfer, box meshes with chamfered edges
+│   ├── turner.gd              #32: Turner, the motion of the turning gear and the turning arm
 │   ├── start/                 #7
 │   ├── gem/ finish/ checkpoint/ egg/      placeholder scenes from #7, then #13
 │   ├── moving_platform/ turning_gear/     #12
 │   ├── bumper/ steam_vent/ pendulum/      #15
 │   ├── trapdoor/ crumbling_tiles/         #16
 │   ├── coil_spring/                       #17
+│   ├── turning_arm/                       #32
 │   └── route/                             #14
 ├── levels/                    #8: level_import.gd (post-import script), built/ (ignored by git)
 ├── harness/                   #9; the route bot and the level test scene from #14
