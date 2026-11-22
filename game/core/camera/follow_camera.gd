@@ -14,6 +14,12 @@ const SNAP_DISTANCE: float = 1.0
 ## How far the camera stops inside the far face of a thin Solid, along its line to the
 ## marble, m. From there it sees the face from behind.
 const INSIDE: float = 0.02
+## The far plane of every level camera (this one, the gallery shots and the perf flight), m.
+## Godot's default of 4 km cut the land of an Ascent town (objects/land) into a step below the
+## horizon. At 50 km the haze is full, so the land takes the colour of the sky behind it and
+## meets the horizon with no edge. The depth buffer is reversed, so a far plane this far costs
+## no depth precision near the camera.
+const FAR: float = 50000.0
 
 ## Turn camera shake off or on (the accessibility setting of docs/plan.md §2.13). It applies
 ## to every camera, also to cameras made later.
@@ -63,6 +69,10 @@ var _focus: Vector3 = Vector3.INF
 ## Shake left, 0..1. The shake angle is shake_angle × _shake².
 var _shake: float = 0.0
 var _time: float = 0.0
+
+
+func _init() -> void:
+	far = FAR
 
 
 ## Adds the shadow and listens to the run's feedback for landings.

@@ -28,7 +28,7 @@ from typing import Literal
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 from mathutils.geometry import tessellate_polygon
 
 import kit
@@ -63,18 +63,27 @@ FRAME = 0.12
 LINTEL = 0.22
 # The finishes of town pieces. Each is a material of game/materials/ (KitMaterials.find):
 # - limestone, brass, gold: the kit's materials (kit.surface()).
-# - wall: limestone cut in courses of ashlar; dressed: limestone with no joints, for frames,
-#   sills, string courses and cornices.
+# - brass_polished: polished brass, for the casings and rings of the lift gears.
+# - wall: limestone cut in courses of ashlar; wall_grey, wall_ochre and wall_pale: the same
+#   stone in other tints, so that each house has its own (HOUSE_WALLS); dressed: limestone
+#   with no joints, for frames, sills, string courses and cornices; wet_stone: dark wet stone
+#   under water; gravel: a country road.
 # - slate (slate_turned runs its courses along y), door, shutter, wood, canvas_*: CC0 texture
 #   sets (docs/licenses.md).
 # - glass: near-white panes that show the room behind; interior: that dark room; sash: painted
-#   window bars; iron: black-painted iron.
+#   window bars; iron: black-painted iron; water: still water, dark, with a weak reflection.
 Finish = Literal[
     "limestone",
     "brass",
     "gold",
+    "brass_polished",
     "wall",
+    "wall_grey",
+    "wall_ochre",
+    "wall_pale",
     "dressed",
+    "wet_stone",
+    "gravel",
     "slate",
     "slate_turned",
     "door",
@@ -88,8 +97,18 @@ Finish = Literal[
     "interior",
     "sash",
     "iron",
+    "water",
 ]
 KIT_FINISHES = ("limestone", "brass", "gold")
+# The walls of town houses: house() gives each house one of them, picked from its place, so
+# that the houses of a street differ. The plain wall comes twice, so it stays the most common.
+HOUSE_WALLS: tuple[Finish, ...] = (
+    "wall",
+    "wall",
+    "wall_grey",
+    "wall_ochre",
+    "wall_pale",
+)
 
 
 def material(finish: Finish) -> bpy.types.Material:
@@ -202,6 +221,22 @@ class Parts:
         first = [self.bm.verts.new(Vector(a) + c) for c in ring]
         last = [self.bm.verts.new(Vector(b) + c) for c in ring]
         self.faces([first, last, *_sides(first, last)], finish)
+
+    def mark(self) -> tuple[int, int]:
+        """Returns a mark of the parts added so far, for turn()."""
+        return len(self.bm.verts), len(self.flats)
+
+    def turn(self, since: tuple[int, int], at: Point, yaw: float) -> None:
+        """Turns the parts added after the mark `since` round the vertical axis through the
+        plan point `at`, by `yaw` degrees counter-clockwise seen from above. Build a piece
+        along x or y, then turn it to any heading."""
+        rotation = Matrix.Rotation(math.radians(yaw), 3, "Z")
+        self.bm.verts.ensure_lookup_table()
+        verts = self.bm.verts[since[0] :]
+        bmesh.ops.rotate(self.bm, verts=verts, cent=(*at, 0.0), matrix=rotation)
+        self.flats[since[1] :] = [
+            (face, rotation @ facing) for face, facing in self.flats[since[1] :]
+        ]
 
     def add(self, name: str, collide: bool = True) -> bpy.types.Object:
         """Turns the parts into the object `name` (`<name>-col` when it collides)."""
@@ -444,7 +479,7 @@ def lift(
 ) -> Lift:
     """Adds a lift gear whose level axis goes through `at`. With yaw 0 the gear stands across
     y: the marble rolls in under it along +x, a tooth pushes it up the +x side inside the
-    brass casing, and at the top it rolls off sideways, through a window in the side ring, to
+    casing of polished brass, and at the top it rolls off sideways, through a window in the side ring, to
     +y (exit 1) or -y (exit -1). yaw turns the lift round z. The gear turns once in `period`
     s, so the ride takes half of it. Build the boarding floor up to the axis line at `floor`,
     as a lane between the side rings, and the exit floor beside the top at `exit`, clear of
@@ -472,6 +507,7 @@ def lift(
         2 * (ring_at + LIFT_RING / 2),
         yaw=yaw,
         name=f"{name}_casing",
+        finish="brass_polished",
     )
     for side in (1, -1):
         window = side == exit
@@ -484,6 +520,7 @@ def lift(
             thickness=0.9,
             yaw=yaw,
             name=f"{name}_ring_{'exit' if window else 'back'}",
+            finish="brass_polished",
         )
     floor = z - radius - LIFT_GAP
     top = z + radius - 0.45
@@ -632,20 +669,23 @@ def house(
     plain: bool = False,
 ) -> None:
     """Adds a town house to parts between the plan corners lo and hi, on the floor at height
-    0: coursed stone walls up to `eave` and a slate gable roof up to `ridge`, whose ridge runs
-    along `along`. blind: the sides with no windows, for example "ew" for a house between two
+    0: coursed stone walls up to `eave`, a slate gable roof up to `ridge`, whose ridge runs
+    along `along`, and a chimney stack on the ridge. The walls take one of HOUSE_WALLS, picked
+    from lo. blind: the sides with no windows, for example "ew" for a house between two
     others. A house that is not plain also gets a door on the side `door` (s, e, n or w; ""
-    for none), windows, a string course at each storey, a cornice under the eaves and a
-    chimney stack. A plain house is for the far town: walls and a roof only."""
+    for none), framed windows, a string course at each storey, a cornice under the eaves and
+    an iron ridge. A plain house is for the far town: its windows are flat dark panes with no
+    frame, and it has no door, bands or ridge."""
     (x0, y0), (x1, y1) = lo, hi
-    parts.box((x0, y0, 0.0), (x1, y1, eave), "wall")
+    wall = HOUSE_WALLS[_pick(lo, 0) % len(HOUSE_WALLS)]
+    parts.box((x0, y0, 0.0), (x1, y1, eave), wall)
     over = 0.35
     if along == "x":
         mid, ends, low, high = (y0 + y1) / 2, (x0, x1), y0, y1
     else:
         mid, ends, low, high = (x0 + x1) / 2, (y0, y1), x0, x1
     slate: Finish = "slate" if along == "x" else "slate_turned"
-    parts.prism([(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, "wall")
+    parts.prism([(low, eave), (high, eave), (mid, ridge - 0.3)], *ends, along, wall)
     parts.prism(
         [(low - over, eave - 0.25), (high + over, eave - 0.25), (mid, ridge)],
         ends[0] - 0.15,
@@ -653,28 +693,31 @@ def house(
         along,
         slate,
     )
-    if plain:
-        return
-    cap = [(mid - 0.12, ridge - 0.1), (mid + 0.12, ridge - 0.1)]
-    cap += [(mid + 0.12, ridge + 0.08), (mid - 0.12, ridge + 0.08)]
-    parts.prism(cap, ends[0] - 0.2, ends[1] + 0.2, along, "iron")
+    if not plain:
+        cap = [(mid - 0.12, ridge - 0.1), (mid + 0.12, ridge - 0.1)]
+        cap += [(mid + 0.12, ridge + 0.08), (mid - 0.12, ridge + 0.08)]
+        parts.prism(cap, ends[0] - 0.2, ends[1] + 0.2, along, "iron")
     # A chimney stack on the ridge, a quarter of the way along, with a cap and two pots.
     at = ends[0] + (ends[1] - ends[0]) * 0.25
     lo_c, hi_c = (at - 0.45, mid - 0.3), (at + 0.45, mid + 0.3)
     if along == "y":
         lo_c, hi_c = (mid - 0.3, at - 0.45), (mid + 0.3, at + 0.45)
-    parts.box((*lo_c, ridge - 1.0), (*hi_c, ridge + 1.1), "wall")
+    parts.box((*lo_c, ridge - 1.0), (*hi_c, ridge + 1.1), wall)
     parts.box(
         (lo_c[0] - 0.06, lo_c[1] - 0.06, ridge + 1.1),
         (hi_c[0] + 0.06, hi_c[1] + 0.06, ridge + 1.22),
         "dressed",
     )
+    sides = faces(lo, hi)
+    shown = {key: face for key, face in sides.items() if key not in blind}
+    if plain:
+        for face in shown.values():
+            panes(parts, face, eave - 0.55, storey)
+        return
     for t in (0.3, 0.7):
         px = lo_c[0] + (hi_c[0] - lo_c[0]) * (t if along == "x" else 0.5)
         py = lo_c[1] + (hi_c[1] - lo_c[1]) * (0.5 if along == "x" else t)
         parts.solid(_octagon((px, py), 0.11), ridge + 1.22, ridge + 1.6, "iron")
-    sides = faces(lo, hi)
-    shown = {key: face for key, face in sides.items() if key not in blind}
     # A string course at each storey and a cornice under the eaves. Each runs only along the
     # shown faces, and stops flush at a blind side, so that two houses in a row meet flush.
     for k in range(1, math.ceil((eave - 0.9) / storey)):
@@ -683,6 +726,26 @@ def house(
     band(parts, shown, sides, eave - 0.38, eave - 0.25, 0.18)
     for key, face in shown.items():
         windows(parts, face, eave - 0.55, storey, door=key == door)
+
+
+def panes(
+    parts: Parts, face: Face, top: float, storey: float = 3.0, spacing: float = 2.6
+) -> None:
+    """Adds the windows of a far house on a wall face: flat dark panes 2 cm proud of the wall,
+    with no frame, in the rows and places of windows() up to the height top."""
+    count = max(1, int((face.length - 1.2) // spacing))
+    step = face.length / count
+    out = Vector((*face.out, 0.0))
+    for floor in range(int(top // storey) + 1):
+        sill = floor * storey + (0.9 if floor == 0 else 0.8)
+        head = floor * storey + 2.2
+        if head + LINTEL > top:
+            continue
+        for i in range(count):
+            a = face.at(step * (i + 0.5) - 0.5, 0.02)
+            b = face.at(step * (i + 0.5) + 0.5, 0.02)
+            corners = [(*a, sill), (*b, sill), (*b, head), (*a, head)]
+            parts.flat(corners, out, "interior")
 
 
 def band(

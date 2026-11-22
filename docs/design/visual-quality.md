@@ -49,7 +49,7 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 | Sun shadow filter | Soft Very Low | Soft Low | Soft Medium | Soft High | `RenderingServer.directional_soft_shadow_filter_set_quality` |
 | Sun shadow splits | 2 | 4 | 4 | 4 | `DirectionalLight3D.directional_shadow_mode` |
 | Sun shadow distance | 50 m | 80 m | 120 m | 160 m | `DirectionalLight3D.directional_shadow_max_distance` |
-| Sun angular size (PCSS soft shadows) | 0° | 0° | 0.5° | 0.5° | `Light3D.light_angular_distance` |
+| Sun angular size (PCSS soft shadows) | 0° | 0° | 0° | 0.5° | `Light3D.light_angular_distance` |
 | Omni and spot shadow atlas | 2048 | 2048 | 4096 | 4096 | `Viewport.positional_shadow_atlas_size` |
 | Lightmap bicubic sampling | off | on | on | on | `RenderingServer.lightmaps_set_bicubic_filter` |
 | Mesh LOD threshold (pixels; higher is coarser) | 2.0 | 1.0 | 1.0 | 0.5 | `Viewport.mesh_lod_threshold` |
@@ -62,7 +62,7 @@ Rules for the table:
 - Texture quality is the anisotropic level and the mipmap bias. No preset changes the resolution of a texture (section 6).
 - Not built yet: the SDFGI row comes with the Ascent mode. The marble reflection probe row comes with the marble look, because the marble needs its own render layer first.
 - SDFGI never runs in a campaign level, because campaign levels use lightmaps. SDFGI runs only in Ascent and Planetarium on Ultra, where the sun moves.
-- The 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`). Godot warns that PCSS has a "noticeable performance cost", so Low and Medium use 0°.
+- The 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`). Godot warns that PCSS has a "noticeable performance cost", so Low and Medium use 0°. High uses 0° too: in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch in the shade of the square. Test renders of the `egg` shot with the sun at 0°, and with the volumetric fog off, showed that the sun size alone made them.
 - Fixed project settings (all presets): `rendering/anti_aliasing/quality/use_debanding=true`, `rendering/reflections/reflection_atlas/reflection_size=256` (the default), `rendering/lightmapping/lightmap_gi/use_bicubic_filter=true`.
 
 ### Tonemapping, exposure and colour grading
@@ -71,7 +71,7 @@ Rules for the table:
 - Start: `tonemap_agx_white = 16.29` (the default) and `tonemap_agx_contrast = 1.25` (the default). Range: white 6.0 to 16.29 ("at least 6.0" for photorealistic light), contrast 1.0 to 1.5.
 - Exposure is fixed per sky preset (`Environment.tonemap_exposure`). Auto exposure stays off (`CameraAttributesPractical.auto_exposure_enabled = false`), so a level looks the same every run and gallery shots are comparable. In Ascent, a script sets the exposure from the same height curve that drives the time of day.
 - Colour grading uses only `tonemap_agx_contrast` and `adjustment_saturation` (with `adjustment_enabled`). Do not use a colour-correction LUT (`adjustment_color_correction`) and do not use the Soft Light glow blend mode. Both are SDR-only and break HDR output.
-- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.0 or higher, `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
+- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.5 (as built: stone in the low dawn sun reaches about 1.1, and at 1.0 it glowed), `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
 
 ### HDR output
 

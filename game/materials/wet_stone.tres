@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+; Wet stone under still water (the fountain basin of Ascent 1): the limestone of set A, dark and
+; smooth, so the water above it shows the sky's reflection. Albedo about sRGB (62, 57, 52),
+; roughness about 0.23. Every set shares it.
+
+[ext_resource type="Shader" path="res://materials/kit_surface.gdshader" id="1"]
+[ext_resource type="Texture2D" path="res://materials/textures/scuffed_cement_diff_2k.jpg" id="2"]
+[ext_resource type="Texture2D" path="res://materials/textures/scuffed_cement_rough_2k.jpg" id="3"]
+[ext_resource type="Texture2D" path="res://materials/textures/scuffed_cement_nor_gl_2k.png" id="4"]
+
+[resource]
+shader = ExtResource("1")
+shader_parameter/albedo_map = ExtResource("2")
+shader_parameter/roughness_map = ExtResource("3")
+shader_parameter/normal_map = ExtResource("4")
+shader_parameter/tint = Vector3(0.25, 0.29, 0.39)
+shader_parameter/tile = 1.5
+shader_parameter/roughness_scale = 0.3
+shader_parameter/normal_strength = 0.5

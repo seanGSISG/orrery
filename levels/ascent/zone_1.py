@@ -230,11 +230,18 @@ town.floor(
     holes=[kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360)],
     finish="dressed",
 )
-town.floor("fountain_floor", kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360), 0.1, 0.1)
+# The basin's floor is dark wet stone, so the water over it shows the sky's reflection.
+town.floor(
+    "fountain_floor",
+    kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360),
+    0.1,
+    0.1,
+    finish="wet_stone",
+)
 kit.prop("fountain", at=(*FOUNTAIN, TIER), collider="cylinder")
 water = town.Parts()
-water.solid(kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360), 0.42, 0.44, "glass")
-water.solid(kit.arc(FOUNTAIN, 0.86, 0, 360), 0.55 + TIER, 0.62 + TIER, "glass")
+water.solid(kit.arc(FOUNTAIN, BASIN_R - BASIN_RIM, 0, 360), 0.42, 0.44, "water")
+water.solid(kit.arc(FOUNTAIN, 0.86, 0, 360), 0.55 + TIER, 0.62 + TIER, "water")
 water.add("fountain_water", collide=False)
 
 # --- 1. Town: the market side (way A) -----------------------------------------------------------
@@ -1063,15 +1070,16 @@ for z, finish in (
 for cx, cy in ((X0, Y0), (X1, Y0), (X1, Y1), (X0, Y1)):
     sx, sy = (1.0 if cx < 0 else -1.0), (1.0 if cy < TOWER[1] else -1.0)
     top = CROWN - 1.0 if cx > 0 else BELL_FLOOR - SLAB
+    # The pilasters are of the grey stone, so the corners read from afar.
     dress.box(
         (min(cx, cx + sx * 1.0), min(cy, cy - sy * 0.12), 0.9),
         (max(cx, cx + sx * 1.0), max(cy, cy - sy * 0.12), top),
-        "wall",
+        "wall_grey",
     )
     dress.box(
         (min(cx, cx - sx * 0.12), min(cy, cy + sy * 1.0), 0.9),
         (max(cx, cx - sx * 0.12), max(cy, cy + sy * 1.0), top),
-        "wall",
+        "wall_grey",
     )
 TOWER_FACES = town.faces((X0, Y0), (X1, Y1))
 # The light of each room of the tower (objects/room_probe): a warm ambient light, and
@@ -1087,18 +1095,21 @@ for i, (bottom, top) in enumerate(
         height=top - SLAB - bottom,
         name=f"room_{i + 1}",
     )
-# Two windows on each face of each storey, clear of the doors, the dials and the louvres.
+# Two windows on each face of each storey, clear of the doors, the dials and the louvres. Each
+# storey has its own window (width, height, and the step up to the next row, m), so the floors
+# read apart from afar: tall in the base, taller in the gallery, small and square in the gear
+# room.
 for side, face in TOWER_FACES.items():
-    for bottom, top in (
-        (BASE + 4.0, GALLERY - 1.0),
-        (GALLERY + 5.0, GEAR_ROOM - 1.0),
-        (GEAR_ROOM + 5.0, CLOCK_FLOOR - 1.0),
+    for bottom, top, width, height, step in (
+        (BASE + 4.0, GALLERY - 1.0, 1.3, 3.4, 6.0),
+        (GALLERY + 5.0, GEAR_ROOM - 1.0, 1.2, 4.2, 9.0),
+        (GEAR_ROOM + 5.0, CLOCK_FLOOR - 1.0, 0.9, 1.1, 4.0),
     ):
         z = bottom
-        while z + 3.0 < top:
+        while z + height < top:
             for along in (2.6, face.length - 2.6):
-                town.window(dress, face, along, 1.1, z, z + 2.6)
-            z += 6.0
+                town.window(dress, face, along, width, z, z + height)
+            z += step
     town.window(
         dress, face, face.length / 2, 3.2, BELFRY + 5.0, BELFRY + 13.0, pane="iron"
     )
@@ -1274,37 +1285,131 @@ street(
 kit.marker("land", at=(0.0, 20.0, -0.03), name="land")
 
 
+# The far town round the ground: houses along country roads out from the town. Each road is a
+# list of plan points from the edge of the ground; its strip of gravel lies just above the
+# land. The houses thin out toward the road's end, 200 to 300 m from the square. A few farms
+# stand in the fields beyond.
+FAR_ROADS: list[list[Point]] = [
+    [(0.0, -36.0), (8.0, -110.0), (-6.0, -200.0), (12.0, -300.0)],
+    [(4.0, 86.0), (-6.0, 160.0), (10.0, 240.0), (2.0, 330.0)],
+    [(66.0, 22.0), (140.0, 30.0), (220.0, 14.0), (310.0, 26.0)],
+    [(-66.0, 34.0), (-140.0, 22.0), (-220.0, 40.0), (-300.0, 28.0)],
+    [(66.0, -36.0), (125.0, -95.0), (190.0, -175.0), (225.0, -230.0)],
+    [(-66.0, -36.0), (-120.0, -100.0), (-175.0, -185.0)],
+    [(66.0, 86.0), (120.0, 150.0), (170.0, 235.0)],
+    [(-66.0, 86.0), (-125.0, 140.0), (-195.0, 205.0), (-230.0, 250.0)],
+    # Lanes between the roads, about 120 m from the square.
+    [(-120.0, -100.0), (-40.0, -112.0), (8.0, -110.0)],
+    [(140.0, 30.0), (150.0, -40.0), (125.0, -95.0)],
+    [(-6.0, 160.0), (60.0, 150.0), (120.0, 150.0)],
+    [(-140.0, 22.0), (-150.0, 90.0), (-125.0, 140.0)],
+]
+# The middle of the square, from which the far town's reach is measured, and the box round the
+# ground that the far town keeps out of.
+FAR_FROM = (0.0, 20.0)
+FAR_KEEP_OUT = ((-70.0, -40.0), (70.0, 90.0))
+
+
 def far_town() -> None:
-    """Adds the far town round the ground: short rows of plain houses on a jittered grid, out
-    to a ragged edge 150 to 260 m from the square. It is far scenery (`-far`): no collision,
-    no lightmap and no reflection probe."""
+    """Adds the far town: rows of plain houses along FAR_ROADS, each house turned to its road,
+    and farms in the fields beyond. It is far scenery (`-far`): one mesh with no collision,
+    no lightmap, no reflection probe and no shadow."""
     rng = random.Random(31)
     parts = town.Parts()
-    for gx in range(-288, 289, 36):
-        for gy in range(-250, 311, 30):
-            along: Literal["x", "y"] = "x" if rng.random() < 0.6 else "y"
-            length = rng.uniform(14.0, 28.0 if along == "x" else 22.0)
-            deep = rng.uniform(7.0, 9.0)
-            x0 = gx + rng.uniform(-5.0, 5.0) - (length if along == "x" else deep) / 2
-            y0 = gy + rng.uniform(-4.0, 4.0) - (deep if along == "x" else length) / 2
-            x1 = x0 + (length if along == "x" else deep)
-            y1 = y0 + (deep if along == "x" else length)
-            reach = math.hypot((x0 + x1) / 2, (y0 + y1) / 2 - 20.0)
-            if reach > 150.0 + 110.0 * rng.random():
-                continue
-            if x1 > -72.0 and x0 < 72.0 and y1 > -44.0 and y0 < 94.0:
-                continue
-            at = x0 if along == "x" else y0
-            end = x1 if along == "x" else y1
-            while end - at > 5.0:
-                width = min(rng.uniform(6.0, 9.0), end - at)
-                if along == "x":
-                    lo, hi = (at, y0), (at + width, y1)
-                else:
-                    lo, hi = (x0, at), (x1, at + width)
-                eave = rng.uniform(6.0, 9.5)
-                town.house(parts, lo, hi, eave, eave + 3.4, along, plain=True)
-                at += width
+    placed: list[tuple[Point, float, int]] = []
+
+    def free(at: Point, radius: float, group: int) -> bool:
+        (x0, y0), (x1, y1) = FAR_KEEP_OUT
+        if x0 - radius < at[0] < x1 + radius and y0 - radius < at[1] < y1 + radius:
+            return False
+        return all(
+            math.dist(at, other) > radius + size - 1.0
+            for other, size, owner in placed
+            if owner != group
+        )
+
+    def house(
+        at: Point, width: float, depth: float, heading: float, group: int
+    ) -> None:
+        radius = math.hypot(width, depth) / 2
+        if not free(at, radius, group):
+            return
+        placed.append((at, radius, group))
+        mark = parts.mark()
+        lo = (at[0] - width / 2, at[1] - depth / 2)
+        hi = (at[0] + width / 2, at[1] + depth / 2)
+        eave = rng.uniform(5.5, 9.0)
+        ridge = eave + depth * rng.uniform(0.36, 0.46)
+        town.house(parts, lo, hi, eave, ridge, "x", blind="ew", plain=True)
+        parts.turn(mark, at, heading)
+
+    group = 0
+    for road in FAR_ROADS:
+        end = rng.uniform(200.0, 300.0)
+        for a, b in pairwise(road):
+            group += 1
+            length = math.dist(a, b)
+            u = ((b[0] - a[0]) / length, (b[1] - a[1]) / length)
+            heading = math.degrees(math.atan2(u[1], u[0]))
+            # The road: a strip of gravel 5 m wide, just above the grass, that runs on
+            # 2.5 m past each end to meet the next strip at a bend.
+            n = (-u[1], u[0])
+            road = [
+                (a[0] + u[0] * s + n[0] * w, a[1] + u[1] * s + n[1] * w)
+                for s, w in (
+                    (-2.5, -2.5),
+                    (length + 2.5, -2.5),
+                    (length + 2.5, 2.5),
+                    (-2.5, 2.5),
+                )
+            ]
+            parts.solid(road, -0.025, -0.012, "gravel")
+            for side in (1, -1):
+                n = (-u[1] * side, u[0] * side)
+                along = rng.uniform(0.0, 4.0)
+                setback = 3.0 + rng.uniform(0.0, 1.5)
+                while along < length - 4.0:
+                    width = rng.uniform(6.0, 9.0)
+                    depth = rng.uniform(7.0, 9.5)
+                    mid = along + width / 2
+                    out = setback + depth / 2
+                    at = (
+                        a[0] + u[0] * mid + n[0] * out,
+                        a[1] + u[1] * mid + n[1] * out,
+                    )
+                    reach = math.dist(at, FAR_FROM)
+                    # Rows break at lanes, and they thin out over the last 80 m of the road.
+                    keep = min(1.0, (end - reach) / 80.0)
+                    if rng.random() < 0.1:
+                        along += rng.uniform(4.0, 12.0)
+                        setback = 3.0 + rng.uniform(0.0, 1.5)
+                        continue
+                    if rng.random() < keep:
+                        house(at, width, depth, heading, group)
+                    along += width
+    # Farms: a house and two or three barns round a yard, out in the fields.
+    for _ in range(16):
+        group += 1
+        angle = rng.uniform(0.0, math.tau)
+        reach = rng.uniform(380.0, 1400.0)
+        yard = (
+            FAR_FROM[0] + reach * math.cos(angle),
+            FAR_FROM[1] + reach * math.sin(angle),
+        )
+        heading = rng.uniform(0.0, 180.0)
+        h = math.radians(heading)
+        u, n = (math.cos(h), math.sin(h)), (-math.sin(h), math.cos(h))
+        for along, out, width, depth in (
+            (0, 9, 10, 7),
+            (-2, -9, 16, 8),
+            (11, 0, 8, 14),
+        )[: rng.randint(2, 3)]:
+            at = (
+                yard[0] + u[0] * along + n[0] * out,
+                yard[1] + u[1] * along + n[1] * out,
+            )
+            turned = heading if width >= depth else heading + 90.0
+            house(at, max(width, depth), min(width, depth), turned, group)
     parts.add("far_town-far", collide=False)
 
 
