@@ -1302,7 +1302,11 @@ EXPERT[5] = [
 
 
 def route(kind: str, legs: list[Leg]) -> None:
-    """Places the route of `kind` through the legs, ending on the finish pad."""
+    """Places the route of `kind` through the legs, from the start pad to the finish pad. In
+    the climb the marble comes from zone 1's finish, so the route first goes to the pad: the
+    way from there to the first jump is then the same as in the zone on its own."""
+    first = START if TEST_FROM == 1 else FOOT[TEST_FROM]
+    legs = [(first, "speed 3"), *legs]
     actions = [
         f"{i} {action.strip()}"
         for i, (_, text) in enumerate(legs)
@@ -1312,7 +1316,7 @@ def route(kind: str, legs: list[Leg]) -> None:
     legs = [*legs, (FINISH, "")]
     kit.marker(
         "route",
-        at=START if TEST_FROM == 1 else FOOT[TEST_FROM],
+        at=first,
         points=[point for point, _ in legs],
         name=f"route_{kind}",
         kind=kind,
