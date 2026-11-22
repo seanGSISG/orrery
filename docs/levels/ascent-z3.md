@@ -94,6 +94,10 @@ Level script: `levels/ascent/zone_3.py`. Harbour kit: `kit/harbour.py`. The scri
 
 The route bot drives both routes to the gate (`just test-levels zone_3`, 2026-11-21): first run **214.0 s**, expert **128.8 s**. Par 321.0 s and gold 148.2 s come from `just suggest-times zone_3`. The bot is slower than the estimates (152 s and 73 s): it slows to 3.5 m/s at each sharp turn and it waits for each mover's window.
 
+The Tender way of part 1 is on neither route. A temporary first-run route through it (planks, gondola deck, sponson vent, fin, deckhouse, stern steps, gangway B) reached the gate in 224.0 s; the bot needs a straight run of 1.5 m before the jump onto the deckhouse and before the jump from stern step 1.
+
+`just perf zone_3` (RTX 5090, 2026-11-21): Medium 1080p p99 0.45 ms and 1057 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 12.04 ms (gate 16.7 ms).
+
 | Difference | Reason |
 |---|---|
 | Roof 2 has a wing to the west for the first rope (25°, 16.7 m) | The rope needs a straight run-up on Roof 2 |
