@@ -357,6 +357,8 @@ func _render(camera: Camera3D) -> Image:
 	var before: Camera3D = viewport.get_camera_3d()
 	if camera != null:
 		camera.make_current()
+		for i: int in 30:
+			await RenderingServer.frame_post_draw
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var image: Image = viewport.get_texture().get_image()
