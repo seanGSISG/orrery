@@ -33,3 +33,13 @@ func test_arm_turns_on_its_period_and_pushes_a_marble_in_its_way() -> void:
 	assert_lt(run.state.velocity.x, -1.0, "the bar pushes the marble the way it turns")
 	assert_lt(run.state.position.x, -0.3, "the marble moved ahead of the bar")
 	assert_almost_eq(run.state.position.y, TUNING.radius, 0.05, "pushed along the floor, not over")
+
+
+func test_bar_takes_its_finish() -> void:
+	var steel: Material = KitMaterials.find("blued_steel")
+	var arm: TurningArm = _arm(8.0)
+	arm.finish = steel
+	add_child_autofree(arm)
+	var look: MeshInstance3D = arm.get_node("Solid/Mesh") as MeshInstance3D
+	assert_not_null(look.mesh, "the bar is built from its outline")
+	assert_eq(look.material_override, steel)

@@ -4,8 +4,8 @@ extends Turner
 ## (Blender z) and pushes aside a marble in its way. The bar's outline is the marker's points
 ## (kit.marker(points=...)): give them in order round the bar, in the marker's own plane, at
 ## the arm's pose at run time 0. The bar stands `height` m up from that plane, with a chamfer
-## round its top edge, and its shape is the same solid as its look. The look is the kit
-## material `finish` (KitMaterials), mapped in the arm's own space, so it turns with the arm.
+## round its top edge, and its shape is the same solid as its look. The look is `finish`,
+## mapped in the arm's own space, so it turns with the arm.
 ## Turner gives the settings `period` and `clockwise` and the motion. Ascent 2's clock hands
 ## use it; the Clock Hands of M3 build on it (docs/plan.md §2.6).
 
@@ -14,8 +14,9 @@ const BEVEL: float = 0.02
 
 ## Size up from the marker's plane, m.
 @export var height: float = 0.25
-## The kit material of the bar (KitMaterials.find), for example "brass" or "blued_steel".
-@export var finish: String = "brass"
+## The bar's material. A level script names a kit material, for example finish="blued_steel",
+## and the importer sets it (an unknown name fails the import). Null keeps Godot's default.
+@export var finish: Material = null
 
 
 ## Builds the bar from the outline, then starts the turn.
@@ -27,7 +28,7 @@ func _ready() -> void:
 	else:
 		var look: MeshInstance3D = $Solid/Mesh
 		look.mesh = _bar(outline, triangles)
-		look.material_override = KitMaterials.find(finish)
+		look.material_override = finish
 		var shape: CollisionShape3D = $Solid/Shape
 		shape.shape = look.mesh.create_trimesh_shape()
 	super()

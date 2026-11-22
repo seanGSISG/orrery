@@ -1438,7 +1438,7 @@ route(
 # --- Shots ----------------------------------------------------------------------------------------
 
 # The overview looks south-east from the north-west, with the dawn sun (azimuth 135°) behind it.
-kit.shot("overview", at=(-85.0, 125.0, 262.0), rotation=(-21.0, 0.0, -136.0))
+kit.shot("overview", at=(-85.0, 125.0, 262.0), rotation=(-12.0, 0.0, -136.0))
 kit.shot("start", at=(START[0], START[1] - 3.0, CROWN + 1.6), rotation=(8.0, 0.0, 0.0))
 kit.shot(
     "finish",
