@@ -124,7 +124,7 @@ The look follows a concept board of the square at dawn (GPT-Image, not in the ga
 - The fountain is 4 m across: a low stone basin with the trial fountain raised in its middle as the upper tier. The basin floor is dark `wet_stone`, and the water is `water` (`game/materials/water.gdshader`): a thin, dark, clear surface with slow ripples that move its reflection.
 - The casings and the side rings of the lift gears are `brass_polished` (metallic 1, roughness 0.23), so they mirror the room and the sun. The gears themselves belong to `turning_gear`.
 - A steam vent's column is a soft shader (`game/objects/steam_vent/steam.gdshader`): it fades at its edges and toward its top, and slow noise drifts up through it.
-- Moving decks are timber (`finish="wood"` of `moving_platform`).
+- Moving decks are timber (`finish="wood"` of `moving_platform`) in the brass bands that every deck has.
 
 Past the town: a `land` marker (`game/objects/land/`) gives 120 km of flat country just under the town's ground. Every camera sees 50 km (`FollowCamera.FAR`), where the sky's distance fog is full, so the land meets the sky with no step. Round the town the land is closes, small grass fields with thin hedges. Past 90 m it is farmland: blocks of fields on a grid turned 0.3 rad, each block cut into two to five strips of one crop (young or ripe wheat, stubble, ploughed earth, pasture, hay) with rows, grass margins between the strips, hedges with trees round the block, and a few woods (`land.gdshader`). The four streets of the outer ring meet at the corners, so a marble on the ground cannot leave the town. A marble that falls past the ring from the tower lands on the grass, and the touch puts it out of bounds: it comes back on the start pad (with Assist, on the last checkpoint).
 
