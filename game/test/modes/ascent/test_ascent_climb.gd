@@ -30,11 +30,11 @@ func climb_to_the_gate(kind: StringName) -> void:
 	for i: int in zones.size():
 		var zone: Node = zones[i]
 		var route: Route = route_in(zone, kind)
-		if route == null:
-			fail_test("%s has no %s route" % [zone.name, kind])
-			return
-		var bot: RouteBot = RouteBot.new(run, route)
-		assert_eq(bot.problems.size(), 0, route.name)
+		var bot: RouteBot = RouteBot.new(run, route) if route != null else null
+		# A bot with problems never ends, so the climb stops here, through the clean-up below.
+		if bot == null or not bot.problems.is_empty():
+			fail_test("%s: no %s route the bot can drive" % [zone.name, kind])
+			break
 		InputHub.use_source(bot)
 		while not bot.done:
 			run.step(InputHub.next_input(run.state))
