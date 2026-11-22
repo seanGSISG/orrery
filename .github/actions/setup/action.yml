@@ -1,5 +1,5 @@
 name: Set up Orrery
-description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, and install just. Run it after actions/checkout.
+description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, install just, and turn off GPU texture compression for the import. Run it after actions/checkout.
 inputs:
   templates:
     description: Also install the Godot export templates.
@@ -33,3 +33,8 @@ runs:
         include-templates: ${{ inputs.templates }}
 
     - uses: extractions/setup-just@v4
+
+    # CI only: Betsy GPU compression can deadlock a Godot 4.7.2 import (godotengine/godot#114121); remove this step to revert.
+    - name: Turn off GPU texture compression
+      shell: bash
+      run: printf '[rendering]\n\ntextures/vram_compression/compress_with_gpu=false\n' > game/override.cfg
