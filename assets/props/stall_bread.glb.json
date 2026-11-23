@@ -1,0 +1,102 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"7b6c1760-eb40-4def-ba64-728a7a37040e\"",
+  "settings": {
+    "input": "7b6c1760-eb40-4def-ba64-728a7a37040e",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-art-stall_bread-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-art-stall_bread-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-art-stall_bread-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-art-stall_bread-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "a6a8bd8e-e369-49ff-b6d3-ea1b44fea93a",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1-art/props/stall_bread-draft.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0357
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1-art/props/stall_bread-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0554,
+      "refs": [
+        "build/art/images/zone1-art/props/stall_bread-draft.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-art-stall_bread-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "a2855957-7632-418c-906d-e7f96fb1e765",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-art-stall_bread-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "7b6c1760-eb40-4def-ba64-728a7a37040e",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "a2855957-7632-418c-906d-e7f96fb1e765"
+          }
+        ],
+        "face_limit": 4000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-art-stall_bread.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "a6a8bd8e-e369-49ff-b6d3-ea1b44fea93a",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "discarded": []
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name stall_bread --stone 1.0 --metal-threshold 0.6 --yaw -90 --fit 2.17,0.6,0.51",
+  "total_billed_usd": 0.6911
+}

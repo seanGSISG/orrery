@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for a sign on a workshop wall in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular board of three weathered dark timber planks held by two dark iron straps with round rivets. Hand-painted off-white capitals, a little faded, in two lines, centred. Line 1: \"WORKSHOP\" in large letters. Line 2: \"GEARS & SPRINGS\" in smaller letters.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: W-O-R-K-S-H-O-P; G-E-A-R-S, an ampersand, S-P-R-I-N-G-S.\nSTYLE: Photographic realism with restraint. Weathered timber with open grain, flaking paint, dark iron with a satin finish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for a sign on a workshop wall in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular board of three weathered dark timber planks held by two dark iron straps with round rivets. Hand-painted off-white capitals, a little faded, in two lines, centred. Line 1: \"WORKSHOP\" in large letters. Line 2: \"GEARS & SPRINGS\" in smaller letters.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: W-O-R-K-S-H-O-P; G-E-A-R-S, an ampersand, S-P-R-I-N-G-S.\nSTYLE: Photographic realism with restraint. Weathered timber with open grain, flaking paint, dark iron with a satin finish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+    "size": "1536x1024",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 265,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 265
+      },
+      "output_tokens": 1372,
+      "total_tokens": 1637,
+      "output_tokens_details": {
+        "image_tokens": 1372,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0425,
+  "billed_usd": 0.0425,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}

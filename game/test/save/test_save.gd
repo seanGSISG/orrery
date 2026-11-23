@@ -20,7 +20,9 @@ func after_all() -> void:
 ## A save and a load give back every section unchanged.
 func test_save_then_load_is_unchanged() -> void:
 	save.finish(&"b01", 12.345678901234, &"gold", null)
-	save.find_egg(&"b02")
+	save.find_egg(&"b02", &"egg_01")
+	save.find_egg(&"b02", &"egg_00")
+	save.find_egg(&"b02", &"egg_01")
 	save.settings.dead_zone = 0.27
 	save.settings.invert_y = true
 	save.settings.graphics_preset = &"low"
@@ -32,7 +34,7 @@ func test_save_then_load_is_unchanged() -> void:
 	loaded.read()
 	assert_eq(loaded.level(&"b01").best_time, 12.345678901234)
 	assert_eq(loaded.level(&"b01").medal, &"gold")
-	assert_true(loaded.level(&"b02").egg)
+	assert_eq(loaded.level(&"b02").eggs, PackedStringArray(["egg_00", "egg_01"]))
 	assert_eq(loaded.settings.to_dict(), save.settings.to_dict())
 	assert_eq(loaded.ascent.to_dict(), save.ascent.to_dict())
 	assert_eq(loaded.ascent.spot_position, Vector3(1.5, 230.25, -7.125))
@@ -41,7 +43,7 @@ func test_save_then_load_is_unchanged() -> void:
 
 ## The file holds the format version, and no temporary file stays.
 func test_file_is_versioned() -> void:
-	save.find_egg(&"b01")
+	save.find_egg(&"b01", &"egg_00")
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(_file()))
 	assert_true(data is Dictionary)
 	var fields: Dictionary = data if data is Dictionary else {}
@@ -77,9 +79,15 @@ func test_wrong_types_keep_defaults() -> void:
 	DirAccess.make_dir_recursive_absolute(save.dir)
 	var text: String = JSON.stringify(
 		{
-			"version": 1,
-			"levels": {"b01": {"best_time": "fast", "medal": "gold", "egg": 1}},
-			"settings": {"dead_zone": [0.3], "invert_y": true},
+			"version": 2,
+			"levels": {"b01": {"best_time": "fast", "medal": "gold", "eggs": ["egg_00", 2]}},
+			"settings":
+			{
+				"dead_zone": [0.3],
+				"invert_y": true,
+				"resolution": [1280],
+				"bindings": {"jump.pad": 3},
+			},
 			"ascent": {"spot_position": [1, 2]},
 		}
 	)
@@ -87,10 +95,46 @@ func test_wrong_types_keep_defaults() -> void:
 	save.read()
 	assert_eq(save.level(&"b01").best_time, -1.0)
 	assert_eq(save.level(&"b01").medal, &"gold")
-	assert_false(save.level(&"b01").egg)
+	assert_eq(save.level(&"b01").eggs.size(), 0, "an egg id that is not text")
 	assert_eq(save.settings.dead_zone, Settings.new().dead_zone)
 	assert_true(save.settings.invert_y)
+	assert_eq(save.settings.resolution, Vector2i.ZERO)
+	assert_eq(save.settings.bindings.size(), 0, "a binding that is not text")
 	assert_eq(save.ascent.spot_position, Vector3.ZERO)
+
+
+## A file of version 1 had one egg flag for each level. A found egg becomes the id of the
+## level's one egg: its node name in the level's scene, or the kit's first egg name for a
+## level with no scene. The next write gives a file of the version of today.
+func test_version_1_egg_becomes_the_egg_id() -> void:
+	DirAccess.make_dir_recursive_absolute(save.dir)
+	var levels: Dictionary = {
+		"rules": {"best_time": 9.5, "medal": "gold", "egg": true},
+		"no_such_level": {"egg": true},
+		"flat": {"best_time": 4.0, "egg": false},
+	}
+	_put(_file(), JSON.stringify({"version": 1, "levels": levels}))
+	save.read()
+	assert_eq(save.level(&"rules").eggs, PackedStringArray(["Egg"]), "the name in rules.tscn")
+	assert_eq(save.level(&"rules").best_time, 9.5)
+	assert_eq(save.level(&"no_such_level").eggs, PackedStringArray([Level.DEFAULT_EGG]))
+	assert_eq(save.level(&"flat").eggs.size(), 0)
+	assert_true(save.write())
+	var text: String = FileAccess.get_file_as_string(_file())
+	assert_true(text.contains("\"version\": 2"))
+	assert_false(text.contains("\"egg\":"), "the flag of version 1 is gone")
+
+
+## The eggs of a level are a set of ids: has_eggs() is true when every egg of the level is
+## in it. An id that the level no longer has does not stand for another egg.
+func test_every_egg_of_a_level() -> void:
+	var ids: PackedStringArray = ["egg_crate", "egg_fin"]
+	save.find_egg(&"zone_3", &"egg_crate")
+	save.find_egg(&"zone_3", &"egg_of_an_old_build")
+	assert_false(save.level(&"zone_3").has_eggs(ids), "one of two, and an id of no egg")
+	save.find_egg(&"zone_3", &"egg_fin")
+	assert_true(save.level(&"zone_3").has_eggs(ids))
+	assert_false(save.level(&"zone_3").has_eggs(PackedStringArray()), "a level with no egg")
 
 
 ## Beginner level 1 is open; each next level opens when the one before it is qualified.

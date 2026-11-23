@@ -1,0 +1,110 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"7d9a0173-e597-4b79-bf65-2870058ba913\"",
+  "settings": {
+    "input": "7d9a0173-e597-4b79-bf65-2870058ba913",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-lamp_post-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-lamp_post-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-lamp_post-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-lamp_post-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "54de231b-f039-4337-a639-5024be900fa8",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-trial.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1/props/lamp_post-a.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0448
+      },
+      {
+        "file": "build/art/images/zone1/props/lamp_post-b.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0448
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1/props/lamp_post-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0624,
+      "refs": [
+        "build/art/images/zone1/props/lamp_post-a.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-lamp_post-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "dd946526-e996-4b8a-9eee-c9d36bcafde2",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-lamp_post-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "7d9a0173-e597-4b79-bf65-2870058ba913",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "dd946526-e996-4b8a-9eee-c9d36bcafde2"
+          }
+        ],
+        "face_limit": 6000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-lamp_post.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "54de231b-f039-4337-a639-5024be900fa8",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "discarded_geometry": []
+  },
+  "downsampled_textures_px": 2048,
+  "material_fix": "--size 2048 --name lamp_post --stone 1.0 --metal-threshold 0.6",
+  "total_billed_usd": 0.752
+}

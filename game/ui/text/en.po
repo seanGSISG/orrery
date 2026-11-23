@@ -121,5 +121,198 @@ msgstr "Over par"
 msgid "SETTINGS_TITLE"
 msgstr "Settings"
 
-msgid "SETTINGS_BACK"
-msgstr "Back"
+msgid "SETTINGS_GRAPHICS"
+msgstr "Graphics"
+
+msgid "SETTINGS_DISPLAY"
+msgstr "Display"
+
+msgid "SETTINGS_AUDIO"
+msgstr "Audio"
+
+msgid "SETTINGS_CONTROLS"
+msgstr "Controls"
+
+msgid "SETTINGS_ACCESSIBILITY"
+msgstr "Accessibility"
+
+msgid "SETTINGS_ON"
+msgstr "On"
+
+msgid "SETTINGS_OFF"
+msgstr "Off"
+
+msgid "SETTINGS_PRESET"
+msgstr "Quality"
+
+msgid "SETTINGS_LOW"
+msgstr "Low"
+
+msgid "SETTINGS_MEDIUM"
+msgstr "Medium"
+
+msgid "SETTINGS_HIGH"
+msgstr "High"
+
+msgid "SETTINGS_ULTRA"
+msgstr "Ultra"
+
+msgid "SETTINGS_GHOST"
+msgstr "Best-run ghost"
+
+msgid "SETTINGS_MODE"
+msgstr "Mode"
+
+msgid "SETTINGS_WINDOWED"
+msgstr "Windowed"
+
+msgid "SETTINGS_BORDERLESS"
+msgstr "Borderless"
+
+msgid "SETTINGS_FULLSCREEN"
+msgstr "Fullscreen"
+
+msgid "SETTINGS_RESOLUTION"
+msgstr "Resolution"
+
+msgid "SETTINGS_FRAME_CAP"
+msgstr "Frame cap"
+
+msgid "SETTINGS_VSYNC"
+msgstr "V-Sync"
+
+msgid "SETTINGS_HDR"
+msgstr "HDR"
+
+msgid "SETTINGS_MASTER"
+msgstr "Master"
+
+msgid "SETTINGS_MUSIC"
+msgstr "Music"
+
+msgid "SETTINGS_EFFECTS"
+msgstr "Effects"
+
+msgid "SETTINGS_INTERFACE"
+msgstr "Interface"
+
+msgid "SETTINGS_SENSITIVITY"
+msgstr "Camera speed"
+
+msgid "SETTINGS_INVERT_Y"
+msgstr "Invert Y"
+
+msgid "SETTINGS_DEAD_ZONE"
+msgstr "Stick dead zone"
+
+msgid "SETTINGS_RUMBLE"
+msgstr "Rumble"
+
+msgid "SETTINGS_KEYBOARD"
+msgstr "Keyboard"
+
+msgid "SETTINGS_CONTROLLER"
+msgstr "Controller"
+
+# A button row waits for the new button.
+msgid "SETTINGS_PRESS"
+msgstr "Press a button"
+
+msgid "ACTION_ROLL_FORWARD"
+msgstr "Roll forward"
+
+msgid "ACTION_ROLL_BACK"
+msgstr "Roll back"
+
+msgid "ACTION_ROLL_LEFT"
+msgstr "Roll left"
+
+msgid "ACTION_ROLL_RIGHT"
+msgstr "Roll right"
+
+msgid "ACTION_JUMP"
+msgstr "Jump"
+
+msgid "ACTION_USE"
+msgstr "Use power-up"
+
+msgid "ACTION_RESTART"
+msgstr "Restart"
+
+msgid "ACTION_PAUSE"
+msgstr "Pause"
+
+msgid "ACTION_LOOK_UP"
+msgstr "Look up"
+
+msgid "ACTION_LOOK_DOWN"
+msgstr "Look down"
+
+msgid "ACTION_LOOK_LEFT"
+msgstr "Look left"
+
+msgid "ACTION_LOOK_RIGHT"
+msgstr "Look right"
+
+msgid "SETTINGS_CAMERA_SHAKE"
+msgstr "Camera shake"
+
+msgid "SETTINGS_COLOURBLIND"
+msgstr "Colourblind colours"
+
+msgid "HINT_DEFAULTS"
+msgstr "Defaults"
+
+# The unit of a height: metres. It stands after the number.
+msgid "UNIT_M"
+msgstr "m"
+
+msgid "PAUSE_SAVE_QUIT"
+msgstr "Save and quit"
+
+msgid "ASCENT_CONTINUE"
+msgstr "Continue"
+
+msgid "ASCENT_NEW"
+msgstr "New climb"
+
+# Assist adds a checkpoint at the start of each zone.
+msgid "ASCENT_ASSIST_OFF"
+msgstr "Assist: off"
+
+msgid "ASCENT_ASSIST_ON"
+msgstr "Assist: on"
+
+# The saved climb that Continue goes on with.
+msgid "ASCENT_SPOT"
+msgstr "This climb"
+
+msgid "ASCENT_BEST_HEIGHT"
+msgstr "Best height"
+
+msgid "ASCENT_BEST_TIME"
+msgstr "Best time"
+
+# The words over the gate at the top of the last zone, and the title of the stats screen.
+msgid "ASCENT_GATE"
+msgstr "To be continued"
+
+msgid "ASCENT_HEIGHT"
+msgstr "Height"
+
+msgid "ASCENT_FALLS"
+msgstr "Falls"
+
+# The total height that the falls of the climb cost.
+msgid "ASCENT_FALLEN"
+msgstr "Fallen"
+
+# A line of the stats of a climb that used Assist.
+msgid "ASCENT_ASSIST"
+msgstr "Assist"
+
+msgid "ASCENT_ASSIST_USED"
+msgstr "Used"
+
+msgid "ASCENT_DONE"
+msgstr "Done"

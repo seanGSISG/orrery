@@ -28,12 +28,14 @@ func before_each() -> void:
 	add_child_autofree(ui)
 
 
-## Ends the run, and puts back the screen, the save and the device of the other tests.
+## Ends the run, and puts back the screen, the save, its settings and the device of the other
+## tests.
 func after_each() -> void:
 	Game.screen = &"title"
 	Game.screen = &"play"
 	Save.dir = "user://"
 	Save.read()
+	Save.settings.apply()
 	tap_key(KEY_F12)
 
 

@@ -7,7 +7,7 @@ game. A game that this server launched quits when the server exits.
 
 import atexit
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Literal
 
 from mcp.server.mcpserver import Image, MCPServer
@@ -34,7 +34,7 @@ def _errors() -> Generator[None]:
     """Shows launch, harness and socket errors to the agent as tool errors."""
     try:
         yield
-    except (game.LaunchError, HarnessError, OSError) as error:
+    except (game.LaunchError, game.ShaderError, HarnessError, OSError) as error:
         raise ToolError(str(error)) from error
 
 
@@ -60,6 +60,22 @@ def game_launch(
         _launched = game.launch(game.LaunchOptions(level, display, (width, height)))
     with _game() as harness:
         return harness.state()
+
+
+@server.tool()
+def game_load_mode(
+    mode: Literal["ascent"] = "ascent",
+    zone: int | None = None,
+    zones: list[str] | None = None,
+    resume: bool = False,
+    assist: bool | None = None,
+) -> GameState:
+    """Start a mode in the launched game and return the state. ascent starts a new climb of
+    every built zone, or continues the saved spot when resume is true. zone (1 is the first)
+    puts the marble on the start pad of that zone; zones are the zone level ids from the
+    bottom; assist turns Assist on or off first. state.height is m above the climb start."""
+    with _game() as harness:
+        return harness.load_mode(mode, zone, zones, resume, assist)
 
 
 @server.tool()
@@ -129,7 +145,9 @@ def game_quit() -> str:
 def _stop_launched() -> None:
     """Stops the game this server launched, unless another launch replaced it."""
     if _launched is not None and game.SESSION.exists() and game.current() == _launched:
-        game.stop()
+        # The exit cannot report a shader error; game_quit does.
+        with suppress(game.ShaderError):
+            game.stop()
 
 
 def main() -> None:

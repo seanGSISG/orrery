@@ -4,7 +4,8 @@ extends PanelContainer
 ## buttons for a pad, key caps for the keyboard and mouse. Make one with InputGlyph.new(),
 ## set action, and add it to a HUD or menu; it redraws when InputHub.device changes. Use
 ## for_action() for the button name alone, for example in a text prompt. Both read the
-## input map, so a rebound action shows its new button.
+## input map, so a rebound action shows its new button: Bindings.apply() calls refresh() on
+## every glyph. Set `device` to show the button of one device at all times.
 ##
 ## The look comes from the Theme (game/ui/look/ui_theme.gd): the panel is the type GlyphPad
 ## for a pad button and GlyphKey for a key, and the name is a Label of the type GlyphText.
@@ -56,7 +57,12 @@ const SIDE: float = 44.0
 @export var action: StringName = &"":
 	set(value):
 		action = value
-		_refresh()
+		refresh()
+## The device whose button to show: &"pad" or &"keyboard". &"" follows the device used last.
+@export var device: StringName = &"":
+	set(value):
+		device = value
+		refresh()
 
 var _label: Label = Label.new()
 ## The pad button whose symbol _draw() shows; "" shows the name in the label.
@@ -101,7 +107,8 @@ static func _is_pad(event: InputEvent) -> bool:
 	return event is InputEventJoypadButton or event is InputEventJoypadMotion
 
 
-## Builds the badge and follows InputHub's device.
+## Builds the badge, follows InputHub's device, and joins the group that Bindings tells of a
+## rebind.
 func _ready() -> void:
 	_label.theme_type_variation = &"GlyphText"
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -111,8 +118,9 @@ func _ready() -> void:
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	InputHub.device_changed.connect(_refresh.unbind(1))
-	_refresh()
+	InputHub.device_changed.connect(refresh.unbind(1))
+	add_to_group(Bindings.GROUP)
+	refresh()
 
 
 ## Draws the symbol of the Menu button (three lines) or the View button (two windows).
@@ -130,12 +138,13 @@ func _draw() -> void:
 		draw_rect(Rect2(middle + Vector2(-9.0, -3.0), Vector2(13.0, 10.0)), color, false, 2.0)
 
 
-## Shows the button for action on the device used last.
-func _refresh() -> void:
+## Shows the button for action on `device`, or on the device used last.
+func refresh() -> void:
 	if not is_node_ready():
 		return
-	var on_pad: bool = InputHub.device == &"pad"
-	var text: String = for_action(action, InputHub.device)
+	var shown: StringName = device if device != &"" else InputHub.device
+	var on_pad: bool = shown == &"pad"
+	var text: String = for_action(action, shown)
 	_symbol = text if on_pad and text in SYMBOLS else ""
 	_label.text = "" if _symbol != "" else text
 	visible = text != ""

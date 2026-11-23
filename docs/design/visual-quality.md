@@ -8,7 +8,7 @@ Fixed decisions (`docs/plan.md` §4.7 and #38):
 
 - Realism in M1 comes from baked lightmaps (`LightmapGI`), baked on the GPU at high quality.
 - Real-time ray-traced reflections and shadows are a later, Ultra-only spike (#38). Nothing here depends on it.
-- Sky by tier: Beginner is Earth sky clockwork at dawn. Intermediate is a high, bright sky. Advanced is the edge of space with one restrained planet.
+- Sky by tier: Beginner is Earth sky clockwork at dawn. Intermediate is a high, bright sky. Advanced is the edge of space with one restrained planet. Section 10 gives the skies and the materials as built.
 - Restraint and photographic realism come before spectacle.
 - Performance target: 1080p at 60 fps on a GTX 1660-class GPU at Medium. Ultra can use everything on high-end GPUs.
 
@@ -49,7 +49,6 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 | Sun shadow filter | Soft Very Low | Soft Low | Soft Medium | Soft High | `RenderingServer.directional_soft_shadow_filter_set_quality` |
 | Sun shadow splits | 2 | 4 | 4 | 4 | `DirectionalLight3D.directional_shadow_mode` |
 | Sun shadow distance | 50 m | 80 m | 120 m | 160 m | `DirectionalLight3D.directional_shadow_max_distance` |
-| Sun angular size (PCSS soft shadows) | 0° | 0° | 0.5° | 0.5° | `Light3D.light_angular_distance` |
 | Omni and spot shadow atlas | 2048 | 2048 | 4096 | 4096 | `Viewport.positional_shadow_atlas_size` |
 | Lightmap bicubic sampling | off | on | on | on | `RenderingServer.lightmaps_set_bicubic_filter` |
 | Mesh LOD threshold (pixels; higher is coarser) | 2.0 | 1.0 | 1.0 | 0.5 | `Viewport.mesh_lod_threshold` |
@@ -58,9 +57,11 @@ The settings menu (#23) applies one row of this table per preset. `game/` code a
 Rules for the table:
 
 - The level's `LightmapGI`, static reflection probes and baked shadowmask are the same in every preset. Presets change only real-time cost.
-- Distance fog gives aerial perspective in every preset, so the cloud sea looks the same depth on Low and on Ultra. When volumetric fog is on, the preset code lowers the distance-fog density so the haze does not double.
+- Distance fog gives aerial perspective in every preset, so far geometry looks the same depth on Low and on Ultra. A sky preset gives one haze density. When volumetric fog is on, the volumetric fog shows half of the haze and the distance fog shows the other half (`GraphicsPreset.VOLUMETRIC_FOG_SHARE`), so the haze does not double. The fog does not change the sky (`fog_sky_affect = 0`).
+- Texture quality is the anisotropic level and the mipmap bias. No preset changes the resolution of a texture (section 6).
+- Not built yet: the SDFGI row comes with the Ascent mode. The marble reflection probe row comes with the marble look, because the marble needs its own render layer first.
 - SDFGI never runs in a campaign level, because campaign levels use lightmaps. SDFGI runs only in Ascent and Planetarium on Ultra, where the sun moves.
-- The 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`). Godot warns that PCSS has a "noticeable performance cost", so Low and Medium use 0°.
+- The sun has no size: no preset sets `Light3D.light_angular_distance`, so it keeps its default of 0° and no preset has PCSS soft shadows. A 0.5° sun matches the real sun ("approximately 0.5", `Light3D.light_angular_distance`), but in the Ascent 1 town (#31), with the low dawn sun, its PCSS made a cross-hatch dither in shade, stepped shadow edges from the tower, and a grainy sun patch that leaked into the shade of the square, on High and on Ultra alike. Test renders of the `egg`, `start` and `crown_down` shots with the sun at 0° and at 0.5°, and with the volumetric fog off, showed that the sun size alone made them. Godot also warns that PCSS has a "noticeable performance cost".
 - Fixed project settings (all presets): `rendering/anti_aliasing/quality/use_debanding=true`, `rendering/reflections/reflection_atlas/reflection_size=256` (the default), `rendering/lightmapping/lightmap_gi/use_bicubic_filter=true`.
 
 ### Tonemapping, exposure and colour grading
@@ -69,7 +70,7 @@ Rules for the table:
 - Start: `tonemap_agx_white = 16.29` (the default) and `tonemap_agx_contrast = 1.25` (the default). Range: white 6.0 to 16.29 ("at least 6.0" for photorealistic light), contrast 1.0 to 1.5.
 - Exposure is fixed per sky preset (`Environment.tonemap_exposure`). Auto exposure stays off (`CameraAttributesPractical.auto_exposure_enabled = false`), so a level looks the same every run and gallery shots are comparable. In Ascent, a script sets the exposure from the same height curve that drives the time of day.
 - Colour grading uses only `tonemap_agx_contrast` and `adjustment_saturation` (with `adjustment_enabled`). Do not use a colour-correction LUT (`adjustment_color_correction`) and do not use the Soft Light glow blend mode. Both are SDR-only and break HDR output.
-- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.0 or higher, `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
+- Glow: `glow_blend_mode = GLOW_BLEND_MODE_SCREEN` (the default), `glow_intensity` start 0.3, `glow_hdr_threshold` 1.5 (as built: stone in the low dawn sun reaches about 1.1, and at 1.0 it glowed), `glow_bloom = 0.0`. Glow must not make a haze over the whole image.
 
 ### HDR output
 
@@ -109,6 +110,7 @@ Reasons:
   - Reason: with `BAKE_STATIC`, the light "doesn't display a specular lobe on static lightmapped meshes". Brass, gold and glass would lose their sun highlight. Shadowmasking also needs a directional light with the Dynamic bake mode (manual, "Using Lightmap GI"; `lightmapper_rd.cpp` warns "Shadowmask disabled: no directional light with their bake mode set to dynamic exists").
 - Fill light comes from the sky and from baked bounce light. Do not add fill lights.
 - Accent lights (lamps, emissive glass) use `BAKE_STATIC` and cast no real-time shadows.
+  - Exception: the light below a gem and the light above the Clockwork Egg (section 11) are real time: `light_bake_mode = BAKE_DISABLED`. The gem's light casts no shadows. The egg's light casts shadows, so it does not shine through the walls of the room that hides the egg; the egg itself casts none, so it does not shadow its own foot (#106). Reason: they belong to objects, not to the level. A collected gem hides, and a lightmap would keep its light on the floor. The egg's light is there so that the room that hides the egg is not dark; it is the one light in a level that does the work of a fill light.
 - `rendering/lights_and_shadows/use_physical_light_units` stays `false`. We do not need physical units to meet the bar.
 
 ### Bake settings (every level)
@@ -128,24 +130,35 @@ Reasons:
 | `shadowmask_mode` | `SHADOWMASK_MODE_REPLACE` | Real-time sun shadows up close; baked shadows beyond `directional_shadow_max_distance`, so far islands keep their shadows on Low |
 | `generate_probes_subdiv` | `GENERATE_PROBES_SUBDIV_8` (default) | Lightmap probes light the marble and the moving platforms |
 | Lightmap texel size (import option `meshes/lightmap_texel_size`) | 0.1 m on level `.glb` files | Track, rails and props near the route |
-| `GeometryInstance3D.gi_lightmap_texel_scale` | 0.25 on far scenery | Far scenery bakes at 0.4 m per texel |
+| `GeometryInstance3D.gi_mode` | `GI_MODE_DISABLED` on a mesh named `<name>-far` | Far scenery stays out of the lightmap and costs no bake time or file size. Every other mesh bakes at the texel size above |
 
 Godot writes the lightmap as `.exr` and the shadowmask as `.png` (`scene/3d/lightmap_gi.cpp`). A bake must run in an editor with a real GPU, because `--headless` uses a dummy renderer. `LightmapGI.bake()` is not exposed to scripts in 4.7.2 (its binding is commented out in `scene/3d/lightmap_gi.cpp`); only the editor plugin bakes. The `just` bake command in #24 must work around this.
 
 ### Reflection probes
 
-- Static probes: `ReflectionProbe` with `update_mode = UPDATE_ONCE`, `box_projection = true` and `size` at most 30 m, placed along the track so that each track section is inside one probe. They are the same in every preset.
+- Static probes: `ReflectionProbe` with `update_mode = UPDATE_ONCE` and `size` at most 30 m, placed so that each track section is inside one probe. They are the same in every preset.
+  - `LevelConverter` adds them at import: a grid over the bounds of the level's meshes plus 3 m, with one probe for each grid cell that holds a mesh. Each probe looks from 2 m above the highest mesh of its cell.
+  - `box_projection` is off. A level is in the open air, so most of a reflection is the sky, which is very far away. Box projection puts the sky on the walls of the box, and the reflection of the sky then slides as the camera moves along the track. Turn it on by hand only for a closed room.
+  - `ambient_mode` is Disabled. The probes give reflections only; the lightmap and its probes give the ambient light.
+  - A mesh named `<name>-far` is far scenery: it gets no probe and stays out of the lightmap.
+- Room probes: a `room_probe` marker (`game/objects/room_probe/`) gives an indoor room an interior probe with box projection and a warm ambient colour. Godot's Forward+ renderer lets the first probe in a cluster take the whole weight, and a probe fades out over its blend distance at the edge of its box, so the room probe's box reaches 0.45 m into the walls, the floor and the ceiling.
 - Marble probe (Ultra only): one `ReflectionProbe` follows the marble with `UPDATE_ALWAYS`. Its `cull_mask` leaves out the marble's layer, so the marble does not reflect itself. Its `reflection_mask` is only the marble's layer, so only the marble uses it. Godot recommends "only one ReflectionProbe with UPDATE_ALWAYS at most per scene", because of its "significant performance cost".
 - SSR (High and Ultra) adds sharp reflections on opaque surfaces such as polished stone and brass. SSR does not reflect transparent materials and does not apply to them (manual, "Environment and post-processing").
 
 ## 5. The glass marble
 
-The glass marble (and the translucent ghost) gets reflection and refraction without ray tracing:
+The glass marble gets reflection and refraction without ray tracing. Its look is one skin scene, `game/core/marble/skins/glass_orrery.tscn` (marble A of the style board). `marble.tscn` puts the skin under `Ball`, the node that turns with the spin. A second skin is a second scene in `skins/`.
 
-- **Material:** `BaseMaterial3D` with `transparency = TRANSPARENCY_ALPHA`, `metallic = 0`, `metallic_specular = 0.5` (F0 about 0.04, the value for glass with an index of refraction near 1.5), `roughness` 0.02 to 0.05, and `refraction_enabled = true`.
-- **Refraction:** `refraction_enabled` distorts the screen texture behind the marble along its normal. Only opaque objects appear in the refraction. This is correct for the tiny orrery inside the glass marble: it is an opaque mesh inside the sphere, so the glass bends it like a lens. Start `refraction_scale` at 0.05 (the default). If the result does not look like a solid glass ball, write a small spatial shader that bends the view ray through the sphere and reads `hint_screen_texture`. Do this only if the gallery shows the need.
-- **Reflection:** the static probes on every preset, plus the marble probe on Ultra. Fresnel from the PBR model makes the rim brighter at grazing angles.
-- **Shadow:** `TRANSPARENCY_ALPHA` "disables shadow casting". Add a child sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Core:** the brass orrery is an opaque mesh. `tools/blender/marble_core.py` builds it, and `just build-marble` exports it to `game/core/marble/built/` (a build output, like the levels). Because it is opaque, it is in the screen texture and the depth texture, and it has motion vectors for FSR 2.2.
+- **Glass:** a sphere with the shader `skins/glass.gdshader`. The shader reads `hint_screen_texture` and `hint_depth_texture`, so the glass draws in the transparent pass.
+  - Where the depth texture holds a point inside the ball, the pixel shows the core. The shader shows the screen texture at the same pixel, so the core is not sampled again and stays crisp. The glass does not magnify the core. The mesh has the sizes that the eye sees through glass with an index of refraction of 1.65.
+  - Elsewhere the shader bends the view ray through a solid ball (index of refraction 1.65) and reads the screen texture where the ray points, outside the marble's own outline. The world shows upside down and small, as in a real glass ball. Only opaque objects appear in this picture.
+  - The picture goes to `EMISSION` with `ALBEDO` black, `ROUGHNESS` 0.05 and `SPECULAR` 0.61 (F0 0.06, the value for an index of refraction of 1.65). The engine adds the sky, the probes and the sun as reflections.
+  - Toward the outline, the glass has a cool tint. The outline itself is a thin dark line with no reflection. The tint and the line keep the marble visible on pale stone and on a bright sky.
+- **Reflection:** the sky and the static probes on every preset, plus the marble probe on Ultra when the presets have it. Until a level has probes, the brass core reflects only the sky on Low and Medium; SSR adds the floor on High and Ultra.
+- **Shadow:** the glass itself casts no shadow. The skin has a second sphere with `cast_shadow = SHADOW_CASTING_SETTING_SHADOWS_ONLY`, so the marble casts a sun shadow. The core casts no shadow and takes none (`game/core/marble/core_import.gd`), because it is inside the sphere. The crisp blob shadow straight down (`docs/plan.md` §2.11) stays in addition.
+- **Ghost:** the ghost marble shows the shapes of the same skin in one pale, see-through look (`game/core/ghost/ghost.gdshader`). It does not read the screen texture.
+- **Cost:** measured on the fixture at 1080p (RTX 5090, a shared GPU), the glass adds about 0.15 ms of GPU time on Low and Medium and less than 0.05 ms on High and Ultra. Most of it is the copy of the screen texture. A cheaper glass for Low needs a field in `GraphicsPreset`.
 - **Later:** #38 can add ray-traced reflections on Ultra. This design does not depend on it.
 
 ## 6. Textures, materials and texel density
@@ -172,10 +185,12 @@ A 2K texture that repeats every 2 m gives 1024 px/m. So 2K meets the close-zone 
   - The Advanced-tier planet: 1 set. It fills a large part of the screen.
 - **Marble skins stay at 2K.** The marble's equator is 1.26 m long, and in play it is about 200 px across at 1080p (about 400 px at 4K). 1K is already sharper than the screen, so 2K leaves margin for the skin-select close-up. A skin goes to 4K only if the 4K skin-select shot fails rubric check 2.
 - **Detail maps:** 1K tileable detail normal maps (and optional detail albedo) for the close-zone materials. At most 6 sets.
-  - `BaseMaterial3D` detail on UV1 uses the same UV scale as the base textures (`material.cpp`). Detail on UV2 rescales UV2, and UV2 is the lightmap UV. So close-zone materials use one kit `ShaderMaterial` (a `BaseMaterial3D` converted to a shader, plus a `detail_scale` uniform on UV1). Do not use `detail_uv_layer = DETAIL_UV_2` on lightmapped meshes.
-- **Skies:** HDRIs at 4K. A tier sky may go to 8K only if its 4K gallery shot looks soft. (At 4K output with a 70° view, a 4K equirectangular sky is about 2.7× softer than the screen.)
+  - `BaseMaterial3D` detail on UV1 uses the same UV scale as the base textures (`material.cpp`). Detail on UV2 rescales UV2, and UV2 is the lightmap UV. So every kit material uses one shader, `game/materials/kit_surface.gdshader`. Do not use `detail_uv_layer = DETAIL_UV_2` on lightmapped meshes.
+  - As built: the kit shader maps the textures from three sides in the piece's own space, so a kit piece needs no UV1 and one repeat always covers `tile` metres. Its `detail_tile` uniform adds the material's own normal map again at 0.25 m per repeat. This gives the fine grain, so no separate detail set is in the repo yet.
+- **Skies:** HDRIs at 4K. A tier sky may go to 8K only if its 4K gallery shot looks soft. (At 4K output with a 70° view, a 4K equirectangular sky is about 2.7× softer than the screen.) The tier skies import without compression (`compress/mode` Lossless) and with mipmaps: an HDR sky is one texture, and BC6H is slow to compress on a CI runner.
+- **Where the files are:** `assets/textures/` holds each texture once, in Git LFS. Godot reads only `res://`, so `just import` copies the textures that the game uses into `game/materials/textures/` (not in git). A committed `game/materials/textures/<file>.import` adopts a texture and holds its import settings. The baked tier skies are in `game/skies/` (Git LFS).
 - **Import settings:** `compress/mode` VRAM Compressed, `compress/high_quality = true` (BC7) for albedo, normal maps with RGTC (`compress/normal_map`), mipmaps on. Set `roughness/src_normal` on each roughness map, so the import filters roughness and reduces specular aliasing.
-- **Source files:** use the OpenGL (Y+) normal-map variant (Poly Haven `nor_gl`, ambientCG `NormalGL`). Store albedo, roughness and AO as JPG (quality 90 or higher), and store normal maps as PNG, because lossy compression shows as blocky shading in normal maps.
+- **Source files:** use the OpenGL (Y+) normal-map variant (Poly Haven `nor_gl`, ambientCG `NormalGL`). Store albedo, roughness and AO as JPG (quality 90 or higher), and store normal maps as PNG, because lossy compression shows as blocky shading in normal maps. An 8-bit PNG is enough. Exception: the material sets B and C are not in use, so they keep the JPG normal maps of the style board. A set gets PNG normal maps when it becomes the set in use.
 - **Filtering:** every kit material sets `texture_filter = TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC`. The default is `TEXTURE_FILTER_LINEAR_WITH_MIPMAPS`, and with it the anisotropic setting does nothing.
 - Godot 4.7.2 has no texture streaming, so no preset changes texture resolution. Estimated VRAM for one level: about 12 2K sets and 3 4K sets, as BC7 with mipmaps, is about 0.5 GB. This fits a 6 GB GTX 1660.
 
@@ -206,13 +221,14 @@ Estimate from typical Poly Haven and ambientCG file sizes; not measured. One 2K 
 | Stone, polished (accents only) | 0 | 0.15–0.30 | 50–220 |
 | Brass, polished | 1 | 0.15–0.30 | Warm yellow; brightest channel 200–245 |
 | Brass, aged or brushed | 1 | 0.30–0.55 | Same hue, 10–20% darker |
-| Gold | 1 | 0.10–0.35 | Warm yellow-orange; brightest channel 230–250 |
+| Gold | 1 | 0.10–0.45 | Warm yellow-orange; brightest channel 230–250 |
 | Glass | 0 | 0.00–0.08 | Near white; tint comes from transparency |
 
 These ranges are starting values from common PBR practice. We did not take them from a Godot source.
 
 - No pure black or pure white albedo. Dielectrics stay between sRGB 30 and 240. Metals stay between sRGB 180 and 250 in their brightest channel.
 - Metallic is 0 or 1. Use values between only for dust or dirt masks.
+- A flat metal under the open sky reflects mostly sky. Gold and brass below roughness 0.4 look olive where they reflect blue sky, so the gold inlay and the kit brass are 0.43.
 - A roughness below 0.2 with a high-frequency normal map causes specular shimmer. Raise the roughness, or set `roughness/src_normal` on import.
 - Use `anisotropy_enabled` only on brushed brass. Use `clearcoat_enabled` only on lacquered parts.
 
@@ -239,20 +255,174 @@ The gallery renders `start` at 1080p and at 4K, and every other shot at 1080p, o
 
 | Preset | Resolution | Measures | Fails when |
 |---|---|---|---|
-| Low | 1080p | GPU time (mean, 99th percentile) | Its GPU time is higher than Medium's |
+| Low | 1080p | GPU time (mean, 99th percentile), VRAM | Its VRAM is not lower than Medium's |
 | Medium | 1080p | GPU time, VRAM | The 99th-percentile GPU time on the RTX 5090 is above the budget (`docs/plan.md` §4.7: start at 3 ms, calibrate in M1), or VRAM is above 4 GB |
 | High | 1440p | GPU time | Report only |
 | Ultra | 4K | GPU time | The 99th-percentile GPU time on the RTX 5090 is above 16.7 ms (60 fps) |
 
-- The check also fails when Low, Medium, High and Ultra do not cost more in that order at 1080p. This proves that the presets change real settings (#24).
+- The check also fails when Low, Medium, High and Ultra do not use more VRAM in that order at 1080p. This proves that the presets change real settings (#24). The check does not compare GPU time between presets: on a small level, the GPU time of Low and Medium changes by 2x from run to run on a shared GPU, and Medium and High cost about the same.
+- Other agents' games share the GPU and inflate the times. Before each run, `just perf` waits until no other Godot game runs (editors and `--headless` runs do not count) and gives up after 20 minutes. If a game starts during a run, the run counts as disturbed and the tool repeats it, at most 2 times. The report and each run's JSON give the number of disturbed runs, and a run that is still disturbed after the last try fails with its own message.
 - The camera path includes one fast orbit around the marble. During that orbit, the check saves two frames 1/60 s apart as the `motion` pair for rubric check 3.
 
 ## 9. Not verified
 
-- The VRAM, bake-size and Git LFS numbers are estimates. #20 and #24 must measure them and replace the estimates.
-- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. We have not baked a level.
+- The Git LFS numbers for the whole scope are estimates. Section 10 has the numbers that #24 measured on the two fixture levels.
+- Lightmap file size per level (about 5 MB) assumes about 5,000 m² of near surfaces at 0.1 m and 20,000 m² of far scenery at 0.4 m, so about 1 million texels with atlas padding. The first real level, B1, is 4.7 MB with every mesh at 0.1 m (section 10).
 - The material ranges in section 6 are common PBR practice, not values from a Godot source.
 - We did not test how much MSAA 2× costs on a real GTX 1660. The plan's 5090 budget stands in for it.
-- We did not check whether a script can call the editor plugin's bound `_bake` method from a running editor. #24 must prove the bake command.
 - We did not test HDR output on Sean's KDE Wayland session, or in `gamescope`.
 - The −0.5 mipmap bias for FSR 2.2 at native resolution is our choice, not a Godot recommendation.
+
+## 10. As built: kit materials and skies (#24)
+
+Sean approved look A of the style board on 2026-11-21: honey limestone, aged brass and a golden dawn. He approved the noon sky and the dusk sky as rendered.
+
+### Kit materials
+
+A level script names a kit material, and the importer gives those faces the game's material of that name.
+
+- Names: `limestone` (track decks), `brass` (trim and borders) and `gold` (inlays). `kit.surface(id, material)` makes the Blender material; `kit.track()` and `kit.ramp()` take `material="limestone"` and `trim="brass"`.
+- The pieces of `kit/masonry.py` (`deck`, `wall`, `arch`, `lathe`, `inlay` and the others) take `material` in the same way. An inlay is gold; gear teeth, a gear, a hoop and a ball are brass unless the level script says otherwise.
+- The trim is a brass angle section along the two long edges of a piece. It is a mesh of its own that does not collide, so it does not change how the marble rolls. Give `trim=""` for an edge that touches another piece.
+- `KitMaterials.find(name)` (`game/materials/kit_materials.gd`) returns `res://materials/<set>/<name>.tres`, or else `res://materials/<name>.tres`. `LevelConverter` applies it at import. A level that names an unknown material fails the import.
+- To add a kit material: add its name to `MATERIALS` in `kit/surfaces.py`, and add `<name>.tres` (a `ShaderMaterial` with `kit_surface.gdshader`) to each set folder, or once to `game/materials/` when the sets share it.
+- A mesh whose material has no `material` property keeps its own material (for example the coloured stations of the feel course).
+- Eight objects take their look from the kit materials: the Trapdoor and Crumbling Tiles (#29), the Bumper, Moving platform, Turning gear, Checkpoint and Finish (#30), and the Turning arm (#32). Each has a test that checks its kit materials. An object gets a fixed kit material from `KitMaterials.find()` at run time. A `finish` that the level script names is a `Material` export, which the importer sets, so an unknown name fails the import.
+  - A Bumper is a band of enamel in the palette's hazard colour (roughness 0.5; a glossier band showed streaks of reflection) between a base and a cap of the kit brass. The cap covers the top face, and both pulse with the drum.
+  - A Moving platform's deck is a copy of the kit limestone with no paving (a deck moves; see Crumbling Tiles), with a band of the kit brass round its top edge and one round its foot. A set `finish` (a kit material, for example `wood` in Ascent 1) replaces the stone; the brass bands stay.
+  - A Turning gear's disc and teeth are the kit brass. The shader maps it in the gear's own space, so the texture turns with the gear.
+  - A Turning arm's bar is its `finish` (Ascent 2's clock hands are `blued_steel`), mapped in the arm's own space like the Turning gear.
+  - A Checkpoint and a Finish share one look (`game/objects/pad_look.gd`): a round plate of stone (the kit limestone × 1.12, smoother, no paving) in a bevelled rim of the kit brass, with a glass lens in the middle. The plate stands 4.5 cm proud of the floor, so it reads as a raised pad; it does not collide. The lens is the pad's colour, pale while the pad is off and glowing while it is on. Before, an unlit pad was a dark disc that read as a hole (B2 style review).
+  - These objects are built at run time and move or pulse, so they are not in the lightmap; the lightmap probes light them.
+  - A Trapdoor's door is its own copy of the kit brass with one texture repeat across the door, so a large door shows no repeat.
+  - Crumbling Tiles are a copy of the kit limestone: tint × 0.78, normal strength 1.8 and no paving (a tile moves, and the paving picks each slab's look from the piece's world position, so it would flicker). Each tile sits on a 4 cm tray of kit brass that shows as a brass line in the 5 cm gap round it. Each tile also lies at its own fixed tilt of up to 0.8° (its collider stays level) and shows its own patch of stone, both picked from its grid index. So loose tiles read apart from solid floor by shape, not by colour alone.
+  - `crumbling_tiles.gd` is a tool script, so its tiles (meshes with lightmap UVs) exist in the editor and the lightmap bake lights them like the stone round them; a tile's baked light moves with it as it falls. Before, the tiles had only the probes, which over an empty frame see the sky: B2's east sheet in shade measured sRGB (55, 52, 47), and with the bake (73, 64, 52). The bake also closes the crumbling cells over B2's undercroft, as the tiles do in play, so that room is darker: the median luma of B2's `egg` shot went from 37 to 16 (pure black 0.05 %).
+
+`KitMaterials.SET` picks the material set. It is the only setting to change:
+
+| Set | Limestone | Tint, repeat | Brass | Tint, repeat, roughness scale |
+|---|---|---|---|---|
+| `a` (in use) | Poly Haven `scuffed_cement` | (2.6, 3.0, 3.5), 1.5 m | ambientCG `Metal048C`, metallic 1, detail normal at 0.25 m | (0.764, 0.665, 0.471), 2.0 m, × 1.59 |
+| `b` | Poly Haven `concrete_wall_008` | (2.3, 2.45, 3.0), 1.6 m | ambientCG `Metal048A` | (0.9, 0.8, 0.62), 1.0 m, × 3.0 |
+| `c` | Poly Haven `dirty_concrete` | (1.6, 1.7, 1.9), 1.6 m | ambientCG `Metal008` | (1.0, 1.0, 1.0), 1.2 m, × 1.3 |
+
+- The brass of set A repeats every 2 m: with the 2K maps that is 1024 px/m, the close-zone target (section 6). Before, it repeated every 0.7 m. A bar 0.09 m wide then showed a narrow strip of the map's dark blotches, which read as wood grain, and a dark pit fell every 0.7 m along a rail (B3 style review). The detail normal at 0.25 m gives the fine grain close to the camera.
+- Sean picked Metal048C for the brass of set A on 2026-11-22, from the brass study (branch `brass-study`, `tools/brass_study/`). Before, it was Metal007 (metallic 0.85, tint (1.0, 1.1, 1.4), roughness × 2.4). On flat boxes at 5 to 15 m, the blotches of Metal007 read as wood or cork, in shade and in sun. In colour, the blotches of Metal048C vary about half as much (0.029 against 0.056). Its roughness map is blotchier (0.089 against 0.070 at the blotch scale). Its tinted albedo is about sRGB (222, 186, 108), and its median roughness is 0.271 × 1.59 = 0.43, so faces that look up at the sky do not turn olive (section 6).
+- The polished brass (`brass_polished`) and the gold stay on `Metal048A`. The kit brass and the gold have almost the same hue and saturation. The kit brass differs from the gold by its pitted Metal048C texture and its darker albedo (lightness 77 against 85). It differs from the polished brass by its roughness (0.43 against 0.23) and its mottle.
+- Gear teeth (`kit.teeth()`) and grille rails have 0.02 m chamfers on their edges, so each edge catches a highlight and the piece reads as cast metal, not as a sawn block. The teeth's chamfers are round, in two segments: with one flat segment, the small triangle at each corner caught the sun as a near-white point. The brass that objects build in code (turning-gear teeth, the carriage bands) gets the same 0.02 m chamfers from `Chamfer.box()` (`game/objects/chamfer.gd`); their colliders stay plain boxes.
+- Gold is the same in every set: `Metal048A`, tint (1.0, 0.82, 0.5), 0.6 m, roughness × 5.
+- Every limestone is paved: slabs of 1.0 m by 1.5 m in a running bond, joints 12 mm wide, the detail normal at 0.25 m.
+- The tints are above 1 because the colour maps are darker than limestone. The shader keeps the result inside the albedo limits of section 6.
+- To change the set: set `KitMaterials.SET`, then run `just build-levels` and `just bake`. Each set has its own dawn on the style board. To get it, set `SET` in `tools/blender/bake_skies.py` to the same letter, run `just bake-skies dawn`, and put these values into `game/skies/dawn.tres`. (`just bake-skies dawn --set b` bakes a set that is not in use into `build/skies/`, for a preview.)
+
+| Dawn of set | `sky_energy` | `sun_elevation` | `sun_color` | `sun_energy` |
+|---|---|---|---|---|
+| A (in use) | 0.297 | 12 | (1, 0.84, 0.68) | 2.27 |
+| B | 0.354 | 8 | (1, 0.80, 0.71) | 1.58 |
+| C | 0.379 | 4.5 | (1, 0.77, 0.58) | 2.17 |
+
+### Sky presets
+
+A `SkyPreset` (`game/skies/<name>.tres`) is one baked sky and the light that goes with it. `LevelConverter` gives a level the preset that `kit.level(sky=...)` names. With no name, the tier picks it: Beginner `dawn`, Intermediate `noon`, Advanced `dusk`, every other tier `dawn`. An unknown name fails the import. A level that brings its own `WorldEnvironment` and `DirectionalLight3D` keeps them.
+
+| Preset | Backdrop | Sun elevation | Sun colour (sRGB) | Sun energy | Sky energy | Fill | Haze (1/m) |
+|---|---|---|---|---|---|---|---|
+| `dawn` | A photographed dawn sky over a sea of clouds. No planets | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | none | 0.001 |
+| `ground_dawn` | The same dawn sky on the ground: the photograph's far horizon over far land. No cloud sea, no planets. The Ascent climb starts in it | 12° | (1, 0.84, 0.68) | 2.27 | 0.297 | a fifth of the ambient light is a warm stone colour; in the Ascent climb it grows with the sun (`docs/design/ascent.md` §4) | 0.001 |
+| `noon` | The sky from 16 km: deep blue, clouds far below. No planets | 58° | (1, 0.99, 0.96) | 1.35 | 0.177 | none | 0.0005 |
+| `dusk` | The sky from 80 km: the curve of the Earth, faint stars, one pale planet | 7° | (1, 0.77, 0.58) | 4.39 | 1.15 | half of the ambient light is a cool blue | 0.0003 |
+
+- The sun stands at azimuth 135° in every sky: ahead of the start and on its left, when the level runs along the kit's +y.
+- The energies hold the exposure of the style-board render (dawn −1.75 stops, noon −2.5, dusk +0.2), so `tonemap_exposure` stays 1.0 and a glowing object looks the same under every sky. A sun of S W/m² in the style-board script is `sun_energy` = S / π × 2^stops.
+- A backdrop is one 4096×2048 panorama. It has no parallax, so it reads as far away. Its sun disc is cut down to a radiance of 16, because the `DirectionalLight3D` is the sun.
+- The dusk sky is almost black, so the dusk preset mixes a cool blue colour into the ambient light. This is not a fill light: it comes from all directions and it is in the lightmap bake. The dusk panorama also has a faint airglow, so that space is not pure black.
+- The ground dawn (#31) is the dawn of a town on the ground. Its sky is the same photograph as the dawn (Poly Haven `syferfontein_6d_clear`, strength 0.8), and so are its light and its energies. Its lower half is not a cloud sea:
+  - Down to 0.7° below the horizon it is the photograph, with the photograph's far hills and plains. From 0.7° to 1.8° below the horizon it fades into far land, so the photograph's near rocks and grass do not show. From a tower they would look like giant rocks.
+  - The bake draws the far land in the world shader: the view ray meets a plane 250 m below the camera. The land is dry grass with bushes and a few woods, and some fields in the farmed areas (`GRASS`, `BUSHES`, `FIELDS`). The sun lamp (24 W/m², 12°) and the sky light it. A haze with the colour of the photograph's far land, smoothed along the horizon, hides it with distance (visibility 6 km), so it meets the photograph with no seam.
+  - The plane is lower than the climb. A panorama has no parallax, so the land shows its scale only by the size of its fields, and those look right from every height of zones 1 to 3.
+- `just bake-skies [dawn|ground_dawn|noon|dusk]` renders the panoramas again with Blender Cycles (about 5 minutes for dawn, seconds for the others). `tools/blender/bake_skies.py` holds every number of the backdrops.
+- The importer writes the sky and the sun into the level. After a change of a preset, `just test`, `just gallery` and `just bake` build the levels again by themselves.
+
+### Measured (RTX 5090, 2026-11-21)
+
+| Item | Value |
+|---|---|
+| Lightmap files, `fixture` (three 4 m by 8 m pieces; 2026-11-22, after the brass change of #112) | 147 KB |
+| Lightmap files, `core_loop` (four 8 m wide pieces; 2026-11-22) | 259 KB |
+| Kit textures in Git LFS (`assets/textures/` without `sky/` and `planet/`: sets A, B and C, the gold, the town, harbour and land textures; 2026-11-22) | 147 MB |
+| Tier skies in Git LFS (dawn, ground_dawn, noon, dusk; 2026-11-22) | 48 MB |
+| Sky sources in Git LFS (4 HDRIs, the planet map; 2026-11-22) | 21 MB |
+| Lightmap files, `b01` (#28: 96 meshes, 83,300 triangles with the round 0.02 m chamfers of #30, every mesh at 0.1 m per texel; bake 39 s) | 4.7 MB |
+| VRAM, `fixture`, Medium at 1080p | 875 MB |
+| VRAM, `b01`, Medium at 1080p | 892 MB |
+| GPU time, `b01`, mean / p99 at 1080p (three runs; see the note on clock speed below) | Low 0.22 to 0.54 / 0.27 to 0.78 ms, Medium 0.38 to 0.89 / 0.95 to 1.16 ms, High 0.83 to 0.90 / 0.94 to 3.00 ms, Ultra 1.30 to 1.33 / 1.60 to 1.62 ms |
+| Lightmap files, `b02` (#29: 139 meshes and 102 crumbling tiles, 72,400 triangles in the level with the chamfers of #30; bake 39 s) | 5.1 MB |
+| VRAM, `b02`, Medium at 1080p | 904 MB |
+| GPU time, `b02`, mean / p99 (one run, with the object looks of #29) | Low 0.28 / 1.01 ms, Medium 0.37 / 0.50 ms, High 0.81 / 0.96 ms, Ultra 1.26 / 1.57 ms at 1080p; High 1.23 / 1.57 ms at 1440p; Ultra 3.95 / 5.14 ms at 4K |
+| Lightmap files, `b03` (#30: 224 meshes, 64,600 triangles in the level; bake 40 s) | 5.2 MB |
+| VRAM, `b03`, Medium at 1080p | 912 MB |
+| GPU time, `b03`, mean / p99 (one run, with the round chamfers of the B3 style review) | Low 0.26 / 0.37 ms, Medium 0.39 / 0.54 ms, High 0.87 / 1.12 ms, Ultra 2.00 / 2.38 ms at 1080p; High 1.42 / 3.03 ms at 1440p; Ultra 4.98 / 11.92 ms at 4K |
+| VRAM, `fixture`, Ultra at 4K | 2.3 GB |
+| GPU time, `fixture`, mean / p99 at 1080p | Low 0.28 / 0.69 ms, Medium 0.39 / 0.95 ms, High 0.71 / 2.69 ms, Ultra 1.02 / 3.17 ms |
+| GPU time, `fixture`, Ultra at 4K | 2.97 / 4.09 ms |
+
+- With the stand-in light rig and no textures (#20), the same level used 222 MB at Medium.
+- At these small loads the GPU changes its clock speed between runs: the same preset measured 0.19 ms in one run and 0.44 ms in the next. So the check "Low costs less than Medium" in `just perf` can fail by chance on a level this small. The two budgets passed in every run. Run the check again when only that order fails.
+
+## 11. As built: gems and the Clockwork Egg
+
+### Gems
+
+One scene, `game/objects/gem/gem.tscn`, and four cuts. `GemCut` holds each cut as rings round the vertical axis and builds its mesh and the planes of its facets once; every gem of a cut shares them. A gem is 0.5 m across at its largest, and its lowest point is 0.3 m above its marker.
+
+| Cut | Outline | Sides | Standard colour | Colourblind colour |
+|---|---|---|---|---|
+| 0 hexagon | flat at both ends | 6 | amber | orange |
+| 1 double pyramid | pointed at both ends | 6 | deep blue | blue |
+| 2 rose | pointed on top, flat below | 6 | emerald green | yellow |
+| 3 brilliant | flat on top, pointed below | 12 | magenta | reddish purple |
+
+- Cuts 0, 1 and 3 and their colours are the three gems of the style board, with its ring sizes. The game has four cuts, so cut 2 is new. Its outline is the one pair of ends that the board does not use. Its colour is a deep tone of the bluish green of the Okabe-Ito set, as the board's colours are deep tones of that set's orange, blue and reddish purple.
+- `Palette` is the one place for the colours. The standard gems have one lightness, as on the board ("every colour emits the same luminance"). The colourblind gems keep the steps of lightness of their colours: `Palette.gem_lightness()` gives the jewel a factor from the luminance of its colour.
+
+**Glass.** `game/objects/gem/gem.gdshader` draws the jewel in the opaque pass. The board's gem is clear glass (transmission 1); the game's gem does not show the level behind it. In exchange it has crisp edges with MSAA and with FSR 2.2, it writes motion vectors, and it needs no copy of the screen texture.
+
+- The shader follows the view ray into the gem through the planes of the cut (index of refraction 2.2): the ray bends at the facet, the facets inside mirror it up to four times, and it leaves where it meets a facet at a steep angle. This needs a convex cut; a test checks each cut.
+- The gem shows the sky and the probes in the direction of the ray that left. The engine reads them: the shader gives the engine a normal for that direction through `TANGENT` and `NORMAL_MAP`, and the colour as the tint of a metal. `NORMAL` stays the facet's own normal, so the clearcoat layer mirrors the surroundings in the outside of the glass.
+- A long path through the glass gives a deep colour and a short path a pale one. The gem is dark where the camera looks straight through it and bright where it sends light back.
+- `light()` adds two glints for each light: a coloured one where the path inside leaves toward the light, and a white one where a facet mirrors the light.
+- A pale line marks each edge of the cut and each place where the path inside changes. That line hides the step between two pictures inside one facet, which no anti-aliasing mode smooths. A thin bright rim, at least 1.2 pixels wide, marks the outline.
+- A far gem changes look: from 6 mm per pixel the picture of the inside fades, and from 2 cm per pixel the gem shows plain facets, glows about four times more, has no coloured glint from the path inside, and the sides that face the camera glint as the gem turns. Each gem starts at its own turn angle, so the gems of a level do not glint together.
+
+**Round the gem.** The gem casts no shadow. An `OmniLight3D` 0.22 m above the marker (energy 0.25, range 1.2 m, no shadows, not baked) marks its place on the floor. The beam is 3.2 m tall and starts at the top of the jewel: `game/objects/gem/beam.gdshader`, additive, at least 0.2 % of the height of the view wide, so that it shows from far away. The finish uses the same shader with its old settings.
+
+### Clockwork Egg
+
+- `tools/blender/egg.py` builds the egg, and `just build-egg` writes `game/objects/egg/egg.glb` (21 266 triangles, 589 KB). The file is committed, like the baked skies, so that only a change to the script needs Blender. It is in plain git, not in Git LFS.
+- The `.glb` holds three objects, which `egg.gd` moves: `shell`, `lid` with its origin on the hinge, and `gear` with its origin on its axis. It holds no texture. `egg.glb.import` gives the material `brass` the look of `game/objects/egg/brass.tres`: the kit shader with the Metal048A maps, tint (0.9, 0.76, 0.5), metallic 1. The jewels are plain PBR materials from the script: mirrors with the hue of the board's gem colours and a small glow.
+- The light: one `OmniLight3D` 1 m above the marker, colour (1.0, 0.78, 0.5), energy 1.2, range 4 m, shadows on (the egg's own meshes cast none), not baked (the exception in section 4).
+
+### Measured (RTX 5090, 2026-11-21)
+
+GPU time is the median of three runs of the `just perf` scene. "Before" is one such set. "After" was measured in three sets: its mean repeated within 0.02 ms, its 99th percentile within 0.1 ms. The GPU also did other work, and at these loads it changes its clock speed between runs (section 10), so a difference below about 0.1 ms is not reliable.
+
+| Run | Before: mean / p99 | After: mean / p99 | VRAM before / after |
+|---|---|---|---|
+| `core_loop`, Medium at 1080p | 0.75 / 0.89 ms | 0.78 / 0.92 ms | 872 / 882 MB |
+| `core_loop`, Ultra at 4K | 3.34 / 4.12 ms | 3.39 / 4.23 ms | 2347 / 2357 MB |
+| `fixture`, Medium at 1080p | 0.70 / 0.93 ms | 0.74 / 0.92 ms | 875 / 875 MB |
+| `fixture`, Ultra at 4K | 3.03 / 3.91 ms | 3.07 / 3.94 ms | 2349 / 2349 MB |
+
+- The budgets of section 8 hold: Medium at 1080p has a 99th percentile of 0.9 ms (limit 3 ms) and uses 882 MB (limit 4 GB); Ultra at 4K has a 99th percentile of 4.2 ms (limit 16.7 ms).
+- One gem that fills about 40 % of the height of the view costs about 0.5 ms at Ultra 4K: 4.3 ms with the gem, 3.8 ms without it, in three runs each. The same test at 1080p gives no result, because the change of clock speed is larger than the cost.
+- The style review of the B1 level (#28) found a median luma of about 20 of 255 in the vault that hides the egg. With a copy of that level (not part of this change) and the egg's light, one frame of its `egg` shot has a median luma of 58. The two numbers come from different runs, and the first one was not measured again here.
+- Colourblind palette, mean luminance of the gem in one close view each: blue 0.08, reddish purple 0.13, orange 0.16, yellow 0.24. The step from reddish purple to orange is small. The standard gems are between 0.14 and 0.16.
+
+### Not verified
+
+- No check finds a shader that does not compile. `godot --headless` does not compile shaders, and `just gallery` fails only on a blank frame; a gem with a broken shader is a plain grey solid, not a blank frame. After a change to a shader, run the game on a GPU and search its log for `SHADER ERROR`.
+- No level here uses the noon or the dusk sky. With the sky changed at run time in `core_loop` (the floor kept its dawn lightmap), the gems stay coloured at dusk but are darker: 0.10 to 0.12 mean luminance, against 0.14 to 0.16 at dawn. Look at the gems again in the first level with a dusk sky.
+- The colourblind palette was not tested with a simulation of colour vision or with a player.
+- The lightmaps of `core_loop` and `fixture` were baked with the old gem light, whose bounce light was baked. They were not baked again. The `.sha256` check does not see a change to an object scene.
+- The finish beam was compared in one view on one GPU: the old and the new beam shader give the same picture there.
+- Every frame here comes from one GPU and one driver. Two expressions that GLSL leaves undefined (a `smoothstep` with equal edges in the beam, a division by zero for opposite facets in the gem) drew correctly on it. They were found by reading and by review, and they are corrected; a frame did not show them.

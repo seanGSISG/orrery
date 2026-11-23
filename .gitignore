@@ -2,11 +2,18 @@
 build/
 game/.godot/
 game/levels/built/
+game/core/marble/built/
+# CI writes it (.github/actions/setup); never commit a local copy
+game/override.cfg
+# Copies of the kit textures from assets/textures/ (`just import` makes them); their .import files are committed
+game/materials/textures/*
+!game/materials/textures/*.import
 *.blend1
 
 # Python
 __pycache__/
 .venv/
 
-# Local secrets
+# Local secrets. .env.example is the committed template.
 .env
+!.env.example

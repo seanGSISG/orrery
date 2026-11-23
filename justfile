@@ -26,9 +26,99 @@ blender *args:
 blender-agent:
     gamescope --backend headless -W 1920 -H 1080 -- blender-5.2 --online-mode
 
-# Import the Godot project headless (fills game/.godot)
-import:
-    "{{ godot }}" --headless --path game --import
+# Build the Clockwork Egg (tools/blender/egg.py) into game/objects/egg/egg.glb. The .glb is
+# committed, like the baked skies: run this after a change to the script, then commit both
+[script("bash")]
+build-egg:
+    set -euo pipefail
+    # In build/, on the file system of the checkout: the last step is then a rename, and Godot
+    # never reads a part of the file.
+    mkdir -p build
+    tmp=$(mktemp -d build/egg.XXXXXX)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/egg.py -- "$tmp/egg.glb" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just build-egg: Blender failed" >&2
+        exit 1
+    fi
+    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/egg.glb"
+    mv "$tmp/egg.glb" game/objects/egg/egg.glb
+
+# Build the marble's brass core (tools/blender/marble_core.py) into game/core/marble/built/
+[script("bash")]
+build-marble:
+    set -euo pipefail
+    out=game/core/marble/built
+    # In build/, on the file system of the checkout, as in build-egg: the last step is then a
+    # rename, and Godot never reads a part of the file.
+    mkdir -p build
+    tmp=$(mktemp -d build/marble.XXXXXX)
+    trap 'rm -rf "$tmp"' EXIT
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/marble_core.py -- "$tmp/orrery_core.glb" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just build-marble: Blender failed" >&2
+        exit 1
+    fi
+    "${GLTF_VALIDATOR:-gltf_validator}" "$tmp/orrery_core.glb"
+    # The .import file names the post-import script before Godot can see the new .glb.
+    mkdir -p "$out"
+    printf '[remap]\n\nimporter="scene"\n\n[params]\n\nimport_script/path="res://core/marble/core_import.gd"\ngltf/embedded_image_handling=2\n' \
+        >"$out/orrery_core.glb.import"
+    mv "$tmp/orrery_core.glb" "$out/orrery_core.glb"
+
+# Build the marble's core when its .glb is missing or older than its script or its texture
+[private]
+[script("bash")]
+fresh-marble:
+    set -euo pipefail
+    glb=game/core/marble/built/orrery_core.glb
+    for input in tools/blender/marble_core.py assets/textures/metal/Metal048A_2K-JPG_Color.jpg; do
+        if [[ ! -f $glb || $input -nt $glb ]]; then just build-marble; break; fi
+    done
+
+# Copy the kit textures that the game uses from assets/textures/ into the Godot project, which
+# reads only res://. A committed game/materials/textures/<file>.import adopts <file>
+[private]
+[script("bash")]
+kit-textures:
+    set -euo pipefail
+    for import in game/materials/textures/*.import; do
+        name=$(basename "$import" .import)
+        sources=(assets/textures/*/"$name")
+        if [[ ! -f ${sources[0]} ]]; then echo "just kit-textures: assets/textures/ has no $name" >&2; exit 1; fi
+        cp -u "${sources[0]}" "game/materials/textures/$name"
+    done
+
+# Import the Godot project headless (fills game/.godot). Godot 4.7.2 sometimes hangs in a fresh
+# import on a CI runner and prints nothing new from then on. A good import prints a new line at
+# least once a minute, so after 3 minutes with no new line the recipe stops Godot and imports
+# once more; the second import continues from the files that the first one finished.
+[script("bash")]
+import: fresh-marble kit-textures
+    set -euo pipefail
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    for attempt in 1 2; do
+        "{{ godot }}" --headless --path game --import > >(tee "$log") 2>&1 &
+        pid=$!
+        lines=0 still=0
+        while kill -0 "$pid" 2>/dev/null && (( still < 180 )); do
+            sleep 5
+            # Count distinct lines: a hung import can print the same progress lines again and again.
+            now=$(LC_ALL=C sort -u "$log" | wc -l)
+            if (( now == lines )); then still=$((still + 5)); else still=0 lines=$now; fi
+        done
+        # Godot can exit during the last sleep: then its exit status counts, not the stall.
+        if ! kill -0 "$pid" 2>/dev/null; then
+            wait "$pid"
+            exit
+        fi
+        { kill -9 "$pid"; wait "$pid"; } 2>/dev/null || true
+        echo "just import: godot --import printed nothing new for 3 minutes, so it hung (attempt $attempt of 2)" >&2
+    done
+    exit 1
 
 # Play a level in a window (default: the flat test level). Click to turn the camera with the mouse
 [positional-arguments]
@@ -37,19 +127,20 @@ run level="flat": import
 
 # Build level scripts (all, or the given ids) into game/levels/built/ and check that they import
 [positional-arguments]
-build-levels *ids:
+build-levels *ids: fresh-marble kit-textures
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
 
 # Build the feel-review course and play it in a window with the tuning overlay (LB+Y or F1)
 feel: (build-levels "feel")
     "{{ godot }}" --path game res://debug/feel.tscn
 
-# Build the levels whose .glb is missing or older than its script, the kit or the importer
+# Build the levels whose .glb is missing or older than its script, the kit, the importer, the
+# material set or a sky preset (the importer writes the sky and the sun into the level)
 [private]
 [script("bash")]
 fresh-levels:
     set -euo pipefail
-    inputs=(kit/*.py tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd)
+    inputs=(kit/*.py assets/props/*.glb tools/blender/build_level.py tools/blender/build_levels.py game/levels/level_converter.gd game/materials/kit_materials.gd game/skies/sky_preset.gd game/skies/*.tres)
     stale=()
     for script in levels/*/*.py; do
         id=$(basename "$script" .py)
@@ -75,14 +166,15 @@ test: fresh-levels import
     count=$(grep -oE '^Tests +[0-9]+' "$log" | grep -oE '[0-9]+' || true)
     if (( ${count:-0} == 0 )); then echo "just test: zero tests ran" >&2; exit 1; fi
 
-# Lint GDScript (gdlint, and a Godot compile check), Python (Ruff; ty outside Blender
-# scripts) and shell scripts (shellcheck). Tool versions come from tools/setup/pins.env
+# Lint GDScript, Python and shell scripts (lint-game and lint-scripts)
+lint: lint-game lint-scripts
+
+# Lint GDScript: gdlint, and a Godot compile check. Tool versions come from tools/setup/pins.env
 [script("bash")]
-lint: import
+lint-game: import
     set -euo pipefail
     source tools/setup/pins.env
-    files() { git ls-files --cached --others --exclude-standard "$@"; }
-    mapfile -t gd < <(files 'game/*.gd' ':!game/addons/*')
+    mapfile -t gd < <(git ls-files --cached --others --exclude-standard 'game/*.gd' ':!game/addons/*')
     uvx --from "gdtoolkit==$GDTOOLKIT_VERSION" gdlint "${gd[@]}"
     # Compile every game script, also the ones that no test loads. Load them from a running
     # SceneTree, not with --check-only, so that references to autoloads resolve.
@@ -100,9 +192,17 @@ lint: import
     log=$("{{ godot }}" --headless --path game --script "$check" -- "${gd[@]}" 2>&1) || status=$?
     if (( status != 0 )) || grep -q 'SCRIPT ERROR' <<<"$log"; then
         echo "$log" >&2
-        echo "just lint: a game script does not compile" >&2
+        echo "just lint-game: a game script does not compile" >&2
         exit 1
     fi
+
+# Lint Python (Ruff; ty outside Blender scripts) and shell scripts (shellcheck). It needs no
+# Godot. Tool versions come from tools/setup/pins.env
+[script("bash")]
+lint-scripts:
+    set -euo pipefail
+    source tools/setup/pins.env
+    files() { git ls-files --cached --others --exclude-standard "$@"; }
     mapfile -t py < <(files '*.py')
     uvx "ruff@$RUFF_VERSION" check "${py[@]}"
     uvx "ruff@$RUFF_VERSION" format --check "${py[@]}"
@@ -111,19 +211,21 @@ lint: import
     tools=() deps=()
     for f in "${py[@]}"; do
         grep -qE '^(import|from) bpy' "$f" && continue
-        [[ $f == tools/harness/* || $f == tools/audio/music/* ]] && continue
+        [[ $f == tools/harness/* || $f == tools/audio/music/* || $f == tools/art/* ]] && continue
         tools+=("$f")
         grep -q '^# /// script' "$f" && deps+=(--with-requirements "$f")
     done
     uvx "${deps[@]}" "ty@$TY_VERSION" check "${tools[@]}"
-    # The harness and the music pipeline are uv projects; ty checks each with its locked dependencies.
+    # The harness, the music pipeline and the asset tools are uv projects; ty checks each with
+    # its locked dependencies.
     uv run --quiet --project tools/harness --with "ty==$TY_VERSION" ty check tools/harness
     uv run --quiet --project tools/audio/music --with "ty==$TY_VERSION" ty check tools/audio/music
+    uv run --quiet --project tools/art --with "ty==$TY_VERSION" ty check tools/art
     mapfile -t sh < <(files '*.sh')
     shellcheck "${sh[@]}"
 
-# Build the Linux and Windows release exports into build/
-export: import
+# Build the Linux and Windows release exports, with every level, into build/
+export: fresh-levels import
     mkdir -p build/linux build/windows
     "{{ godot }}" --headless --path game --export-release "Linux" ../build/linux/orrery.x86_64
     "{{ godot }}" --headless --path game --export-release "Windows Desktop" ../build/windows/orrery.exe
@@ -160,6 +262,83 @@ test-harness *args: import
 [positional-arguments]
 test-music *args:
     uv run --quiet --project tools/audio/music pytest tools/audio/music "$@"
+
+# --- Asset tools (tools/art/README.md) ---
+
+# GPT-Image art and Tripo props: `just art image|set|views|edit-views|model|texture|balance|check`.
+# Paid calls need --yes; --dry-run sends nothing. Keys come from the environment or the git-ignored .env
+[positional-arguments]
+art *args:
+    @uv run --quiet --project tools/art orrery-art "$@"
+
+# A Tripo model (from an image, views or a views task) into build/art/models/: `just art model`
+[positional-arguments]
+model *args:
+    @uv run --quiet --project tools/art orrery-art model "$@"
+
+# Clean a generated GLB into assets/props/<name>.glb for kit.prop: real height in m, the origin
+# on the base centre, the triangle budget and texture size of its class, and materials inside
+# the limits of visual-quality.md §6. For example
+# `just prop-cleanup build/art/models/lamp.glb lamp --height 3.2 [--class hero] [--stone] [--material brass:1,2]`
+[positional-arguments]
+[script("bash")]
+prop-cleanup source name *args:
+    set -euo pipefail
+    # Read the arguments as data from $1 and $2: just interpolation would paste them into the script.
+    source=$1 name=$2
+    shift 2
+    if [[ ! $name =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just prop-cleanup: the name must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    staged="$tmp/$name.glb" dest="assets/props/$name.glb"
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/prop_cleanup.py -- "$source" "$staged" "$@" >"$tmp/log" 2>&1; then
+        cat "$tmp/log" >&2
+        echo "just prop-cleanup: Blender failed" >&2
+        exit 1
+    fi
+    grep '^prop-cleanup:' "$tmp/log"
+    "${GLTF_VALIDATOR:-gltf_validator}" "$staged"
+    # Keep the generation record next to the prop, for docs/licenses.md and the Steam disclosure.
+    # A source without a record leaves none, so an old record never names a new prop. Copy the
+    # record first: a clean-up in place has the same record as source and as destination.
+    if [[ -f "$source.json" ]]; then cp "$source.json" "$tmp/record.json"; fi
+    mkdir -p assets/props
+    mv "$staged" "$dest"
+    rm -f "$dest.json"
+    if [[ -f "$tmp/record.json" ]]; then cp "$tmp/record.json" "$dest.json"; fi
+    echo "$dest"
+
+# Render the review sheet of assets/props/<id>.glb to build/props/<id>.png: four views of the
+# prop beside the marble and the kit materials, in neutral light (headless Cycles on the CPU)
+[positional-arguments]
+[script("bash")]
+render-prop id *args:
+    set -euo pipefail
+    id=$1
+    shift
+    if [[ ! $id =~ ^[A-Za-z0-9_-]+$ ]]; then
+        echo "just render-prop: the id must be letters, digits, _ and - only" >&2
+        exit 1
+    fi
+    log=$(mktemp)
+    trap 'rm -f "$log"' EXIT
+    out="build/props/$id.png"
+    if ! "${BLENDER:-blender-5.2}" -b --factory-startup -noaudio --python-exit-code 1 \
+        --python tools/blender/render_prop.py -- "assets/props/$id.glb" "$out" "$@" >"$log" 2>&1; then
+        cat "$log" >&2
+        echo "just render-prop: Blender failed" >&2
+        exit 1
+    fi
+    echo "$out"
+
+# Run the asset tool tests: mocked APIs, no paid call. The prop tests need blender-5.2
+[positional-arguments]
+test-art *args:
+    uv run --quiet --project tools/art pytest tools/art "$@"
 
 # Build the Linux debug export (harness and test levels included) into build/linux-debug/
 export-debug: import
@@ -217,15 +396,20 @@ test-pad: import
 
 # --- Gallery and performance (#20) ---
 
-# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html
+# Render every shot of each level (all, or the given ids) on High into build/gallery/index.html. Fails on a shader compile error
 [positional-arguments]
 gallery *ids: fresh-levels import
     uv run --quiet --script tools/gallery/gallery.py "$@"
 
-# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets
+# Fly each level's camera path per graphics preset and check the GPU time and VRAM budgets. Fails on a shader compile error
 [positional-arguments]
 perf *ids: fresh-levels import
     GODOT="{{ godot }}" uv run --quiet --script tools/perf/perf.py "$@"
+
+# Run the perf tool's tests (no Godot needed)
+[positional-arguments]
+test-perf *args:
+    uv run --quiet --with pytest pytest tools/perf "$@"
 
 # --- Lightmaps (#24) ---
 
@@ -276,7 +460,7 @@ build-sfx *args:
 # --- HUD and menus (#22) ---
 
 # Save a screenshot of each UI screen at 1080p and 4K into build/ui/<height>/ (GPU, gamescope).
-# The Dummy audio driver keeps the run silent
+# The Dummy audio driver keeps the run silent. It fails on a shader compile error in the log
 [script("bash")]
 ui-shots: fresh-levels import
     set -euo pipefail
@@ -294,5 +478,14 @@ ui-shots: fresh-levels import
             echo "just ui-shots: not every screenshot was saved at ${width}x${height}" >&2
             exit 1
         fi
+        # A shader that does not compile draws as a grey solid, and the screenshots still save.
+        uv run --quiet --project tools/harness orrery-harness check-log "$log"
         grep '^ui-shots: /' "$log"
     done
+
+# --- Skies (#24) ---
+
+# Bake the tier skies (all, or dawn, noon, dusk) into game/skies/<name>.hdr with Cycles on this GPU
+[positional-arguments]
+bake-skies *args:
+    blender-5.2 -b --factory-startup -noaudio --python-exit-code 1 --python tools/blender/bake_skies.py -- "$@"

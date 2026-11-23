@@ -12,20 +12,28 @@ extends RefCounted
 ##   Camera3D with the marker's name and transform, for the harness `screenshot {shot}` command.
 ##   A marker of any other type becomes an instance of res://objects/T/T.tscn with the marker's
 ##   name and transform. Each other key sets the @export var of that name on the instance root,
-##   and the marker's children become Marker3D children of the instance, in name order.
+##   and the marker's children become Marker3D children of the instance, in name order. A
+##   Material export takes a kit material name: an unknown name fails the import.
 ## - Collision: a mesh named `<name>-col` collides and stays visible as `<name>`; a mesh named
 ##   `<name>-colonly` collides and goes away. Their faces are grouped by the `surface` extra of
 ##   each material ("default" when it has none). Each group becomes one Solid, `solid_<surface>`,
 ##   with the Surface res://core/level/<surface>_surface.tres.
+## - Far scenery: a mesh named `<name>-far` stays visible as `<name>`, but it stays out of the
+##   lightmap, gets no reflection probe and casts no shadow: scenery past the play space, such
+##   as the far town round an Ascent zone. (Its shadows were soft blobs on the land.)
 ## - Lint: a level has exactly one `level`, one `start` and one `finish` marker. A level outside
 ##   levels/test/ (tier `test`) also has the gallery shots `overview`, `start`, `finish` and
 ##   `egg` (docs/design/visual-quality.md §7).
 ## - Route lint (#14): each `route` marker has the kind first_run or expert, a level has at most
 ##   one route of each kind, and a level outside levels/test/ has a first_run route.
-## - Light: a level without its own WorldEnvironment and DirectionalLight3D gets a stand-in
-##   rig: one sun with shadows and a procedural sky with AgX tonemapping. The level's `sky`
-##   picks dawn, noon or dusk; without one, the tier does (beginner dawn, intermediate noon,
-##   advanced dusk, others noon). The look baseline (#24) replaces it with the real skies.
+## - Materials: a mesh surface whose material has the `material` extra (a kit material name,
+##   kit/surfaces.py) gets the material that KitMaterials.find() returns for it.
+## - Light: a level without its own WorldEnvironment and DirectionalLight3D gets them from a
+##   SkyPreset, res://skies/<name>.tres: one sun with shadows, `sun`, and the sky, `sky`. The
+##   level's `sky` names the preset; without one, the tier does (beginner dawn, intermediate
+##   noon, advanced dusk, others dawn).
+## - Reflections: static ReflectionProbes, `probe_<n>`, cover the level's meshes. Each is at
+##   most PROBE_SIZE m on a side (docs/design/visual-quality.md §4).
 ## - Lightmap: every level gets one LightmapGI, `lightmap`, with the bake settings of
 ##   docs/design/visual-quality.md §4. When `just bake <id>` has written LIGHTMAP_DATA for the
 ##   level id, the LightmapGI uses it.
@@ -39,28 +47,19 @@ const ONE_EACH: Array[String] = ["level", "start", "finish"]
 const GALLERY_SHOTS: Array[String] = ["overview", "start", "finish", "egg"]
 ## The baked lightmap of a level id. `just bake` writes it; the lightmap baker plugin uses it.
 const LIGHTMAP_DATA: String = "res://levels/lightmaps/%s.lmbake"
-## The stand-in light rigs by name: sun elevation in degrees, sun colour and sky colours.
-const SUN_ELEVATION: Dictionary[String, float] = {"dawn": 20.0, "noon": 60.0, "dusk": 25.0}
-const SUN_COLOR: Dictionary[String, Color] = {
-	"dawn": Color(1.0, 0.82, 0.66),
-	"noon": Color(1.0, 0.97, 0.92),
-	"dusk": Color(1.0, 0.68, 0.48),
-}
-const SKY_TOP: Dictionary[String, Color] = {
-	"dawn": Color(0.3, 0.42, 0.65),
-	"noon": Color(0.24, 0.45, 0.82),
-	"dusk": Color(0.1, 0.13, 0.3),
-}
-const SKY_HORIZON: Dictionary[String, Color] = {
-	"dawn": Color(0.92, 0.74, 0.6),
-	"noon": Color(0.7, 0.8, 0.9),
-	"dusk": Color(0.85, 0.55, 0.45),
-}
-const TIER_RIG: Dictionary[String, String] = {
+## The sky preset of a name, and the name for each tier. Other tiers get DEFAULT_SKY.
+const SKY: String = "res://skies/%s.tres"
+const TIER_SKY: Dictionary[String, String] = {
 	"beginner": "dawn",
 	"intermediate": "noon",
 	"advanced": "dusk",
 }
+const DEFAULT_SKY: String = "dawn"
+## The longest side of a reflection probe, and how far the probes reach past the meshes, m.
+const PROBE_SIZE: float = 30.0
+const PROBE_MARGIN: float = 3.0
+## How far above the highest mesh of its cell a reflection probe looks from, m.
+const PROBE_HEIGHT: float = 2.0
 
 ## The problems of the last convert() call.
 var errors: PackedStringArray = []
@@ -109,8 +108,10 @@ func convert(scene: Node3D) -> Level:
 			_place_shot(marker, data)
 		else:
 			_place(marker, data)
-	_build_solids(meshes)
+	var visible: Array[MeshInstance3D] = _build_solids(meshes)
+	_apply_materials(visible)
 	_add_light_rig(level_data)
+	_add_probes(visible.filter(_lit))
 	_add_lightmap()
 	scene.set_script(LEVEL_SCRIPT)
 	_apply(scene, LEVEL_SCRIPT, level_data, "level")
@@ -119,13 +120,13 @@ func convert(scene: Node3D) -> Level:
 	return scene as Level
 
 
-## Collects the markers and the hinted meshes under node. It does not look inside markers.
+## Collects the markers and the meshes under node. It does not look inside markers.
 func _find(node: Node, markers: Array[Node3D], meshes: Array[MeshInstance3D]) -> void:
 	for child: Node in node.get_children():
 		if child is Node3D and not _marker_data(child as Node3D).is_empty():
 			markers.append(child as Node3D)
 			continue
-		if child is MeshInstance3D and _hint(child) != "":
+		if child is MeshInstance3D:
 			meshes.append(child as MeshInstance3D)
 		_find(child, markers, meshes)
 
@@ -139,9 +140,9 @@ func _marker_data(node: Node3D) -> Dictionary:
 	return {}
 
 
-## Returns "-col" or "-colonly" when the node name ends with that hint, else "".
+## Returns "-col", "-colonly" or "-far" when the node name ends with that hint, else "".
 func _hint(node: Node) -> String:
-	for hint: String in ["-colonly", "-col"]:
+	for hint: String in ["-colonly", "-col", "-far"]:
 		if String(node.name).ends_with(hint):
 			return hint
 	return ""
@@ -201,11 +202,13 @@ func _check_routes(markers: Array[Node3D], tier: String) -> void:
 
 
 ## Puts a Camera3D with the marker's name and transform in the marker's place. It looks along
-## the marker's -z axis in Godot, which is the marker's +y axis in Blender.
+## the marker's -z axis in Godot, which is the marker's +y axis in Blender, as far as the play
+## camera sees (FollowCamera.FAR).
 func _place_shot(marker: Node3D, data: Dictionary) -> void:
 	if data.size() > 1:
 		_fail(marker, "a `shot` marker has no settings")
 	var camera: Camera3D = Camera3D.new()
+	camera.far = FollowCamera.FAR
 	var parent: Node = marker.get_parent()
 	var index: int = marker.get_index()
 	parent.remove_child(marker)
@@ -236,14 +239,17 @@ func _apply(target: Object, script: Script, settings: Dictionary, node: String) 
 			continue
 		var value: Variant = _converted(settings[key], types[name])
 		if value == null:
-			var expected: String = type_string(types[name])
+			var expected: String = (
+				"a kit material name" if types[name] == TYPE_OBJECT else type_string(types[name])
+			)
 			_error(node, "setting `%s` must be %s, got %s" % [name, expected, settings[key]])
 			continue
 		target.set(name, value)
 
 
 ## Returns value converted to the Variant type, or null when it does not convert. Numbers
-## arrive from glTF as floats, so a whole float converts to int too.
+## arrive from glTF as floats, so a whole float converts to int too. A String converts to an
+## Object (a Material export) as the kit material of that name, or null when there is none.
 func _converted(value: Variant, type: int) -> Variant:
 	var number: bool = value is float or value is int
 	if type == TYPE_FLOAT and number:
@@ -253,24 +259,35 @@ func _converted(value: Variant, type: int) -> Variant:
 		var whole: float = value
 		if whole == roundf(whole):
 			return int(whole)
-	if type == TYPE_BOOL and value is bool:
-		return value
-	if type == TYPE_STRING and value is String:
-		return value
-	if type == TYPE_STRING_NAME and value is String:
-		var text: String = value
-		return StringName(text)
+	if type == TYPE_OBJECT and value is String:
+		var kit_name: String = value
+		return KitMaterials.find(kit_name)
+	var strings: bool = value is String and type in [TYPE_STRING, TYPE_STRING_NAME]
+	if strings or (type == TYPE_BOOL and value is bool):
+		return type_convert(value, type)
 	return null
 
 
-## Makes one Solid for each surface type from the faces of the hinted meshes.
-func _build_solids(meshes: Array[MeshInstance3D]) -> void:
+## Makes one Solid for each surface type from the faces of the hinted meshes. Returns the
+## meshes that stay in the level.
+func _build_solids(meshes: Array[MeshInstance3D]) -> Array[MeshInstance3D]:
+	var visible: Array[MeshInstance3D] = []
 	var faces: Dictionary[String, PackedVector3Array] = {}
 	for mesh_node: MeshInstance3D in meshes:
 		var hint: String = _hint(mesh_node)
+		if hint == "":
+			visible.append(mesh_node)
+			continue
+		if hint == "-far":
+			mesh_node.name = String(mesh_node.name).trim_suffix(hint)
+			mesh_node.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+			mesh_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			visible.append(mesh_node)
+			continue
 		_add_faces(mesh_node, faces)
 		if hint == "-col":
 			mesh_node.name = String(mesh_node.name).trim_suffix(hint)
+			visible.append(mesh_node)
 		elif mesh_node.get_child_count() > 0:
 			_fail(mesh_node, "a -colonly mesh must not have children")
 		else:
@@ -293,15 +310,17 @@ func _build_solids(meshes: Array[MeshInstance3D]) -> void:
 		_root.add_child(solid)
 		solid.owner = _root
 		collision.owner = _root
+	return visible
+
+
+## Returns true for a mesh in the lit play space: every mesh but far scenery.
+func _lit(mesh_node: MeshInstance3D) -> bool:
+	return mesh_node.gi_mode != GeometryInstance3D.GI_MODE_DISABLED
 
 
 ## Adds the faces of each mesh surface, in root space, to the group of its material's surface.
 func _add_faces(mesh_node: MeshInstance3D, faces: Dictionary[String, PackedVector3Array]) -> void:
-	var to_root: Transform3D = Transform3D.IDENTITY
-	var node: Node = mesh_node
-	while node != _root and node is Node3D:
-		to_root = (node as Node3D).transform * to_root
-		node = node.get_parent()
+	var to_root: Transform3D = _to_root(mesh_node)
 	var mesh: Mesh = mesh_node.mesh
 	for i: int in mesh.get_surface_count():
 		var arrays: Array = mesh.surface_get_arrays(i)
@@ -320,12 +339,44 @@ func _add_faces(mesh_node: MeshInstance3D, faces: Dictionary[String, PackedVecto
 		faces[surface_id] = group
 
 
+## Returns the transform from the space of node to the space of the level root.
+func _to_root(node: Node3D) -> Transform3D:
+	var to_root: Transform3D = Transform3D.IDENTITY
+	var above: Node = node
+	while above != _root and above is Node3D:
+		to_root = (above as Node3D).transform * to_root
+		above = above.get_parent()
+	return to_root
+
+
 ## Returns the `surface` extra of material, or "default".
 func _surface_id(material: Material) -> String:
+	return _extra(material, "surface", "default")
+
+
+## Returns the extra `key` of material as text, or fallback when it has none.
+func _extra(material: Material, key: String, fallback: String) -> String:
 	if material == null:
-		return "default"
+		return fallback
 	var extras: Dictionary = material.get_meta(&"extras", {})
-	return str(extras.get("surface", "default"))
+	return str(extras.get(key, fallback))
+
+
+## Gives each mesh surface with a kit material name the material of the library.
+func _apply_materials(meshes: Array[MeshInstance3D]) -> void:
+	for mesh_node: MeshInstance3D in meshes:
+		var mesh: Mesh = mesh_node.mesh
+		if mesh == null:
+			continue
+		for i: int in mesh.get_surface_count():
+			var kit_name: String = _extra(mesh.surface_get_material(i), "material", "")
+			if kit_name == "":
+				continue
+			var material: Material = KitMaterials.find(kit_name)
+			if material == null:
+				_fail(mesh_node, "unknown kit material `%s` (game/materials/)" % kit_name)
+				continue
+			mesh.surface_set_material(i, material)
 
 
 ## Takes node out of the scene and frees it.
@@ -344,38 +395,68 @@ func _error(node: String, message: String) -> void:
 	errors.append("level %s: node %s: %s" % [_id, node, message])
 
 
-## Adds the stand-in sun and sky when the level has no WorldEnvironment and no
-## DirectionalLight3D of its own.
+## Adds the sun and the sky of the level's SkyPreset when the level has no WorldEnvironment
+## and no DirectionalLight3D of its own.
 func _add_light_rig(level_data: Dictionary) -> void:
 	for type: String in ["WorldEnvironment", "DirectionalLight3D"]:
 		if not _root.find_children("*", type, true, false).is_empty():
 			return
-	var rig: String = str(level_data.get("sky", ""))
-	if not SUN_ELEVATION.has(rig):
-		rig = TIER_RIG.get(str(level_data.get("tier", "")), "noon")
-	var material: ProceduralSkyMaterial = ProceduralSkyMaterial.new()
-	material.sky_top_color = SKY_TOP[rig]
-	material.sky_horizon_color = SKY_HORIZON[rig]
-	material.ground_horizon_color = SKY_HORIZON[rig]
-	var sky: Sky = Sky.new()
-	sky.sky_material = material
-	var environment: Environment = Environment.new()
-	environment.background_mode = Environment.BG_SKY
-	environment.sky = sky
-	environment.tonemap_mode = Environment.TONE_MAPPER_AGX
-	# A light haze for the presets that turn volumetric fog on; the default washes out the sky.
-	environment.volumetric_fog_density = 0.002
+	var sky_name: String = str(level_data.get("sky", ""))
+	if sky_name == "":
+		sky_name = TIER_SKY.get(str(level_data.get("tier", "")), DEFAULT_SKY)
+	var path: String = SKY % sky_name
+	var preset: SkyPreset = load(path) as SkyPreset if ResourceLoader.exists(path) else null
+	if preset == null:
+		_fail(_root, "unknown sky `%s`: %s is not a SkyPreset" % [sky_name, path])
+		return
 	var world: WorldEnvironment = WorldEnvironment.new()
 	world.name = "sky"
-	world.environment = environment
-	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	world.environment = preset.environment()
+	var sun: DirectionalLight3D = preset.sun()
 	sun.name = "sun"
-	sun.shadow_enabled = true
-	sun.light_color = SUN_COLOR[rig]
-	sun.rotation_degrees = Vector3(-SUN_ELEVATION[rig], 35.0, 0.0)
 	for node: Node in [world, sun]:
 		_root.add_child(node)
 		node.owner = _root
+
+
+## Adds static reflection probes in a grid over the bounds of the meshes. A grid cell with no
+## mesh in it gets no probe. A probe looks from PROBE_HEIGHT m above the highest mesh of its
+## cell, so that it sees the track from above and the open sky.
+func _add_probes(meshes: Array[MeshInstance3D]) -> void:
+	var boxes: Array[AABB] = []
+	for mesh_node: MeshInstance3D in meshes:
+		boxes.append(_to_root(mesh_node) * mesh_node.get_aabb())
+	if boxes.is_empty():
+		return
+	var bounds: AABB = boxes[0]
+	for box: AABB in boxes:
+		bounds = bounds.merge(box)
+	bounds = bounds.grow(PROBE_MARGIN)
+	var counts: Vector3i = Vector3i((bounds.size / PROBE_SIZE).ceil()).maxi(1)
+	var cell: Vector3 = bounds.size / Vector3(counts)
+	var number: int = 0
+	for x: int in counts.x:
+		for y: int in counts.y:
+			for z: int in counts.z:
+				var area: AABB = AABB(bounds.position + cell * Vector3(x, y, z), cell)
+				var inside: Array[AABB] = boxes.filter(area.intersects)
+				if inside.is_empty():
+					continue
+				var top: float = area.position.y
+				for box: AABB in inside:
+					top = maxf(top, minf(box.end.y, area.end.y))
+				var probe: ReflectionProbe = ReflectionProbe.new()
+				probe.name = "probe_%d" % number
+				probe.update_mode = ReflectionProbe.UPDATE_ONCE
+				# Reflections only: the lightmap and its probes give the ambient light.
+				probe.ambient_mode = ReflectionProbe.AMBIENT_DISABLED
+				probe.size = cell
+				probe.position = area.get_center()
+				var eye: float = minf(top + PROBE_HEIGHT, area.end.y - 0.1)
+				probe.origin_offset = Vector3(0.0, eye - probe.position.y, 0.0)
+				_root.add_child(probe)
+				probe.owner = _root
+				number += 1
 
 
 ## Adds the LightmapGI with the bake settings, and its committed bake when one exists.

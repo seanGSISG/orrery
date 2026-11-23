@@ -5,9 +5,14 @@ on:
     branches: [main, "plan-*"]
   push:
     branches: [main, "plan-*"]
+    tags: ["v*"]
+  workflow_dispatch:
 
+# A new push to a pull request cancels its older run: the new run checks the whole pull request.
+# A push to a branch runs in a group of its own, never cancelled or queued behind another: its
+# run checks only that push's changes, so every such run must finish.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -17,23 +22,100 @@ defaults:
   run:
     shell: bash
 
+# Every job imports the project, with its Git LFS files (textures, skies, lightmaps, music).
+# The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
+# downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
+# The setup action also writes game/override.cfg to turn off GPU texture compression (godotengine/godot#114121); to revert, remove its last step.
 jobs:
-  lint:
-    name: Lint
+  # Lists the changed files and picks the jobs they need (.github/pick-jobs.sh holds the rules).
+  # A pull request compares with its base, a push with the commit before it. A new branch or tag, a
+  # manual run or a failed diff runs every job. A docs-only change runs no other job.
+  changes:
+    name: Pick the jobs
     runs-on: ubuntu-latest
+    # Each timeout is 2.5 times the longest recent successful run of the job, rounded up to 5 minutes (at least 5). A hung job then fails fast.
+    timeout-minutes: 5
+    outputs:
+      levels: ${{ steps.pick.outputs.levels }}
+      lint-game: ${{ steps.pick.outputs.lint-game }}
+      lint-scripts: ${{ steps.pick.outputs.lint-scripts }}
+      test: ${{ steps.pick.outputs.test }}
+      harness: ${{ steps.pick.outputs.harness }}
+      export: ${{ steps.pick.outputs.export }}
+      music: ${{ steps.pick.outputs.music }}
+      art: ${{ steps.pick.outputs.art }}
+      perf: ${{ steps.pick.outputs.perf }}
     steps:
-      # `just lint` imports the project, with its LFS lightmaps and music.
       - uses: actions/checkout@v7
         with:
-          lfs: true
+          fetch-depth: 0
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # The pull request checkout is a merge commit; its first parent is the base.
+          case $EVENT in
+            pull_request) base=HEAD^1 ;;
+            push) base=$BEFORE ;;
+            *) base= ;;
+          esac
+          if [[ -z $base || $base =~ ^0+$ ]] || ! files=$(git -c core.quotePath=false diff --name-only --no-renames "$base" HEAD); then
+            files=everything
+          fi
+          picked=$(.github/pick-jobs.sh <<<"$files")
+          echo "$picked" >> "$GITHUB_OUTPUT"
+          {
+            echo '### Changed files'
+            echo '```'
+            echo "$files"
+            echo '```'
+            if [[ $picked != *=true* ]]; then
+              echo 'Docs-only change: no job runs beyond this one.'
+            else
+              echo "Outputs set to true (windows-boot follows export; the tools job runs music, art and perf): $(grep '=true' <<<"$picked" | cut -d= -f1 | paste -sd ' ')"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # GDScript: gdlint and a compile check, which imports the game.
+  lint-game:
+    name: Lint GDScript
+    needs: [changes, levels]
+    if: needs.changes.outputs.lint-game == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
-      - run: just lint
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
+      - run: just lint-game
 
-  # Builds every level script with Blender and checks the import; the test jobs get the files.
+  # Python and shell scripts. It needs no Godot and no LFS files, so a tool change lints fast.
+  lint-scripts:
+    name: Lint scripts
+    needs: changes
+    if: needs.changes.outputs.lint-scripts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: extractions/setup-just@v4
+      - run: just lint-scripts
+
+  # Builds the marble's core with Blender, and for the tests and the export every level script
+  # too, and checks the import. Every other job that runs the game gets the core, because the
+  # marble scene needs it. The levels output is `all`, `core` or `false` (.github/pick-jobs.sh).
   levels:
     name: Build levels
+    needs: changes
+    if: needs.changes.outputs.levels != 'false'
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -48,8 +130,17 @@ jobs:
           path: ~/.local/opt
           key: ${{ steps.pins.outputs.key }}
       - run: tools/blender/install-ci.sh
-      - run: just build-levels
+      - if: needs.changes.outputs.levels == 'all'
+        run: just build-levels
+      - if: needs.changes.outputs.levels != 'all'
+        run: just build-marble
       - uses: actions/upload-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
+          if-no-files-found: error
+      - if: needs.changes.outputs.levels == 'all'
+        uses: actions/upload-artifact@v7
         with:
           name: levels
           path: game/levels/built/
@@ -57,18 +148,21 @@ jobs:
 
   test:
     name: Import, GUT and level tests (${{ matrix.os }})
-    needs: levels
+    needs: [changes, levels]
+    if: needs.changes.outputs.test == 'true'
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     steps:
-      # The baked lightmaps (game/levels/lightmaps/) and the music are in Git LFS.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
       - uses: actions/download-artifact@v7
         with:
           name: levels
@@ -79,30 +173,46 @@ jobs:
   # The harness contract tests against a headless debug build; the GPU screenshot test runs locally.
   harness:
     name: Harness contract tests
+    needs: [changes, levels]
+    if: needs.changes.outputs.harness == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      # The game imports and plays the LFS music.
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
       - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
       - run: just test-harness
 
   export:
     name: Export Linux and Windows
+    needs: [changes, levels]
+    if: needs.changes.outputs.export == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
-        with:
-          lfs: true
       - uses: ./.github/actions/setup
         with:
           templates: "true"
+      - uses: actions/download-artifact@v7
+        with:
+          name: marble
+          path: game/core/marble/built/
+      - uses: actions/download-artifact@v7
+        with:
+          name: levels
+          path: game/levels/built/
       - run: just export
       - name: Boot the Linux export
         timeout-minutes: 2
-        run: build/linux/orrery.x86_64 --headless -- --smoke | grep '^ORRERY boot ok'
+        run: build/linux/orrery.x86_64 --headless --audio-driver Dummy -- --smoke | grep '^ORRERY boot ok'
+      - name: Play every level in the Linux export
+        timeout-minutes: 3
+        run: .github/check-export.sh build/linux/orrery.x86_64
       # Artifact zips drop the executable bit; a tarball keeps it.
       - run: tar -czf build/orrery-linux.tar.gz -C build/linux .
       - uses: actions/upload-artifact@v7
@@ -116,16 +226,81 @@ jobs:
           path: build/windows/
           if-no-files-found: error
 
-  # Boots the Windows export that the export job uploads.
+  # Boots the Windows export that the export job uploads and plays every level in it. It is
+  # skipped when the export is. The check needs only the names of the level scripts and the
+  # bakes, so the checkout is sparse and has no LFS files.
   windows-boot:
     name: Boot the Windows export
     needs: export
     runs-on: windows-latest
+    timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            .github
+            levels
+            game/levels/lightmaps
       - uses: actions/download-artifact@v7
         with:
           name: orrery-windows
           path: build/windows/
       - name: Boot the Windows export
         timeout-minutes: 2
-        run: build/windows/orrery.exe --headless -- --smoke | grep '^ORRERY boot ok'
+        run: build/windows/orrery.exe --headless --audio-driver Dummy -- --smoke | grep '^ORRERY boot ok'
+      - name: Play every level in the Windows export
+        timeout-minutes: 3
+        run: .github/check-export.sh build/windows/orrery.exe
+
+  # The pytest suites of the music pipeline, the asset tools and the perf tool. They need no Godot
+  # and no LFS files; the music tests measure loudness with ffmpeg.
+  tools:
+    name: Tool tests
+    needs: changes
+    if: needs.changes.outputs.music == 'true' || needs.changes.outputs.art == 'true' || needs.changes.outputs.perf == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: extractions/setup-just@v4
+      - if: needs.changes.outputs.music == 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ffmpeg
+          just test-music
+      - if: needs.changes.outputs.art == 'true'
+        run: just test-art
+      - if: needs.changes.outputs.perf == 'true'
+        run: just test-perf
+
+  # A version tag (`v*`) publishes the exports that the other jobs checked as a GitHub release; it
+  # builds nothing again. A tag with a hyphen (v0.1.0-rc.1) makes a prerelease. docs/plan.md 5.3
+  # tells how to cut a release.
+  release:
+    name: Publish the release
+    needs: [lint-game, lint-scripts, test, harness, windows-boot, tools]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-linux
+          path: linux/
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-windows
+          path: windows/
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mv linux/orrery-linux.tar.gz "orrery-$TAG-linux-x86_64.tar.gz"
+          (cd windows && zip -r "../orrery-$TAG-windows-x86_64.zip" .)
+          prerelease=()
+          [[ $TAG == *-* ]] && prerelease=(--prerelease)
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes "${prerelease[@]}" \
+            "orrery-$TAG-linux-x86_64.tar.gz" "orrery-$TAG-windows-x86_64.zip"

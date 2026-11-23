@@ -110,6 +110,7 @@ func test_shot_marker_becomes_a_camera_named_after_it() -> void:
 	var camera: Camera3D = scene.get_node(^"overview") as Camera3D
 	assert_not_null(camera)
 	assert_eq(camera.position, Vector3(1, 2, 3))
+	assert_eq(camera.far, FollowCamera.FAR, "it sees as far as the play camera")
 
 
 func test_wrong_setting_type_fails_with_level_id_and_node_name() -> void:
@@ -123,6 +124,16 @@ func test_wrong_setting_type_fails_with_level_id_and_node_name() -> void:
 func test_unknown_setting_fails() -> void:
 	var errors: String = _errors(_scene([{"type": "gem", "speed": 2.0}]))
 	assert_string_contains(errors, "level t: node gem_3: unknown setting `speed`")
+
+
+func test_material_setting_takes_a_kit_material_name() -> void:
+	var errors: String = _errors(_scene([{"type": "moving_platform", "finish": "woood"}]))
+	assert_string_contains(errors, "setting `finish` must be a kit material name, got woood")
+	var level: Level = LevelConverter.new().convert(
+		_scene([{"type": "moving_platform", "finish": "wood"}])
+	)
+	var platform: MovingPlatform = level.get_node("moving_platform_3") as MovingPlatform
+	assert_eq(platform.finish, KitMaterials.find("wood"))
 
 
 func test_unknown_marker_type_fails() -> void:
@@ -142,22 +153,7 @@ func test_level_outside_the_test_tier_needs_the_gallery_shots() -> void:
 	assert_false(errors.contains("shot `overview`"))
 
 
-## A level with no light of its own gets the stand-in sun and sky; its tier picks the rig.
-func test_level_without_light_gets_the_stand_in_rig() -> void:
-	var scene: Node3D = _scene()
-	LevelConverter.new().convert(scene)
-	var suns: Array[Node] = scene.find_children("*", "DirectionalLight3D", true, false)
-	var skies: Array[Node] = scene.find_children("*", "WorldEnvironment", true, false)
-	assert_eq(suns.size(), 1)
-	assert_eq(skies.size(), 1)
-	assert_true((suns[0] as DirectionalLight3D).shadow_enabled)
-	var environment: Environment = (skies[0] as WorldEnvironment).environment
-	assert_eq(environment.tonemap_mode, Environment.TONE_MAPPER_AGX)
-	var sky: ProceduralSkyMaterial = environment.sky.sky_material as ProceduralSkyMaterial
-	assert_eq(sky.sky_top_color, LevelConverter.SKY_TOP["noon"])
-
-
-## A level that brings its own sun keeps it and gets no stand-in sky.
+## A level that brings its own sun keeps it and gets no sky (test_level_look.gd has the rest).
 func test_level_with_its_own_sun_gets_no_rig() -> void:
 	var scene: Node3D = _scene()
 	scene.add_child(DirectionalLight3D.new())

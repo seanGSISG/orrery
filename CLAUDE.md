@@ -31,6 +31,7 @@ An original 3D marble platformer for Linux and Windows, built with Godot 4.7.2 a
 - `godot --headless` renders nothing, so its screenshots are blank. Use the harness for anything visual. Use `--headless` for imports, exports and logic tests.
 - Automated runs (harness, gallery, perf, bake, temporary scenes) pass `--audio-driver Dummy`, so no sound plays on Sean's speakers. `just run` and `just feel` keep sound.
 - Godot and Jolt don't promise identical results from identical inputs. Assert with tolerances, and compare physics values only within one OS. Ghosts record transforms for this reason.
+- `--headless` compiles no shaders, so `just test` cannot see a shader that fails to compile (the material draws as a grey solid). The GPU runs (`just gallery`, `just ui-shots`, `just perf`, and `orrery-harness quit` after a harness session) fail on a shader compile error in the game log.
 - Run the pinned official Blender (`blender-5.2`). The Arch `blender` package uses a different Python.
 - GUT reports success when zero tests run, and it skips a test script that does not parse. Keep both checks in `just test`.
 - The pause screen pauses the scene tree, and GUT cannot wait in a paused tree. Do not `await` in a test while the game is paused.

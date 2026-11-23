@@ -1,0 +1,102 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"3407b638-13ea-4b37-8529-52e0b78f71ef\"",
+  "settings": {
+    "input": "3407b638-13ea-4b37-8529-52e0b78f71ef",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-art-anvil-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-art-anvil-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-art-anvil-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-art-anvil-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "6c3e8d4f-ed68-477c-9b25-7245c21e556c",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1-art/props/anvil-draft.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0452
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1-art/props/anvil-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0628,
+      "refs": [
+        "build/art/images/zone1-art/props/anvil-draft.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-art-anvil-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "3de99af5-969e-4a56-a499-05d1e73ad25f",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-art-anvil-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "3407b638-13ea-4b37-8529-52e0b78f71ef",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "3de99af5-969e-4a56-a499-05d1e73ad25f"
+          }
+        ],
+        "face_limit": 4000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-art-anvil.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "6c3e8d4f-ed68-477c-9b25-7245c21e556c",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "discarded": []
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name anvil --stone 1.0 --metal-threshold 0.6 --yaw -90 --fit 0.8,0.555,0.8",
+  "total_billed_usd": 0.708
+}

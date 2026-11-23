@@ -1,0 +1,195 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"4f88686f-52ee-4a0d-b714-18bc2124d828\"",
+  "settings": {
+    "input": "4f88686f-52ee-4a0d-b714-18bc2124d828",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "detailed",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-art-great_door2-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-art-great_door2-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-art-great_door2-views-edit.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-art-great_door2-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.2,
+  "billed_usd": 0.2,
+  "request_id": "1a87a3ad-682f-456c-8588-7d3571a2351d",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-art.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1-art/props/great_door-draft.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0396
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1-art/props/great_door-final2.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0657,
+      "refs": [
+        "build/art/images/zone1-art/props/great_door-final.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-art-great_door2-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "de123fec-2fa4-4fce-9729-f535cfc1d42a",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [
+      {
+        "file": "build/art/models/zone1-art-great_door2-views-edit.json",
+        "service": "Tripo API /generation/edit-multiview",
+        "model": "",
+        "task_id": "e6652b21-039e-4483-94db-3eddc1ca73a2",
+        "seed": null,
+        "billed_usd": 0.05,
+        "settings": {
+          "input": "de123fec-2fa4-4fce-9729-f535cfc1d42a",
+          "prompts": [
+            {
+              "view": "back",
+              "prompt": "The back of the piece is one flat, plain wall of pale warm cream limestone blocks, the same stone as the arch surround. There is no door, no arch opening, no timber, no iron and no other object on this side."
+            }
+          ]
+        }
+      }
+    ],
+    "geometry": {
+      "file": "build/art/models/zone1-art-great_door2-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "4f88686f-52ee-4a0d-b714-18bc2124d828",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "front": "build/art/models/zone1-art-great_door2-views.front.jpeg"
+          },
+          {
+            "left": "build/art/models/zone1-art-great_door2-views.left.jpeg"
+          },
+          {
+            "back": "build/art/models/zone1-art-great_door2-views-edit.back.jpeg"
+          },
+          {
+            "right": "build/art/models/zone1-art-great_door2-views.right.jpeg"
+          }
+        ],
+        "face_limit": 8000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-art-great_door.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "1a87a3ad-682f-456c-8588-7d3571a2351d",
+      "seed": 1,
+      "billed_usd": 0.2
+    },
+    "superseded": [
+      {
+        "file": "build/art/images/zone1-art/props/great_door-final.png.json",
+        "service": "OpenAI Images API /v1/images/edits",
+        "model": "gpt-image-2.6-sunburst",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0579
+      },
+      {
+        "file": "build/art/models/zone1-art-great_door-views.json",
+        "service": "Tripo API /generation/image-to-multiview",
+        "model": "",
+        "task_id": "5c03a6a2-30c3-42ce-8c6b-0f6f5ffd6602",
+        "seed": null,
+        "billed_usd": 0.1,
+        "settings": {
+          "input": "build/art/images/zone1-art/props/great_door-final.png"
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-great_door-views-edit.json",
+        "service": "Tripo API /generation/edit-multiview",
+        "model": "",
+        "task_id": "d98dd3f5-90b3-4ad5-9efb-388e9fa2f2d4",
+        "seed": null,
+        "billed_usd": 0.05,
+        "settings": {
+          "input": "5c03a6a2-30c3-42ce-8c6b-0f6f5ffd6602",
+          "prompts": [
+            {
+              "view": "back",
+              "prompt": "The back of the piece is one flat, plain wall of pale warm cream limestone blocks, the same stone as the arch surround. There is no door, no arch opening, no timber and no iron on this side."
+            }
+          ]
+        }
+      },
+      {
+        "file": "build/art/models/zone1-art-great_door-shape.glb.json",
+        "service": "Tripo API /generation/multiview-to-model",
+        "model": "P1-20260311",
+        "task_id": "0dc2da40-6a97-4202-9ec5-6741f776c4e6",
+        "seed": 1,
+        "billed_usd": 0.4,
+        "settings": {
+          "model": "P1-20260311",
+          "texture": false,
+          "pbr": false,
+          "inputs": [
+            {
+              "front": "build/art/models/zone1-art-great_door-views.front.jpeg"
+            },
+            {
+              "left": "build/art/models/zone1-art-great_door-views.left.jpeg"
+            },
+            {
+              "back": "build/art/models/zone1-art-great_door-views-edit.back.jpeg"
+            },
+            {
+              "right": "build/art/models/zone1-art-great_door-views.right.jpeg"
+            }
+          ],
+          "face_limit": 8000,
+          "model_seed": 1
+        }
+      }
+    ]
+  },
+  "downsampled_textures_px": 2048,
+  "material_fix": "--size 2048 --name great_door --stone 0.4 --stone-min-lum 0.42 --metal-threshold 0.6 --yaw -90 --fit 4.0,0.6,4.9",
+  "total_billed_usd": 1.4632
+}

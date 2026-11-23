@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for the face of a small wall clock outside a clockmaker's shop. Straight-on orthographic view, no perspective.\nSUBJECT: A circular clock dial centred in a square frame, filling 92 percent of the width. A thin aged-brass bezel. Inside it, an ivory enamel dial with fine age crazing, twelve slim dark-bronze bars for the hours and a fine ring of small minute ticks. Two slim dark blued-steel hands set to ten past ten, and a small brass centre cap. No numerals and no letters.\nSTYLE: Photographic realism with restraint. Ivory enamel with a soft satin sheen, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the bezel, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No text of any kind, no numerals. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for the face of a small wall clock outside a clockmaker's shop. Straight-on orthographic view, no perspective.\nSUBJECT: A circular clock dial centred in a square frame, filling 92 percent of the width. A thin aged-brass bezel. Inside it, an ivory enamel dial with fine age crazing, twelve slim dark-bronze bars for the hours and a fine ring of small minute ticks. Two slim dark blued-steel hands set to ten past ten, and a small brass centre cap. No numerals and no letters.\nSTYLE: Photographic realism with restraint. Ivory enamel with a soft satin sheen, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the bezel, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No text of any kind, no numerals. No logos, no watermarks. Original design only.",
+    "size": "1536x1536",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 231,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 231
+      },
+      "output_tokens": 2511,
+      "total_tokens": 2742,
+      "output_tokens_details": {
+        "image_tokens": 2511,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0765,
+  "billed_usd": 0.0765,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}

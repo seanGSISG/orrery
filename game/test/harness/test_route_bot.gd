@@ -66,6 +66,21 @@ func test_the_last_point_jumps_once_then_the_route_ends_without_a_finish() -> vo
 	assert_eq([bot.finished, bot.reason, jumps[0]], [false, &"route_end", 1])
 
 
+## A route with no finish ends at rest on its last point, so in a climb the bot of the next
+## zone starts from a still marble.
+func test_a_route_without_a_finish_ends_at_rest_on_its_last_point() -> void:
+	var route: Route = ROUTE.instantiate() as Route
+	route.name = &"ToThePoint"
+	route.actions = "0 speed 6"
+	var point: Marker3D = Marker3D.new()
+	point.position = Vector3(0, 0, -4)
+	route.add_child(point)
+	var bot: RouteBot = _drive("ToThePoint", [route])
+	assert_eq([bot.finished, bot.reason], [false, &"route_end"])
+	assert_lt(run.state.velocity.length(), 0.5, "the marble is at rest")
+	assert_almost_eq(run.state.position.z, -4.0, RouteBot.STOP_REACH, "on the last point")
+
+
 func test_a_marble_that_passes_a_point_off_the_line_turns_back_to_it() -> void:
 	var route: Route = ROUTE.instantiate() as Route
 	route.name = &"PastTheGem"

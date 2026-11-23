@@ -2,6 +2,7 @@
 
 import math
 
+import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
 
@@ -29,6 +30,19 @@ def add_object(name: str, data: bpy.types.Mesh | None = None) -> bpy.types.Objec
     obj = bpy.data.objects.new(name, data)
     bpy.context.scene.collection.objects.link(obj)
     return obj
+
+
+def add_mesh(
+    bm: bmesh.types.BMesh, name: str, material: bpy.types.Material, collide: bool
+) -> bpy.types.Object:
+    """Turns bm into the object `name` with one material, and frees bm. A mesh that collides
+    gets the object name `<name>-col`: the Godot importer makes it a part of a Solid and
+    shows it as `<name>`."""
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(material)
+    return add_object(f"{name}-col" if collide else name, mesh)
 
 
 def pose(at: Vec3, rotation: Vec3) -> Matrix:

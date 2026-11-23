@@ -43,7 +43,7 @@ Ascent has no gems.
 
 ## Hazards and objects
 
-16 Steam Vents (plus 1 on the crate), 5 bumpers, 3 pendulums, 1 turning gear, 10 moving platforms (4 gangways, 3 gangplanks, 3 cargo lifts), 4 strips of Crumbling Tiles, 5 narrow beams (4 mooring ropes, 1 yardarm), 2 eggs, the gate. No carried power-ups.
+16 Steam Vents (plus 1 on the crate), 5 bumpers, 3 pendulums, 1 turning gear, 10 moving platforms (4 gangways, 3 gangplanks, 3 cargo lifts), 3 strips of Crumbling Tiles, 5 narrow beams (4 mooring ropes, 1 yardarm), 2 eggs, the gate. No carried power-ups.
 
 ## Falls and rest ledges
 
@@ -78,7 +78,7 @@ Ascent has no par time. The level script carries the first-run route and the exp
 | Five crossings | 7.5 s | 5 × 1.5 | 6.5 s | |
 | **Zone** | **152 s** | | **73 s** | |
 
-M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 + 112 + 152), which is 6.4 minutes. The expert routes take about 199 s (67 + 59 + 73), which is 3.3 minutes.
+M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 + 112 + 152), which is 6.4 minutes. The expert routes take about 199 s (67 + 59 + 73), which is 3.3 minutes. These are the estimates. The route bot needs about 559 s (9.3 minutes) for the three first-run routes and about 306 s (5.1 minutes) for the three expert routes (`README.md`, 2026-11-22).
 
 ## Why it is fun
 
@@ -87,3 +87,59 @@ M1 Ascent in total: the first-run routes of zones 1 to 3 take about 386 s (122 +
 - The flotilla ropes cross open sky from ship to ship. They are the hardest moves in M1 and they are in view the whole time.
 - The two eggs sit at the bottom and the top of the zone. Both need a move that goes against the climb.
 - The gate at the top faces the next zone, so the slice ends with a view of what comes next.
+
+## As built
+
+Level script: `levels/ascent/zone_3.py`. Harbour kit: `kit/harbour.py`. The script holds the layout as named constants, and most places follow from the ones before them: read the script for the numbers. Plan: x east, y north. Parts 1 to 3 climb north from the quay (y 25 to 118). Part 4 runs north from the Signal roof to Skiff 1, then west to Skiff 2 and the Tanker. Parts 5 and 6 run west from the Tanker to the Flagship (x about -142 to -70, y about 120 to 152).
+
+The zone uses the town finishes of zone 1 (#31). The brass fittings of the ships (mooring cones, tail caps, cabin window frames, deck-edge bands, spinners and propeller hubs) take zone 1's `brass_polished`. Polished brass is only on trim and curved parts; the kerbs are kit `brass`, and the propeller blades are `varnish`. The harbour adds four finishes: `envelope`, `varnish`, `rope` and `seam`.
+
+An envelope has 24 gores. The middle of each gore stands 2.5 % of the radius out of the polygon of its girders, and the fabric sags 2 % of the radius between two ring frames, 3.2 m apart, with a crease at each frame. A seam of `seam`, 0.1 m wide, runs along each girder and round each frame. `seam` is a lighter cord than `rope` (sRGB about 150, 128, 98 against 107, 87, 61), so in shade the seams read as fine lines on the canvas, not as a dark net. Posts stand under a deck on a ship's back every 4.8 m; where the envelope is narrower than the deck, they stand further in, so each one ends in the fabric. Ropes, rigging and mast braces are 0.07 m thick or more, so they do not break into dots at range. A mast that hangs in the air ends below in an iron point. The east half of the Flagship's top has a skylight and two capstans, off both routes.
+
+The route bot drives both routes to the gate (`just test-levels zone_3`, 2026-11-21, after the merge of zone 2 and the review fixes): first run **214.0 s**, expert **128.1 s**. Each route starts with a stop on the start pad, and the expert route stops again before the first rope (see the handover below). Par 321.2 s and gold 147.3 s come from `just suggest-times zone_3`. The bot is slower than the estimates (152 s and 73 s): it slows to 3.5 m/s at each sharp turn and it waits for each mover's window.
+
+The Tender way of part 1 is on neither route. A temporary first-run route through it (planks, gondola deck, sponson vent, fin, deckhouse, stern steps, gangway B) reached the gate in 224.0 s; the bot needs a straight run of 1.5 m before the jump onto the deckhouse and before the jump from stern step 1.
+
+`just perf zone_3` (RTX 5090, 2026-11-21, after the merge of zone 2 and the seam material, two runs with nothing else on this checkout): Medium 1080p p99 0.44 ms and 1075 MB VRAM (gates 3.0 ms, 4096 MB); Ultra 4K p99 3.83 to 4.10 ms (gate 16.7 ms). After the style review fixes, two runs gave Medium p99 1.32 to 1.33 ms (0.47 ms before the fixes). That rise came from load, not from the envelopes: a third run now, with a headless climb test on the CPU at the same time, gave Medium p99 1.42 ms.
+
+**Handover from zone 2** (2026-11-21; first found with zone 2 at `t32-zone-2` a5464a2, then checked after zone 2 merged, #108). In a climb of zones 2 and 3, the bot drove zone 2's route to the cap, then zone 3's route with no restart. The first run reached the gate (174.5 s and 219.5 s, no fall). The expert route crossed onto the quay, then fell from the first mooring rope. The fixes:
+
+- The quay met the cap's edge only on its arc (x -3 to 3). Beside the arc, the round edge of the cap left open drops, 0.85 m wide at x ±3.9 and 4 m at x ±5: a marble that left the cap there fell about 45 m. Now the quay wraps round the cap's south half, from -22° to -158° round the cap's axis, and meets zone 2's floor edge to edge, with all tops at +300 m. From -50° to -130°, where the cap has no rim, the quay follows the sides of the cap's polygon (96 sides). Beyond, it follows the outer edge of zone 2's brass rim (0.12 m wide, mitred in steps of 4°) and the rim's square-cut ends. Its outer edges run straight out from the cap to the quay's sides at (5.5, 36.78) and (-7.0, 36.17). The wrap stays south of y 37.1, clear of the spire vent's throw along y 39 and of the lightning rod at 160°. Zone 2 keeps everything but the cap disc and its rim below +297 m inside the wrap, as inside the quay's rectangle.
+- The quay copies the numbers of zone 2's cap and rim (`CAP_SIDES`, `RIM_SPAN`, `RIM_STEP` and `RIM_WIDTH` in the script, from zone 2 at 006410b). Change them together with zone 2. A check of the top faces of the two zones' meshes found no gap wider than 1 mm along the junction and 10 mm² of overlap in all.
+- Each route starts with a stop on the start pad: the way to it from the cap crosses the arc, and the bot drives on from rest, as in the zone alone.
+- The expert route stops at the west end of Roof 2's wing, in line with the first rope, and climbs the rope from rest. Before, the turn onto the rope's line carried the marble 0.4 to 0.5 m off it at the foot: from 8 start states that differ a little, 6 drives fell there. One drive also fell through a gap between the teeth of the propeller gear; now the mast ledge reaches in under the teeth.
+- Robustness check (2026-11-21, a throwaway runner that is not in the repo): the bot drove each route on the zone alone, through `MarbleInput`, from 12 start states. Each one moved the marble up to 0.4 m from the start pad, gave it up to 0.7 m/s, and waited 0 to 7.3 s before the first input, so that the movers and the gear stand at other turns. All 24 drives reached the gate with no fall: expert 127.8 to 128.6 s, first run 213.5 to 222.7 s. 16 more expert drives, with waits 0.5 s apart over the gear's turn of 8 s, also reached the gate with no fall.
+- Climb check after the fixes (2026-11-21, a throwaway merge with zone 2 at 006410b): in a climb of zones 2 and 3, the bot drove zone 2's route, then zone 3's route, with no restart. 4 expert climbs (waits of 0 to 5.9 s before the first input) and 2 first-run climbs reached the gate with no fall; zone 3 took 130.6 s (expert) and 219.4 to 219.6 s (first run). Harness screenshots from zone 2's `finish` camera and close to both ends of the rim show the quay flush with the cap and the rim.
+- Climb of zones 1 to 3 (2026-11-21, after zone 2 merged at 4282835, a throwaway GUT test that is not in the repo): from the climb start, the bot of each zone drove its route in turn through `MarbleInput`, with no restart, to the gate. Each climb waited 0 to 5.3 s before the first input. All 20 climbs reached the gate with no fall: 6 expert + expert + expert, 6 first run + first run + first run, and 8 with mixed routes. Expert in each zone: 103.0 to 110.4 s, 77.2 to 84.0 s and 129.8 to 130.2 s, about 317 s in all. First run: 170.3 to 175.6 s, 180.9 s and 217.7 s, about 571 s in all. The run clock at the gate is 10 s more: each bot of zones 1 and 2 waits 5 s on its last point before the next one starts.
+- That climb found a fall at the junction of zones 2 and 3. The bot did not stop at the last point of a route with no finish: it swung through the point at full speed until it gave up. On the cap, zone 2's expert route handed over at 7.5 m/s, 2.3 m from the cap's open west edge, and in 2 of 9 first climbs with that route zone 3's bot rolled off it (a fall of 150 m). Now the bot comes to rest at the last point of its route (`route_bot.gd`), and every handover is at rest. The bot times of the levels alone do not change: the marble finishes when it gets to the last point.
+- In a climb the mode removes the lightmap, and the sun stands higher than in the gallery (12°): about 40° at +300 m and 55° at +480 m. Harness screenshots of a climb of zones 1 and 3 (`load_mode ascent --zones zone_1 zone_3 --zone 2`) show the gores and frames of the envelopes clearly from above. The floors in shadow are near black: RGB 7 to 17 on the quay at +300 m, where the gallery at dawn shows a dark brown. In a climb, shot names are shared by the zones: `start` and `finish` give the cameras of zone 1.
+
+| Difference | Reason |
+|---|---|
+| Roof 2 has a wing to the west for the first rope (25°, 16.7 m). The expert route stops at the west end of the wing, in line with the rope, and climbs it from rest | The rope needs a straight run-up. A turn onto its line carried the marble off its foot after a start that differed a little (see the handover above) |
+| The Courier's hull ramps are a switchback on its north flank (3 × 12.5 m at 20.6°) | A ramp on the back of a round envelope is too steep near the tail |
+| The ledge after the propeller gear is 0.55 m lower than the gear and reaches in under its teeth | A marble that rolls off the gear between two teeth drops onto the ledge, not through the gap. The bot fell there at some turns of the gear |
+| The quay wraps round the south half of the cap (see the handover above) | No gap opens between the quay and the cap |
+| The Lamplighter's "back" is a flying gangway beside the ship (16.5 m at 20°) | Same reason |
+| The flotilla ropes are 24 m at 30° and 22.5 m at 32° twice. The Tanker is at +417.8 m, not +419 m, and lies west of Skiff 2 | The marble stalls on a beam of 35°, and about 22 m up a beam of 32°, even from a run-up at full speed |
+| Ships with a deck on top have no top fin (`LOW_FINS`) | A top fin crosses the deck |
+| The crow's nests are at +427.4, +436.9, +440.8 (after the yardarm) and +450.3 m. Their vents lift 12.3 m, and the last one 12.5 m | Each vent throws the marble 9.5 m up onto a floor whose edge is 2.2 m past the column (see the rules below) |
+| The cargo lifts rise 13.0, 12.5 and 16.7 m. The walkway is at +430.9 m and the pallet deck at +443.4 m | They meet the Flagship deck at +460 m. The pallet deck is solid, because the first run never rolls on a loose floor |
+| The Flagship deck is the deck on its gondola, 20 m long | |
+| The first run climbs three ramps of 15.4 m at 17° on the north flank of the Flagship, outside the hull, then a vent (lift 11.3 m) onto the top | Simpler than a hollow hull with a room inside, and the bot drives it the same way as the Courier |
+| The expert climbs the loose slates (13.4 m at 27°) and a timber ramp (9.8 m at 31°) west under the nose to the bow gallery (+471.1 m), then a vent (lift 13.7 m) east onto the top. The two bumpers stand on the top | The gondola deck gives the slates a straight run-up of 17 m. The tail of the Flagship hangs over the rigging, so the ramps go to the nose |
+| The top is a deck 56 m long and 14 m wide at +482 m. The mast ramp is a spiral of two turns, 3.2 m wide, 18 m up (about 48 m at 20.6°) to the gate deck at +500 m | |
+| Egg 2 sits on the highest of three timber steps on iron posts at the east end of the top (+485.8 m), not on a fin | A fin plate under the steps would collide with them |
+| Crumbling Tiles: 3 strips (planks, shingles, slates), not 4 | The pallet deck is solid (see above) |
+
+**Rules found while building (vents and the bot).**
+
+- A vent throw needs lift = rise + 2.5 to 3 m when the next floor's edge is 2.2 to 2.5 m past the column's edge. With less, the marble meets the side of the floor and drops back into the column, where it hovers: the bot cannot push in the air with no speed ("stuck" at the column top).
+- Enter a vent from a straight approach of 1.5 m or more at speed 3, with the approach point 1.2 m before the vent's middle.
+- The marble climbs a beam of 30° for about 24 m and of 32° for about 22 m from a run-up at full speed. At 35° it stalls. Keep the run-up straight and in line with the beam; after a sharp turn the bot swings 0.8 m off the line, so slow it (`speed 2.5`, then `speed 3`) before a 0.6 m rope.
+- For a 0.6 m rope that a turn leads onto, stop the bot (`wait 0`) in line with the rope, then send it through a point on the line about 3 m before the foot. The marble climbs the 25° first rope from a stop 5.9 m before the foot. Without the stop, a start that differed by 0.3 m made the bot fall from the rope in most drives.
+- A marble that rolls off a turning gear can drop between two teeth: the gap is 0.4 m deep into the disc and 0.7 m wide at the tips. Put the next floor a step below the gear (0.55 m here), reaching in under its teeth.
+- `kit.marker` names path points with three digits above 100 points. The first-run route of this zone has more than 100 points.
+- The bot counts its 300 s limit from its own first input, and it comes to rest at the last point of its route, so a climb can give a bot to each zone in turn (`route_bot.gd`). Zones 1 to 3 take about 317 s (expert) and 571 s (first run).
+- Shot names share one namespace with the level's objects: `kit.shot("rigging")` fails when an object is named `rigging`.
+- To see where the bot fails, copy `game/harness/route_bot.gd`, add a `print` in `_steer()` or at `falls += 1`, run `just test-levels zone_3`, then restore the file. `uv run --quiet --project tools/harness orrery-harness teleport --velocity vx vy vz x y z` (Godot axes: y up, z = -north) probes one throw.

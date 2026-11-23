@@ -8,19 +8,24 @@ Every Easter egg and secret in Orrery. Add a row when you add a secret, and chan
 
 | Level | Place | How a player finds it |
 |---|---|---|
-| B1 Dawn Plaza | A vault under the upper court, at the end of an alley behind the garden ramp (−2 m) | The ramp wall hides the alley. The player must turn the camera in the garden to see the strip that leads to it. The last garden gem sits halfway there |
-| B2 Loose Hours | A nook at the east end of the undercroft, under the trapdoor straight ahead of the gate (−4 m) | The player falls through that trapdoor, or falls through any west trapdoor and looks east in the undercroft. Hint: a gold glint shows through the gaps round that one trapdoor |
-| B3 Spring Court | The back ledge, 3 m below the north dock, behind the tower (+3 m) | The tower hides the ledge from the court and both balconies. The player sees it from a carriage during the 2 s stop at the north dock, and drops onto it. A Coil Spring on the ledge returns the marble to the tower |
+| B1 Dawn Plaza | A vault under the south-east corner of the upper court, at the west end of an alley behind the garden ramp (−2 m) | The garden wall hides the alley. The player must turn the camera in the garden to see the strip that leads to it. The last garden gem sits halfway there. From the north-east kerb of the plaza the player sees the arch of the vault across a gap, and the egg glints inside |
+| B2 Loose Hours | A nook at the east end of the undercroft, under the trapdoor straight ahead of the gate (−4 m). A post hides it from the west part of the undercroft | The player falls through that trapdoor and lands on the egg, or falls through any west trapdoor and looks east in the undercroft: the egg's light shows on a gear wheel in the nook. Hint: that one trapdoor has a gold frame; the frames of the others are brass. A player at the gate sees it |
+| B3 Spring Court | The back ledge, in a niche behind the tower between two buttresses, 3 m below the north dock (+3 m) | The tower and the buttresses hide the ledge from the court and both balconies. A carriage rider sees it from the north side of the loop: the north-east corner, the 2 s stop at the north dock and the north-west corner. The player rolls off the carriage onto the ledge, or rolls off the north edge of the tower top. A Coil Spring on the ledge returns the marble to the tower |
 
 ### Ascent: 10 eggs along the climb (4 placed in M1)
 
 | Zone | Place | How a player finds it |
 |---|---|---|
-| Ascent 1 Clockmaker's Square | The hearth room of the guildhall, at ground level | The guildhall ridge (+14 m) has two chimneys. One steams and is a Steam Vent. The other is dry: the player drops into it and falls 13 m to the egg. A door leads back to the square |
-| Ascent 2 The Broken Tower | The movement chamber under the hub of the tilted clock face (+154 m) | The hub has a hole where the axle was. The two clock hands hide it as they pass. The player drops into the hole. A vent in the chamber lifts the marble back onto the face |
+| Ascent 1 Clockmaker's Square | The hall of the guildhall, in front of its hearth, at ground level | The guildhall roof (+14 m) has two chimneys: one beside the steaming ridge vent on the north terrace, and a dry one at the south end of the ridge walk. The player hops into the dry chimney and falls 15 m down its flue to the hearth and the egg. A door in the hall's east wall leads back to the square |
+| Ascent 2 The Broken Tower | The movement chamber under the hub of the tilted clock face, floor at +152 m | The hub has a hole where the axle was, inside the collar of the two turning clock hands; the hands start 0.7 m out from the axle, so the hole is always open. The player drops into the hole and lands beside the egg. A vent under the winding hole at four o'clock lifts the marble back onto the face |
 | Ascent 3 Sky Harbour, egg 1 | A cargo crate that hangs under the Tender airship (+297.8 m, below the zone start) | The player sees the crate from the spire ramp at the top of zone 2 and from the loose planks, and drops from the planks onto it. A vent on the crate lifts the marble back to the gondola deck |
-| Ascent 3 Sky Harbour, egg 2 | The tip of the Flagship's tail fin (+483 m) | At the top of the Flagship, the mast and the gate are in the middle. The player turns away from them, goes to the east end of the top and climbs three steps of 1.2 to 1.3 m to the fin tip |
+| Ascent 3 Sky Harbour, egg 2 | The highest of three timber steps on iron posts at the east end of the Flagship's top, towards its tail (+485.8 m) | At the top of the Flagship, the mast and the gate are in the middle. The player turns away from them, goes to the east end of the top and climbs the three steps, each 1.25 m higher than the last |
 
 ## Untracked secrets
 
-None yet.
+| Where | Secret |
+|---|---|
+| B1 Dawn Plaza | The clock face in the plaza shows six o'clock and has no minute hand. The minute hand is the gold beam from the west terrace to the court |
+| B1 Dawn Plaza | At dawn the shadow of the north-west pillar crosses the centre of the clock face, as on a sundial |
+| B2 Loose Hours | The clock over the finish has nine of its twelve hour balls. The hours 2, 7 and 10 are missing: the loose hours of the level's name |
+| B3 Spring Court | The court floor is a clock dial round the middle bumper. Its hour hand points at the west spring and its minute hand at the east spring |

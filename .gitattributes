@@ -12,6 +12,7 @@ assets/**/*.ogg  filter=lfs diff=lfs merge=lfs -text
 assets/**/*.flac filter=lfs diff=lfs merge=lfs -text
 assets/**/*.ttf  filter=lfs diff=lfs merge=lfs -text
 assets/**/*.otf  filter=lfs diff=lfs merge=lfs -text
+assets/**/*.glb  filter=lfs diff=lfs merge=lfs -text
 *.blend          filter=lfs diff=lfs merge=lfs -text
 
 # Baked lightmaps (`just bake`). Their .import files and .sha256 sidecars stay plain text.
@@ -21,3 +22,6 @@ game/levels/lightmaps/*.lmbake filter=lfs diff=lfs merge=lfs -text
 
 # Music tracks (#26). Their .import files stay plain text.
 game/audio/music/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+
+# Baked tier skies (`just bake-skies`). Their .import files stay plain text.
+game/skies/*.hdr               filter=lfs diff=lfs merge=lfs -text

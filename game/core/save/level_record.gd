@@ -7,10 +7,22 @@ extends SaveRecord
 var best_time: float = -1.0
 ## Best medal: &"none", &"qualified" or &"gold".
 var medal: StringName = &"none"
-## True when the player found the level's Clockwork Egg.
-var egg: bool = false
+## The ids of the Clockwork Eggs that the player found in the level, sorted. The id of an egg
+## is its node name, which is its marker name in the level script. A campaign level has one
+## egg; an Ascent zone can have more.
+var eggs: PackedStringArray = []
 
 
 ## Returns true when the level has a finish at or under par.
 func qualified() -> bool:
 	return medal == &"qualified" or medal == &"gold"
+
+
+## Returns true when the player found every egg of the level, whose egg ids are ids
+## (LevelInfo.eggs). An id of the save that the level no longer has does not count. False for
+## a level with no egg.
+func has_eggs(ids: PackedStringArray) -> bool:
+	for id: String in ids:
+		if not eggs.has(id):
+			return false
+	return not ids.is_empty()

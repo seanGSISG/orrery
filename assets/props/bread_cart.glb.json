@@ -1,0 +1,110 @@
+{
+  "service": "Tripo API /models/texture",
+  "model": "v3.5-20260815",
+  "mode": "task",
+  "prompt": "\"a7a8840f-5a28-4b2e-af99-1d7ad2f6434d\"",
+  "settings": {
+    "input": "a7a8840f-5a28-4b2e-af99-1d7ad2f6434d",
+    "model": "v3.5-20260815",
+    "pbr": true,
+    "delight": true,
+    "bake": true,
+    "texture_quality": "standard",
+    "texture_prompt": {
+      "images": [
+        {
+          "front": "build/art/models/zone1-bread_cart-views.front.jpeg"
+        },
+        {
+          "left": "build/art/models/zone1-bread_cart-views.left.jpeg"
+        },
+        {
+          "back": "build/art/models/zone1-bread_cart-views.back.jpeg"
+        },
+        {
+          "right": "build/art/models/zone1-bread_cart-views.right.jpeg"
+        }
+      ]
+    },
+    "texture_seed": 1
+  },
+  "estimated_usd": 0.1,
+  "billed_usd": 0.1,
+  "request_id": "ea3d8838-087b-4d07-8eb6-3b842f58ac9a",
+  "seed": 1,
+  "date": "2026-11-21",
+  "ai_generated": true,
+  "chain": {
+    "prompt_set": "tools/art/sets/zone1-trial.jsonl",
+    "concept_drafts": [
+      {
+        "file": "build/art/images/zone1/props/bread_cart-a.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0449
+      },
+      {
+        "file": "build/art/images/zone1/props/bread_cart-b.png.json",
+        "service": "OpenAI Images API /v1/images/generations",
+        "model": "gpt-image-2.6-flare",
+        "task_id": "",
+        "seed": null,
+        "billed_usd": 0.0448
+      }
+    ],
+    "concept_final": {
+      "file": "build/art/images/zone1/props/bread_cart-final.png.json",
+      "service": "OpenAI Images API /v1/images/edits",
+      "model": "gpt-image-2.6-sunburst",
+      "task_id": "",
+      "seed": null,
+      "billed_usd": 0.0624,
+      "refs": [
+        "build/art/images/zone1/props/bread_cart-b.png"
+      ]
+    },
+    "views": {
+      "file": "build/art/models/zone1-bread_cart-views.json",
+      "service": "Tripo API /generation/image-to-multiview",
+      "model": "",
+      "task_id": "33ba53e0-37da-45f2-b80d-10a6bb72c0b4",
+      "seed": null,
+      "billed_usd": 0.1
+    },
+    "edit_views": [],
+    "geometry": {
+      "file": "build/art/models/zone1-bread_cart-shape.glb.json",
+      "service": "Tripo API /generation/multiview-to-model",
+      "model": "P1-20260311",
+      "task_id": "a7a8840f-5a28-4b2e-af99-1d7ad2f6434d",
+      "seed": 1,
+      "billed_usd": 0.4,
+      "settings": {
+        "model": "P1-20260311",
+        "texture": false,
+        "pbr": false,
+        "inputs": [
+          {
+            "task_id": "33ba53e0-37da-45f2-b80d-10a6bb72c0b4"
+          }
+        ],
+        "face_limit": 5000,
+        "model_seed": 1
+      }
+    },
+    "texture": {
+      "file": "build/art/models/zone1-bread_cart.glb.json",
+      "service": "Tripo API /models/texture",
+      "model": "v3.5-20260815",
+      "task_id": "ea3d8838-087b-4d07-8eb6-3b842f58ac9a",
+      "seed": 1,
+      "billed_usd": 0.1
+    },
+    "discarded_geometry": []
+  },
+  "downsampled_textures_px": 1024,
+  "material_fix": "--size 1024 --name bread_cart --stone 1.0 --metal-threshold 0.6",
+  "total_billed_usd": 0.7521
+}

@@ -1,0 +1,34 @@
+{
+  "service": "OpenAI Images API /v1/images/generations",
+  "model": "gpt-image-2.6-sunburst",
+  "mode": "live",
+  "prompt": "USE: A flat game decal for a shop sign over a bakery door in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular sign board with rounded corners, of oiled timber painted a dark, sun-faded bottle green, with a thin aged-brass edge. Hand-painted cream capitals with a fine gold outline, in two lines, centred. Line 1: \"BAKERY\" in large letters. Line 2: \"BREAD & PASTRY\" in smaller letters. Between the two lines, a small painted sheaf of wheat in gold.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: B-A-K-E-R-Y; B-R-E-A-D, an ampersand, P-A-S-T-R-Y.\nSTYLE: Photographic realism with restraint. Old paint with fine cracks and soft wear at the edges, the wood grain showing through, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+  "settings": {
+    "model": "gpt-image-2.6-sunburst",
+    "prompt": "USE: A flat game decal for a shop sign over a bakery door in a clockmaker's town square. Straight-on orthographic view, no perspective. The sign fills the frame.\nSUBJECT: A rectangular sign board with rounded corners, of oiled timber painted a dark, sun-faded bottle green, with a thin aged-brass edge. Hand-painted cream capitals with a fine gold outline, in two lines, centred. Line 1: \"BAKERY\" in large letters. Line 2: \"BREAD & PASTRY\" in smaller letters. Between the two lines, a small painted sheaf of wheat in gold.\nTEXT RULES: Draw exactly these two lines, once each, and no other text. Spelling: B-A-K-E-R-Y; B-R-E-A-D, an ampersand, P-A-S-T-R-Y.\nSTYLE: Photographic realism with restraint. Old paint with fine cracks and soft wear at the edges, the wood grain showing through, aged brass with soft warm tarnish. Soft, even, shadowless light from all sides. No mirror reflections, no glow, so the colours read as base colour.\nCONSTRAINTS: Fully transparent background outside the sign, with a crisp edge and no halo. Do not draw a checkerboard, a backdrop, a wall or a drop shadow. No people, no extra signs. No logos, no watermarks. Original design only.",
+    "size": "1536x1024",
+    "quality": "high",
+    "output_format": "png",
+    "background": "transparent",
+    "complexity": "high",
+    "usage": {
+      "input_tokens": 296,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 296
+      },
+      "output_tokens": 1372,
+      "total_tokens": 1668,
+      "output_tokens_details": {
+        "image_tokens": 1372,
+        "text_tokens": 0
+      }
+    }
+  },
+  "estimated_usd": 0.0426,
+  "billed_usd": 0.0426,
+  "request_id": "",
+  "seed": null,
+  "date": "2026-11-21",
+  "ai_generated": true
+}

@@ -49,6 +49,7 @@ func _run() -> void:
 		return
 	_marble = Game.run.marble.global_position
 	_poses = _shot_poses(Game.run.level)
+	_camera.far = FollowCamera.FAR
 	Game.run.add_child(_camera)
 	_camera.make_current()
 	var viewport: RID = get_viewport().get_viewport_rid()
@@ -65,7 +66,9 @@ func _run() -> void:
 	if motion != "" and not await _save_motion(motion, frames - ORBIT):
 		get_tree().quit(1)
 		return
-	var size: Vector2i = get_viewport().get_visible_rect().size
+	# The size of the drawn image is the render size. The stretch mode scales the 2D sizes:
+	# get_visible_rect() and ViewportTexture.get_size() do not give it.
+	var size: Vector2i = get_viewport().get_texture().get_image().get_size()
 	var report: Dictionary = {
 		"level": level,
 		"preset": Graphics.current,

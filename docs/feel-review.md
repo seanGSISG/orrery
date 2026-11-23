@@ -38,11 +38,17 @@ The loop goes counter-clockwise. A yellow sign shows the number and the name of 
 | 7 Wall 45 | Roll up the face and onto the top. | Same as station 6. |
 | 8 Thin wall | Stop against the wall. Turn the camera to the far side of the wall. | Can you see the marble? (camera case from #11) |
 | 9 V seam | Roll along the bottom of the V. Stop in it. | Does the marble stick, shake or jump in the seam? |
-| 10 Gaps | Jump the gaps of 1, 2, 3, 4 and 6 m. Steer in the air. | Which gaps are easy, which are hard? Jump height. Air control. |
+| 10 Gaps | Jump the gaps of 1, 2, 3, 4 and 6 m. Steer in the air. Then jump the gaps of 8 and 10 m from full speed: roll 8 m or more from rest on the pad before the gap, and jump at the very edge. Roll the 1 m gap at walking speed and at full speed. | Which gaps are easy, which are hard? Jump height. Air control. Can you clear 8 m and 10 m, and is the edge timing fair? Does the 1 m gap launch the marble at full speed? |
 | 11 Steps | Jump up the steps of 0.5, 0.8, 1.0 and 1.2 m. | Which steps can you jump up? Does a step stop the marble hard? |
 | 12 Platform | Ride the moving platform. Roll on it while it moves. | Does the platform carry the marble well? Do you slide off when it stops? |
 | 13 Gear | Ride the turning gear and roll off it. | Does the gear carry the marble? Is it easy to roll off? |
 | 14 Bumpers | Roll into the bumpers slowly and at full speed. | Is the push too strong or too weak? Is the rumble correct? |
+
+Notes on station 10:
+
+- The marble needs about 7.4 m from rest to reach full speed (15 m/s). The pads before the 8 and 10 m gaps are 14 m long, and a checkpoint on each one starts the run-up from rest. A marble at full speed clears 11.25 m at most, so the 10 m gap leaves little room. A jump a little before the edge is better than a jump after it.
+- The 1 m gap is too narrow to fall into at full speed. The marble hits the far corner (an edge hit), hops about 3 m and carries over the gaps of 2 and 3 m. At walking speed (stick pushed a little, 2 to 4 m/s) the marble falls in, so try both speeds.
+- Every pad after the gaps of 6, 8 and 10 m is long enough to stop on (full brake takes 7.4 m).
 
 Do these checks on all of the course:
 
@@ -67,6 +73,7 @@ Write one line for each problem in #19, with the station number. Examples:
 
 - "Station 2 feels icy: the marble slides back when I stop. static_friction 1.1 → 1.3 fixed it."
 - "Station 10: the 6 m gap is too easy at full speed."
+- "Station 10: the 10 m gap is too hard. I need to jump before the edge."
 - "fov 70 is better."
 
 When the feel is correct, commit the saved values and write "Signed off" in #19.
