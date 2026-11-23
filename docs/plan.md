@@ -440,7 +440,7 @@ CI runs only the jobs that a change needs, on pull requests, on pushes to `main`
 - **`changes` job** (ubuntu): picks the jobs, and writes the changed files and the picked jobs to the run summary.
 - **`lint-game` job** (ubuntu): runs `just lint-game`, which imports the game.
 - **`lint-scripts` job** (ubuntu): runs `just lint-scripts`. It has no Godot and no LFS files, so a tool change lints in about a minute.
-- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` when the tests or the export run (else only `just build-marble`), uploads the built files.
+- **`levels` job** (ubuntu): installs Blender 5.2.4 (cached), runs `just build-levels` when the tests or the export run (else only `just build-marble`), uploads the built files. When the level cache has the .glb files, it runs `just build-levels --reuse`, which skips Blender but imports and checks the levels as before. When the core cache has the core and the levels are not needed, it skips Blender and Godot.
 - **`test` job** (matrix: `ubuntu-latest`, `windows-latest`): Git LFS checkout (cached), `setup-godot@v2` with the Godot version from `mise.toml`, downloads the built levels, runs import, GUT tests and the headless level tests.
 - **`harness` job** (ubuntu): `just test-harness`, the harness contract tests on a headless debug build.
 - **`export` job** (ubuntu): `setup-godot@v2` with export templates, downloads the built levels, `just export`, boots the Linux export, plays every level in it (`.github/check-export.sh`), uploads both exports as artifacts. The check fails when the export does not load a built level or a file of its baked lightmap.
@@ -448,6 +448,18 @@ CI runs only the jobs that a change needs, on pull requests, on pushes to `main`
 - **`tools` job** (ubuntu): `just test-music` and `just test-art`, each when its tool changed.
 - **`release` job** (ubuntu, version tags only): runs after every other job passes. It downloads the two exports that the `export` job made and the boot checks passed, and publishes them as `orrery-<tag>-linux-x86_64.tar.gz` and `orrery-<tag>-windows-x86_64.zip` on a GitHub release with generated notes. A tag with a hyphen (`v0.1.0-rc.1`) makes a prerelease. Only this job has `contents: write`.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
+
+CI caches (`actions/cache`; a cache made on a branch serves that branch and its pull requests, one made on `main` serves all):
+
+| Cache | Path | Key | Restore |
+|---|---|---|---|
+| Git LFS objects | `.git/lfs` | `lfs-` + hash of the LFS object list | exact key |
+| Godot import | `game/.godot` | `godot-import-<os>-<godot pin>-` + `hashFiles` of `game/**` (less `.godot/`, `*.gd`, `*.uid`, `*.tscn`, `*.tres`, `*.gdshader`, and the built core and levels, so all jobs on one OS share one key) and `assets/textures/**` | the newest cache with the `godot-import-<os>-<godot pin>-` prefix |
+| Marble core | `game/core/marble/built/` | `marble-<blender pin>-<validator pin>-` + SHA-256 of `git ls-files -s` (path and blob ID) of `tools/blender/marble_core.py`, its texture `Metal048A_2K-JPG_Color.jpg`, `game/core/marble/core_import.gd` and `justfile` (the recipe writes the `.import` file) | exact key |
+| Level .glb files | `game/levels/built/*.glb` | `levels-<blender pin>-<validator pin>-` + SHA-256 of `git ls-files -s` (path and blob ID) of `levels/**`, `kit/**`, `tools/blender/**`, `assets/props/**`, `assets/decals/**` and `game/skies/*.tres` (every file that the Blender export reads) | exact key |
+| Blender and glTF-Validator | `~/.local/opt` | the two pins | exact key |
+
+A partial hit of the import cache is safe: Godot imports a file again only when the MD5 of the file or of its `.import` file differs from the stored one. The level cache holds the Blender output only. `--reuse` writes fresh `.import` files (each import gives them a new UID), so every job that has the levels imports them again with the current `LevelConverter`. A change to one input of a Blender build misses its cache and builds again.
 
 To cut a release, tag a commit that CI passed on, and push the tag:
 

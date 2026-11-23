@@ -1,9 +1,12 @@
 name: Set up Orrery
-description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, install just, and turn off GPU texture compression for the import. Run it after actions/checkout.
+description: Pull Git LFS files through a cache, download the built marble core and levels, install the Godot version that mise.toml pins, install just, restore the cached Godot import, and turn off GPU texture compression for the import. Run it after actions/checkout.
 inputs:
   templates:
     description: Also install the Godot export templates.
     default: "false"
+  built:
+    description: The built files to download from the levels job, `none`, `core` (the marble's core) or `all` (the core and the levels).
+    default: "none"
 runs:
   using: composite
   steps:
@@ -21,6 +24,19 @@ runs:
       shell: bash
       run: git lfs pull
 
+    # After the LFS pull: a built file must be newer than its inputs, or `just fresh-marble` and
+    # `just fresh-levels` build it again.
+    - if: inputs.built != 'none'
+      uses: actions/download-artifact@v7
+      with:
+        name: marble
+        path: game/core/marble/built/
+    - if: inputs.built == 'all'
+      uses: actions/download-artifact@v7
+      with:
+        name: levels
+        path: game/levels/built/
+
     - name: Read the Godot pin
       id: pin
       shell: bash
@@ -33,6 +49,23 @@ runs:
         include-templates: ${{ inputs.templates }}
 
     - uses: extractions/setup-just@v4
+
+    # Godot keeps its import in game/.godot. An import tests each file whose modification time
+    # changed: it imports the file again only when the MD5 of the file or of its .import file
+    # differs from the stored one. So a cache from an older key is safe, and the restore key
+    # restores the newest one. The key hashes the files that Godot imports (game/ less the
+    # scripts and text resources, which it loads as they are, and assets/textures/, which
+    # `just kit-textures` copies into game/), so a new cache is saved only when they change.
+    # The key leaves out the built core and levels, so all jobs on one OS share one key: the
+    # levels job (or the first job to finish) saves the cache, and the others restore it. The
+    # levels job writes fresh level .import files on every run (a new UID each time), so every
+    # job that has the levels imports them again with the current LevelConverter.
+    - name: Cache the Godot import
+      uses: actions/cache@v6
+      with:
+        path: game/.godot
+        key: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-${{ hashFiles('game/**', 'assets/textures/**', '!game/.godot/**', '!game/**/*.gd', '!game/**/*.uid', '!game/**/*.tscn', '!game/**/*.tres', '!game/**/*.gdshader', '!game/levels/built/**', '!game/core/marble/built/**') }}
+        restore-keys: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-
 
     # CI only: Betsy GPU compression can deadlock a Godot 4.7.2 import (godotengine/godot#114121); remove this step to revert.
     - name: Turn off GPU texture compression
