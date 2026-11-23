@@ -1,5 +1,5 @@
 name: Set up Orrery
-description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, install just, and turn off GPU texture compression for the import. Run it after actions/checkout.
+description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, install just, turn off GPU texture compression for the import, and restore the cached Godot import. Run it after actions/checkout and the downloads of the built files.
 inputs:
   templates:
     description: Also install the Godot export templates.
@@ -38,3 +38,17 @@ runs:
     - name: Turn off GPU texture compression
       shell: bash
       run: printf '[rendering]\n\ntextures/vram_compression/compress_with_gpu=false\n' > game/override.cfg
+
+    # Godot keeps its import in game/.godot. An import tests each file whose modification time
+    # changed: it imports the file again only when the MD5 of the file or of its .import file
+    # differs from the stored one. So a cache from an older key is safe, and the restore key
+    # restores the newest one. The key hashes the files that Godot imports (game/ less the
+    # scripts and text resources, which it loads as they are, and assets/textures/, which
+    # `just kit-textures` copies into game/), so a new cache is saved only when they change.
+    # Run this action after the downloads of the built levels and core, so the key covers them.
+    - name: Cache the Godot import
+      uses: actions/cache@v6
+      with:
+        path: game/.godot
+        key: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-${{ hashFiles('game/**', 'assets/textures/**', '!game/.godot/**', '!game/**/*.gd', '!game/**/*.uid', '!game/**/*.tscn', '!game/**/*.tres', '!game/**/*.gdshader') }}
+        restore-keys: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-

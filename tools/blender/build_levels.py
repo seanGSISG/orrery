@@ -3,11 +3,13 @@
 # ///
 """Builds level scripts into game/levels/built/<id>.glb and checks them.
 
-Usage: `just build-levels [id ...]`, which runs `uv run --script tools/blender/build_levels.py`.
-With no ids it builds every `levels/<tier>/<id>.py`.
+Usage: `just build-levels [--reuse] [id ...]`, which runs `uv run --script
+tools/blender/build_levels.py`. With no ids it builds every `levels/<tier>/<id>.py`.
 
 1. In parallel, for each level: headless Blender runs tools/blender/build_level.py to export the
-   .glb, and glTF-Validator checks it. A level that fails loses its old .glb.
+   .glb, and glTF-Validator checks it. A level that fails loses its old .glb. With `--reuse` the
+   build keeps the .glb files in game/levels/built/ and does not start Blender: CI restores them
+   from its cache when no input of the Blender export changed (docs/plan.md §5.3).
 2. Godot imports the project once. Each built level gets a `.glb.import` file that names the
    post-import script game/levels/level_import.gd. Its LevelConverter swaps the markers for
    objects, builds the collision and runs the level lint. The file also sets the meshes to
@@ -113,6 +115,15 @@ def build(level: Level) -> list[str]:
     return []
 
 
+def reuse(level: Level) -> list[str]:
+    """Keeps the .glb that is already built and writes a fresh .glb.import file, as build()
+    does. Returns a problem when there is no .glb."""
+    if not level.out.exists():
+        return [f"no {level.out.relative_to(ROOT)} to reuse"]
+    level.out.with_name(level.out.name + ".import").write_text(IMPORT_SETTINGS)
+    return []
+
+
 def import_and_check(levels: list[Level]) -> list[str]:
     """Imports the Godot project and checks that each level loads as a Level. Returns the
     problems: the importer's errors, then one line for each level that does not load."""
@@ -147,15 +158,18 @@ def remove_stale(levels: list[Level]) -> None:
 
 
 def main() -> None:
-    """Builds the levels named on the command line (all when none) and exits 1 on a problem."""
-    levels = find_levels(sys.argv[1:])
+    """Builds the levels named on the command line (all when none) and exits 1 on a problem.
+    `--reuse` keeps the built .glb files instead of building them."""
+    ids = [arg for arg in sys.argv[1:] if arg != "--reuse"]
+    step = reuse if "--reuse" in sys.argv[1:] else build
+    levels = find_levels(ids)
     BUILT.mkdir(parents=True, exist_ok=True)
-    if not sys.argv[1:]:
+    if not ids:
         remove_stale(levels)
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
-        problems = dict(zip(levels, pool.map(build, levels), strict=True))
+        problems = dict(zip(levels, pool.map(step, levels), strict=True))
     for level, errors in problems.items():
-        print(f"{level.id}: {'FAILED' if errors else 'built'}")
+        print(f"{level.id}: {'FAILED' if errors else 'reused' if step is reuse else 'built'}")
         for error in errors:
             print(f"  {error}")
     built = [level for level, errors in problems.items() if not errors]

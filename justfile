@@ -101,13 +101,14 @@ import: fresh-marble kit-textures
     log=$(mktemp)
     trap 'rm -f "$log"' EXIT
     for attempt in 1 2; do
-        "{{ godot }}" --headless --path game --import > >(tee "$log") 2>&1 &
+        # Godot prints the same progress line many times, and a hung import can print old lines
+        # again and again. awk passes each line only the first time, so every line in the log is new.
+        "{{ godot }}" --headless --path game --import > >(awk '!seen[$0]++ { print; fflush() }' | tee "$log") 2>&1 &
         pid=$!
         lines=0 still=0
         while kill -0 "$pid" 2>/dev/null && (( still < 180 )); do
             sleep 5
-            # Count distinct lines: a hung import can print the same progress lines again and again.
-            now=$(LC_ALL=C sort -u "$log" | wc -l)
+            now=$(wc -l < "$log")
             if (( now == lines )); then still=$((still + 5)); else still=0 lines=$now; fi
         done
         # Godot can exit during the last sleep: then its exit status counts, not the stall.
@@ -125,7 +126,8 @@ import: fresh-marble kit-textures
 run level="flat": import
     "{{ godot }}" --path game -- --level "$1"
 
-# Build level scripts (all, or the given ids) into game/levels/built/ and check that they import
+# Build level scripts (all, or the given ids) into game/levels/built/ and check that they import.
+# `--reuse` keeps the built .glb files and skips Blender (CI uses it on a level cache hit)
 [positional-arguments]
 build-levels *ids: fresh-marble kit-textures
     GODOT="{{ godot }}" uv run --script tools/blender/build_levels.py "$@"
