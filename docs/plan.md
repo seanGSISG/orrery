@@ -444,7 +444,7 @@ CI runs only the jobs that a change needs, on pull requests, on pushes to `main`
 - **`export` job** (ubuntu): `setup-godot@v2` with export templates, downloads the built levels, `just export`, boots the Linux export, plays every level in it (`.github/check-export.sh`), uploads both exports as artifacts. The check fails when the export does not load a built level or a file of its baked lightmap.
 - **`windows-boot` job** (`windows-latest`): downloads the Windows export from the `export` job, boots it headless, checks its boot marker, and plays every level in it with the same check.
 - **`tools` job** (ubuntu): `just test-music` and `just test-art`, each when its tool changed.
-- **`release` job** (ubuntu, version tags only): runs after every other job passes. It downloads the two exports that the `export` job made and the boot checks passed, and puts them as `orrery-<tag>-linux-x86_64.tar.gz` and `orrery-<tag>-windows-x86_64.zip` on a draft GitHub release with generated notes. A tag with a hyphen (`v0.1.0-rc.1`) makes a prerelease. The repo is public, so the release stays a draft, which only people with push access can see, until Sean publishes it by hand (no public release before the store title is chosen). Only this job has `contents: write`.
+- **`release` job** (ubuntu, version tags only): runs after every other job passes. It downloads the two exports that the `export` job made and the boot checks passed, and publishes them as `orrery-<tag>-linux-x86_64.tar.gz` and `orrery-<tag>-windows-x86_64.zip` on a GitHub release with generated notes. A tag with a hyphen (`v0.1.0-rc.1`) makes a prerelease. Only this job has `contents: write`.
 - GPU work (gallery, performance check) runs on Sean's machine only, because GitHub runners have no GPU.
 
 To cut a release, tag a commit that CI passed on, and push the tag:
@@ -455,8 +455,6 @@ git tag -a v0.1.0-rc.1 -m "M1 playtest build 1" origin/plan-1
 git push origin v0.1.0-rc.1
 gh run watch -R seanGSISG/orrery   # then: gh release view v0.1.0-rc.1 -R seanGSISG/orrery
 ```
-
-The run makes a draft release. Download its assets with `gh release download <tag> -R seanGSISG/orrery`, or from the release page when logged in. To make it public, publish the draft on GitHub (or `gh release edit <tag> -R seanGSISG/orrery --draft=false`).
 
 If the tag run fails, fix the cause, delete the tag (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`), and tag the new commit. The exe is not signed, so Windows SmartScreen warns on its first start (More info, then Run anyway).
 
