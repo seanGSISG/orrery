@@ -121,25 +121,33 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
-      - name: Read the Blender and glTF-Validator pins
+      # Each key hashes the path and the Git blob ID of every input (`git ls-files -s`): a changed,
+      # added, removed or renamed input changes it. The level id and tier come from the script
+      # path. A Git LFS file counts by its pointer, which holds the SHA-256 of the file.
+      - name: Hash the inputs of the Blender builds
         id: pins
         run: |
           source tools/setup/pins.env
-          echo "key=blender-$BLENDER_VERSION-gltf-validator-$GLTF_VALIDATOR_VERSION" >> "$GITHUB_OUTPUT"
-      # The checkout has the Git LFS pointer files here, which hold the SHA-256 of each file.
+          pins="blender-$BLENDER_VERSION-gltf-validator-$GLTF_VALIDATOR_VERSION"
+          hash() { git ls-files -s -- "$@" | sha256sum | cut -d ' ' -f 1; }
+          {
+            echo "blender=$pins"
+            echo "marble=marble-$pins-$(hash tools/blender/marble_core.py assets/textures/metal/Metal048A_2K-JPG_Color.jpg game/core/marble/core_import.gd justfile)"
+            echo "levels=levels-$pins-$(hash levels kit tools/blender assets/props assets/decals 'game/skies/*.tres')"
+          } >> "$GITHUB_OUTPUT"
       - name: Restore the built marble core
         id: marble
         uses: actions/cache@v6
         with:
           path: game/core/marble/built/
-          key: marble-${{ steps.pins.outputs.key }}-${{ hashFiles('tools/blender/marble_core.py', 'assets/textures/metal/Metal048A_2K-JPG_Color.jpg', 'game/core/marble/core_import.gd', 'justfile') }}
+          key: ${{ steps.pins.outputs.marble }}
       - name: Restore the built levels
         id: built
         if: needs.changes.outputs.levels == 'all'
         uses: actions/cache@v6
         with:
           path: game/levels/built/*.glb
-          key: levels-${{ steps.pins.outputs.key }}-${{ hashFiles('levels/**', 'kit/**', 'tools/blender/**', 'assets/props/**', 'assets/decals/**', 'game/skies/*.tres') }}
+          key: ${{ steps.pins.outputs.levels }}
       - name: Pick the builds
         id: need
         env:
@@ -159,7 +167,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.local/opt
-          key: ${{ steps.pins.outputs.key }}
+          key: ${{ steps.pins.outputs.blender }}
       - if: steps.need.outputs.blender == 'true'
         run: tools/blender/install-ci.sh
       - name: Build the levels, or reuse the cached ones
