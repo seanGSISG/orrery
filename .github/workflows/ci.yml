@@ -5,6 +5,7 @@ on:
     branches: [main, "plan-*"]
   push:
     branches: [main, "plan-*"]
+    tags: ["v*"]
   workflow_dispatch:
 
 # A new push to a pull request cancels its older run: the new run checks the whole pull request.
@@ -27,7 +28,7 @@ defaults:
 # The setup action also writes game/override.cfg to turn off GPU texture compression (godotengine/godot#114121); to revert, remove its last step.
 jobs:
   # Lists the changed files and picks the jobs they need (.github/pick-jobs.sh holds the rules).
-  # A pull request compares with its base, a push with the commit before it. A new branch, a
+  # A pull request compares with its base, a push with the commit before it. A new branch or tag, a
   # manual run or a failed diff runs every job. A docs-only change runs no other job.
   changes:
     name: Pick the jobs
@@ -272,3 +273,34 @@ jobs:
         run: just test-art
       - if: needs.changes.outputs.perf == 'true'
         run: just test-perf
+
+  # A version tag (`v*`) publishes the exports that the other jobs checked as a GitHub release; it
+  # builds nothing again. A tag with a hyphen (v0.1.0-rc.1) makes a prerelease. docs/plan.md 5.3
+  # tells how to cut a release.
+  release:
+    name: Publish the release
+    needs: [lint-game, lint-scripts, test, harness, windows-boot, tools]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-linux
+          path: linux/
+      - uses: actions/download-artifact@v7
+        with:
+          name: orrery-windows
+          path: windows/
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mv linux/orrery-linux.tar.gz "orrery-$TAG-linux-x86_64.tar.gz"
+          (cd windows && zip -r "../orrery-$TAG-windows-x86_64.zip" .)
+          prerelease=()
+          [[ $TAG == *-* ]] && prerelease=(--prerelease)
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes "${prerelease[@]}" \
+            "orrery-$TAG-linux-x86_64.tar.gz" "orrery-$TAG-windows-x86_64.zip"
