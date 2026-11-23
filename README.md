@@ -127,14 +127,14 @@ Get the build for your system from the [Releases](https://github.com/seanGSISG/o
 
 **Windows**
 
-1. Download the Windows `.zip` and extract it.
+1. Download `orrery-<version>-windows-x86_64.zip` and extract it.
 2. Run `orrery.exe`.
 3. The game is not signed yet, so Windows SmartScreen can show "Windows protected your PC". Click **More info**, then **Run anyway**.
 
 **Linux**
 
 ```text
-tar -xzf orrery-*linux*.tar.gz
+tar -xzf orrery-*-linux-x86_64.tar.gz
 chmod +x orrery.x86_64   # if the file lost its executable bit
 ./orrery.x86_64
 ```
