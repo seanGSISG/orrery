@@ -14,19 +14,15 @@
   &nbsp;·&nbsp; Windows and Linux &nbsp;·&nbsp; Controller or keyboard and mouse
 </p>
 
+## Roll, jump, beat the clock
+
 <p align="center">
   <img src="docs/media/play-b03.webp" alt="Spring Court: the marble takes a Coil Spring up over a wall, rolls between the red bumpers on the clock-face floor and takes a gem" width="100%">
 </p>
 
-## Roll, jump, beat the clock
-
 - **A marble that rolls.** The marble is a spinning sphere. Your input sets its spin, so it grips, slides, bounces and keeps its speed like a real ball.
 - **Gems, then the finish.** Collect every gem in the level. The finish pad opens when the last gem is in.
 - **Fast retries.** Hazards push the marble but never break it. After a fall, the marble is back on the last checkpoint, or the start pad, in half a second. One button restarts the level.
-
-<p align="center">
-  <img src="docs/media/finish-b01.webp" alt="Dawn Plaza: the marble takes the last gems, reaches the finish pad and the results show a gold time and a new record" width="100%">
-</p>
 
 ## Race your best
 
@@ -34,9 +30,16 @@
 - **Ghosts.** The game records your best run of each level and races it beside you as a see-through marble.
 - **Clockwork Eggs.** A jewelled Clockwork Egg hides off the main route of every level, and more hide on the climb. Find one and it opens. Where they are is for you to find.
 
-<p align="center">
-  <img src="docs/media/ghost-b01.webp" alt="Dawn Plaza: a see-through blue ghost of the best run rolls ahead of the marble" width="100%">
-</p>
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/finish-b01.webp" alt="Dawn Plaza: the marble takes the last gems, reaches the finish pad and the results show a gold time and a new record"></td>
+    <td width="50%"><img src="docs/media/ghost-b01.webp" alt="Dawn Plaza: a see-through blue ghost of the best run rolls ahead of the marble"></td>
+  </tr>
+  <tr>
+    <td align="center">A gold time and a new record</td>
+    <td align="center">Racing the ghost of the best run</td>
+  </tr>
+</table>
 
 ## Levels
 
@@ -72,19 +75,22 @@ One long climb from a town square on the ground up a broken clock tower and into
   </tr>
 </table>
 
-<p align="center">
-  <img src="docs/media/climb-z1.webp" alt="Clockmaker's Square: a steam vent lifts the marble from a ledge of the clock tower, high over the town and the fields, onto the next stone step" width="100%">
-</p>
-
 - **No checkpoints.** A fall costs height, not the run. A big fall can drop you into the zone below.
 - **Quit any time.** The game saves your exact spot and continues from there.
 - **Assist** adds a checkpoint at the start of each zone. An assisted climb keeps no record.
 - **Your climb, measured.** A height meter, a flag at your best height, and a stats screen at the gate: time, falls and metres fallen. The ghost of your best climb climbs with you.
 - **The light follows the height**, from the low dawn sun in the square to bright noon at the top.
 
-<p align="center">
-  <img src="docs/media/climb-z3.webp" alt="Sky Harbour: the marble rolls up a narrow plank past a moored airship, about 400 m above the fields" width="100%">
-</p>
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/climb-z1.webp" alt="Clockmaker's Square: a steam vent lifts the marble from a ledge of the clock tower, high over the town and the fields, onto the next stone step"></td>
+    <td width="50%"><img src="docs/media/climb-z3.webp" alt="Sky Harbour: the marble rolls up a narrow plank past a moored airship, about 400 m above the fields"></td>
+  </tr>
+  <tr>
+    <td align="center">A steam vent lifts the marble up the clock tower</td>
+    <td align="center">Up a plank past an airship, 400 m above the fields</td>
+  </tr>
+</table>
 
 ## Graphics and settings
 
@@ -127,7 +133,7 @@ Get the build for your system from the [Releases](https://github.com/seanGSISG/o
 
 **Linux**
 
-```sh
+```text
 tar -xzf orrery-*linux*.tar.gz
 chmod +x orrery.x86_64   # if the file lost its executable bit
 ./orrery.x86_64
@@ -137,7 +143,7 @@ chmod +x orrery.x86_64   # if the file lost its executable bit
 
 Orrery is built with Godot 4.7.2 and Blender 5.2.4 LTS. The levels are Blender Python scripts that build into the game. With [`just`](https://github.com/casey/just) installed:
 
-```sh
+```text
 just setup          # install and check the pinned tools
 just build-levels   # build every level
 just run b01        # play a level in a window
