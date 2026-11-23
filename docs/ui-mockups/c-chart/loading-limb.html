@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" id="climb">
+<head>
+<meta charset="utf-8">
+<title>C · Loading: limb</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop b02 level-only" style="--bd-blur:3px;--bd-dim:.6"></div>
+<div class="backdrop zone1 climb-only" style="--bd-blur:3px;--bd-dim:.6"></div>
+<div class="night left"></div>
+<!-- The limb of the Ascent HUD, read as 0 to 100 %: the bright arc climbs from the foot as the
+     load runs, and the ring is now. The fine graduation drifts up all the time, also while the
+     arc waits. -->
+<svg class="limb-gauge" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs><clipPath id="span"><rect x="1600" y="89" width="320" height="902"/></clipPath></defs>
+  <g clip-path="url(#span)"><circle class="limb" cx="316" cy="540" r="1447.5" stroke-width="111"/></g>
+  <g class="pool">
+  <g clip-path="url(#span)"><g transform="rotate(-17.7 316 540)">
+    <circle class="ln2" cx="316" cy="540" r="1392"/>
+    <circle class="ln2" cx="316" cy="540" r="1480" pathLength="6101.69"/>
+    <circle class="ln2 drifts" cx="316" cy="540" r="1487" pathLength="6101.69" stroke-width="14" stroke-dasharray="1 11" stroke-dashoffset=".5"/>
+    <circle class="ln" cx="316" cy="540" r="1491" pathLength="6101.69" stroke-width="22" stroke-dasharray="1.4 58.6" stroke-dashoffset=".7"/>
+    <circle class="sol level-only" cx="316" cy="540" r="1480" pathLength="6101.69" stroke-width="5" stroke-dasharray="0 252 348 6000"/>
+    <circle class="sol climb-only" cx="316" cy="540" r="1480" pathLength="6101.69" stroke-width="5" stroke-dasharray="0 216 384 6000"/>
+  </g></g>
+  <circle class="body" cx="1725.9" cy="90" r="9"/>
+  <g class="level-only">
+    <path class="sol" style="stroke-width:2" d="M1781 466.9h-87"/>
+    <circle class="now" cx="1794.2" cy="466.9" r="11"/>
+    <text class="pct" x="1680" y="466.9" text-anchor="end" dominant-baseline="central">58<tspan class="pct-unit"> %</tspan></text>
+  </g>
+  <g class="climb-only">
+    <path class="sol" style="stroke-width:2" d="M1777 412.1h-87"/>
+    <circle class="now" cx="1790.5" cy="412.1" r="11"/>
+    <text class="pct" x="1676" y="412.1" text-anchor="end" dominant-baseline="central">64<tspan class="pct-unit"> %</tspan></text>
+  </g>
+  </g>
+</svg>
+<div class="limb-text pool">
+  <h1 class="name level-only">Loose Hours</h1>
+  <h1 class="name climb-only">Ascent</h1>
+  <p class="name zone climb-only">Clockmaker’s Square</p>
+</div>
+</div>
+</body>
+</html>

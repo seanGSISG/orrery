@@ -216,3 +216,45 @@ svg text.mid { fill: var(--ink-2); }
 .ledger .i { font-size: 32px; }
 .actions { position: absolute; right: 0; bottom: 6px; width: 640px; display: flex; justify-content: space-between; padding: 0 36px 0 30px; }
 .actions span { display: inline-flex; align-items: center; gap: 16px; height: 64px; font-family: var(--font-name); font-size: 50px; color: var(--ink-2); }
+
+/* ---------- Loading (#138) ---------- */
+
+/* Open a loading page as <file>.html#climb to show the Ascent climb; the <html> element carries
+   id="climb". The page alone shows one level. */
+:root:not(:target) .climb-only { display: none !important; }
+:root:target .level-only { display: none !important; }
+.b02 { background-image: url(../backdrops/b02.jpg); }
+.zone1 { background-image: url(../backdrops/zone1.jpg); }
+.night.low { background: linear-gradient(0deg, color-mix(in srgb, var(--night) 92%, transparent), color-mix(in srgb, var(--night) 55%, transparent) 34%, transparent 62%); }
+.pct { font-weight: 500; }
+.pct small { font-size: .5em; color: var(--ink-2); margin-left: .12em; }
+/* The one element that keeps moving while the load runs. render.py takes the shot with
+   animations off, so the PNG shows the start pose. */
+@keyframes turn { to { transform: rotate(360deg); } }
+.turns { transform-box: view-box; transform-origin: 960px 540px; animation: turn 7s linear infinite; }
+.spins { transform-box: fill-box; transform-origin: center; animation: turn 1.6s linear infinite; }
+@keyframes climb { to { stroke-dashoffset: -60; } }
+.drifts { animation: climb 4s linear infinite; }
+
+/* A · Dial: the load as an arc on one ring; the marble keeps its orbit inside it. */
+.dial { position: absolute; inset: 0; }
+.dial-text { position: absolute; left: 50%; top: 540px; transform: translate(-50%, -50%); width: 560px; display: grid; justify-items: center; text-align: center; }
+.dial-text h1 { font-size: 96px; line-height: 1; }
+.dial-text .zone { margin-top: 14px; font-size: 40px; color: var(--ink-2); }
+.dial-text .pct { margin-top: 26px; font-size: 52px; }
+
+/* B · Horizon: the level in full, its name and a scale along the foot of the frame. */
+.horizon { position: absolute; left: 96px; right: 96px; bottom: 54px; height: 300px; }
+.horizon .label { position: absolute; left: -4px; bottom: 104px; }
+.horizon h1 { font-size: 140px; line-height: 1; }
+.horizon .zone { margin: 6px 0 0 4px; font-size: 40px; color: var(--ink-2); }
+.horizon .pct { position: absolute; right: 0; bottom: 104px; font-size: 64px; line-height: 1; }
+.horizon svg { position: absolute; left: 0; bottom: 0; }
+
+/* C · Limb: a graduated arc on the right edge, filled from the foot as the load runs. */
+.limb-text { position: absolute; left: 96px; top: 50%; transform: translateY(-50%); }
+.limb-text h1 { font-size: 150px; line-height: 1; }
+.limb-text .zone { margin-top: 18px; font-size: 44px; color: var(--ink-2); }
+.limb-gauge { position: absolute; inset: 0; }
+.limb-gauge .pct { font-size: 60px; font-weight: 500; }
+.limb-gauge .pct-unit { font-size: 30px; fill: var(--ink-2); }

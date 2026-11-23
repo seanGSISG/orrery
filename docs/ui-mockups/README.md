@@ -31,3 +31,18 @@ uv run docs/ui-mockups/render.py b- hud   # only the names that contain "b-" or 
 ```
 
 The script needs Google Chrome and network access to Google Fonts. `hud.html#keys` is the same HUD page with keyboard glyphs on the build frame; the script renders it as `*-hud-keys.png`.
+
+## Loading screen (#138)
+
+Three designs for the screen that shows while a level or the Ascent climb loads, all in direction C. Sean picks one; then the game builds it. Each shows the level name (for the climb: "Ascent" and the zone that loads), the real progress, and one element that keeps moving while the load thread runs.
+
+| Page | Progress | Moving element |
+|---|---|---|
+| `c-chart/loading-dial.html` | A coral arc on one ring, and the percent under the name | The marble on the inner orbit |
+| `c-chart/loading-horizon.html` | A scale along the foot of the level's frame | The spin marks of the marble at the head of the scale |
+| `c-chart/loading-limb.html` | The Ascent HUD's limb, filled from the foot | The fine graduation of the limb, which drifts up |
+
+- `<page>.html` shows one level (b02, Loose Hours). `<page>.html#climb` shows the climb.
+- The backdrops are `just gallery` shots: `backdrops/b02.jpg` (b02, `sheet`) and `backdrops/zone1.jpg` (zone 1, `overview`).
+- Open a page in Chrome to see the motion (CSS animation). The PNGs show its first pose.
+- `render.py` saves each one at 1920 × 1080 in `png/` (and a thumbnail) and at 3840 × 2160 in `png/4k/`: `uv run docs/ui-mockups/render.py loading`.

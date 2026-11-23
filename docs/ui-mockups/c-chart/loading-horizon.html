@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" id="climb">
+<head>
+<meta charset="utf-8">
+<title>C · Loading: horizon</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop b02 level-only" style="--bd-dim:.8"></div>
+<div class="backdrop zone1 climb-only" style="--bd-dim:.8"></div>
+<div class="night low"></div>
+<!-- One scale along the foot of the frame: the bright line is the load so far. The marble
+     rolls on its head; its spin marks turn all the time, also while the line waits. -->
+<div class="horizon pool">
+  <div class="label">
+    <h1 class="name level-only">Loose Hours</h1>
+    <h1 class="name climb-only">Ascent</h1>
+    <p class="name zone climb-only">Clockmaker’s Square</p>
+  </div>
+  <p class="pct level-only">58<small>%</small></p>
+  <p class="pct climb-only">64<small>%</small></p>
+  <svg viewBox="0 0 1728 80" width="1728" height="80">
+    <path class="ln2" d="M0 44h1728" stroke-width="12" stroke-dasharray="2 22"/>
+    <path class="ln" d="M0 39h1730" stroke-width="22" stroke-dasharray="2 214"/>
+    <path class="ln" d="M0 50h1728"/>
+    <g class="level-only">
+      <path class="sol" stroke-width="5" d="M0 50h1002"/>
+      <circle class="now" cx="1002" cy="26" r="22" style="stroke-width:3"/>
+      <circle class="sol spins" cx="1002" cy="26" r="13" pathLength="12" stroke-width="3" stroke-dasharray="1.6 1.4"/>
+    </g>
+    <g class="climb-only">
+      <path class="sol" stroke-width="5" d="M0 50h1106"/>
+      <circle class="now" cx="1106" cy="26" r="22" style="stroke-width:3"/>
+      <circle class="sol spins" cx="1106" cy="26" r="13" pathLength="12" stroke-width="3" stroke-dasharray="1.6 1.4"/>
+    </g>
+  </svg>
+</div>
+</div>
+</body>
+</html>

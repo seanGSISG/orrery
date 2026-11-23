@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" id="climb">
+<head>
+<meta charset="utf-8">
+<title>C · Loading: dial</title>
+<link rel="stylesheet" href="../shared/base.css">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="frame">
+<div class="backdrop b02 level-only" style="--bd-blur:10px;--bd-dim:.52"></div>
+<div class="backdrop zone1 climb-only" style="--bd-blur:10px;--bd-dim:.52"></div>
+<div class="night"></div>
+<!-- The bright arc is the load so far, from the top, clockwise; the ring at its head is now.
+     The marble on the inner orbit turns all the time, also while the arc waits. -->
+<svg class="dial" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <g transform="translate(960 540)">
+    <circle class="disc" r="404"/>
+    <circle class="ln2" r="360"/>
+    <circle class="ln2" r="369" pathLength="360" stroke-width="12" stroke-dasharray=".4 5.6" stroke-dashoffset=".2"/>
+    <circle class="ln" r="373" pathLength="360" stroke-width="20" stroke-dasharray=".5 29.5" stroke-dashoffset=".25"/>
+    <circle class="ln3" r="318"/>
+    <path class="ln" d="M0-346v-40"/>
+    <g class="level-only">
+      <circle class="sol" r="360" pathLength="100" stroke-width="5" stroke-dasharray="58 100" transform="rotate(-90)"/>
+      <circle class="now" cy="-360" r="11" transform="rotate(208.8)"/>
+    </g>
+    <g class="climb-only">
+      <circle class="sol" r="360" pathLength="100" stroke-width="5" stroke-dasharray="64 100" transform="rotate(-90)"/>
+      <circle class="now" cy="-360" r="11" transform="rotate(230.4)"/>
+    </g>
+  </g>
+  <g class="turns"><g transform="rotate(-56 960 540)">
+    <circle class="sol" style="stroke-width:2" cx="960" cy="222" r="18"/>
+    <circle class="sol-fill" cx="960" cy="222" r="9"/>
+  </g></g>
+</svg>
+<div class="dial-text">
+  <h1 class="name level-only">Loose Hours</h1>
+  <h1 class="name climb-only">Ascent</h1>
+  <p class="name zone climb-only">Clockmaker’s Square</p>
+  <p class="pct level-only">58<small>%</small></p>
+  <p class="pct climb-only">64<small>%</small></p>
+</div>
+</div>
+</body>
+</html>
