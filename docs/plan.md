@@ -203,6 +203,7 @@ No third-party Godot MCP. The harness MCP covers running the game, screenshots, 
 
 ```
 orrery/
+├── README.md              the front page for players (media in docs/media/)
 ├── CLAUDE.md              agent rules and commands
 ├── justfile               every task (see 5.1)
 ├── mise.toml              pins Godot
@@ -217,6 +218,7 @@ orrery/
 │   ├── style/             approved style board
 │   ├── ui-mockups/        approved HUD and menu mockups
 │   ├── design/            runtime, audio and visual quality designs
+│   ├── media/             README screenshots and clips (not in Git LFS)
 │   ├── secrets.md         every Easter egg and secret
 │   └── licenses.md        source and license of every third-party asset and model
 ├── game/                  the Godot project
