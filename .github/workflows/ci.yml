@@ -162,7 +162,8 @@ jobs:
           key: ${{ steps.pins.outputs.key }}
       - if: steps.need.outputs.blender == 'true'
         run: tools/blender/install-ci.sh
-      - if: needs.changes.outputs.levels == 'all'
+      - name: Build the levels, or reuse the cached ones
+        if: needs.changes.outputs.levels == 'all'
         env:
           MARBLE_HIT: ${{ steps.marble.outputs.cache-hit }}
           LEVELS_HIT: ${{ steps.built.outputs.cache-hit }}

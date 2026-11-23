@@ -56,11 +56,14 @@ runs:
     # restores the newest one. The key hashes the files that Godot imports (game/ less the
     # scripts and text resources, which it loads as they are, and assets/textures/, which
     # `just kit-textures` copies into game/), so a new cache is saved only when they change.
+    # The levels job writes fresh level .import files on every run (a new UID each time), so the
+    # jobs import the levels again on every run with the current LevelConverter. The key leaves
+    # those .import files out, or every run would save a new cache.
     - name: Cache the Godot import
       uses: actions/cache@v6
       with:
         path: game/.godot
-        key: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-${{ hashFiles('game/**', 'assets/textures/**', '!game/.godot/**', '!game/**/*.gd', '!game/**/*.uid', '!game/**/*.tscn', '!game/**/*.tres', '!game/**/*.gdshader') }}
+        key: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-${{ hashFiles('game/**', 'assets/textures/**', '!game/.godot/**', '!game/**/*.gd', '!game/**/*.uid', '!game/**/*.tscn', '!game/**/*.tres', '!game/**/*.gdshader', '!game/levels/built/*.import') }}
         restore-keys: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-
 
     # CI only: Betsy GPU compression can deadlock a Godot 4.7.2 import (godotengine/godot#114121); remove this step to revert.

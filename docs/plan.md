@@ -452,12 +452,12 @@ CI caches (`actions/cache`; a cache made on a branch serves that branch and its 
 | Cache | Path | Key | Restore |
 |---|---|---|---|
 | Git LFS objects | `.git/lfs` | `lfs-` + hash of the LFS object list | exact key |
-| Godot import | `game/.godot` | `godot-import-<os>-<godot pin>-` + `hashFiles` of `game/**` (less `.godot/`, `*.gd`, `*.uid`, `*.tscn`, `*.tres`, `*.gdshader`) and `assets/textures/**` | the newest cache with the `godot-import-<os>-<godot pin>-` prefix |
+| Godot import | `game/.godot` | `godot-import-<os>-<godot pin>-` + `hashFiles` of `game/**` (less `.godot/`, `*.gd`, `*.uid`, `*.tscn`, `*.tres`, `*.gdshader` and the level `.import` files) and `assets/textures/**` | the newest cache with the `godot-import-<os>-<godot pin>-` prefix |
 | Marble core | `game/core/marble/built/` | `marble-<blender pin>-<validator pin>-` + `hashFiles` of `tools/blender/marble_core.py`, its texture `Metal048A_2K-JPG_Color.jpg`, `game/core/marble/core_import.gd` and `justfile` (the recipe writes the `.import` file) | exact key |
 | Level .glb files | `game/levels/built/*.glb` | `levels-<blender pin>-<validator pin>-` + `hashFiles` of `levels/**`, `kit/**`, `tools/blender/**`, `assets/props/**`, `assets/decals/**` and `game/skies/*.tres` (every file that the Blender export reads) | exact key |
 | Blender and glTF-Validator | `~/.local/opt` | the two pins | exact key |
 
-A partial hit of the import cache is safe: Godot imports a file again only when the MD5 of the file or of its `.import` file differs from the stored one. The level cache holds the Blender output only. `--reuse` writes fresh `.import` files, so every job imports the levels again (about 25 s) with the current `LevelConverter`. A change to one input of a Blender build misses its cache and builds again.
+A partial hit of the import cache is safe: Godot imports a file again only when the MD5 of the file or of its `.import` file differs from the stored one. The level cache holds the Blender output only. `--reuse` writes fresh `.import` files (each import gives them a new UID), so every job that has the levels imports them again with the current `LevelConverter`; the import key leaves those `.import` files out, so this does not save a new cache on every run. A change to one input of a Blender build misses its cache and builds again.
 
 To cut a release, tag a commit that CI passed on, and push the tag:
 
