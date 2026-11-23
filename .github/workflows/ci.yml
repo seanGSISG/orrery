@@ -25,8 +25,8 @@ defaults:
 # Every job imports the project, with its Git LFS files (textures, skies, lightmaps, music).
 # The setup action pulls them through a cache. Do not set `lfs: true` on a checkout: it
 # downloads every LFS file again on every run, past the cache, and that uses up the LFS quota.
-# The setup action restores the Godot import (game/.godot) from a cache too, with a key that
-# hashes the imported files: run it after the downloads of the built core and levels.
+# The setup action also downloads the built core and levels (input `built`) and restores the
+# Godot import (game/.godot) from a cache, with a key that hashes the imported files.
 # The setup action also writes game/override.cfg to turn off GPU texture compression (godotengine/godot#114121); to revert, remove its last step.
 jobs:
   # Lists the changed files and picks the jobs they need (.github/pick-jobs.sh holds the rules).
@@ -88,11 +88,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
-        with:
-          name: marble
-          path: game/core/marble/built/
       - uses: ./.github/actions/setup
+        with:
+          built: core
       - uses: astral-sh/setup-uv@v10.3.3
       - run: just lint-game
 
@@ -149,9 +147,6 @@ jobs:
           MARBLE_HIT: ${{ steps.marble.outputs.cache-hit }}
           LEVELS_HIT: ${{ steps.built.outputs.cache-hit }}
         run: |
-          # A restored file keeps its old modification time. Touch the core, or `just fresh-marble`
-          # sees it as older than its script and builds it again.
-          if [[ $MARBLE_HIT == true ]]; then touch game/core/marble/built/*; fi
           blender=false
           if [[ $MARBLE_HIT != true || ($LEVELS == all && $LEVELS_HIT != true) ]]; then blender=true; fi
           echo "blender=$blender" >> "$GITHUB_OUTPUT"
@@ -168,7 +163,14 @@ jobs:
       - if: steps.need.outputs.blender == 'true'
         run: tools/blender/install-ci.sh
       - if: needs.changes.outputs.levels == 'all'
-        run: just build-levels ${{ steps.built.outputs.cache-hit == 'true' && '--reuse' || '' }}
+        env:
+          MARBLE_HIT: ${{ steps.marble.outputs.cache-hit }}
+          LEVELS_HIT: ${{ steps.built.outputs.cache-hit }}
+        run: |
+          # A restored core keeps its old modification time, older than the files of the LFS pull.
+          # Touch it, or `just fresh-marble` sees it as older than its texture and builds it again.
+          if [[ $MARBLE_HIT == true ]]; then touch game/core/marble/built/*; fi
+          if [[ $LEVELS_HIT == true ]]; then just build-levels --reuse; else just build-levels; fi
       - if: needs.changes.outputs.levels != 'all' && steps.need.outputs.blender == 'true'
         run: just build-marble
       - uses: actions/upload-artifact@v7
@@ -195,15 +197,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
-        with:
-          name: marble
-          path: game/core/marble/built/
-      - uses: actions/download-artifact@v7
-        with:
-          name: levels
-          path: game/levels/built/
       - uses: ./.github/actions/setup
+        with:
+          built: all
       - run: just test
       - run: just test-levels
 
@@ -216,11 +212,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
-        with:
-          name: marble
-          path: game/core/marble/built/
       - uses: ./.github/actions/setup
+        with:
+          built: core
       - uses: astral-sh/setup-uv@v10.3.3
       - run: just test-harness
 
@@ -232,17 +226,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
-        with:
-          name: marble
-          path: game/core/marble/built/
-      - uses: actions/download-artifact@v7
-        with:
-          name: levels
-          path: game/levels/built/
       - uses: ./.github/actions/setup
         with:
           templates: "true"
+          built: all
       - run: just export
       - name: Boot the Linux export
         timeout-minutes: 2

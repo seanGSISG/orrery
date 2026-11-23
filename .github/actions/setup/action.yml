@@ -1,9 +1,12 @@
 name: Set up Orrery
-description: Pull Git LFS files through a cache, install the Godot version that mise.toml pins, install just, turn off GPU texture compression for the import, and restore the cached Godot import. Run it after actions/checkout and the downloads of the built files.
+description: Pull Git LFS files through a cache, download the built marble core and levels, install the Godot version that mise.toml pins, install just, restore the cached Godot import, and turn off GPU texture compression for the import. Run it after actions/checkout.
 inputs:
   templates:
     description: Also install the Godot export templates.
     default: "false"
+  built:
+    description: The built files to download from the levels job, `none`, `core` (the marble's core) or `all` (the core and the levels).
+    default: "none"
 runs:
   using: composite
   steps:
@@ -20,6 +23,19 @@ runs:
     - name: Pull Git LFS objects
       shell: bash
       run: git lfs pull
+
+    # After the LFS pull: a built file must be newer than its inputs, or `just fresh-marble` and
+    # `just fresh-levels` build it again. Before the import cache: its key covers the built files.
+    - if: inputs.built != 'none'
+      uses: actions/download-artifact@v7
+      with:
+        name: marble
+        path: game/core/marble/built/
+    - if: inputs.built == 'all'
+      uses: actions/download-artifact@v7
+      with:
+        name: levels
+        path: game/levels/built/
 
     - name: Read the Godot pin
       id: pin
@@ -40,7 +56,6 @@ runs:
     # restores the newest one. The key hashes the files that Godot imports (game/ less the
     # scripts and text resources, which it loads as they are, and assets/textures/, which
     # `just kit-textures` copies into game/), so a new cache is saved only when they change.
-    # Run this action after the downloads of the built levels and core, so the key covers them.
     - name: Cache the Godot import
       uses: actions/cache@v6
       with:
