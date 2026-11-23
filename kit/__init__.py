@@ -51,3 +51,4 @@ __all__ = [
     "track",
     "wall",
 ]
+# TEMP probe for #136: a kit change must rebuild the levels.
