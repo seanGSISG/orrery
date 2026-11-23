@@ -274,11 +274,12 @@ jobs:
       - if: needs.changes.outputs.perf == 'true'
         run: just test-perf
 
-  # A version tag (`v*`) publishes the exports that the other jobs checked as a GitHub release; it
-  # builds nothing again. A tag with a hyphen (v0.1.0-rc.1) makes a prerelease. docs/plan.md 5.3
-  # tells how to cut a release.
+  # A version tag (`v*`) puts the exports that the other jobs checked on a draft GitHub release; it
+  # builds nothing again. A tag with a hyphen (v0.1.0-rc.1) makes a prerelease. The release stays a
+  # draft (only people with push access see it) until Sean publishes it by hand: the game has no
+  # public release before its store title is chosen. docs/plan.md 5.3 tells how to cut a release.
   release:
-    name: Publish the release
+    name: Draft the release
     needs: [lint-game, lint-scripts, test, harness, windows-boot, tools]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -302,5 +303,5 @@ jobs:
           (cd windows && zip -r "../orrery-$TAG-windows-x86_64.zip" .)
           prerelease=()
           [[ $TAG == *-* ]] && prerelease=(--prerelease)
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes "${prerelease[@]}" \
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --generate-notes "${prerelease[@]}" \
             "orrery-$TAG-linux-x86_64.tar.gz" "orrery-$TAG-windows-x86_64.zip"
