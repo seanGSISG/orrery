@@ -34,11 +34,6 @@ runs:
 
     - uses: extractions/setup-just@v4
 
-    # CI only: Betsy GPU compression can deadlock a Godot 4.7.2 import (godotengine/godot#114121); remove this step to revert.
-    - name: Turn off GPU texture compression
-      shell: bash
-      run: printf '[rendering]\n\ntextures/vram_compression/compress_with_gpu=false\n' > game/override.cfg
-
     # Godot keeps its import in game/.godot. An import tests each file whose modification time
     # changed: it imports the file again only when the MD5 of the file or of its .import file
     # differs from the stored one. So a cache from an older key is safe, and the restore key
@@ -52,3 +47,8 @@ runs:
         path: game/.godot
         key: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-${{ hashFiles('game/**', 'assets/textures/**', '!game/.godot/**', '!game/**/*.gd', '!game/**/*.uid', '!game/**/*.tscn', '!game/**/*.tres', '!game/**/*.gdshader') }}
         restore-keys: godot-import-${{ runner.os }}-${{ steps.pin.outputs.godot }}-
+
+    # CI only: Betsy GPU compression can deadlock a Godot 4.7.2 import (godotengine/godot#114121); remove this step to revert.
+    - name: Turn off GPU texture compression
+      shell: bash
+      run: printf '[rendering]\n\ntextures/vram_compression/compress_with_gpu=false\n' > game/override.cfg

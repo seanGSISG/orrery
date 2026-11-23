@@ -161,7 +161,7 @@ def main() -> None:
     """Builds the levels named on the command line (all when none) and exits 1 on a problem.
     `--reuse` keeps the built .glb files instead of building them."""
     ids = [arg for arg in sys.argv[1:] if arg != "--reuse"]
-    step = reuse if "--reuse" in sys.argv[1:] else build
+    step, done = (reuse, "reused") if "--reuse" in sys.argv[1:] else (build, "built")
     levels = find_levels(ids)
     BUILT.mkdir(parents=True, exist_ok=True)
     if not ids:
@@ -169,7 +169,7 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
         problems = dict(zip(levels, pool.map(step, levels), strict=True))
     for level, errors in problems.items():
-        print(f"{level.id}: {'FAILED' if errors else 'reused' if step is reuse else 'built'}")
+        print(f"{level.id}: {'FAILED' if errors else done}")
         for error in errors:
             print(f"  {error}")
     built = [level for level, errors in problems.items() if not errors]
